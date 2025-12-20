@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($page_title) ? $page_title . ' - ' : '' ?>Admin - Clase de Ciencia</title>
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
         <script>
             // Emit early auth diagnostics if present
             (function(){
