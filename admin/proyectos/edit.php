@@ -25,7 +25,7 @@ $proyecto = [
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, nombre, slug, ciclo, activo, destacado, resumen, objetivo_aprendizaje FROM proyectos WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, nombre, slug, ciclo, activo, destacado, resumen, objetivo_aprendizaje FROM clases WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $proyecto = $row; } else { $is_edit = false; $id = null; }
@@ -60,10 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Slug único
     try {
       if ($is_edit) {
-        $check = $pdo->prepare('SELECT COUNT(*) FROM proyectos WHERE slug = ? AND id <> ?');
+        $check = $pdo->prepare('SELECT COUNT(*) FROM clases WHERE slug = ? AND id <> ?');
         $check->execute([$slug, $id]);
       } else {
-        $check = $pdo->prepare('SELECT COUNT(*) FROM proyectos WHERE slug = ?');
+        $check = $pdo->prepare('SELECT COUNT(*) FROM clases WHERE slug = ?');
         $check->execute([$slug]);
       }
       $exists = (int)$check->fetchColumn();
@@ -71,10 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = 'El slug ya existe. Elige otro.';
       } else {
         if ($is_edit) {
-          $stmt = $pdo->prepare('UPDATE proyectos SET nombre=?, slug=?, ciclo=?, activo=?, destacado=?, resumen=?, objetivo_aprendizaje=?, updated_at=NOW() WHERE id=?');
+          $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, activo=?, destacado=?, resumen=?, objetivo_aprendizaje=?, updated_at=NOW() WHERE id=?');
           $stmt->execute([$nombre, $slug, $ciclo, $activo, $destacado, $resumen, $objetivo, $id]);
         } else {
-          $stmt = $pdo->prepare('INSERT INTO proyectos (nombre, slug, ciclo, activo, destacado, resumen, objetivo_aprendizaje, updated_at) VALUES (?,?,?,?,?,?,?,NOW())');
+          $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, activo, destacado, resumen, objetivo_aprendizaje, updated_at) VALUES (?,?,?,?,?,?,?,NOW())');
           $stmt->execute([$nombre, $slug, $ciclo, $activo, $destacado, $resumen, $objetivo]);
           $id = (int)$pdo->lastInsertId();
           $is_edit = true;

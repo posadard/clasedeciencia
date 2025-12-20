@@ -9,8 +9,8 @@ if (!$slug) {
     exit;
 }
 
-// Cargar proyecto
-$stmt = $pdo->prepare("SELECT * FROM proyectos WHERE slug = ? AND activo = 1");
+// Cargar clase
+$stmt = $pdo->prepare("SELECT * FROM clases WHERE slug = ? AND activo = 1");
 $stmt->execute([$slug]);
 $proyecto = $stmt->fetch();
 if (!$proyecto) {
@@ -18,23 +18,29 @@ if (!$proyecto) {
     exit;
 }
 
-// Cargar guía activa
-$stmt = $pdo->prepare("SELECT * FROM guias WHERE proyecto_id = ? AND activa = 1 ORDER BY id DESC LIMIT 1");
+// Cargar guía (última versión)
+$stmt = $pdo->prepare("SELECT * FROM guias WHERE clase_id = ? ORDER BY id DESC LIMIT 1");
 $stmt->execute([$proyecto['id']]);
 $guia = $stmt->fetch();
 
-// Materiales (puente)
-$stmt = $pdo->prepare("SELECT pm.*, m.nombre_comun, m.slug AS material_slug FROM proyecto_materiales pm JOIN materiales m ON pm.material_id = m.id WHERE pm.proyecto_id = ?");
+// Kit y componentes
+$stmt = $pdo->prepare("SELECT id FROM kits WHERE clase_id = ? LIMIT 1");
 $stmt->execute([$proyecto['id']]);
-$materiales = $stmt->fetchAll();
+$kit = $stmt->fetch(PDO::FETCH_ASSOC);
+$materiales = [];
+if ($kit && isset($kit['id'])) {
+    $stmt = $pdo->prepare("SELECT kc.*, i.nombre_comun, i.sku, i.unidad FROM kit_componentes kc JOIN kit_items i ON kc.item_id = i.id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, i.nombre_comun ASC");
+    $stmt->execute([(int)$kit['id']]);
+    $materiales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 // Multimedia
-$stmt = $pdo->prepare("SELECT * FROM recursos_multimedia WHERE proyecto_id = ? ORDER BY orden");
+$stmt = $pdo->prepare("SELECT * FROM recursos_multimedia WHERE clase_id = ? ORDER BY sort_order");
 $stmt->execute([$proyecto['id']]);
 $recursos = $stmt->fetchAll();
 
-$page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Proyecto Científico');
-$page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva del proyecto científico');
+$page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Ciencia');
+$page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
 $canonical_url = $proyecto['canonical_url'] ?: (SITE_URL . '/proyecto.php?slug=' . $proyecto['slug']);
 
 // Schema.org básico HowTo
@@ -73,11 +79,11 @@ include 'includes/header.php';
                 <span class="read-time">Duración: <?= (int)$proyecto['duracion_minutos'] ?> min</span>
             </div>
             <?php if (!empty($proyecto['imagen_portada'])): ?>
-                <img src="<?= h($proyecto['imagen_portada']) ?>" alt="Portada del proyecto" class="article-cover"/>
+                <img src="<?= h($proyecto['imagen_portada']) ?>" alt="Portada de la clase" class="article-cover"/>
             <?php endif; ?>
             <?php if (!empty($proyecto['video_portada'])): ?>
                 <div class="video-wrapper">
-                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video del proyecto" allowfullscreen></iframe>
+                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de la clase" allowfullscreen></iframe>
                 </div>
             <?php endif; ?>
             <?php if (!empty($proyecto['resumen'])): ?>
@@ -115,22 +121,22 @@ include 'includes/header.php';
                     <p><?= h($guia['explicacion_cientifica']) ?></p>
                 <?php endif; ?>
             <?php else: ?>
-                <p>No hay guía activa para este proyecto.</p>
+                <p>No hay guía disponible para esta clase.</p>
             <?php endif; ?>
         </section>
 
         <?php if (!empty($materiales)): ?>
         <section class="related-materials">
-            <h2>Materiales del Proyecto</h2>
+            <h2>Componentes del Kit</h2>
             <ul class="materials-list">
                 <?php foreach ($materiales as $m): ?>
                     <li>
-                        <a href="/material.php?slug=<?= h($m['material_slug']) ?>"><?= h($m['nombre_comun']) ?></a>
+                        <?= h($m['nombre_comun']) ?>
                         <?php if (!empty($m['cantidad'])): ?>
                             <span class="badge"><?= h($m['cantidad']) ?></span>
                         <?php endif; ?>
-                        <?php if (!empty($m['es_incluido_kit'])): ?>
-                            <span class="badge">Incluido en kit</span>
+                        <?php if (isset($m['es_incluido_kit']) && (int)$m['es_incluido_kit'] === 1): ?>
+                            <span class="badge">Incluido</span>
                         <?php endif; ?>
                         <?php if (!empty($m['notas'])): ?>
                             <small><?= h($m['notas']) ?></small>
@@ -162,9 +168,9 @@ include 'includes/header.php';
     </article>
 </div>
 <script>
-console.log('🔍 [proyecto] Slug:', '<?= h($slug) ?>');
-console.log('✅ [proyecto] Cargado proyecto:', <?= json_encode(['id'=>$proyecto['id'],'nombre'=>$proyecto['nombre']]) ?>);
-console.log('📦 [proyecto] Materiales:', <?= count($materiales) ?>);
-console.log('🎞️ [proyecto] Recursos:', <?= count($recursos) ?>);
+console.log('🔍 [Clase] Slug:', '<?= h($slug) ?>');
+console.log('✅ [Clase] Cargada clase:', <?= json_encode(['id'=>$proyecto['id'],'nombre'=>$proyecto['nombre']]) ?>);
+console.log('📦 [Clase] Componentes del kit:', <?= count($materiales) ?>);
+console.log('🎞️ [Clase] Recursos:', <?= count($recursos) ?>);
 </script>
 <?php include 'includes/footer.php'; ?>

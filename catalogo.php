@@ -16,51 +16,51 @@ function cdc_get_competencias($pdo) {
 
 function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
     $params = [];
-    $where = ["p.activo = 1"];
+    $where = ["c.activo = 1"];
     $joins = [
-        "LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id",
-        "LEFT JOIN areas a ON a.id = pa.area_id"
+        "LEFT JOIN clase_areas ca ON ca.clase_id = c.id",
+        "LEFT JOIN areas a ON a.id = ca.area_id"
     ];
 
     if (!empty($filters['ciclo'])) {
-        $where[] = "p.ciclo = ?";
+        $where[] = "c.ciclo = ?";
         $params[] = $filters['ciclo'];
     }
     if (!empty($filters['grado'])) {
         // grados es JSON: usamos JSON_CONTAINS
-        $where[] = "JSON_CONTAINS(p.grados, ? )";
+        $where[] = "JSON_CONTAINS(c.grados, ? )";
         $params[] = json_encode([(int)$filters['grado']]);
     }
     if (!empty($filters['area'])) {
-        // areas como JSON ids o tabla puente proyecto_areas
-        $joins[] = "LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id";
+        // filtro por área vía tabla puente clase_areas
+        $joins[] = "LEFT JOIN clase_areas ca ON ca.clase_id = c.id";
         if (is_numeric($filters['area'])) {
-            $where[] = "pa.area_id = ?";
+            $where[] = "ca.area_id = ?";
             $params[] = (int)$filters['area'];
         } else {
-            $joins[] = "LEFT JOIN areas a ON a.id = pa.area_id";
+            $joins[] = "LEFT JOIN areas a ON a.id = ca.area_id";
             $where[] = "a.slug = ?";
             $params[] = $filters['area'];
         }
     }
     if (!empty($filters['competencia'])) {
-        $joins[] = "LEFT JOIN proyecto_competencias pc ON pc.proyecto_id = p.id";
+        $joins[] = "LEFT JOIN clase_competencias cc ON cc.clase_id = c.id";
         if (is_numeric($filters['competencia'])) {
-            $where[] = "pc.competencia_id = ?";
+            $where[] = "cc.competencia_id = ?";
             $params[] = (int)$filters['competencia'];
         }
     }
     if (!empty($filters['dificultad'])) {
-        $where[] = "p.dificultad = ?";
+        $where[] = "c.dificultad = ?";
         $params[] = $filters['dificultad'];
     }
 
-        $sql = "SELECT p.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
-            FROM proyectos p
+    $sql = "SELECT c.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
+            FROM clases c
             " . implode(' ', array_unique($joins)) . "
             WHERE " . implode(' AND ', $where) . "
-            GROUP BY p.id
-            ORDER BY p.destacado DESC, p.orden_popularidad DESC, p.updated_at DESC
+            GROUP BY c.id
+            ORDER BY c.destacado DESC, c.orden_popularidad DESC, c.updated_at DESC
             LIMIT ? OFFSET ?";
     $params[] = (int)$limit;
     $params[] = (int)$offset;
@@ -72,45 +72,45 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
 
 function cdc_count_proyectos($pdo, $filters = []) {
     $params = [];
-    $where = ["p.activo = 1"];
+    $where = ["c.activo = 1"];
     $joins = [
-        "LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id",
-        "LEFT JOIN areas a ON a.id = pa.area_id"
+        "LEFT JOIN clase_areas ca ON ca.clase_id = c.id",
+        "LEFT JOIN areas a ON a.id = ca.area_id"
     ];
 
     if (!empty($filters['ciclo'])) {
-        $where[] = "p.ciclo = ?";
+        $where[] = "c.ciclo = ?";
         $params[] = $filters['ciclo'];
     }
     if (!empty($filters['grado'])) {
-        $where[] = "JSON_CONTAINS(p.grados, ? )";
+        $where[] = "JSON_CONTAINS(c.grados, ? )";
         $params[] = json_encode([(int)$filters['grado']]);
     }
     if (!empty($filters['area'])) {
-        $joins[] = "LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id";
+        $joins[] = "LEFT JOIN clase_areas ca ON ca.clase_id = c.id";
         if (is_numeric($filters['area'])) {
-            $where[] = "pa.area_id = ?";
+            $where[] = "ca.area_id = ?";
             $params[] = (int)$filters['area'];
         } else {
-            $joins[] = "LEFT JOIN areas a ON a.id = pa.area_id";
+            $joins[] = "LEFT JOIN areas a ON a.id = ca.area_id";
             $where[] = "a.slug = ?";
             $params[] = $filters['area'];
         }
     }
     if (!empty($filters['competencia'])) {
-        $joins[] = "LEFT JOIN proyecto_competencias pc ON pc.proyecto_id = p.id";
+        $joins[] = "LEFT JOIN clase_competencias cc ON cc.clase_id = c.id";
         if (is_numeric($filters['competencia'])) {
-            $where[] = "pc.competencia_id = ?";
+            $where[] = "cc.competencia_id = ?";
             $params[] = (int)$filters['competencia'];
         }
     }
     if (!empty($filters['dificultad'])) {
-        $where[] = "p.dificultad = ?";
+        $where[] = "c.dificultad = ?";
         $params[] = $filters['dificultad'];
     }
 
-    $sql = "SELECT COUNT(DISTINCT p.id) AS total
-            FROM proyectos p
+    $sql = "SELECT COUNT(DISTINCT c.id) AS total
+            FROM clases c
             " . implode(' ', array_unique($joins)) . "
             WHERE " . implode(' AND ', $where);
 

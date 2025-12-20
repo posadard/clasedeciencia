@@ -9,13 +9,14 @@
  */
 
 function cdc_get_featured_proyectos($pdo, $limit = 3) {
-    $sql = "SELECT p.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
-            FROM proyectos p
-            LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id
-            LEFT JOIN areas a ON a.id = pa.area_id
-            WHERE p.activo = 1 AND p.destacado = 1
-            GROUP BY p.id
-            ORDER BY p.updated_at DESC
+    // Adaptado a nuevo esquema: clases + clase_areas
+    $sql = "SELECT c.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
+            FROM clases c
+            LEFT JOIN clase_areas ca ON ca.clase_id = c.id
+            LEFT JOIN areas a ON a.id = ca.area_id
+            WHERE c.activo = 1 AND c.destacado = 1
+            GROUP BY c.id
+            ORDER BY c.updated_at DESC
             LIMIT ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$limit]);
@@ -23,13 +24,14 @@ function cdc_get_featured_proyectos($pdo, $limit = 3) {
 }
 
 function cdc_get_recent_proyectos($pdo, $limit = 6) {
-    $sql = "SELECT p.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
-            FROM proyectos p
-            LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id
-            LEFT JOIN areas a ON a.id = pa.area_id
-            WHERE p.activo = 1
-            GROUP BY p.id
-            ORDER BY p.updated_at DESC
+    // Adaptado a nuevo esquema: clases + clase_areas
+    $sql = "SELECT c.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
+            FROM clases c
+            LEFT JOIN clase_areas ca ON ca.clase_id = c.id
+            LEFT JOIN areas a ON a.id = ca.area_id
+            WHERE c.activo = 1
+            GROUP BY c.id
+            ORDER BY c.updated_at DESC
             LIMIT ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$limit]);

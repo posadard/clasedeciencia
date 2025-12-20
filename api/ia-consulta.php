@@ -1,7 +1,7 @@
 <?php
 /**
- * API: IA Consulta con guardrails y contexto de proyecto
- * Entrada: JSON { proyecto_id, pregunta }
+ * API: IA Consulta con guardrails y contexto de clase
+ * Entrada: JSON { clase_id, pregunta }
  * Salida: JSON { respuesta, guardrail_activado, cached, modelo, tokens, tiempo_ms }
  */
 
@@ -19,7 +19,7 @@ try {
     $data = json_decode($raw, true);
     if (!is_array($data)) $data = [];
 
-    $proyecto_id = isset($data['proyecto_id']) ? (int)$data['proyecto_id'] : null;
+    $clase_id = isset($data['clase_id']) ? (int)$data['clase_id'] : null;
     $pregunta = isset($data['pregunta']) ? trim($data['pregunta']) : '';
 
     if ($pregunta === '') {
@@ -64,10 +64,10 @@ try {
         $ses = $stmtS->fetch(PDO::FETCH_ASSOC);
         if ($ses) {
             $sesion_id = (int)$ses['id'];
-            $pdo->prepare('UPDATE ia_sesiones SET proyecto_id = COALESCE(?, proyecto_id), fecha_ultima_interaccion = NOW() WHERE id = ?')
-                ->execute([$proyecto_id, $sesion_id]);
+            $pdo->prepare('UPDATE ia_sesiones SET clase_id = COALESCE(?, clase_id), fecha_ultima_interaccion = NOW() WHERE id = ?')
+                ->execute([$clase_id, $sesion_id]);
         } else {
-            $pdo->prepare('INSERT INTO ia_sesiones (sesion_hash, proyecto_id) VALUES (?, ?)')->execute([$sesion_hash, $proyecto_id]);
+            $pdo->prepare('INSERT INTO ia_sesiones (sesion_hash, clase_id) VALUES (?, ?)')->execute([$sesion_hash, $clase_id]);
             $sesion_id = (int)$pdo->lastInsertId();
         }
     } catch (Exception $e) {
@@ -90,10 +90,10 @@ try {
     // Intentar caché
     $cached = false;
     $respuesta = null;
-    if ($proyecto_id) {
+    if ($clase_id) {
         try {
-            $stmtC = $pdo->prepare('SELECT id, respuesta FROM ia_respuestas_cache WHERE proyecto_id = ? AND pregunta_normalizada = ? AND activa = 1 LIMIT 1');
-            $stmtC->execute([$proyecto_id, $pregunta_lower]);
+            $stmtC = $pdo->prepare('SELECT id, respuesta FROM ia_respuestas_cache WHERE clase_id = ? AND pregunta_normalizada = ? AND activa = 1 LIMIT 1');
+            $stmtC->execute([$clase_id, $pregunta_lower]);
             $rowC = $stmtC->fetch(PDO::FETCH_ASSOC);
             if ($rowC) {
                 $cached = true;
@@ -115,14 +115,14 @@ try {
             // Contexto del proyecto (si aplica)
             $contexto = [];
             $materiales_ctx = [];
-            if ($proyecto_id) {
+            if ($clase_id) {
                 try {
-                    $stmtCtx = $pdo->prepare('SELECT * FROM v_proyecto_contexto_ia WHERE proyecto_id = ? LIMIT 1');
-                    $stmtCtx->execute([$proyecto_id]);
+                    $stmtCtx = $pdo->prepare('SELECT * FROM v_clase_contexto_ia WHERE clase_id = ? LIMIT 1');
+                    $stmtCtx->execute([$clase_id]);
                     $contexto = $stmtCtx->fetch(PDO::FETCH_ASSOC) ?: [];
 
-                    $stmtMat = $pdo->prepare('SELECT * FROM v_proyecto_materiales_detalle WHERE proyecto_id = ?');
-                    $stmtMat->execute([$proyecto_id]);
+                    $stmtMat = $pdo->prepare('SELECT * FROM v_clase_kits_detalle WHERE clase_id = ?');
+                    $stmtMat->execute([$clase_id]);
                     $materiales_ctx = $stmtMat->fetchAll(PDO::FETCH_ASSOC);
                 } catch (Exception $e) {
                     error_log('IA contexto error: ' . $e->getMessage());
@@ -139,7 +139,7 @@ try {
                         ['role' => 'system', 'content' => $contexto_sistema],
                         ['role' => 'user', 'content' => json_encode([
                             'pregunta' => $pregunta,
-                            'proyecto' => $contexto,
+                            'clase' => $contexto,
                             'materiales' => $materiales_ctx
                         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)]
                     ]
@@ -174,10 +174,10 @@ try {
         }
 
         // Guardar en caché si hay proyecto y no es guardrail ni error
-        if ($proyecto_id && !$guardrail_activado && !empty($respuesta)) {
+        if ($clase_id && !$guardrail_activado && !empty($respuesta)) {
             try {
-                $pdo->prepare('INSERT INTO ia_respuestas_cache (proyecto_id, pregunta_normalizada, pregunta_original, respuesta) VALUES (?, ?, ?, ?)')
-                    ->execute([$proyecto_id, $pregunta_lower, $pregunta, $respuesta]);
+                $pdo->prepare('INSERT INTO ia_respuestas_cache (clase_id, pregunta_normalizada, pregunta_original, respuesta) VALUES (?, ?, ?, ?)')
+                    ->execute([$clase_id, $pregunta_lower, $pregunta, $respuesta]);
             } catch (Exception $e) {
                 error_log('IA cache insert error: ' . $e->getMessage());
             }
@@ -187,9 +187,9 @@ try {
     // Registrar interacción (SP) si hay sesión
     if ($sesion_id) {
         try {
-            $stmtLog = $pdo->prepare('CALL sp_registrar_interaccion_ia(?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmtLog = $pdo->prepare('CALL sp_registrar_interaccion_ia_clase(?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $costo = 0.0; // estimado
-            $stmtLog->execute([$sesion_id, $proyecto_id, $pregunta, $respuesta, $tokens, $tiempo_ms, $modelo, $costo, $guardrail_activado ? 1 : 0]);
+            $stmtLog->execute([$sesion_id, $clase_id, $pregunta, $respuesta, $tokens, $tiempo_ms, $modelo, $costo, $guardrail_activado ? 1 : 0]);
         } catch (Exception $e) {
             error_log('IA log error: ' . $e->getMessage());
         }

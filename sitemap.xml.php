@@ -37,10 +37,10 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     <!-- Proyectos -->
     <?php
     try {
-        $stmtP = $pdo->query("SELECT slug, updated_at FROM proyectos WHERE activo = 1 ORDER BY orden_popularidad DESC, updated_at DESC");
+            $stmtP = $pdo->query("SELECT slug, updated_at FROM clases WHERE activo = 1 ORDER BY orden_popularidad DESC, updated_at DESC");
         $proyectos = $stmtP->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-        error_log('Error sitemap proyectos: ' . $e->getMessage());
+            error_log('Error sitemap clases: ' . $e->getMessage());
         $proyectos = [];
     }
     foreach ($proyectos as $p):
@@ -58,10 +58,10 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     <!-- Materiales -->
     <?php
     try {
-        $stmtM = $pdo->query("SELECT slug, created_at FROM materiales ORDER BY created_at DESC");
+            $stmtM = $pdo->query("SELECT slug, created_at FROM kit_items ORDER BY created_at DESC");
         $materiales = $stmtM->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-        error_log('Error sitemap materiales: ' . $e->getMessage());
+            error_log('Error sitemap kit_items: ' . $e->getMessage());
         $materiales = [];
     }
     foreach ($materiales as $m):

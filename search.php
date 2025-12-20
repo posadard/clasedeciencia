@@ -10,7 +10,7 @@ require_once 'includes/db-functions.php';
 $q = trim($_GET['q'] ?? '');
 
 $page_title = $q ? 'Búsqueda: ' . h($q) : 'Búsqueda';
-$page_description = $q ? 'Resultados de búsqueda para: ' . h($q) : 'Busca proyectos y materiales';
+$page_description = $q ? 'Resultados de búsqueda para: ' . h($q) : 'Busca clases y componentes de kits';
 $canonical_url = SITE_URL . '/search.php' . ($q ? ('?q=' . urlencode($q)) : '');
 
 include 'includes/header.php';
@@ -21,18 +21,18 @@ include 'includes/header.php';
     <h1><?= h($page_title) ?></h1>
 
     <?php if (!$q): ?>
-        <p>Escribe un término para buscar proyectos y materiales.</p>
+        <p>Escribe un término para buscar clases y componentes de kits.</p>
     <?php else: ?>
         <?php
         // 🔍 Debug
         echo '<script>console.log("🔍 [search.php] Query:", ' . json_encode($q) . ');</script>';
 
         $like = '%' . $q . '%';
-        // Proyectos: buscar por nombre, resumen, objetivo
+        // Clases: buscar por nombre, resumen, objetivo
         try {
             $stmtP = $pdo->prepare(
                 "SELECT id, nombre, slug, resumen, updated_at
-                 FROM proyectos
+                 FROM clases
                  WHERE activo = 1 AND (nombre LIKE :q1 OR resumen LIKE :q2 OR objetivo_aprendizaje LIKE :q3)
                  ORDER BY orden_popularidad DESC, updated_at DESC
                  LIMIT 20"
@@ -40,23 +40,23 @@ include 'includes/header.php';
             $stmtP->execute(['q1' => $like, 'q2' => $like, 'q3' => $like]);
             $proyectos = $stmtP->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log('Error búsqueda proyectos: ' . $e->getMessage());
+            error_log('Error búsqueda clases: ' . $e->getMessage());
             $proyectos = [];
         }
 
-        // Materiales: nombre común/técnico y descripción
+        // Componentes del kit: nombre y descripción
         try {
             $stmtM = $pdo->prepare(
-                "SELECT id, nombre_comun, slug, nombre_tecnico, descripcion
-                 FROM materiales
-                 WHERE (nombre_comun LIKE :q1 OR nombre_tecnico LIKE :q2 OR descripcion LIKE :q3)
-                 ORDER BY created_at DESC
+                "SELECT id, nombre_comun, slug, advertencias_seguridad AS descripcion
+                 FROM kit_items
+                 WHERE (nombre_comun LIKE :q1 OR descripcion LIKE :q2)
+                 ORDER BY id DESC
                  LIMIT 20"
             );
-            $stmtM->execute(['q1' => $like, 'q2' => $like, 'q3' => $like]);
+            $stmtM->execute(['q1' => $like, 'q2' => $like]);
             $materiales = $stmtM->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            error_log('Error búsqueda materiales: ' . $e->getMessage());
+            error_log('Error búsqueda kit_items: ' . $e->getMessage());
             $materiales = [];
         }
         ?>
@@ -70,7 +70,7 @@ include 'includes/header.php';
             <?php else: ?>
                 <?php if (!empty($proyectos)): ?>
                 <div class="content-section">
-                    <h2>Proyectos</h2>
+                    <h2>Clases</h2>
                     <ul>
                         <?php foreach ($proyectos as $p): ?>
                         <li>
@@ -84,12 +84,12 @@ include 'includes/header.php';
 
                 <?php if (!empty($materiales)): ?>
                 <div class="content-section">
-                    <h2>Materiales</h2>
+                    <h2>Componentes de Kits</h2>
                     <ul>
                         <?php foreach ($materiales as $m): ?>
                         <li>
                             <a href="/material.php?slug=<?= h($m['slug']) ?>"><?= h($m['nombre_comun']) ?></a>
-                            — <?= h($m['nombre_tecnico'] ?: substr(strip_tags($m['descripcion'] ?? ''), 0, 120)) ?>
+                            — <?= h(substr(strip_tags($m['descripcion'] ?? ''), 0, 120)) ?>
                         </li>
                         <?php endforeach; ?>
                     </ul>
