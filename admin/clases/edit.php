@@ -152,13 +152,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               ? preg_replace('/\s+\S*$/', '', substr($desc_source, 0, 160))
               : $desc_source;
           }
-          if ($canonical_url === '') { $canonical_url = '/proyecto.php?slug=' . $slug; }
-          echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ', "auto canon:", ' . json_encode($canonical_url) . ');</script>';
-          // Transacción para clase + relaciones
+          <?php if ($error_msg !== ''): ?>
+            <div class="alert alert-error"><?= htmlspecialchars($error_msg, ENT_QUOTES, 'UTF-8') ?></div>
+          <?php endif; ?>
           $pdo->beginTransaction();
-          if ($is_edit) {
+          <form method="POST" class="article-form">
             $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, seccion_id=?, updated_at=NOW() WHERE id=?');
             $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id, $id]);
+            <div class="form-section">
             // Limpiar relaciones
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_competencias WHERE clase_id = ?')->execute([$id]);
@@ -224,7 +225,9 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="ciclo">Ciclo</label>
+            </div>
     <select id="ciclo" name="ciclo" required>
+            <div class="form-section">
       <option value="">Selecciona</option>
       <option value="1" <?= $clase['ciclo']==='1'?'selected':'' ?>>1 (6°-7°)</option>
       <option value="2" <?= $clase['ciclo']==='2'?'selected':'' ?>>2 (8°-9°)</option>
@@ -235,7 +238,9 @@ include '../header.php';
     <label>Grados</label>
     <div class="checkbox-grid">
       <?php foreach ([6,7,8,9,10,11] as $g): $has = false; $gj = $clase['grados'] ?: '[]'; $arr = json_decode($gj, true); $has = is_array($arr) && in_array($g, $arr); ?>
+            </div>
         <label><input type="checkbox" name="grados[]" value="<?= $g ?>" <?= $has ? 'checked' : '' ?>> <?= $g ?>°</label>
+            <div class="form-section">
       <?php endforeach; ?>
     </div>
   </div>
@@ -251,7 +256,9 @@ include '../header.php';
     </div>
     <div class="form-group">
       <label for="duracion_minutos">Duración (min)</label>
+            </div>
       <input type="number" id="duracion_minutos" name="duracion_minutos" value="<?= htmlspecialchars((string)($clase['duracion_minutos'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" min="1" />
+            <div class="form-section">
     </div>
     <div class="form-group">
       <label for="seccion_id">Sección</label>
@@ -299,7 +306,9 @@ include '../header.php';
       <label for="seg_edad_min">Edad mínima</label>
       <input type="number" id="seg_edad_min" name="seg_edad_min" value="<?= htmlspecialchars((string)($seg['edad_min'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
     </div>
+            </div>
     <div class="form-group">
+            <div class="form-section">
       <label for="seg_edad_max">Edad máxima</label>
       <input type="number" id="seg_edad_max" name="seg_edad_max" value="<?= htmlspecialchars((string)($seg['edad_max'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
     </div>
@@ -317,12 +326,15 @@ include '../header.php';
     <div class="form-group">
       <label for="seo_description">SEO Description (≤255)</label>
       <input type="text" id="seo_description" name="seo_description" maxlength="255" value="<?= htmlspecialchars($clase['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+            </div>
     </div>
+            <div class="form-section">
   </div>
   <div class="form-group">
     <label for="canonical_url">Canonical URL</label>
     <input type="text" id="canonical_url" name="canonical_url" value="<?= htmlspecialchars($clase['canonical_url'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
   </div>
+            </div>
   <!-- SEO Auto Preview + Override Toggle -->
   <div class="form-section">
     <label><input type="checkbox" id="seo_override_toggle"> Editar SEO manualmente</label>
@@ -336,6 +348,24 @@ include '../header.php';
   <style>
     .seo-preview { background:#f7f7f7; padding:8px; border-radius:6px; }
     #seo-manual { display:none; }
+    /* Ocultar banners/avisos de CKEditor sobre versiones inseguras (como en article-edit) */
+    .cke .cke_warning,
+    .cke .cke_panel_warning,
+    .cke .cke_browser_warning,
+            <div class="form-section">
+            <div class="form-group">
+    .cke_warning,
+    .cke_panel_warning { display: none !important; }
+    .cke_notification.cke_notification_warning,
+            <div class="form-actions">
+    .cke_notification.cke_notification_warning .cke_notification_close {
+      display: none !important;
+      visibility: hidden !important;
+      height: 0 !important;
+      width: 0 !important;
+      overflow: hidden !important;
+            </div>
+    }
   </style>
   <div id="seo-manual">
     <!-- Los campos SEO arriba funcionan como override cuando este panel está activo -->
@@ -502,6 +532,41 @@ include '../header.php';
       console.log('❌ [ClasesEdit] Error iniciando CKEditor:', e.message);
     }
   })();
+
+  // Oculta avisos de CKEditor sobre versión insegura (igual a article-edit)
+  function removeCKEditorWarnings() {
+    try {
+      const candidates = document.querySelectorAll('.cke, .cke_top, .cke_bottom, .cke_inner');
+      candidates.forEach(node => {
+        const text = (node.textContent || '').toLowerCase();
+        if (text.includes('secure') || text.includes('insecure') || text.includes('upgrade') || text.includes('paid') || text.includes('license')) {
+          node.remove();
+        }
+      });
+      console.log('🔍 [ClasesEdit] CKEditor warnings revisados');
+    } catch (e) {
+      console.log('⚠️ [ClasesEdit] removeCKEditorWarnings error:', e.message);
+    }
+  }
+  setTimeout(removeCKEditorWarnings, 800);
+  const ckeObserver = new MutationObserver((mutations, obs) => {
+    let removed = false;
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node instanceof HTMLElement) {
+          if (node.matches && node.matches('.cke_notification.cke_notification_warning')) {
+            node.remove();
+            removed = true;
+          } else {
+            const found = node.querySelector && node.querySelector('.cke_notification.cke_notification_warning');
+            if (found) { found.remove(); removed = true; }
+          }
+        }
+      }
+    }
+    if (removed) { obs.disconnect(); console.log('✅ [ClasesEdit] CKEditor warning ocultado'); }
+  });
+  ckeObserver.observe(document.documentElement || document.body, { childList: true, subtree: true });
 
   // Asegurar sincronización del editor antes de enviar
   const formEl = document.querySelector('form');
