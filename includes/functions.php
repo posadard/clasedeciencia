@@ -80,6 +80,20 @@ function parse_markdown($text) {
 }
 
 /**
+ * Build URL with query parameters
+ */
+function build_url($path, $params = []) {
+    $url = $path;
+    $clean_params = array_filter($params, function($v) {
+        return $v !== '' && $v !== null;
+    });
+    if (!empty($clean_params)) {
+        $url .= '?' . http_build_query($clean_params);
+    }
+    return $url;
+}
+
+/**
  * Get current page number from query string
  */
 function get_current_page() {

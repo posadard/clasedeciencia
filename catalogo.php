@@ -122,12 +122,20 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
         $params[] = $filters['dificultad'];
     }
 
+    // Determinar ordenamiento según sort
+    $sort = $filters['sort'] ?? 'recomendados';
+    if ($sort === 'recientes') {
+        $order_by = "ORDER BY c.updated_at DESC, c.destacado DESC";
+    } else {
+        $order_by = "ORDER BY c.destacado DESC, c.orden_popularidad DESC, c.updated_at DESC";
+    }
+
     $sql = "SELECT c.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
             FROM clases c
             " . implode(' ', array_unique($joins)) . "
             WHERE " . implode(' AND ', $where) . "
             GROUP BY c.id
-            ORDER BY c.destacado DESC, c.orden_popularidad DESC, c.updated_at DESC
+            " . $order_by . "
             LIMIT ? OFFSET ?";
     $params[] = (int)$limit;
     $params[] = (int)$offset;
@@ -196,6 +204,7 @@ if (isset($_GET['grado'])) $filters['grado'] = $_GET['grado'];
 if (isset($_GET['area'])) $filters['area'] = $_GET['area'];
 if (isset($_GET['competencia'])) $filters['competencia'] = $_GET['competencia'];
 if (isset($_GET['dificultad'])) $filters['dificultad'] = $_GET['dificultad'];
+if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
 $page_title = 'Clases disponibles';
 $page_description = 'Explora clases científicas por ciclo, grado, área y competencias MEN.';
@@ -298,6 +307,13 @@ include 'includes/header.php';
                         (Página <?= $current_page ?> de <?= ceil($total / POSTS_PER_PAGE) ?>)
                     <?php endif; ?>
                 </p>
+                <div class="sort-selector">
+                    <label for="sort">Ordenar por:</label>
+                    <select name="sort" id="sort" onchange="this.form ? this.form.submit() : updateSort(this.value)">
+                        <option value="recomendados" <?= (!isset($_GET['sort']) || $_GET['sort'] === 'recomendados') ? 'selected' : '' ?>>📌 Recomendados primero</option>
+                        <option value="recientes" <?= (isset($_GET['sort']) && $_GET['sort'] === 'recientes') ? 'selected' : '' ?>>🕐 Más recientes</option>
+                    </select>
+                </div>
             </div>
             <?php if (empty($proyectos)): ?>
             <div class="no-results">
@@ -311,6 +327,9 @@ include 'includes/header.php';
                     <a class="card-link" href="/proyecto.php?slug=<?= h($p['slug']) ?>">
                         <div class="card-content">
                             <div class="card-meta">
+                                <?php if (!empty($p['destacado'])): ?>
+                                <span class="badge badge-destacado">⭐ Recomendado</span>
+                                <?php endif; ?>
                                 <span class="section-badge">Ciclo <?= h($p['ciclo']) ?></span>
                                 <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                             </div>
@@ -357,5 +376,11 @@ include 'includes/header.php';
 <script>
 console.log('🔍 [catalogo] Filtros activos:', <?= json_encode($filters) ?>);
 console.log('✅ [catalogo] Clases cargadas:', <?= count($proyectos) ?>);
+
+function updateSort(sortValue) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', sortValue);
+    window.location.href = url.toString();
+}
 </script>
 <?php include 'includes/footer.php'; ?>
