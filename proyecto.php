@@ -18,6 +18,14 @@ if (!$proyecto) {
     exit;
 }
 
+// Cargar información completa del ciclo
+$ciclo_info = [];
+if (!empty($proyecto['ciclo'])) {
+    $stmt = $pdo->prepare("SELECT * FROM ciclos WHERE numero = ? AND activo = 1 LIMIT 1");
+    $stmt->execute([$proyecto['ciclo']]);
+    $ciclo_info = $stmt->fetch();
+}
+
 // Cargar áreas asociadas
 $stmt = $pdo->prepare("SELECT a.* FROM areas a JOIN clase_areas ca ON a.id = ca.area_id WHERE ca.clase_id = ? ORDER BY a.nombre");
 $stmt->execute([$proyecto['id']]);
@@ -140,9 +148,12 @@ include 'includes/header.php';
                 </div>
                 
                 <div class="summary-specs">
-                    <div class="spec-item">
+                    <div class="spec-item spec-ciclo-clickable" onclick="toggleCicloModal()" title="Click para ver más información">
                         <span class="spec-label">📚 Ciclo</span>
-                        <span class="spec-value">Ciclo <?= h($proyecto['ciclo']) ?></span>
+                        <span class="spec-value">
+                            Ciclo <?= h($proyecto['ciclo']) ?>: <?= !empty($ciclo_info) ? h($ciclo_info['nombre']) : '' ?>
+                            <span class="info-icon">ℹ️</span>
+                        </span>
                     </div>
                     <div class="spec-item">
                         <span class="spec-label">🎓 Grados</span>
@@ -416,8 +427,64 @@ include 'includes/header.php';
         </section>
         <?php endif; ?>
     </article>
+    
+    <!-- Modal de Información del Ciclo -->
+    <?php if (!empty($ciclo_info)): ?>
+    <div id="cicloModal" class="modal-overlay" onclick="toggleCicloModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="toggleCicloModal()">&times;</button>
+            <div class="modal-header">
+                <h2>📚 Ciclo <?= h($ciclo_info['numero']) ?>: <?= h($ciclo_info['nombre']) ?></h2>
+            </div>
+            <div class="modal-body">
+                <div class="ciclo-info-grid">
+                    <div class="ciclo-info-item">
+                        <strong>🎓 Grados:</strong>
+                        <span><?= h($ciclo_info['grados_texto']) ?></span>
+                    </div>
+                    <div class="ciclo-info-item">
+                        <strong>👥 Edad:</strong>
+                        <span><?= h($ciclo_info['edad_min']) ?> a <?= h($ciclo_info['edad_max']) ?> años</span>
+                    </div>
+                    <div class="ciclo-info-item">
+                        <strong>📖 Nivel Educativo:</strong>
+                        <span><?= h($ciclo_info['nivel_educativo']) ?></span>
+                    </div>
+                    <div class="ciclo-info-item">
+                        <strong>🌍 ISCED:</strong>
+                        <span><?= h($ciclo_info['isced_level']) ?></span>
+                    </div>
+                </div>
+                
+                <div class="ciclo-proposito">
+                    <h3>🎯 Propósito</h3>
+                    <p><?= h($ciclo_info['proposito']) ?></p>
+                </div>
+                
+                <?php if (!empty($ciclo_info['explicacion'])): ?>
+                <div class="ciclo-explicacion">
+                    <h3>📝 Explicación Detallada</h3>
+                    <p><?= h($ciclo_info['explicacion']) ?></p>
+                </div>
+                <?php endif; ?>
+                
+                <div class="modal-actions">
+                    <a href="/catalogo.php?ciclo=<?= h($ciclo_info['numero']) ?>" class="btn btn-primary">Ver Clases de este Ciclo</a>
+                    <button onclick="toggleCicloModal()" class="btn btn-secondary">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 <script>
+function toggleCicloModal() {
+    const modal = document.getElementById('cicloModal');
+    if (modal) {
+        modal.classList.toggle('active');
+    }
+}
+
 function toggleCompetencia(index) {
     const content = document.getElementById('content-' + index);
     const icon = document.getElementById('icon-' + index);
