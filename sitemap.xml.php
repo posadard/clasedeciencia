@@ -20,35 +20,59 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         <priority>1.0</priority>
     </url>
     
-    <!-- Library -->
+    <!-- Catálogo -->
     <url>
-        <loc><?= h(SITE_URL) ?>/library.php</loc>
+        <loc><?= h(SITE_URL) ?>/catalogo.php</loc>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
     
-    <!-- Sections -->
+    <!-- Materiales (listado) -->
+    <url>
+        <loc><?= h(SITE_URL) ?>/materials.php</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    
+    <!-- Proyectos -->
     <?php
-    $sections = get_sections($pdo);
-    foreach ($sections as $section):
+    try {
+        $stmtP = $pdo->query("SELECT slug, updated_at FROM proyectos WHERE activo = 1 ORDER BY orden_popularidad DESC, updated_at DESC");
+        $proyectos = $stmtP->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Error sitemap proyectos: ' . $e->getMessage());
+        $proyectos = [];
+    }
+    foreach ($proyectos as $p):
     ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/section.php?slug=<?= h($section['slug']) ?></loc>
-        <changefreq>weekly</changefreq>
+        <loc><?= h(SITE_URL) ?>/proyecto.php?slug=<?= h($p['slug']) ?></loc>
+        <?php if (!empty($p['updated_at'])): ?>
+        <lastmod><?= h(date('Y-m-d', strtotime($p['updated_at']))) ?></lastmod>
+        <?php endif; ?>
+        <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
     <?php endforeach; ?>
     
-    <!-- Articles -->
+    <!-- Materiales -->
     <?php
-    $articles = get_articles($pdo, []);
-    foreach ($articles as $article):
+    try {
+        $stmtM = $pdo->query("SELECT slug, created_at FROM materiales ORDER BY created_at DESC");
+        $materiales = $stmtM->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Error sitemap materiales: ' . $e->getMessage());
+        $materiales = [];
+    }
+    foreach ($materiales as $m):
     ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/article.php?slug=<?= h($article['slug']) ?></loc>
-        <lastmod><?= date('Y-m-d', strtotime($article['updated_at'])) ?></lastmod>
+        <loc><?= h(SITE_URL) ?>/material.php?slug=<?= h($m['slug']) ?></loc>
+        <?php if (!empty($m['created_at'])): ?>
+        <lastmod><?= h(date('Y-m-d', strtotime($m['created_at']))) ?></lastmod>
+        <?php endif; ?>
         <changefreq>monthly</changefreq>
-        <priority>0.7</priority>
+        <priority>0.6</priority>
     </url>
     <?php endforeach; ?>
     
