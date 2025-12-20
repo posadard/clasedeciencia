@@ -257,6 +257,7 @@ strong, b {
     max-width: 720px;
     margin: 0 auto;
     position: relative;
+    padding: 0 1rem; /* Padding lateral para mobile */
 }
 
 .search-form {
@@ -297,19 +298,29 @@ strong, b {
 }
 
 @media (max-width: 768px) {
-    .search-section {
-        margin: var(--spacing-md) 0;
+    .header-search-container {
+        padding: 0.75rem 0;
+    }
+    
+    .search-box {
+        max-width: 100%;
+        padding: 0 0.75rem;
     }
     
     .search-input {
-        padding: 0.875rem 1rem 0.875rem 2.75rem;
-        font-size: 0.9375rem;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        font-size: 0.875rem;
+        border-radius: 25px;
     }
     
     .search-icon {
-        left: 16px;
-        width: 18px;
-        height: 18px;
+        left: 14px;
+        width: 16px;
+        height: 16px;
+    }
+    
+    .search-input::placeholder {
+        font-size: 0.8125rem;
     }
 }
 
