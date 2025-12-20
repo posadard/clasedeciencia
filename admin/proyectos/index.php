@@ -1,6 +1,6 @@
 <?php
 require_once '../auth.php';
-$page_title = 'Proyectos';
+$page_title = 'Clases';
 
 // Filtros
 $ciclo = isset($_GET['ciclo']) ? trim($_GET['ciclo']) : ''; // '1','2','3' o ''
@@ -14,7 +14,7 @@ if ($activo === '1' || $activo === '0') { $where[] = 'activo = ?'; $params[] = (
 if ($search !== '') { $where[] = '(nombre LIKE ? OR slug LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; }
 
 try {
-    $sql = "SELECT id, nombre, slug, ciclo, activo, destacado, updated_at FROM proyectos WHERE " . implode(' AND ', $where) . " ORDER BY updated_at DESC";
+    $sql = "SELECT id, nombre, slug, ciclo, activo, destacado, updated_at FROM clases WHERE " . implode(' AND ', $where) . " ORDER BY updated_at DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $proyectos = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -25,12 +25,12 @@ try {
 include '../header.php';
 ?>
 <div class="page-header">
-  <h2>Proyectos</h2>
-  <span class="help-text">Gestión básica de proyectos (CdC).</span>
+  <h2>Clases</h2>
+  <span class="help-text">Gestión básica de clases (CdC).</span>
   <script>
-    console.log('✅ [Admin] Proyectos index cargado');
+    console.log('✅ [Admin] Clases index cargado');
     console.log('🔍 [Admin] Filtros:', { ciclo: '<?= htmlspecialchars($ciclo, ENT_QUOTES, 'UTF-8') ?>', activo: '<?= htmlspecialchars($activo, ENT_QUOTES, 'UTF-8') ?>', search: '<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>' });
-    console.log('🔍 [Admin] Total proyectos:', <?= count($proyectos) ?>);
+    console.log('🔍 [Admin] Total clases:', <?= count($proyectos) ?>);
   </script>
 </div>
 
@@ -67,14 +67,14 @@ include '../header.php';
 
 <div class="card" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
   <h3 style="margin:0;">Listado</h3>
-  <a href="/admin/proyectos/edit.php" class="btn">+ Nuevo Proyecto</a>
+  <a href="/admin/proyectos/edit.php" class="btn">+ Nueva Clase</a>
 </div>
 
 <?php if (empty($proyectos)): ?>
   <div class="message info">
-    No hay proyectos.
+    No hay clases.
   </div>
-  <p><a href="/admin/proyectos/edit.php" class="btn">Crear Proyecto</a></p>
+  <p><a href="/admin/proyectos/edit.php" class="btn">Crear Clase</a></p>
 <?php else: ?>
   <table class="data-table">
     <thead>

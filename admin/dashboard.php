@@ -54,11 +54,11 @@ $getCount = function (PDO $pdo, string $sql) {
 // Estadísticas principales
 try {
     $stats = [
-        'proyectos' => $tableExists($pdo, 'proyectos') ? $getCount($pdo, "SELECT COUNT(*) FROM proyectos WHERE activo = 1") : 0,
-        'materiales' => $tableExists($pdo, 'materiales') ? $getCount($pdo, "SELECT COUNT(*) FROM materiales") : 0,
+        'clases' => $tableExists($pdo, 'clases') ? $getCount($pdo, "SELECT COUNT(*) FROM clases WHERE activo = 1") : 0,
+        'kit_items' => $tableExists($pdo, 'kit_items') ? $getCount($pdo, "SELECT COUNT(*) FROM kit_items") : 0,
+        'kits' => $tableExists($pdo, 'kits') ? $getCount($pdo, "SELECT COUNT(*) FROM kits") : 0,
         'contratos' => $tableExists($pdo, 'contratos') ? $getCount($pdo, "SELECT COUNT(*) FROM contratos") : 0,
         'entregas' => $tableExists($pdo, 'entregas') ? $getCount($pdo, "SELECT COUNT(*) FROM entregas") : 0,
-        'lotes' => $tableExists($pdo, 'lotes_kits') ? $getCount($pdo, "SELECT COUNT(*) FROM lotes_kits") : 0,
     ];
 } catch (PDOException $e) {
     error_log('Admin stats error: ' . $e->getMessage());
@@ -76,30 +76,30 @@ try {
 }
 
 // Table presence snapshot
-$tables_to_check = ['proyectos','materiales','contratos','entregas','lotes_kits','ia_logs'];
+$tables_to_check = ['clases','kit_items','kits','contratos','entregas','ia_logs'];
 $tables_snapshot = [];
 foreach ($tables_to_check as $t) {
     $tables_snapshot[$t] = $tableExists($pdo, $t);
 }
 
-// Proyectos recientes
+// Clases recientes
 try {
-    if ($tableExists($pdo, 'proyectos')) {
-        $stmt = $pdo->prepare("\n            SELECT id, nombre, slug, ciclo, updated_at, activo, destacado\n            FROM proyectos\n            ORDER BY updated_at DESC\n            LIMIT 5\n        ");
+    if ($tableExists($pdo, 'clases')) {
+        $stmt = $pdo->prepare("\n            SELECT id, nombre, slug, ciclo, updated_at, activo, destacado\n            FROM clases\n            ORDER BY updated_at DESC\n            LIMIT 5\n        ");
         if ($stmt && $stmt->execute([])) {
-            $recent_proyectos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $recent_clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
-            $recent_proyectos = [];
-            $debug_messages[] = 'Recent proyectos query failed to execute';
+            $recent_clases = [];
+            $debug_messages[] = 'Recent clases query failed to execute';
         }
     } else {
-        $recent_proyectos = [];
-        $debug_messages[] = 'Table missing: proyectos';
+        $recent_clases = [];
+        $debug_messages[] = 'Table missing: clases';
     }
 } catch (PDOException $e) {
-    error_log('Admin recent proyectos error: ' . $e->getMessage());
-    $recent_proyectos = [];
-    $debug_messages[] = 'Recent proyectos error: ' . $e->getMessage();
+    error_log('Admin recent clases error: ' . $e->getMessage());
+    $recent_clases = [];
+    $debug_messages[] = 'Recent clases error: ' . $e->getMessage();
 }
 
 // IA actividad (últimos 7 días)
@@ -132,11 +132,11 @@ include 'header.php';
             console.log('🔍 [Admin] DB ping OK:', <?= $pdo_ok ? 'true' : 'false' ?>);
             console.log('🔍 [Admin] Tablas presentes:', <?= json_encode($tables_snapshot, JSON_UNESCAPED_UNICODE) ?>);
             console.log('🔍 [Admin] Stats:', {
-                proyectos: <?= (int)$stats['proyectos'] ?>,
-                materiales: <?= (int)$stats['materiales'] ?>,
+                clases: <?= (int)$stats['clases'] ?>,
+                kit_items: <?= (int)$stats['kit_items'] ?>,
+                kits: <?= (int)$stats['kits'] ?>,
                 contratos: <?= (int)$stats['contratos'] ?>,
-                entregas: <?= (int)$stats['entregas'] ?>,
-                lotes: <?= (int)$stats['lotes'] ?>
+                entregas: <?= (int)$stats['entregas'] ?>
             });
             console.log('🔍 [Admin] IA (7d):', {
                 consultas: <?= (int)$ia_stats['consultas'] ?>,
@@ -153,12 +153,16 @@ include 'header.php';
 <!-- Estadísticas -->
 <div class="stats-grid">
     <div class="stat-card">
-        <h3><?= $stats['proyectos'] ?></h3>
-        <p>Proyectos activos</p>
+        <h3><?= $stats['clases'] ?></h3>
+        <p>Clases activas</p>
     </div>
     <div class="stat-card">
-        <h3><?= $stats['materiales'] ?></h3>
-        <p>Materiales</p>
+        <h3><?= $stats['kit_items'] ?></h3>
+        <p>Componentes de kits</p>
+    </div>
+    <div class="stat-card">
+        <h3><?= $stats['kits'] ?></h3>
+        <p>Kits</p>
     </div>
     <div class="stat-card">
         <h3><?= $stats['contratos'] ?></h3>
@@ -184,14 +188,14 @@ include 'header.php';
 <div class="card">
     <h3>Acciones rápidas</h3>
     <div class="actions">
-        <a href="/admin/proyectos/edit.php" class="btn">+ Nuevo Proyecto</a>
-        <a href="/admin/materiales/edit.php" class="btn btn-secondary">+ Nuevo Material</a>
+        <a href="/admin/proyectos/edit.php" class="btn">+ Nueva Clase</a>
+        <a href="/admin/materiales/edit.php" class="btn btn-secondary">+ Nuevo Componente</a>
     </div>
 </div>
 
 <!-- Proyectos recientes -->
 <div class="card">
-    <h3>Proyectos recientes</h3>
+    <h3>Clases recientes</h3>
     <table class="data-table">
         <thead>
             <tr>
@@ -203,7 +207,7 @@ include 'header.php';
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($recent_proyectos as $p): ?>
+            <?php foreach ($recent_clases as $p): ?>
             <tr>
                 <td><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars($p['ciclo'], ENT_QUOTES, 'UTF-8') ?></td>

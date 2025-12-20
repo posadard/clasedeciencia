@@ -5,7 +5,7 @@ require_once '../auth.php';
 $is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
 $id = $is_edit ? (int)$_GET['id'] : null;
 
-$page_title = $is_edit ? 'Editar Proyecto' : 'Nuevo Proyecto';
+$page_title = $is_edit ? 'Editar Clase' : 'Nueva Clase';
 
 // CSRF token
 if (!isset($_SESSION['csrf_token'])) {
@@ -93,7 +93,7 @@ include '../header.php';
 ?>
 <div class="page-header">
   <h2><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></h2>
-  <span class="help-text">Completa los campos del proyecto.</span>
+  <span class="help-text">Completa los campos de la clase.</span>
   <script>
     console.log('✅ [Admin] Proyectos edit cargado');
     console.log('🔍 [Admin] Edit mode:', <?= $is_edit ? 'true' : 'false' ?>);

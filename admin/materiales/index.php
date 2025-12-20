@@ -1,7 +1,7 @@
 <?php
 require_once '../auth.php';
 require_once __DIR__ . '/../../includes/materials-functions.php';
-$page_title = 'Materiales';
+$page_title = 'Componentes';
 
 // Filtros
 $category = $_GET['category'] ?? ''; // slug de categoría
@@ -18,8 +18,8 @@ $materiales = get_materials($pdo, $filters);
 include '../header.php';
 ?>
 <div class="page-header">
-  <h2>Materiales</h2>
-  <span class="help-text">Gestión de materiales del catálogo (CdC).</span>
+  <h2>Componentes</h2>
+  <span class="help-text">Gestión de componentes del catálogo (kit_items).</span>
   <script>
     console.log('✅ [Admin] Materiales index cargado');
     console.log('🔍 [Admin] Filtros:', { category: '<?= htmlspecialchars($category, ENT_QUOTES, 'UTF-8') ?>', search: '<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>' });
@@ -54,22 +54,22 @@ include '../header.php';
 
 <div class="card" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
   <h3 style="margin:0;">Listado</h3>
-  <a href="/admin/materiales/edit.php" class="btn">+ Nuevo Material</a>
+  <a href="/admin/materiales/edit.php" class="btn">+ Nuevo Componente</a>
 </div>
 
 <?php if (empty($materiales)): ?>
   <div class="empty-state">
-    <p>No hay materiales.</p>
-    <a href="/admin/materiales/edit.php" class="btn btn-primary">Crear Material</a>
+    <p>No hay componentes.</p>
+    <a href="/admin/materiales/edit.php" class="btn btn-primary">Crear Componente</a>
   </div>
 <?php else: ?>
   <table class="data-table">
     <thead>
       <tr>
         <th>ID</th>
-        <th>Material</th>
+        <th>Componente</th>
         <th>Categoría</th>
-        <th>Slug</th>
+        <th>SKU</th>
         <th>Acciones</th>
       </tr>
     </thead>
