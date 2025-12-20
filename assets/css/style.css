@@ -411,7 +411,12 @@ strong, b {
     box-shadow: 0 2px 6px rgba(15,59,31,0.03);
 }
 .section-card h3 { margin: 0 0 0.25rem 0; color: var(--color-primary); font-size: 1.15rem; }
-.section-card p { margin: 0; color: var(--color-text-muted); }
+.section-card p { 
+    margin: 0; 
+    color: var(--color-text-muted); 
+    font-size: 0.875rem; /* 14px - más compacto */
+    line-height: 1.4; /* espaciado vertical reducido */
+}
 
 .section-card:hover,
 .section-card:focus {
