@@ -642,6 +642,45 @@ strong, b {
 .section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
 
+/* Sección de exploración unificada */
+.explore-section {
+    margin: 3rem 0;
+}
+
+.explore-main-title {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 2.5rem;
+    letter-spacing: -0.02em;
+}
+
+.section-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 2rem 0 1.5rem;
+    opacity: 0.5;
+}
+
+.section-divider::before,
+.section-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid rgba(31, 60, 136, 0.2);
+}
+
+.section-divider span {
+    padding: 0 1rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: lowercase;
+    letter-spacing: 0.1em;
+    font-style: italic;
+}
+
 /* Área cards simplificadas con contador */
 .areas-section {
     margin-bottom: 3rem;

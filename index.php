@@ -29,9 +29,16 @@ include 'includes/header.php';
             <a href="/clases" class="btn btn-primary">Explorar Clases</a>
         </div>
     </section>
+    
+    <!-- Sección de exploración unificada -->
+    <div class="explore-section">
+        <h2 class="explore-main-title">Explora las clases de ciencia</h2>
+        
         <!-- Acceso Rápido por Ciclo -->
         <section class="sections-overview">
-            <h2 class="section-title-centered">Escoge tu ciclo</h2>
+            <div class="section-divider">
+                <span>por ciclo</span>
+            </div>
             <div class="ciclos-grid">
                 <?php foreach ($ciclos as $c): ?>
                 <article class="ciclo-card" data-ciclo="<?= h($c['numero']) ?>">
@@ -74,12 +81,12 @@ include 'includes/header.php';
             </div>
         </section>
 
-
-    
-    <!-- Acceso Rápido por Área -->
-    <section class="areas-section">
-        <h2 class="section-title-centered">Escoge tu área</h2>
-        <div class="areas-grid">
+        <!-- Acceso Rápido por Área -->
+        <section class="areas-section">
+            <div class="section-divider">
+                <span>por área</span>
+            </div>
+            <div class="areas-grid">
             <?php foreach ($areas as $a): ?>
             <a href="/<?= h($a['slug']) ?>" class="area-card-simple">
                 <div class="area-card-header">
@@ -93,6 +100,7 @@ include 'includes/header.php';
             <?php endforeach; ?>
         </div>
     </section>
+    </div>
     
     <!-- Materiales (se adaptará al esquema CdC en una fase posterior) -->
     
