@@ -283,21 +283,21 @@ include '../header.php';
 <form method="POST">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
   <!-- Información básica -->
+  <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+    <label class="switch-label">
+      <input type="checkbox" name="activo" class="switch-input" <?= ((int)$clase['activo']) ? 'checked' : '' ?> />
+      <span class="switch-slider"></span>
+      <span class="switch-text">✓ Activo</span>
+    </label>
+    <label class="switch-label">
+      <input type="checkbox" name="destacado" class="switch-input" <?= ((int)$clase['destacado']) ? 'checked' : '' ?> />
+      <span class="switch-slider"></span>
+      <span class="switch-text">⭐ Destacado</span>
+    </label>
+  </div>
   <div class="form-group">
     <label for="nombre">Nombre</label>
-    <div style="display: flex; gap: 20px; align-items: center;">
-      <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($clase['nombre'], ENT_QUOTES, 'UTF-8') ?>" required style="flex: 1;" />
-      <label class="switch-label">
-        <input type="checkbox" name="activo" class="switch-input" <?= ((int)$clase['activo']) ? 'checked' : '' ?> />
-        <span class="switch-slider"></span>
-        <span class="switch-text">✓ Activo</span>
-      </label>
-      <label class="switch-label">
-        <input type="checkbox" name="destacado" class="switch-input" <?= ((int)$clase['destacado']) ? 'checked' : '' ?> />
-        <span class="switch-slider"></span>
-        <span class="switch-text">⭐ Destacado</span>
-      </label>
-    </div>
+    <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($clase['nombre'], ENT_QUOTES, 'UTF-8') ?>" required />
   </div>
   <div class="form-group">
     <label for="slug">Slug</label>
