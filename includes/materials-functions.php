@@ -121,7 +121,7 @@ function get_material_by_slug($pdo, $slug) {
 }
 
 // Legacy admin/stat functions from TGA are omitted in CdC adaptation.
-?><?php
+/*
 /**
  * The Green Almanac - Materials Database Functions
  * Functions for querying materials, categories, and relationships
@@ -338,3 +338,4 @@ function get_material_stats($pdo) {
     
     return $stats;
 }
+*/
