@@ -164,6 +164,25 @@
             color: #666;
         }
         
+        /* Checkbox Grid - para grados múltiples */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .checkbox-grid label {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        .checkbox-grid input[type="checkbox"] {
+            margin-right: 0.35rem;
+            cursor: pointer;
+        }
+        
         /* Cards */
         .card {
             background: white;

@@ -238,10 +238,18 @@ include '../header.php';
   <div class="form-group">
     <label>Grados <small style="color: #666;">(se prellenan según ciclo, pero son editables)</small></label>
     <div class="checkbox-grid">
-      <?php foreach ([6,7,8,9,10,11] as $g): $has = false; $gj = $clase['grados'] ?: '[]'; $arr = json_decode($gj, true); $has = is_array($arr) && in_array($g, $arr); ?>
+      <?php 
+      // Todos los grados desde 1° hasta 11° (Primaria, Secundaria y Media)
+      foreach ([1,2,3,4,5,6,7,8,9,10,11] as $g): 
+        $has = false; 
+        $gj = $clase['grados'] ?: '[]'; 
+        $arr = json_decode($gj, true); 
+        $has = is_array($arr) && in_array($g, $arr); 
+      ?>
         <label><input type="checkbox" name="grados[]" value="<?= $g ?>" <?= $has ? 'checked' : '' ?>> <?= $g ?>°</label>
       <?php endforeach; ?>
     </div>
+    <small style="color: #999;">1°-3°: Ciclo 1 Cimentación | 4°-5°: Ciclo 2 Consolidación | 6°-7°: Ciclo 3 Exploración | 8°-9°: Ciclo 4 Experimentación | 10°-11°: Ciclo 5 Análisis</small>
   </div>
   <div class="form-row">
     <div class="form-group">
