@@ -756,15 +756,6 @@ include '../header.php';
   if (slugInput) slugInput.addEventListener('input', computeSeo);
   if (resumenInput) resumenInput.addEventListener('input', computeSeo);
   
-  // Actualizar SEO cuando cambie el ciclo
-  const cicloSelect = document.getElementById('ciclo');
-  if (cicloSelect) {
-    cicloSelect.addEventListener('change', () => {
-      console.log('🔍 [SEO] Ciclo cambiado, recalculando...');
-      computeSeo();
-    });
-  }
-  
   // Actualizar SEO cuando cambien áreas o competencias
   document.querySelectorAll('input[name="areas[]"]').forEach(checkbox => {
     checkbox.addEventListener('change', () => {
@@ -890,6 +881,9 @@ include '../header.php';
       
       if (cicloInfo) {
         console.log('🔍 [ClasesEdit] Ciclo seleccionado:', cicloInfo.nombre);
+        
+        // Actualizar SEO cuando cambie el ciclo
+        computeSeo();
         
         // Prellenar grados (si grados es un array de números)
         try {
