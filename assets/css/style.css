@@ -3019,6 +3019,7 @@ strong, b {
     margin: 0;
     font-size: 1.6rem;
     padding-right: var(--spacing-xl);
+    color: white;
 }
 
 .modal-body {

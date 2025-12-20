@@ -199,29 +199,6 @@ include 'includes/header.php';
     </div>
 
     <article>
-        <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at'])): ?>
-        <div class="article-byline">
-            <?php if (!empty($proyecto['autor'])): ?>
-                <span class="author">✍️ <?= h($proyecto['autor']) ?></span>
-            <?php endif; ?>
-            <?php if (!empty($proyecto['published_at'])): ?>
-                <span class="date">📅 Publicado: <?= date('d/m/Y', strtotime($proyecto['published_at'])) ?></span>
-            <?php endif; ?>
-            <?php if (!empty($proyecto['updated_at']) && $proyecto['updated_at'] !== $proyecto['published_at']): ?>
-                <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($proyecto['updated_at'])) ?></span>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-        
-        <?php if (!empty($proyecto['video_portada'])): ?>
-        <div class="video-portada-section">
-            <h2>🎥 Video Introductorio</h2>
-            <div class="video-wrapper">
-                <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
-            </div>
-        </div>
-        <?php endif; ?>
-        
         <?php if (!empty($proyecto['resumen'])): ?>
         <div class="resumen-section">
             <p class="lead"><?= h($proyecto['resumen']) ?></p>
@@ -249,6 +226,15 @@ include 'includes/header.php';
             endif;
         }
         ?>
+        
+        <?php if (!empty($proyecto['video_portada'])): ?>
+        <div class="video-portada-section">
+            <h2>🎥 Video Introductorio</h2>
+            <div class="video-wrapper">
+                <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <section class="article-content">
             <?php if (!empty($proyecto['contenido_html'])): ?>
@@ -389,6 +375,20 @@ include 'includes/header.php';
                 <?php endforeach; ?>
             </div>
         </section>
+        <?php endif; ?>
+
+        <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at'])): ?>
+        <div class="article-byline">
+            <?php if (!empty($proyecto['autor'])): ?>
+                <span class="author">✍️ <?= h($proyecto['autor']) ?></span>
+            <?php endif; ?>
+            <?php if (!empty($proyecto['published_at'])): ?>
+                <span class="date">📅 Publicado: <?= date('d/m/Y', strtotime($proyecto['published_at'])) ?></span>
+            <?php endif; ?>
+            <?php if (!empty($proyecto['updated_at']) && $proyecto['updated_at'] !== $proyecto['published_at']): ?>
+                <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($proyecto['updated_at'])) ?></span>
+            <?php endif; ?>
+        </div>
         <?php endif; ?>
 
         <?php if (!empty($tags)): ?>
