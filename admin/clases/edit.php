@@ -496,7 +496,8 @@ include '../header.php';
       if (window.CKEDITOR) {
         CKEDITOR.replace('contenido_html', {
           height: 500,
-          removePlugins: 'elementspath',
+          // Oculta ruta de elementos y desactiva notificaciones para evitar banner inseguro
+          removePlugins: 'elementspath,notification,notificationaggregator',
           resize_enabled: true
         });
         console.log('✅ [ClasesEdit] CKEditor 4 cargado');
@@ -522,12 +523,16 @@ include '../header.php';
   // Oculta avisos de CKEditor sobre versión insegura (igual a article-edit)
   function removeCKEditorWarnings() {
     try {
-      const candidates = document.querySelectorAll('.cke, .cke_top, .cke_bottom, .cke_inner');
-      candidates.forEach(node => {
-        const text = (node.textContent || '').toLowerCase();
-        if (text.includes('secure') || text.includes('insecure') || text.includes('upgrade') || text.includes('paid') || text.includes('license')) {
-          node.remove();
-        }
+      // Remueve únicamente notificaciones específicas, no contenedores
+      const selectors = [
+        '.cke_notification.cke_notification_warning',
+        '.cke_upgrade_notice',
+        '.cke_browser_warning',
+        '.cke_panel_warning',
+        '.cke_warning'
+      ];
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(el => el.remove());
       });
       console.log('🔍 [ClasesEdit] CKEditor warnings revisados');
     } catch (e) {
