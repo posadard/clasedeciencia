@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= isset($page_title) ? $page_title . ' - ' : '' ?>Admin - The Green Almanac</title>
+    <title><?= isset($page_title) ? $page_title . ' - ' : '' ?>Admin - Clase de Ciencia</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -306,25 +306,25 @@
     </svg>
 
     <header class="admin-header">
-        <h1 class="site-title"><svg class="logo-icon" width="20" height="20" aria-hidden="true"><use xlink:href="#icon-leaf"/></svg> The Green Almanac - Admin Panel</h1>
+        <h1 class="site-title"><svg class="logo-icon" width="20" height="20" aria-hidden="true"><use xlink:href="#icon-leaf"/></svg> Clase de Ciencia - Admin</h1>
         <div>
-            <a href="/">View Site</a>
-            <a href="/admin/logout.php">Logout (<?= htmlspecialchars($_SESSION['admin_username']) ?>)</a>
+            <a href="/">Ver Sitio</a>
+            <a href="/admin/logout.php">Salir (<?= htmlspecialchars($_SESSION['admin_username']) ?>)</a>
         </div>
     </header>
     
     <div class="admin-container">
         <aside class="admin-sidebar">
             <nav>
-                        <ul>
-                            <li><a href="/admin/dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-dashboard"/></svg> Dashboard</a></li>
-                            <li><a href="/admin/articles.php" class="<?= basename($_SERVER['PHP_SELF']) === 'articles.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-article"/></svg> Articles</a></li>
-                            <li><a href="/admin/materials.php" class="<?= in_array(basename($_SERVER['PHP_SELF']), ['materials.php', 'material-edit.php', 'material-delete.php']) ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-flask"/></svg> Materials</a></li>
-                            <li><a href="/admin/material-stats.php" class="<?= basename($_SERVER['PHP_SELF']) === 'material-stats.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-chart"/></svg> Material Stats</a></li>
-                            <li><a href="/admin/sections.php" class="<?= basename($_SERVER['PHP_SELF']) === 'sections.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-folder"/></svg> Sections</a></li>
-                            <li><a href="/admin/tags.php" class="<?= basename($_SERVER['PHP_SELF']) === 'tags.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-tag"/></svg> Tags</a></li>
-                            <li><a href="/admin/issues.php" class="<?= basename($_SERVER['PHP_SELF']) === 'issues.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-calendar"/></svg> Issues</a></li>
-                        </ul>
+                <ul>
+                    <li><a href="/admin/dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) === 'dashboard.php' ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-dashboard"/></svg> Panel</a></li>
+                    <li><a href="/admin/proyectos/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/proyectos/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-list"/></svg> Proyectos</a></li>
+                    <li><a href="/admin/materiales/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/materiales/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-flask"/></svg> Materiales</a></li>
+                    <li><a href="/admin/contratos/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/contratos/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-folder"/></svg> Contratos</a></li>
+                    <li><a href="/admin/entregas/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/entregas/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-calendar"/></svg> Entregas</a></li>
+                    <li><a href="/admin/lotes/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/lotes/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-folder"/></svg> Lotes</a></li>
+                    <li><a href="/admin/ia/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/ia/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-chart"/></svg> IA</a></li>
+                </ul>
             </nav>
         </aside>
         
