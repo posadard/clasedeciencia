@@ -16,7 +16,7 @@ if (!isset($_SESSION['csrf_token'])) {
 $clase = [
   'nombre' => '',
   'slug' => '',
-  'ciclo' => '',
+  'ciclo' => null,
   'grados' => '[]',
   'dificultad' => '',
   'duracion_minutos' => '',
@@ -86,7 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   } else {
     $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
     $slug = isset($_POST['slug']) ? trim($_POST['slug']) : '';
-    $ciclo = isset($_POST['ciclo']) ? trim($_POST['ciclo']) : '';
+    $ciclo = isset($_POST['ciclo']) && $_POST['ciclo'] !== '' ? (int)$_POST['ciclo'] : null;
+    echo '<script>console.log("🔍 [ClasesEdit] POST ciclo:", ' . json_encode($ciclo) . ', "tipo:", typeof ' . json_encode($ciclo) . ');</script>';
     $grados_sel = isset($_POST['grados']) && is_array($_POST['grados']) ? array_values(array_filter($_POST['grados'])) : [];
     $grados_json = json_encode(array_map('intval', $grados_sel));
     $dificultad = isset($_POST['dificultad']) ? trim($_POST['dificultad']) : '';
@@ -121,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $slug = trim($slug, '-');
     }
 
-    if ($nombre === '' || $slug === '' || !in_array($ciclo, ['1','2','3'], true)) {
+    if ($nombre === '' || $slug === '' || !in_array($ciclo, [1, 2, 3], true)) {
       $error_msg = 'Completa nombre, ciclo y slug válidos.';
     } else {
       try {
@@ -198,6 +199,7 @@ include '../header.php';
     console.log('✅ [Admin] Clases edit cargado');
     console.log('🔍 [Admin] Edit mode:', <?= $is_edit ? 'true' : 'false' ?>);
     console.log('🔍 [Admin] Clase ID:', <?= $is_edit ? (int)$id : 'null' ?>);
+    console.log('🔍 [Admin] Ciclo desde BD:', <?= json_encode($clase['ciclo']) ?>, 'tipo:', typeof <?= json_encode($clase['ciclo']) ?>);
   </script>
 </div>
 
@@ -220,9 +222,9 @@ include '../header.php';
     <label for="ciclo">Ciclo</label>
     <select id="ciclo" name="ciclo" required>
       <option value="">Selecciona</option>
-      <option value="1" <?= $clase['ciclo']==='1'?'selected':'' ?>>1 (6°-7°)</option>
-      <option value="2" <?= $clase['ciclo']==='2'?'selected':'' ?>>2 (8°-9°)</option>
-      <option value="3" <?= $clase['ciclo']==='3'?'selected':'' ?>>3 (10°-11°)</option>
+      <option value="1" <?= (int)($clase['ciclo'] ?? 0) === 1 ? 'selected' : '' ?>>1 (6°-7°)</option>
+      <option value="2" <?= (int)($clase['ciclo'] ?? 0) === 2 ? 'selected' : '' ?>>2 (8°-9°)</option>
+      <option value="3" <?= (int)($clase['ciclo'] ?? 0) === 3 ? 'selected' : '' ?>>3 (10°-11°)</option>
     </select>
   </div>
   <div class="form-group">
