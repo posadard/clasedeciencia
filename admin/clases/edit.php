@@ -236,7 +236,7 @@ include '../header.php';
     </select>
   </div>
   <div class="form-group">
-    <label>Grados</label>
+    <label>Grados <small style="color: #666;">(se prellenan según ciclo, pero son editables)</small></label>
     <div class="checkbox-grid">
       <?php foreach ([6,7,8,9,10,11] as $g): $has = false; $gj = $clase['grados'] ?: '[]'; $arr = json_decode($gj, true); $has = is_array($arr) && in_array($g, $arr); ?>
         <label><input type="checkbox" name="grados[]" value="<?= $g ?>" <?= $has ? 'checked' : '' ?>> <?= $g ?>°</label>
@@ -296,11 +296,11 @@ include '../header.php';
   <?php $seg = $clase['seguridad'] ? json_decode($clase['seguridad'], true) : null; ?>
   <div class="form-row">
     <div class="form-group">
-      <label for="seg_edad_min">Edad mínima</label>
+      <label for="seg_edad_min">Edad mínima <small style="color: #666;">(se prellena según ciclo)</small></label>
       <input type="number" id="seg_edad_min" name="seg_edad_min" value="<?= htmlspecialchars((string)($seg['edad_min'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
     </div>
     <div class="form-group">
-      <label for="seg_edad_max">Edad máxima</label>
+      <label for="seg_edad_max">Edad máxima <small style="color: #666;">(se prellena según ciclo)</small></label>
       <input type="number" id="seg_edad_max" name="seg_edad_max" value="<?= htmlspecialchars((string)($seg['edad_max'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
     </div>
   </div>
@@ -598,5 +598,56 @@ include '../header.php';
   }
   // Inicializa preview al cargar
   computeSeo();
+
+  // ============================================================
+  // PRELLENADO AUTOMÁTICO DE GRADOS Y EDAD SEGÚN CICLO
+  // ============================================================
+  const ciclosData = <?= json_encode($ciclos_list) ?>;
+  const cicloSelect = document.getElementById('ciclo');
+  const gradosCheckboxes = document.querySelectorAll('input[name="grados[]"]');
+  const edadMinInput = document.getElementById('seg_edad_min');
+  const edadMaxInput = document.getElementById('seg_edad_max');
+
+  if (cicloSelect) {
+    cicloSelect.addEventListener('change', function() {
+      const cicloNumero = parseInt(this.value);
+      const cicloInfo = ciclosData.find(c => c.numero === cicloNumero);
+      
+      if (cicloInfo) {
+        console.log('🔍 [ClasesEdit] Ciclo seleccionado:', cicloInfo.nombre);
+        
+        // Prellenar grados (si grados es un array de números)
+        try {
+          const gradosArray = JSON.parse(cicloInfo.grados);
+          
+          // Desmarcar todos los checkboxes primero
+          gradosCheckboxes.forEach(cb => cb.checked = false);
+          
+          // Marcar solo los grados del ciclo (si son números)
+          if (Array.isArray(gradosArray)) {
+            gradosCheckboxes.forEach(cb => {
+              const gradoValue = parseInt(cb.value);
+              if (gradosArray.includes(gradoValue)) {
+                cb.checked = true;
+              }
+            });
+            console.log('✅ [ClasesEdit] Grados prellenados:', gradosArray);
+          }
+        } catch(e) {
+          console.log('⚠️ [ClasesEdit] Error parseando grados:', e.message);
+        }
+        
+        // Prellenar edades
+        if (edadMinInput && cicloInfo.edad_min) {
+          edadMinInput.value = cicloInfo.edad_min;
+          console.log('✅ [ClasesEdit] Edad mínima:', cicloInfo.edad_min);
+        }
+        if (edadMaxInput && cicloInfo.edad_max) {
+          edadMaxInput.value = cicloInfo.edad_max;
+          console.log('✅ [ClasesEdit] Edad máxima:', cicloInfo.edad_max);
+        }
+      }
+    });
+  }
 </script>
 <?php include '../footer.php'; ?>
