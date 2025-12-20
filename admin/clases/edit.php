@@ -507,7 +507,9 @@ include '../header.php';
         CKEDITOR.replace('contenido_html', {
           height: 500,
           removePlugins: 'elementspath',
-          resize_enabled: true
+          resize_enabled: true,
+          contentsCss: '/assets/css/article-content.css',
+          bodyClass: 'article-body'
         });
         console.log('✅ [ClasesEdit] CKEditor 4 cargado');
         // Live SEO compute on editor changes
