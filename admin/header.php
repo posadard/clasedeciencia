@@ -237,6 +237,22 @@
             display: inline-block;
         }
     </style>
+        <script>
+            // Emit early auth diagnostics if present
+            (function(){
+                try {
+                    var msgs = <?php echo isset($GLOBALS['ADMIN_DEBUG']) ? json_encode($GLOBALS['ADMIN_DEBUG'], JSON_UNESCAPED_UNICODE) : '[]'; ?>;
+                    if (Array.isArray(msgs) && msgs.length) {
+                        console.log('⚠️ [Admin] Early diagnostics from auth:');
+                        msgs.forEach(function(m){ console.log(m); });
+                    }
+                    console.log('🔍 [Admin] PHP file:', '<?= htmlspecialchars(basename($_SERVER['PHP_SELF']), ENT_QUOTES, 'UTF-8') ?>');
+                    console.log('🔍 [Admin] User:', '<?= isset($_SESSION['admin_username']) ? htmlspecialchars($_SESSION['admin_username'], ENT_QUOTES, 'UTF-8') : '(none)' ?>');
+                } catch (e) {
+                    console.log('❌ [Admin] Diagnostics emit error:', e && e.message);
+                }
+            })();
+        </script>
 </head>
 <body>
     <!-- SVG sprite for small icons used in admin (kept inline for widest compatibility) -->

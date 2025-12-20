@@ -17,6 +17,13 @@ set_error_handler(function($severity, $message, $file, $line) use (&$debug_messa
 set_exception_handler(function($e) use (&$debug_messages) {
     $debug_messages[] = 'Uncaught Exception: ' . $e->getMessage();
 });
+register_shutdown_function(function() use (&$debug_messages) {
+    $err = error_get_last();
+    if ($err) {
+        // Try to emit a minimal console log even on fatal shutdown
+        echo '<script>console.log("❌ [Admin] Fatal shutdown:", ' . json_encode($err, JSON_UNESCAPED_UNICODE) . ');</script>';
+    }
+});
 
 // Helper seguro para conteos
 $tableExists = function (PDO $pdo, string $table) {
