@@ -53,7 +53,7 @@ $existing_area_ids = [];
 $existing_comp_ids = [];
 $existing_tags = [];
 $all_kits = [];
-$existing_kit_id = null;
+$existing_kit_ids = [];
 try {
   $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
@@ -81,9 +81,9 @@ if ($is_edit) {
     $existing_tags = $tags_rows ?: [];
   } catch (PDOException $e) {}
   try {
-    $stmt = $pdo->prepare('SELECT kit_id FROM clase_kits WHERE clase_id = ? ORDER BY es_principal DESC, sort_order ASC LIMIT 1');
+    $stmt = $pdo->prepare('SELECT kit_id FROM clase_kits WHERE clase_id = ? ORDER BY es_principal DESC, sort_order ASC');
     $stmt->execute([$id]);
-    $existing_kit_id = $stmt->fetchColumn();
+    $existing_kit_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
   } catch (PDOException $e) {}
 }
 
@@ -130,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $comp_sel = isset($_POST['competencias']) && is_array($_POST['competencias']) ? array_map('intval', $_POST['competencias']) : [];
     $tags_input = isset($_POST['tags']) ? trim($_POST['tags']) : '';
     $tags_list = array_values(array_filter(array_map(function($t){ return trim($t); }, explode(',', $tags_input))));
-    $kit_id = isset($_POST['kit_id']) && $_POST['kit_id'] !== '' ? (int)$_POST['kit_id'] : null;
+    $kits_sel = isset($_POST['kits']) && is_array($_POST['kits']) ? array_map('intval', $_POST['kits']) : [];
 
     if ($slug === '' && $nombre !== '') {
       $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nombre));
@@ -242,9 +242,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins = $pdo->prepare('INSERT INTO clase_tags (clase_id, tag) VALUES (?, ?)');
             foreach ($tags_list as $tg) { if ($tg !== '') { $ins->execute([$id, $tg]); } }
           }
-          if ($kit_id) {
-            $ins = $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?, ?, 1, 1)');
-            $ins->execute([$id, $kit_id]);
+          if (!empty($kits_sel)) {
+            $ins = $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?, ?, ?, ?)');
+            $sort = 1;
+            foreach ($kits_sel as $kid) { 
+              $es_principal = ($sort === 1) ? 1 : 0; // Primer kit es principal
+              $ins->execute([$id, (int)$kid, $sort++, $es_principal]); 
+            }
           }
           $pdo->commit();
           echo '<script>console.log("✅ [ClasesEdit] Clase guardada con relaciones");</script>';
@@ -526,29 +530,41 @@ include '../header.php';
     <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
   </div>
   
-  <!-- Kit de Materiales -->
+  <!-- Kits de Materiales (Autocomplete con Chips) -->
   <div class="form-group">
-    <label for="kit_id">Kit de Materiales</label>
-    <select id="kit_id" name="kit_id" style="width: 100%; max-width: 500px;">
-      <option value="">-- Seleccionar kit --</option>
-      <?php foreach ($all_kits as $kit): ?>
-        <option value="<?= $kit['id'] ?>" 
-          <?= ($existing_kit_id == $kit['id']) ? 'selected' : '' ?>
-          <?= $kit['activo'] ? '' : 'disabled' ?>>
-          <?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>
-          <?= $kit['codigo'] ? ' (' . htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') . ')' : '' ?>
-          <?= !$kit['activo'] ? ' [Inactivo]' : '' ?>
-        </option>
-      <?php endforeach; ?>
-    </select>
-    <small>Selecciona el kit de materiales asociado a esta clase. Usa Ctrl+F para buscar rápidamente.</small>
-    <?php if ($is_edit && $existing_kit_id): ?>
-      <div style="margin-top: 8px;">
-        <a href="/admin/kits/edit.php?id=<?= $existing_kit_id ?>" target="_blank" class="btn btn-secondary" style="font-size: 0.85rem; padding: 4px 12px;">
-          Ver/Editar Kit Asociado
-        </a>
+    <label for="kit_search">Kits de Materiales</label>
+    <div class="kit-selector-container">
+      <div class="selected-kits" id="selected-kits">
+        <?php 
+        // Renderizar kits ya seleccionados
+        foreach ($existing_kit_ids as $kit_id) {
+          foreach ($all_kits as $kit) {
+            if ($kit['id'] == $kit_id) {
+              echo '<div class="kit-chip" data-kit-id="' . $kit['id'] . '">';
+              echo '<span>' . htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') . '</span>';
+              echo '<button type="button" class="remove-kit" onclick="removeKit(this)">×</button>';
+              echo '</div>';
+              break;
+            }
+          }
+        }
+        ?>
       </div>
-    <?php endif; ?>
+      <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
+      <datalist id="kits_list">
+        <?php foreach ($all_kits as $kit): ?>
+          <?php if ($kit['activo']): ?>
+            <option value="<?= $kit['id'] ?>" data-name="<?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($kit['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>
+              <?= $kit['codigo'] ? ' (' . htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') . ')' : '' ?>
+            </option>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </datalist>
+      <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
+    </div>
+    <small>Escribe para buscar kits. Puedes seleccionar múltiples. El primero será el kit principal.</small>
+    <div id="kits-hidden"></div>
   </div>
   </div>
   <!-- SEO -->
@@ -602,6 +618,108 @@ include '../header.php';
     .form-section h2 { margin-bottom:0.5rem; font-size:1.05rem; color:#111; }
     .form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:0.5rem; }
     .form-group { margin-bottom:0.6rem; }
+    .form-group label { display:block; margin-bottom:0.25rem; font-weight:600; color:#374151; font-size:0.95rem; }
+    
+    /* Kits Autocomplete Styles */
+    .kit-selector-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+    }
+    .selected-kits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+      min-height: 32px;
+    }
+    .kit-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px 4px 12px;
+      background: linear-gradient(135deg, #1f3c88 0%, #2e7d32 100%);
+      color: white;
+      border-radius: 16px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .kit-chip .remove-kit {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      transition: background 0.2s;
+    }
+    .kit-chip .remove-kit:hover {
+      background: rgba(255,255,255,0.5);
+    }
+    #kit_search {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.92rem;
+      transition: border-color 0.2s;
+    }
+    #kit_search:focus {
+      outline: none;
+      border-color: #1f3c88;
+      box-shadow: 0 0 0 3px rgba(31,60,136,0.1);
+    }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      margin-top: 4px;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: none;
+    }
+    .autocomplete-item {
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-item:hover {
+      background: #f9fafb;
+    }
+    .autocomplete-item strong {
+      display: block;
+      color: #111;
+      margin-bottom: 2px;
+    }
+    .autocomplete-item .kit-code {
+      color: #6b7280;
+      font-size: 0.82rem;
+    }
+    .autocomplete-no-results {
+      padding: 12px;
+      text-align: center;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+    
     .form-group label { display:block; margin-bottom:0.25rem; font-weight:600; color:#374151; font-size:0.95rem; }
     .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="url"], .form-group input[type="datetime-local"], .form-group select, .form-group textarea { width:100%; padding:0.4rem; border:1px solid #d1d5db; border-radius:4px; font-family:inherit; font-size:0.92rem; }
     .form-group small { display:block; margin-top:0.25rem; color:#6b7280; font-size:0.82rem; }
@@ -1133,6 +1251,137 @@ include '../header.php';
   // Inicializar
   initCompetencias();
   console.log('✅ [Competencias] Dual Listbox inicializado');
+  
+  // ========================================================
+  // AUTOCOMPLETE KITS CON CHIPS
+  // ========================================================
+  
+  const kitSearchInput = document.getElementById('kit_search');
+  const autocompleteDropdown = document.getElementById('autocomplete_dropdown');
+  const selectedKitsContainer = document.getElementById('selected-kits');
+  const kitsHiddenContainer = document.getElementById('kits-hidden');
+  
+  // Datos de kits desde PHP
+  const allKitsData = <?= json_encode($all_kits) ?>;
+  let selectedKitIds = [];
+  
+  // Inicializar con kits ya seleccionados
+  document.querySelectorAll('.kit-chip').forEach(chip => {
+    const kitId = parseInt(chip.dataset.kitId);
+    if (!selectedKitIds.includes(kitId)) {
+      selectedKitIds.push(kitId);
+    }
+  });
+  syncKitsHiddenInputs();
+  
+  // Buscar kits al escribir
+  kitSearchInput.addEventListener('input', function() {
+    const query = this.value.toLowerCase().trim();
+    
+    if (query.length < 2) {
+      autocompleteDropdown.innerHTML = '';
+      autocompleteDropdown.style.display = 'none';
+      return;
+    }
+    
+    // Filtrar kits que matchean y que no están seleccionados
+    const matches = allKitsData.filter(kit => {
+      if (!kit.activo) return false;
+      if (selectedKitIds.includes(kit.id)) return false;
+      
+      const nombre = kit.nombre.toLowerCase();
+      const codigo = kit.codigo ? kit.codigo.toLowerCase() : '';
+      
+      return nombre.includes(query) || codigo.includes(query);
+    });
+    
+    // Mostrar resultados
+    if (matches.length > 0) {
+      autocompleteDropdown.innerHTML = matches.slice(0, 10).map(kit => 
+        `<div class="autocomplete-item" data-kit-id="${kit.id}" data-kit-name="${escapeHtml(kit.nombre)}">
+          <strong>${escapeHtml(kit.nombre)}</strong>
+          ${kit.codigo ? '<span class="kit-code">(' + escapeHtml(kit.codigo) + ')</span>' : ''}
+        </div>`
+      ).join('');
+      autocompleteDropdown.style.display = 'block';
+      
+      // Click en resultado
+      autocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const kitId = parseInt(this.dataset.kitId);
+          const kitName = this.dataset.kitName;
+          addKit(kitId, kitName);
+          kitSearchInput.value = '';
+          autocompleteDropdown.innerHTML = '';
+          autocompleteDropdown.style.display = 'none';
+        });
+      });
+    } else {
+      autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">No se encontraron kits</div>';
+      autocompleteDropdown.style.display = 'block';
+    }
+  });
+  
+  // Cerrar dropdown al hacer click fuera
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.kit-selector-container')) {
+      autocompleteDropdown.style.display = 'none';
+    }
+  });
+  
+  // Agregar kit seleccionado
+  function addKit(kitId, kitName) {
+    if (selectedKitIds.includes(kitId)) return;
+    
+    selectedKitIds.push(kitId);
+    
+    const chip = document.createElement('div');
+    chip.className = 'kit-chip';
+    chip.dataset.kitId = kitId;
+    chip.innerHTML = `
+      <span>${escapeHtml(kitName)}</span>
+      <button type="button" class="remove-kit" onclick="removeKit(this)">×</button>
+    `;
+    
+    selectedKitsContainer.appendChild(chip);
+    syncKitsHiddenInputs();
+    
+    console.log('✅ [Kits] Agregado kit:', kitId, kitName);
+  }
+  
+  // Remover kit (llamado desde HTML onclick)
+  window.removeKit = function(button) {
+    const chip = button.parentElement;
+    const kitId = parseInt(chip.dataset.kitId);
+    
+    selectedKitIds = selectedKitIds.filter(id => id !== kitId);
+    chip.remove();
+    syncKitsHiddenInputs();
+    
+    console.log('❌ [Kits] Removido kit:', kitId);
+  };
+  
+  // Sincronizar hidden inputs para envío
+  function syncKitsHiddenInputs() {
+    kitsHiddenContainer.innerHTML = '';
+    selectedKitIds.forEach(kitId => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'kits[]';
+      input.value = kitId;
+      kitsHiddenContainer.appendChild(input);
+    });
+    console.log('🔍 [Kits] Sincronizados:', selectedKitIds);
+  }
+  
+  // Escape HTML helper
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  console.log('✅ [Kits] Autocomplete inicializado');
   
 </script>
 
