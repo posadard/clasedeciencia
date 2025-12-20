@@ -50,7 +50,6 @@ if ($is_edit) {
 // Cargar listas para relaciones
 $areas = [];
 $competencias = [];
-$secciones = [];
 $existing_area_ids = [];
 $existing_comp_ids = [];
 $existing_tags = [];
@@ -59,9 +58,6 @@ try {
 } catch (PDOException $e) {}
 try {
   $competencias = $pdo->query('SELECT id, codigo, nombre FROM competencias ORDER BY id ASC')->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {}
-try {
-  $secciones = $pdo->query('SELECT id, nombre, slug FROM secciones ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
 if ($is_edit) {
   try {
@@ -252,15 +248,6 @@ include '../header.php';
     <div class="form-group">
       <label for="duracion_minutos">Duración (min)</label>
       <input type="number" id="duracion_minutos" name="duracion_minutos" value="<?= htmlspecialchars((string)($clase['duracion_minutos'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" min="1" />
-    </div>
-    <div class="form-group">
-      <label for="seccion_id">Sección</label>
-      <select id="seccion_id" name="seccion_id">
-        <option value="">(ninguna)</option>
-        <?php foreach ($secciones as $sec): ?>
-          <option value="<?= (int)$sec['id'] ?>" <?= ((int)($clase['seccion_id'] ?? 0) === (int)$sec['id']) ? 'selected' : '' ?>><?= htmlspecialchars($sec['nombre'], ENT_QUOTES, 'UTF-8') ?></option>
-        <?php endforeach; ?>
-      </select>
     </div>
   </div>
   <div class="form-group">
@@ -510,6 +497,7 @@ include '../header.php';
     }
     computeSeo();
   });
+  console.log('ℹ️ [ClasesEdit] Campo Sección ocultado (no requerido)');
   if (slugInput) slugInput.addEventListener('input', computeSeo);
   if (resumenInput) resumenInput.addEventListener('input', computeSeo);
   // Validación simple de SEO
