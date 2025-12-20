@@ -61,10 +61,12 @@ include 'includes/header.php';
                     <!-- Call to action -->
                     <div class="ciclo-footer">
                         <a href="/<?= h($c['slug']) ?>" class="btn btn-primary">
-                            Explorar proyectos
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
-                                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.4rem;">
+                                <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                                <circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>
                             </svg>
+                            Iniciar clases
                         </a>
                     </div>
                 </article>
