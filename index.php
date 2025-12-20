@@ -15,8 +15,9 @@ $canonical_url = SITE_URL . '/';
 // Proyectos destacados y recientes (CdC)
 $featured_projects = cdc_get_featured_proyectos($pdo, 3);
 $recent_projects = cdc_get_recent_proyectos($pdo, 6);
-// Áreas para acceso rápido
+// Áreas y ciclos para acceso rápido
 $areas = cdc_get_areas($pdo);
+$ciclos = cdc_get_ciclos($pdo, true); // Solo ciclos activos
 
 include 'includes/header.php';
 ?>
@@ -35,18 +36,12 @@ include 'includes/header.php';
         <section class="sections-overview">
             <h2>Explorar por Ciclo</h2>
             <div class="sections-grid">
-                <a href="/catalogo.php?ciclo=1" class="section-card">
-                    <h3>Ciclo 1: Exploración (6°-7°)</h3>
-                    <p>Observar, describir y reconocer fenómenos.</p>
+                <?php foreach ($ciclos as $c): ?>
+                <a href="/catalogo.php?ciclo=<?= h($c['numero']) ?>" class="section-card">
+                    <h3>Ciclo <?= h($c['numero']) ?>: <?= h($c['nombre']) ?> (<?= h($c['grados_texto']) ?>)</h3>
+                    <p><?= h($c['proposito_corto']) ?></p>
                 </a>
-                <a href="/catalogo.php?ciclo=2" class="section-card">
-                    <h3>Ciclo 2: Experimentación (8°-9°)</h3>
-                    <p>Explicar, comparar y establecer relaciones causales.</p>
-                </a>
-                <a href="/catalogo.php?ciclo=3" class="section-card">
-                    <h3>Ciclo 3: Análisis (10°-11°)</h3>
-                    <p>Analizar, argumentar y conectar con el mundo real.</p>
-                </a>
+                <?php endforeach; ?>
             </div>
         </section>
 
@@ -188,6 +183,7 @@ include 'includes/header.php';
 console.log('✅ [home] Proyectos destacados:', <?= isset($featured_projects) ? count($featured_projects) : 0 ?>);
 console.log('✅ [home] Proyectos recientes:', <?= isset($recent_projects) ? count($recent_projects) : 0 ?>);
 console.log('✅ [home] Áreas disponibles:', <?= isset($areas) ? count($areas) : 0 ?>);
+console.log('✅ [home] Ciclos activos:', <?= isset($ciclos) ? count($ciclos) : 0 ?>);
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -122,7 +122,9 @@ function cdc_count_proyectos($pdo, $filters = []) {
 
 // Obtener filtros
 $filters = [];
-if (isset($_GET['ciclo']) && in_array($_GET['ciclo'], ['1','2','3'])) $filters['ciclo'] = $_GET['ciclo'];
+// Validar ciclo contra BD
+$ciclos_validos = array_column(cdc_get_ciclos($pdo, true), 'numero');
+if (isset($_GET['ciclo']) && in_array((int)$_GET['ciclo'], $ciclos_validos, true)) $filters['ciclo'] = (int)$_GET['ciclo'];
 if (isset($_GET['grado'])) $filters['grado'] = $_GET['grado'];
 if (isset($_GET['area'])) $filters['area'] = $_GET['area'];
 if (isset($_GET['competencia'])) $filters['competencia'] = $_GET['competencia'];
@@ -179,9 +181,13 @@ include 'includes/header.php';
                     <label>Ciclo</label>
                     <select name="ciclo">
                         <option value="">Todos</option>
-                        <option value="1" <?= isset($filters['ciclo']) && $filters['ciclo']==='1'?'selected':'' ?>>Exploración (6°-7°)</option>
-                        <option value="2" <?= isset($filters['ciclo']) && $filters['ciclo']==='2'?'selected':'' ?>>Experimentación (8°-9°)</option>
-                        <option value="3" <?= isset($filters['ciclo']) && $filters['ciclo']==='3'?'selected':'' ?>>Análisis (10°-11°)</option>
+                        <?php 
+                        $ciclos_filtro = cdc_get_ciclos($pdo, true);
+                        foreach ($ciclos_filtro as $cf): 
+                            $selected = isset($filters['ciclo']) && $filters['ciclo'] == $cf['numero'] ? 'selected' : '';
+                        ?>
+                        <option value="<?= h($cf['numero']) ?>" <?= $selected ?>><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="filter-group">

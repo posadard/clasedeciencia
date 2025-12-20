@@ -43,9 +43,13 @@ include '../header.php';
       <label for="ciclo">Ciclo (clase):</label>
       <select name="ciclo" id="ciclo" onchange="this.form.submit()">
         <option value="">Todos</option>
-        <option value="1" <?= $ciclo==='1'?'selected':'' ?>>1 (6°-7°)</option>
-        <option value="2" <?= $ciclo==='2'?'selected':'' ?>>2 (8°-9°)</option>
-        <option value="3" <?= $ciclo==='3'?'selected':'' ?>>3 (10°-11°)</option>
+        <?php 
+        $ciclos_kits = cdc_get_ciclos($pdo, true);
+        foreach ($ciclos_kits as $ck): 
+            $sel = ($ciclo == $ck['numero']) ? 'selected' : '';
+        ?>
+        <option value="<?= (int)$ck['numero'] ?>" <?= $sel ?>><?= h($ck['numero']) ?> (<?= h($ck['grados_texto']) ?>)</option>
+        <?php endforeach; ?>
       </select>
     </div>
     <div class="filter-group">

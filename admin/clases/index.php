@@ -3,13 +3,16 @@ require_once '../auth.php';
 $page_title = 'Clases';
 
 // Filtros
-$ciclo = isset($_GET['ciclo']) ? trim($_GET['ciclo']) : ''; // '1','2','3' o ''
+$ciclo = isset($_GET['ciclo']) ? (int)$_GET['ciclo'] : 0;
 $activo = isset($_GET['activo']) ? trim($_GET['activo']) : ''; // '1','0' o ''
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
+// Obtener ciclos válidos
+$ciclos_validos = array_column(cdc_get_ciclos($pdo, true), 'numero');
+
 $params = [];
 $where = ['1=1'];
-if (in_array($ciclo, ['1','2','3'], true)) { $where[] = 'ciclo = ?'; $params[] = $ciclo; }
+if ($ciclo > 0 && in_array($ciclo, $ciclos_validos, true)) { $where[] = 'ciclo = ?'; $params[] = $ciclo; }
 if ($activo === '1' || $activo === '0') { $where[] = 'activo = ?'; $params[] = (int)$activo; }
 if ($search !== '') { $where[] = '(nombre LIKE ? OR slug LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; }
 
@@ -41,9 +44,13 @@ include '../header.php';
       <label for="ciclo">Ciclo:</label>
       <select name="ciclo" id="ciclo" onchange="this.form.submit()">
         <option value="">Todos</option>
-        <option value="1" <?= $ciclo==='1'?'selected':'' ?>>1 (6°-7°)</option>
-        <option value="2" <?= $ciclo==='2'?'selected':'' ?>>2 (8°-9°)</option>
-        <option value="3" <?= $ciclo==='3'?'selected':'' ?>>3 (10°-11°)</option>
+        <?php 
+        $ciclos_admin = cdc_get_ciclos($pdo, true);
+        foreach ($ciclos_admin as $ca): 
+            $sel = ($ciclo == $ca['numero']) ? 'selected' : '';
+        ?>
+        <option value="<?= (int)$ca['numero'] ?>" <?= $sel ?>><?= h($ca['numero']) ?> - <?= h($ca['nombre']) ?> (<?= h($ca['grados_texto']) ?>)</option>
+        <?php endforeach; ?>
       </select>
     </div>
     <div class="filter-group">

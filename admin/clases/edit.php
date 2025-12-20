@@ -49,6 +49,7 @@ if ($is_edit) {
 // Cargar listas para relaciones
 $areas = [];
 $competencias = [];
+$ciclos_list = [];
 $existing_area_ids = [];
 $existing_comp_ids = [];
 $existing_tags = [];
@@ -58,6 +59,9 @@ try {
 try {
   $competencias = $pdo->query('SELECT id, codigo, nombre FROM competencias ORDER BY id ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
+try {
+  $ciclos_list = cdc_get_ciclos($pdo, true); // Solo ciclos activos
+} catch (Exception $e) {}
 if ($is_edit) {
   try {
     $stmt = $pdo->prepare('SELECT area_id FROM clase_areas WHERE clase_id = ?');
@@ -122,8 +126,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $slug = trim($slug, '-');
     }
 
-    if ($nombre === '' || $slug === '' || !in_array($ciclo, [1, 2, 3], true)) {
-      $error_msg = 'Completa nombre, ciclo y slug válidos.';
+    // Validar ciclo contra ciclos activos
+    $ciclos_validos = array_column(cdc_get_ciclos($pdo, true), 'numero');
+    if ($nombre === '' || $slug === '' || !in_array($ciclo, $ciclos_validos, true)) {
+      $error_msg = 'Completa nombre, ciclo válido y slug.';
     } else {
       try {
         // Validar slug único
@@ -222,9 +228,11 @@ include '../header.php';
     <label for="ciclo">Ciclo</label>
     <select id="ciclo" name="ciclo" required>
       <option value="">Selecciona</option>
-      <option value="1" <?= (int)($clase['ciclo'] ?? 0) === 1 ? 'selected' : '' ?>>1 (6°-7°)</option>
-      <option value="2" <?= (int)($clase['ciclo'] ?? 0) === 2 ? 'selected' : '' ?>>2 (8°-9°)</option>
-      <option value="3" <?= (int)($clase['ciclo'] ?? 0) === 3 ? 'selected' : '' ?>>3 (10°-11°)</option>
+      <?php foreach ($ciclos_list as $cl): ?>
+      <option value="<?= (int)$cl['numero'] ?>" <?= (int)($clase['ciclo'] ?? 0) === (int)$cl['numero'] ? 'selected' : '' ?>>
+        Ciclo <?= htmlspecialchars($cl['numero'], ENT_QUOTES, 'UTF-8') ?>: <?= htmlspecialchars($cl['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($cl['grados_texto'], ENT_QUOTES, 'UTF-8') ?>)
+      </option>
+      <?php endforeach; ?>
     </select>
   </div>
   <div class="form-group">

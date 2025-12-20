@@ -54,8 +54,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 
   // Validaciones básicas
-  if ($nombre === '' || $slug === '' || !in_array($ciclo, ['1','2','3'], true)) {
-    $error_msg = 'Completa nombre, ciclo y slug válidos.';
+  // Validar ciclo contra ciclos activos
+  $ciclos_validos = array_column(cdc_get_ciclos($pdo, true), 'numero');
+  if ($nombre === '' || $slug === '' || !in_array((int)$ciclo, $ciclos_validos, true)) {
+    $error_msg = 'Completa nombre, ciclo válido y slug.';
   } else {
     // Slug único
     try {

@@ -66,6 +66,56 @@ function cdc_get_areas($pdo) {
 }
 
 /**
+ * Get ciclos activos desde tabla ciclos
+ */
+function cdc_get_ciclos($pdo, $activo_only = true) {
+    try {
+        $sql = "SELECT numero, nombre, slug, edad_min, edad_max, grados, grados_texto, 
+                       proposito, explicacion, nivel_educativo, isced_level, activo, orden 
+                FROM ciclos ";
+        if ($activo_only) {
+            $sql .= "WHERE activo = 1 ";
+        }
+        $sql .= "ORDER BY orden ASC, numero ASC";
+        
+        $stmt = $pdo->query($sql);
+        $rows = $stmt->fetchAll();
+        
+        // Crear resumen del propósito (primera oración)
+        foreach ($rows as &$row) {
+            $proposito = $row['proposito'] ?? '';
+            if (!empty($proposito)) {
+                $sentences = preg_split('/(?<=[.!?])\s+/', $proposito, 2);
+                $row['proposito_corto'] = $sentences[0] ?? '';
+            } else {
+                $row['proposito_corto'] = '';
+            }
+        }
+        
+        return $rows;
+    } catch (Exception $e) {
+        error_log('Error en cdc_get_ciclos: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Get ciclo específico por número
+ */
+function cdc_get_ciclo($pdo, $numero) {
+    try {
+        $stmt = $pdo->prepare("SELECT numero, nombre, slug, edad_min, edad_max, grados, grados_texto, 
+                                      proposito, explicacion, nivel_educativo, isced_level, activo, orden 
+                               FROM ciclos WHERE numero = ?");
+        $stmt->execute([$numero]);
+        return $stmt->fetch();
+    } catch (Exception $e) {
+        error_log('Error en cdc_get_ciclo: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
  * Get all sections
  */
 function get_sections($pdo) {
