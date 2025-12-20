@@ -358,12 +358,104 @@ include '../header.php';
         <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
       <?php endforeach; ?>
     </div>
+    
+    <!-- Competencias MEN - Dual Listbox -->
     <h3 style="margin-top:.5rem">Competencias MEN</h3>
-    <div class="checkbox-grid">
-      <?php foreach ($competencias as $c): ?>
-        <label class="checkbox-label"><input type="checkbox" name="competencias[]" value="<?= (int)$c['id'] ?>" <?= in_array($c['id'], $existing_comp_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>)</label>
-      <?php endforeach; ?>
+    <small class="hint" style="display: block; margin-bottom: 10px;">Selecciona las competencias que desarrolla esta clase. Recomendado: 3-7 competencias.</small>
+    
+    <div class="dual-listbox-container">
+      <div class="listbox-panel">
+        <div class="listbox-header">
+          <strong>Disponibles</strong>
+          <span id="available-count" class="counter">(<?= count($competencias) ?>)</span>
+        </div>
+        <input type="text" id="search-competencias" class="listbox-search" placeholder="🔍 Buscar competencias...">
+        
+        <div class="listbox-content" id="available-list">
+          <?php 
+          // Agrupar competencias por categoría principal
+          $grupos = [
+            'CB' => ['nombre' => 'Ciencias Naturales, Matemáticas y Lenguaje', 'icon' => '🔬', 'items' => []],
+            'CC' => ['nombre' => 'Competencias Ciudadanas', 'icon' => '🤝', 'items' => []],
+            'CLG' => ['nombre' => 'Competencias Laborales Generales', 'icon' => '💼', 'items' => []],
+            'NCP' => ['nombre' => 'Nuevas Competencias 2025', 'icon' => '🆕', 'items' => []],
+            'TRANS' => ['nombre' => 'Transversales (Recomendadas)', 'icon' => '⭐', 'items' => []]
+          ];
+          
+          foreach ($competencias as $c) {
+            $prefix = explode('-', $c['codigo'])[0];
+            if (isset($grupos[$prefix])) {
+              $grupos[$prefix]['items'][] = $c;
+            }
+          }
+          
+          foreach ($grupos as $key => $grupo):
+            if (empty($grupo['items'])) continue;
+          ?>
+            <div class="competencia-grupo" data-grupo="<?= $key ?>">
+              <div class="grupo-header" onclick="toggleGrupo(this)">
+                <span class="grupo-toggle">▼</span>
+                <?= $grupo['icon'] ?> <strong><?= $grupo['nombre'] ?></strong>
+                <span class="grupo-count">(<?= count($grupo['items']) ?>)</span>
+              </div>
+              <div class="grupo-items">
+                <?php foreach ($grupo['items'] as $c): 
+                  $isSelected = in_array($c['id'], $existing_comp_ids);
+                ?>
+                  <div class="competencia-item <?= $isSelected ? 'hidden' : '' ?>" 
+                       data-id="<?= $c['id'] ?>"
+                       data-codigo="<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>"
+                       data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                       data-explicacion="<?= htmlspecialchars($c['explicacion'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                       onclick="selectCompetencia(this)">
+                    <span class="comp-codigo"><?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+                    <?php if (!empty($c['explicacion'])): ?>
+                      <button type="button" class="info-btn" onclick="event.stopPropagation(); showTooltip(this, '<?= htmlspecialchars($c['explicacion'], ENT_QUOTES, 'UTF-8') ?>')" title="Ver explicación">ℹ️</button>
+                    <?php endif; ?>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      
+      <div class="listbox-buttons">
+        <button type="button" onclick="moveAll(true)" title="Agregar todas">➡️</button>
+        <button type="button" onclick="moveAll(false)" title="Quitar todas">⬅️</button>
+      </div>
+      
+      <div class="listbox-panel">
+        <div class="listbox-header">
+          <strong>Seleccionadas</strong>
+          <span id="selected-count" class="counter">(0)</span>
+        </div>
+        <div class="listbox-content" id="selected-list">
+          <?php foreach ($competencias as $c): 
+            if (in_array($c['id'], $existing_comp_ids)):
+          ?>
+            <div class="competencia-item selected" 
+                 data-id="<?= $c['id'] ?>"
+                 data-codigo="<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>"
+                 data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                 onclick="deselectCompetencia(this)">
+              <span class="comp-codigo"><?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+              <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectCompetencia(this.parentElement)">×</button>
+            </div>
+          <?php 
+            endif;
+          endforeach; 
+          ?>
+        </div>
+        <small class="hint" style="margin-top: 10px; display: block;">Haz clic para quitar</small>
+      </div>
+      
+      <!-- Hidden inputs para enviar al servidor -->
+      <div id="competencias-hidden"></div>
     </div>
+    
   <div class="form-group">
     <label for="tags">Tags (separados por coma)</label>
     <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
@@ -666,5 +758,405 @@ include '../header.php';
       }
     });
   }
+  
+  // ========================================================
+  // DUAL LISTBOX - COMPETENCIAS MEN
+  // ========================================================
+  
+  // Inicializar contadores y hidden inputs
+  function initCompetencias() {
+    updateCounts();
+    syncHiddenInputs();
+  }
+  
+  // Toggle grupo colapsable
+  window.toggleGrupo = function(header) {
+    const grupo = header.parentElement;
+    const items = grupo.querySelector('.grupo-items');
+    const toggle = header.querySelector('.grupo-toggle');
+    
+    if (items.style.display === 'none') {
+      items.style.display = 'block';
+      toggle.textContent = '▼';
+    } else {
+      items.style.display = 'none';
+      toggle.textContent = '▶';
+    }
+  };
+  
+  // Seleccionar competencia (mover a seleccionadas)
+  window.selectCompetencia = function(item) {
+    if (item.classList.contains('hidden')) return;
+    
+    const selectedList = document.getElementById('selected-list');
+    const clone = item.cloneNode(true);
+    clone.classList.add('selected');
+    clone.classList.remove('hidden');
+    clone.onclick = function() { deselectCompetencia(this); };
+    
+    // Agregar botón X
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-btn';
+    removeBtn.textContent = '×';
+    removeBtn.onclick = function(e) {
+      e.stopPropagation();
+      deselectCompetencia(clone);
+    };
+    
+    // Remover botón info si existe
+    const infoBtn = clone.querySelector('.info-btn');
+    if (infoBtn) infoBtn.remove();
+    
+    clone.appendChild(removeBtn);
+    selectedList.appendChild(clone);
+    
+    // Ocultar en disponibles
+    item.classList.add('hidden');
+    
+    updateCounts();
+    syncHiddenInputs();
+    console.log('✅ [Competencias] Agregada:', item.dataset.codigo);
+  };
+  
+  // Deseleccionar competencia (mover a disponibles)
+  window.deselectCompetencia = function(item) {
+    const id = item.dataset.id;
+    
+    // Mostrar en disponibles
+    const availableItem = document.querySelector(`#available-list .competencia-item[data-id="${id}"]`);
+    if (availableItem) {
+      availableItem.classList.remove('hidden');
+    }
+    
+    // Remover de seleccionadas
+    item.remove();
+    
+    updateCounts();
+    syncHiddenInputs();
+    console.log('❌ [Competencias] Removida:', item.dataset.codigo);
+  };
+  
+  // Mover todas
+  window.moveAll = function(toSelected) {
+    if (toSelected) {
+      const available = document.querySelectorAll('#available-list .competencia-item:not(.hidden)');
+      available.forEach(item => selectCompetencia(item));
+    } else {
+      const selected = document.querySelectorAll('#selected-list .competencia-item');
+      selected.forEach(item => deselectCompetencia(item));
+    }
+  };
+  
+  // Actualizar contadores
+  function updateCounts() {
+    const availableCount = document.querySelectorAll('#available-list .competencia-item:not(.hidden)').length;
+    const selectedCount = document.querySelectorAll('#selected-list .competencia-item').length;
+    
+    document.getElementById('available-count').textContent = `(${availableCount})`;
+    document.getElementById('selected-count').textContent = `(${selectedCount})`;
+  }
+  
+  // Sincronizar hidden inputs para envío
+  function syncHiddenInputs() {
+    const container = document.getElementById('competencias-hidden');
+    container.innerHTML = '';
+    
+    const selected = document.querySelectorAll('#selected-list .competencia-item');
+    selected.forEach(item => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'competencias[]';
+      input.value = item.dataset.id;
+      container.appendChild(input);
+    });
+  }
+  
+  // Búsqueda en tiempo real
+  const searchInput = document.getElementById('search-competencias');
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      const items = document.querySelectorAll('#available-list .competencia-item');
+      
+      items.forEach(item => {
+        if (item.classList.contains('hidden')) return; // Ya seleccionada
+        
+        const codigo = item.dataset.codigo.toLowerCase();
+        const nombre = item.dataset.nombre.toLowerCase();
+        const explicacion = item.dataset.explicacion ? item.dataset.explicacion.toLowerCase() : '';
+        
+        const matches = codigo.includes(query) || nombre.includes(query) || explicacion.includes(query);
+        
+        if (matches || query === '') {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      // Actualizar contador de disponibles (solo visibles)
+      const visibleCount = document.querySelectorAll('#available-list .competencia-item:not(.hidden)').length;
+      const availableCountSpan = document.getElementById('available-count');
+      if (query) {
+        const filteredCount = Array.from(document.querySelectorAll('#available-list .competencia-item:not(.hidden)'))
+          .filter(item => item.style.display !== 'none').length;
+        availableCountSpan.textContent = `(${filteredCount})`;
+      } else {
+        availableCountSpan.textContent = `(${visibleCount})`;
+      }
+    });
+  }
+  
+  // Tooltip simple
+  window.showTooltip = function(btn, text) {
+    const existing = document.querySelector('.competencia-tooltip');
+    if (existing) existing.remove();
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'competencia-tooltip';
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+    
+    const rect = btn.getBoundingClientRect();
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
+    tooltip.style.left = rect.left + 'px';
+    
+    setTimeout(() => tooltip.remove(), 4000);
+    
+    tooltip.addEventListener('click', () => tooltip.remove());
+  };
+  
+  // Inicializar
+  initCompetencias();
+  console.log('✅ [Competencias] Dual Listbox inicializado');
+  
 </script>
+
+<style>
+/* Dual Listbox Styles */
+.dual-listbox-container {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 15px;
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  background: #f9f9f9;
+}
+
+.listbox-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+}
+
+.listbox-header {
+  padding: 10px;
+  background: #0066cc;
+  color: white;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.counter {
+  background: rgba(255,255,255,0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.listbox-search {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+  font-size: 13px;
+  outline: none;
+}
+
+.listbox-search:focus {
+  background: #fffacd;
+}
+
+.listbox-content {
+  flex: 1;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-top: none;
+  background: white;
+  padding: 5px;
+  max-height: 450px;
+}
+
+.competencia-grupo {
+  margin-bottom: 5px;
+}
+
+.grupo-header {
+  padding: 8px 10px;
+  background: #e8f4f8;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.grupo-header:hover {
+  background: #d0e8f0;
+}
+
+.grupo-toggle {
+  font-size: 10px;
+  width: 15px;
+}
+
+.grupo-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: #666;
+}
+
+.grupo-items {
+  padding-left: 10px;
+}
+
+.competencia-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.competencia-item:hover {
+  background: #f0f8ff;
+}
+
+.competencia-item.hidden {
+  display: none !important;
+}
+
+.competencia-item.selected {
+  background: #e6f7ff;
+}
+
+.comp-codigo {
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  color: #0066cc;
+  font-weight: 600;
+}
+
+.comp-nombre {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.info-btn {
+  background: none;
+  border: none;
+  cursor: help;
+  font-size: 14px;
+  padding: 0;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.info-btn:hover {
+  opacity: 1;
+}
+
+.remove-btn {
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-btn:hover {
+  background: #cc0000;
+}
+
+.listbox-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.listbox-buttons button {
+  background: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background 0.2s;
+}
+
+.listbox-buttons button:hover {
+  background: #0052a3;
+}
+
+.competencia-tooltip {
+  position: fixed;
+  background: #333;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  max-width: 300px;
+  font-size: 12px;
+  line-height: 1.4;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .dual-listbox-container {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .listbox-buttons {
+    flex-direction: row;
+    order: 2;
+  }
+  
+  .listbox-panel:first-child {
+    order: 1;
+  }
+  
+  .listbox-panel:last-child {
+    order: 3;
+  }
+}
+</style>
+
 <?php include '../footer.php'; ?>
