@@ -1,5 +1,4 @@
 <?php
-<?php
 /**
  * Admin Dashboard (CdC)
  */
@@ -227,11 +226,6 @@ include 'header.php';
 <!-- Seguridad -->
 <div class="message info">
     <strong>🔒 Nota:</strong> Cambia las credenciales por defecto en <span class="help-text">/admin/index.php</span>.
-</div>
-
-<?php include 'footer.php'; ?>
-<div class="message info">
-    <strong>🔒 Security Note:</strong> Remember to change the default admin password in <code>/admin/index.php</code> before going to production!
 </div>
 
 <?php include 'footer.php'; ?>
