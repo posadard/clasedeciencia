@@ -143,18 +143,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($exists > 0) {
           $error_msg = 'El slug ya existe. Elige otro.';
         } else {
+          // Autogenerar SEO si vienen vacíos
+          if ($seo_title === '') { $seo_title = $nombre; }
+          $desc_source = $resumen !== '' ? $resumen : strip_tags($contenido_html);
+          $desc_source = preg_replace('/\s+/', ' ', $desc_source);
+          if ($seo_description === '') {
+            $seo_description = (strlen($desc_source) > 160)
+              ? preg_replace('/\s+\S*$/', '', substr($desc_source, 0, 160))
+              : $desc_source;
+          }
+          if ($canonical_url === '') { $canonical_url = '/proyecto.php?slug=' . $slug; }
+          echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ', "auto canon:", ' . json_encode($canonical_url) . ');</script>';
           // Transacción para clase + relaciones
           $pdo->beginTransaction();
           if ($is_edit) {
             $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, seccion_id=?, updated_at=NOW() WHERE id=?');
-            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title ?: null, $seo_description ?: null, $canonical_url ?: null, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id, $id]);
+            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id, $id]);
             // Limpiar relaciones
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_competencias WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_tags WHERE clase_id = ?')->execute([$id]);
           } else {
             $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, seccion_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
-            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title ?: null, $seo_description ?: null, $canonical_url ?: null, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id]);
+            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id]);
             $id = (int)$pdo->lastInsertId();
             $is_edit = true;
           }
@@ -312,6 +323,23 @@ include '../header.php';
     <label for="canonical_url">Canonical URL</label>
     <input type="text" id="canonical_url" name="canonical_url" value="<?= htmlspecialchars($clase['canonical_url'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
   </div>
+  <!-- SEO Auto Preview + Override Toggle -->
+  <div class="form-section">
+    <label><input type="checkbox" id="seo_override_toggle"> Editar SEO manualmente</label>
+    <div class="seo-preview">
+      <p><strong>Preview Title:</strong> <span id="seo_preview_title"></span></p>
+      <p><strong>Preview Description:</strong> <span id="seo_preview_desc"></span></p>
+      <p><strong>Preview Canonical:</strong> <span id="seo_preview_canon"></span></p>
+      <small class="help-text">Si no defines SEO manualmente, se usarán estos valores.</small>
+    </div>
+  </div>
+  <style>
+    .seo-preview { background:#f7f7f7; padding:8px; border-radius:6px; }
+    #seo-manual { display:none; }
+  </style>
+  <div id="seo-manual">
+    <!-- Los campos SEO arriba funcionan como override cuando este panel está activo -->
+  </div>
   <!-- Estado/Publicación -->
   <div class="form-row">
     <div class="form-group">
@@ -369,6 +397,60 @@ include '../header.php';
 <script>
   const nombreInput = document.getElementById('nombre');
   const slugInput = document.getElementById('slug');
+  const resumenInput = document.getElementById('resumen');
+  const seoTitleInput = document.getElementById('seo_title');
+  const seoDescInput = document.getElementById('seo_description');
+  const canonInput = document.getElementById('canonical_url');
+  const seoPrevTitle = document.getElementById('seo_preview_title');
+  const seoPrevDesc = document.getElementById('seo_preview_desc');
+  const seoPrevCanon = document.getElementById('seo_preview_canon');
+  const seoToggle = document.getElementById('seo_override_toggle');
+  const seoManual = document.getElementById('seo-manual');
+
+  function textFromHtml(html) {
+    // Quita etiquetas y normaliza espacios
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    const txt = (tmp.textContent || tmp.innerText || '').replace(/\s+/g,' ').trim();
+    return txt;
+  }
+  function shortenAtWord(str, maxLen) {
+    if (!str) return '';
+    if (str.length <= maxLen) return str;
+    const cut = str.slice(0, maxLen);
+    return cut.replace(/\s+\S*$/, '').trim();
+  }
+  function computeSeo() {
+    const autoTitle = (nombreInput && nombreInput.value) ? nombreInput.value.trim() : '';
+    let descSrc = (resumenInput && resumenInput.value.trim()) ? resumenInput.value.trim() : '';
+    if (!descSrc) {
+      try {
+        if (window.tinymce) { descSrc = textFromHtml(tinymce.get('contenido_html')?.getContent() || ''); }
+        else { const ta = document.getElementById('contenido_html'); descSrc = textFromHtml(ta ? ta.value : ''); }
+      } catch(e) { descSrc = ''; }
+    }
+    const autoDesc = shortenAtWord(descSrc, 160);
+    const slugVal = (slugInput && slugInput.value.trim()) ? slugInput.value.trim() : '';
+    const autoCanon = '/proyecto.php?slug=' + slugVal;
+    // Render preview
+    if (seoPrevTitle) seoPrevTitle.textContent = autoTitle;
+    if (seoPrevDesc) seoPrevDesc.textContent = autoDesc;
+    if (seoPrevCanon) seoPrevCanon.textContent = autoCanon;
+    // If manual not enabled and inputs are empty, mirror preview into inputs (for visibility but still overrideable)
+    if (!seoToggle?.checked) {
+      if (seoTitleInput && !seoTitleInput.value) seoTitleInput.value = autoTitle;
+      if (seoDescInput && !seoDescInput.value) seoDescInput.value = autoDesc;
+      if (canonInput && !canonInput.value) canonInput.value = autoCanon;
+      console.log('🔍 [SEO] autogenerados (preview)');
+    }
+  }
+  // Toggle manual panel
+  if (seoToggle && seoManual) {
+    seoToggle.addEventListener('change', ()=>{
+      seoManual.style.display = seoToggle.checked ? 'block' : 'none';
+      console.log(seoToggle.checked ? '✅ [SEO] override manual activado' : '🔍 [SEO] usando auto');
+    });
+  }
   nombreInput.addEventListener('blur', () => {
     console.log('🔍 [ClasesEdit] blur nombre');
     if (!slugInput.value && nombreInput.value) {
@@ -376,11 +458,57 @@ include '../header.php';
       slugInput.value = s;
       console.log('✅ [ClasesEdit] slug generado:', s);
     }
+    computeSeo();
   });
+  if (slugInput) slugInput.addEventListener('input', computeSeo);
+  if (resumenInput) resumenInput.addEventListener('input', computeSeo);
   // Validación simple de SEO
   const seoTitle = document.getElementById('seo_title');
   const seoDesc = document.getElementById('seo_description');
   if (seoTitle) seoTitle.addEventListener('input', ()=>{ if (seoTitle.value.length>160) console.log('⚠️ [ClasesEdit] SEO title >160'); });
   if (seoDesc) seoDesc.addEventListener('input', ()=>{ if (seoDesc.value.length>255) console.log('⚠️ [ClasesEdit] SEO description >255'); });
+
+  // Integración TinyMCE estilo article-edit (content)
+  (function initTiny() {
+    const src = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js';
+    const s = document.createElement('script');
+    s.src = src; s.referrerPolicy = 'origin';
+    s.onload = () => {
+      console.log('✅ [ClasesEdit] TinyMCE cargado');
+      try {
+        tinymce.init({
+          selector: '#contenido_html',
+          height: 500,
+          menubar: true,
+          plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
+          toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media | table | code preview fullscreen',
+          content_style: 'body { font-family:Inter, Arial, sans-serif; font-size:14px; }',
+          branding: false,
+          convert_urls: false,
+          image_caption: true,
+          placeholder: 'Escribe el contenido de la guía aquí...',
+          setup: (editor) => {
+            editor.on('change keyup', () => computeSeo());
+          }
+        });
+      } catch (e) {
+        console.log('❌ [ClasesEdit] Error iniciando TinyMCE:', e.message);
+      }
+    };
+    s.onerror = () => console.log('⚠️ [ClasesEdit] No se pudo cargar TinyMCE, usando textarea simple');
+    document.head.appendChild(s);
+  })();
+
+  // Asegurar sincronización del editor antes de enviar
+  const formEl = document.querySelector('form');
+  if (formEl) {
+    formEl.addEventListener('submit', function() {
+      try { if (window.tinymce) { tinymce.triggerSave(); console.log('✅ [ClasesEdit] TinyMCE contenido sincronizado'); } }
+      catch(e) { console.log('⚠️ [ClasesEdit] No se pudo sincronizar TinyMCE:', e.message); }
+      computeSeo();
+    });
+  }
+  // Inicializa preview al cargar
+  computeSeo();
 </script>
 <?php include '../footer.php'; ?>
