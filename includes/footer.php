@@ -46,10 +46,12 @@
     
     <script src="/assets/js/main.js"></script>
     <?php 
+    // Cargar sistema de búsqueda en páginas específicas
     $current_page = basename($_SERVER['PHP_SELF']);
-    if ($current_page === 'index.php' || $current_page === 'catalogo.php'): 
+    $search_pages = ['index.php', 'catalogo.php'];
+    if (in_array($current_page, $search_pages) || !empty($_SERVER['HTTP_X_SEARCH_ENABLED'])): 
     ?>
-    <!-- Search System - Homepage y Catálogo -->
+    <!-- Search System -->
     <script src="/assets/js/home-search.js"></script>
     <?php endif; ?>
 </body>

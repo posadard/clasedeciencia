@@ -30,8 +30,8 @@ include 'includes/header.php';
         </div>
     </section>
     
-    <!-- Search Section -->
-    <section class="search-section">
+    <!-- Search Section - Solo visible en mobile -->
+    <section class="search-section mobile-only">
         <div class="search-box">
             <form class="search-form" role="search" aria-label="Buscar clases de ciencia">
                 <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

@@ -86,6 +86,24 @@
                 </nav>
             </div>
         </div>
+        <!-- Search in header - Visible en desktop, oculto en mobile -->
+        <div class="container header-search-container">
+            <div class="search-box">
+                <form class="search-form" role="search" aria-label="Buscar clases de ciencia">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input 
+                        type="search" 
+                        class="search-input" 
+                        placeholder="Buscar por tema, área, grado, ciclo..." 
+                        aria-label="Buscar clases"
+                        autocomplete="off"
+                    >
+                </form>
+            </div>
+        </div>
     </header>
     
     <main class="site-main">
