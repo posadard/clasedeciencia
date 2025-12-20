@@ -14,6 +14,8 @@
     <a class="brand" href="/"><?= h(SITE_NAME) ?></a>
     <nav class="nav">
       <a href="/catalogo.php">Catálogo</a>
+      <a href="/materials.php">Materiales</a>
+      <a href="/search.php">Buscar</a>
       <a href="/privacy.php">Privacidad</a>
       <a href="/terms.php">Términos</a>
     </nav>

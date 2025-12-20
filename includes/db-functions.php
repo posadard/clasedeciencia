@@ -45,4 +45,45 @@ function buscar_proyectos($pdo, $termino) {
         return [];
     }
 }
+
+// Materiales (adaptación simple de TGA)
+function get_materiales($pdo, $categoria_id = null) {
+    if (!$pdo) return [];
+    $sql = "SELECT id, nombre_comun, categoria_id, advertencias_seguridad FROM materiales";
+    $params = [];
+    if ($categoria_id !== null) { $sql .= " WHERE categoria_id = ?"; $params[] = (int)$categoria_id; }
+    $sql .= " ORDER BY nombre_comun ASC LIMIT 500";
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log('get_materiales: ' . $e->getMessage());
+        return [];
+    }
+}
+
+function get_material_por_id($pdo, $id) {
+    if (!$pdo) return null;
+    try {
+        $stmt = $pdo->prepare("SELECT id, nombre_comun, categoria_id, advertencias_seguridad FROM materiales WHERE id = ? LIMIT 1");
+        $stmt->execute([(int)$id]);
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log('get_material_por_id: ' . $e->getMessage());
+        return null;
+    }
+}
+
+function buscar_materiales($pdo, $termino) {
+    if (!$pdo) return [];
+    try {
+        $stmt = $pdo->prepare("SELECT id, nombre_comun, categoria_id FROM materiales WHERE nombre_comun LIKE ? ORDER BY nombre_comun ASC LIMIT 100");
+        $stmt->execute(['%' . $termino . '%']);
+        return $stmt->fetchAll();
+    } catch (PDOException $e) {
+        error_log('buscar_materiales: ' . $e->getMessage());
+        return [];
+    }
+}
 ?>
