@@ -45,8 +45,11 @@
     </footer>
     
     <script src="/assets/js/main.js"></script>
-    <?php if (basename($_SERVER['PHP_SELF']) === 'index.php'): ?>
-    <!-- Home Search - Solo en homepage -->
+    <?php 
+    $current_page = basename($_SERVER['PHP_SELF']);
+    if ($current_page === 'index.php' || $current_page === 'catalogo.php'): 
+    ?>
+    <!-- Search System - Homepage y Catálogo -->
     <script src="/assets/js/home-search.js"></script>
     <?php endif; ?>
 </body>
