@@ -36,12 +36,18 @@ try {
             c.dificultad,
             c.duracion_minutos,
             c.resumen,
+            c.objetivo_aprendizaje,
             c.imagen_portada,
             c.destacado,
-            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas
+            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas,
+            GROUP_CONCAT(DISTINCT comp.nombre ORDER BY comp.nombre SEPARATOR ' | ') AS competencias,
+            GROUP_CONCAT(DISTINCT ct.tag ORDER BY ct.tag SEPARATOR ', ') AS tags
         FROM clases c
         LEFT JOIN clase_areas ca ON ca.clase_id = c.id
         LEFT JOIN areas a ON a.id = ca.area_id
+        LEFT JOIN clase_competencias cc ON cc.clase_id = c.id
+        LEFT JOIN competencias comp ON comp.id = cc.competencia_id
+        LEFT JOIN clase_tags ct ON ct.clase_id = c.id
         WHERE c.activo = 1
         GROUP BY c.id
         ORDER BY c.destacado DESC, c.orden_popularidad DESC
@@ -93,6 +99,45 @@ try {
         $keywords[] = 'ciclo ' . $clase['ciclo'];
         $keywords[] = 'ciclo' . $clase['ciclo'];
         
+        // Keywords de competencias MEN (simplificadas)
+        $competencias_keywords = [];
+        if (!empty($clase['competencias'])) {
+            $comps = explode(' | ', $clase['competencias']);
+            foreach ($comps as $comp) {
+                // Extraer palabras clave de competencias
+                if (stripos($comp, 'indagación') !== false || stripos($comp, 'pregunta') !== false) {
+                    $competencias_keywords[] = 'indagacion';
+                    $competencias_keywords[] = 'preguntas';
+                    $competencias_keywords[] = 'investigacion';
+                }
+                if (stripos($comp, 'explicación') !== false || stripos($comp, 'explico') !== false) {
+                    $competencias_keywords[] = 'explicacion';
+                    $competencias_keywords[] = 'explicar';
+                    $competencias_keywords[] = 'razonamiento';
+                }
+                if (stripos($comp, 'uso') !== false || stripos($comp, 'aplico') !== false) {
+                    $competencias_keywords[] = 'aplicacion';
+                    $competencias_keywords[] = 'practica';
+                    $competencias_keywords[] = 'cotidiano';
+                }
+                if (stripos($comp, 'observo') !== false || stripos($comp, 'registro') !== false) {
+                    $competencias_keywords[] = 'observacion';
+                    $competencias_keywords[] = 'datos';
+                    $competencias_keywords[] = 'registro';
+                }
+                if (stripos($comp, 'modelo') !== false) {
+                    $competencias_keywords[] = 'modelado';
+                    $competencias_keywords[] = 'representacion';
+                }
+                if (stripos($comp, 'cálculo') !== false || stripos($comp, 'medición') !== false) {
+                    $competencias_keywords[] = 'medicion';
+                    $competencias_keywords[] = 'calculo';
+                    $competencias_keywords[] = 'matematicas';
+                }
+            }
+        }
+        $keywords = array_merge($keywords, array_unique($competencias_keywords));
+        
         // Función para normalizar (quitar acentos)
         $normalize = function($text) {
             $text = strtolower($text);
@@ -108,7 +153,9 @@ try {
         $search_parts = [
             $clase['nombre'] ?? '',
             $clase['resumen'] ?? '',
+            $clase['objetivo_aprendizaje'] ?? '',
             $clase['areas'] ?? '',
+            $clase['tags'] ?? '',
             $ciclo_nombre,
             $grados_texto,
             $dificultad,
