@@ -66,7 +66,7 @@
                 <nav class="main-nav" aria-label="Main Navigation">
                     <ul>
                         <li><a href="/">Inicio</a></li>
-                        <li><a href="/catalogo.php">Catálogo</a></li>
+                        <li><a href="/catalogo.php">Clases</a></li>
                         <li><a href="/contact.php">Contacto</a></li>
                     </ul>
                 </nav>
@@ -77,7 +77,7 @@
             <form id="global-search-form" class="global-search" role="search" action="/search.php" method="get" autocomplete="off">
                 <div class="search-wrapper">
                     <label for="global-search-input" class="sr-only">Buscar en el sitio</label>
-                    <input id="global-search-input" name="q" type="search" placeholder="Buscar proyectos o materiales..." aria-label="Buscar en el sitio" />
+                    <input id="global-search-input" name="q" type="search" placeholder="Buscar clases o proyectos..." aria-label="Buscar en el sitio" />
                     <div class="search-spinner" id="global-search-spinner" aria-hidden="true" role="status" aria-label="Searching"></div>
                     <div id="global-search-results" class="search-results" role="listbox" aria-expanded="false" aria-hidden="true"></div>
                 </div>
