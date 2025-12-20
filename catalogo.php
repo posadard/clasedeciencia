@@ -136,6 +136,8 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
     $sort = $filters['sort'] ?? 'recomendados';
     if ($sort === 'recientes') {
         $order_by = "ORDER BY c.updated_at DESC, c.destacado DESC";
+    } elseif ($sort === 'grado') {
+        $order_by = "ORDER BY JSON_EXTRACT(c.grados, '$[0]') ASC, c.destacado DESC";
     } else {
         $order_by = "ORDER BY c.destacado DESC, c.orden_popularidad DESC, c.updated_at DESC";
     }
@@ -288,15 +290,6 @@ include 'includes/header.php';
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label>Grado</label>
-                    <select name="grado">
-                        <option value="">Todos</option>
-                        <?php for($g=1;$g<=11;$g++): ?>
-                        <option value="<?= $g ?>" <?= isset($filters['grado']) && (int)$filters['grado']===$g?'selected':'' ?>><?= $g ?>°</option>
-                        <?php endfor; ?>
-                    </select>
-                </div>
-                <div class="filter-group">
                     <label>Área</label>
                     <select name="area">
                         <option value="">Todas</option>
@@ -340,6 +333,7 @@ include 'includes/header.php';
                     <select name="sort" id="sort" onchange="this.form ? this.form.submit() : updateSort(this.value)">
                         <option value="recomendados" <?= (!isset($_GET['sort']) || $_GET['sort'] === 'recomendados') ? 'selected' : '' ?>>📌 Recomendados primero</option>
                         <option value="recientes" <?= (isset($_GET['sort']) && $_GET['sort'] === 'recientes') ? 'selected' : '' ?>>🕐 Más recientes</option>
+                        <option value="grado" <?= (isset($_GET['sort']) && $_GET['sort'] === 'grado') ? 'selected' : '' ?>>🎓 Por Grado (1° a 11°)</option>
                     </select>
                 </div>
             </div>
