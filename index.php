@@ -65,7 +65,12 @@ include 'includes/header.php';
                             <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                         </div>
                         <h3><?= h($p['nombre']) ?></h3>
-                        <p class="excerpt"><?= h($p['resumen']) ?></p>
+                        <?php if (!empty($p['objetivo_aprendizaje'])): ?>
+                        <p class="objective"><?= h($p['objetivo_aprendizaje']) ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($p['resumen'])): ?>
+                        <p class="excerpt"><small><?= h($p['resumen']) ?></small></p>
+                        <?php endif; ?>
                         <div class="card-footer">
                             <span class="read-time"><?= (int)$p['duracion_minutos'] ?> min</span>
                             <span class="date">Actualizado <?= format_date($p['updated_at']) ?></span>
@@ -107,7 +112,12 @@ include 'includes/header.php';
                             <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                         </div>
                         <h3><?= h($p['nombre']) ?></h3>
-                        <p class="excerpt"><?= h($p['resumen']) ?></p>
+                        <?php if (!empty($p['objetivo_aprendizaje'])): ?>
+                        <p class="objective"><?= h($p['objetivo_aprendizaje']) ?></p>
+                        <?php endif; ?>
+                        <?php if (!empty($p['resumen'])): ?>
+                        <p class="excerpt"><small><?= h($p['resumen']) ?></small></p>
+                        <?php endif; ?>
                         <div class="card-footer">
                             <span class="read-time"><?= (int)$p['duracion_minutos'] ?> min</span>
                         </div>

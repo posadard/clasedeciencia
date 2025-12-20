@@ -122,8 +122,8 @@ if (isset($_GET['area'])) $filters['area'] = $_GET['area'];
 if (isset($_GET['competencia'])) $filters['competencia'] = $_GET['competencia'];
 if (isset($_GET['dificultad'])) $filters['dificultad'] = $_GET['dificultad'];
 
-$page_title = 'Catálogo de Proyectos';
-$page_description = 'Explora proyectos científicos por ciclo, grado, área y competencias MEN.';
+$page_title = 'Clases disponibles';
+$page_description = 'Explora clases científicas por ciclo, grado, área y competencias MEN.';
 $canonical_url = SITE_URL . '/catalogo.php';
 
 $current_page = get_current_page();
@@ -137,7 +137,7 @@ $total = cdc_count_proyectos($pdo, $filters);
 $schema = [
     '@context' => 'https://schema.org',
     '@type' => 'ItemList',
-    'name' => 'Catálogo de Proyectos Científicos',
+    'name' => 'Clases disponibles',
     'description' => $page_description,
     'url' => $canonical_url,
     'numberOfItems' => $total
@@ -145,11 +145,12 @@ $schema = [
 if (!empty($proyectos)) {
     $pos = ($current_page - 1) * POSTS_PER_PAGE + 1;
     $schema['itemListElement'] = array_map(function($p) use (&$pos) {
+        $desc = trim(($p['objetivo_aprendizaje'] ?? '') . ' — ' . ($p['resumen'] ?? ''));
         $item = [
             '@type' => 'CreativeWork',
             'name' => $p['nombre'],
             'url' => SITE_URL . '/proyecto.php?slug=' . $p['slug'],
-            'description' => $p['resumen']
+            'description' => $desc
         ];
         return ['@type' => 'ListItem', 'position' => $pos++, 'item' => $item];
     }, $proyectos);
@@ -160,9 +161,9 @@ include 'includes/header.php';
 ?>
 <div class="container library-page">
     <div class="breadcrumb">
-        <a href="/">Inicio</a> / <strong>Catálogo</strong>
+        <a href="/">Inicio</a> / <strong>Clases</strong>
     </div>
-    <h1>Catálogo de Proyectos</h1>
+    <h1>Clases disponibles</h1>
 
     <div class="library-layout">
         <aside class="filters-sidebar">
@@ -213,7 +214,7 @@ include 'includes/header.php';
         <div class="library-content">
             <div class="results-header">
                 <p class="results-count">
-                    Mostrando <?= count($proyectos) ?> de <?= $total ?> proyectos
+                    Mostrando <?= count($proyectos) ?> de <?= $total ?> clases
                     <?php if ($total > POSTS_PER_PAGE): ?>
                         (Página <?= $current_page ?> de <?= ceil($total / POSTS_PER_PAGE) ?>)
                     <?php endif; ?>
@@ -221,8 +222,8 @@ include 'includes/header.php';
             </div>
             <?php if (empty($proyectos)): ?>
             <div class="no-results">
-                <p>No hay proyectos con los filtros seleccionados.</p>
-                <a href="/catalogo.php" class="btn btn-secondary">Ver todos</a>
+                <p>No hay clases con los filtros seleccionados.</p>
+                <a href="/catalogo.php" class="btn btn-secondary">Ver todas</a>
             </div>
             <?php else: ?>
             <div class="articles-grid">
@@ -235,7 +236,12 @@ include 'includes/header.php';
                                 <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                             </div>
                             <h3><?= h($p['nombre']) ?></h3>
-                            <p class="excerpt"><?= h($p['resumen']) ?></p>
+                            <?php if (!empty($p['objetivo_aprendizaje'])): ?>
+                            <p class="objective"><?= h($p['objetivo_aprendizaje']) ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($p['resumen'])): ?>
+                            <p class="excerpt"><small><?= h($p['resumen']) ?></small></p>
+                            <?php endif; ?>
                             <div class="card-footer">
                                 <span class="read-time"><?= (int)$p['duracion_minutos'] ?> min</span>
                                 <span class="date">Actualizado <?= format_date($p['updated_at'], 'M j, Y') ?></span>
@@ -254,6 +260,6 @@ include 'includes/header.php';
 </div>
 <script>
 console.log('🔍 [catalogo] Filtros activos:', <?= json_encode($filters) ?>);
-console.log('✅ [catalogo] Proyectos cargados:', <?= count($proyectos) ?>);
+console.log('✅ [catalogo] Clases cargadas:', <?= count($proyectos) ?>);
 </script>
 <?php include 'includes/footer.php'; ?>
