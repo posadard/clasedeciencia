@@ -8,6 +8,16 @@ require_once 'auth.php';
 
 $page_title = 'Panel';
 
+// Debug instrumentation
+$debug_messages = [];
+set_error_handler(function($severity, $message, $file, $line) use (&$debug_messages) {
+    $debug_messages[] = "PHP Error ($severity): $message in $file:$line";
+    return false; // allow normal error handling too
+});
+set_exception_handler(function($e) use (&$debug_messages) {
+    $debug_messages[] = 'Uncaught Exception: ' . $e->getMessage();
+});
+
 // Helper seguro para conteos
 $tableExists = function (PDO $pdo, string $table) {
     try {
@@ -17,6 +27,7 @@ $tableExists = function (PDO $pdo, string $table) {
         return ((int)$stmt->fetchColumn()) > 0;
     } catch (PDOException $e) {
         error_log('Admin table exists check error: ' . $e->getMessage());
+        $debug_messages[] = 'Table check failed: ' . $table . ' -> ' . $e->getMessage();
         return false;
     }
 };
@@ -46,6 +57,23 @@ try {
 } catch (PDOException $e) {
     error_log('Admin stats error: ' . $e->getMessage());
     $stats = ['proyectos' => 0, 'materiales' => 0, 'contratos' => 0, 'entregas' => 0, 'lotes' => 0];
+    $debug_messages[] = 'Stats error: ' . $e->getMessage();
+}
+
+// DB ping
+$pdo_ok = false;
+try {
+    $pdo->query('SELECT 1');
+    $pdo_ok = true;
+} catch (PDOException $e) {
+    $debug_messages[] = 'DB ping failed: ' . $e->getMessage();
+}
+
+// Table presence snapshot
+$tables_to_check = ['proyectos','materiales','contratos','entregas','lotes_kits','ia_logs'];
+$tables_snapshot = [];
+foreach ($tables_to_check as $t) {
+    $tables_snapshot[$t] = $tableExists($pdo, $t);
 }
 
 // Proyectos recientes
@@ -56,13 +84,16 @@ try {
             $recent_proyectos = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } else {
             $recent_proyectos = [];
+            $debug_messages[] = 'Recent proyectos query failed to execute';
         }
     } else {
         $recent_proyectos = [];
+        $debug_messages[] = 'Table missing: proyectos';
     }
 } catch (PDOException $e) {
     error_log('Admin recent proyectos error: ' . $e->getMessage());
     $recent_proyectos = [];
+    $debug_messages[] = 'Recent proyectos error: ' . $e->getMessage();
 }
 
 // IA actividad (últimos 7 días)
@@ -75,10 +106,12 @@ try {
         ];
     } else {
         $ia_stats = ['consultas' => 0, 'respuestas' => 0, 'guardrails' => 0];
+        $debug_messages[] = 'Table missing: ia_logs';
     }
 } catch (PDOException $e) {
     error_log('Admin IA stats error: ' . $e->getMessage());
     $ia_stats = ['consultas' => 0, 'respuestas' => 0, 'guardrails' => 0];
+    $debug_messages[] = 'IA stats error: ' . $e->getMessage();
 }
 
 include 'header.php';
@@ -90,6 +123,8 @@ include 'header.php';
     <p class="help-text">Resumen del estado del sitio y acceso rápido a módulos.</p>
         <script>
             console.log('✅ [Admin] Dashboard cargado');
+            console.log('🔍 [Admin] DB ping OK:', <?= $pdo_ok ? 'true' : 'false' ?>);
+            console.log('🔍 [Admin] Tablas presentes:', <?= json_encode($tables_snapshot, JSON_UNESCAPED_UNICODE) ?>);
             console.log('🔍 [Admin] Stats:', {
                 proyectos: <?= (int)$stats['proyectos'] ?>,
                 materiales: <?= (int)$stats['materiales'] ?>,
@@ -102,6 +137,10 @@ include 'header.php';
                 respuestas: <?= (int)$ia_stats['respuestas'] ?>,
                 guardrails: <?= (int)$ia_stats['guardrails'] ?>
             });
+            <?php if (!empty($debug_messages)): ?>
+            console.log('⚠️ [Admin] Debug mensajes:');
+            (<?= json_encode($debug_messages, JSON_UNESCAPED_UNICODE) ?>).forEach(m => console.log('❌ [Admin] ', m));
+            <?php endif; ?>
         </script>
     </div>
 
