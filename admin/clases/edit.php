@@ -155,9 +155,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($canonical_url === '') { $canonical_url = '/proyecto.php?slug=' . $slug; }
           echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ', "auto canon:", ' . json_encode($canonical_url) . ');</script>';
           // Transacción para clase + relaciones
-          $pdo->beginTransaction();
+          <form method="POST" class="article-form">
           if ($is_edit) {
-            $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, seccion_id=?, updated_at=NOW() WHERE id=?');
+            <!-- Información básica -->
+            <div class="form-section">
+              <h2>Información básica</h2>
             $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id, $id]);
             // Limpiar relaciones
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
@@ -227,6 +229,7 @@ include '../header.php';
     <select id="ciclo" name="ciclo" required>
       <option value="">Selecciona</option>
       <option value="1" <?= $clase['ciclo']==='1'?'selected':'' ?>>1 (6°-7°)</option>
+            </div>
       <option value="2" <?= $clase['ciclo']==='2'?'selected':'' ?>>2 (8°-9°)</option>
       <option value="3" <?= $clase['ciclo']==='3'?'selected':'' ?>>3 (10°-11°)</option>
     </select>
@@ -282,6 +285,8 @@ include '../header.php';
     <textarea id="objetivo_aprendizaje" name="objetivo_aprendizaje" rows="4" placeholder="Competencias MEN y objetivos..."><?= htmlspecialchars($clase['objetivo_aprendizaje'], ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
   <!-- Multimedia -->
+  <div class="form-section">
+    <h2>Multimedia</h2>
   <div class="form-row">
     <div class="form-group">
       <label for="imagen_portada">Imagen portada (URL)</label>
@@ -292,7 +297,10 @@ include '../header.php';
       <input type="text" id="video_portada" name="video_portada" value="<?= htmlspecialchars($clase['video_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
     </div>
   </div>
+  </div>
   <!-- Seguridad -->
+  <div class="form-section">
+    <h2>Seguridad</h2>
   <?php $seg = $clase['seguridad'] ? json_decode($clase['seguridad'], true) : null; ?>
   <div class="form-row">
     <div class="form-group">
@@ -308,7 +316,10 @@ include '../header.php';
     <label for="seg_notas">Notas de seguridad</label>
     <textarea id="seg_notas" name="seg_notas" rows="3"><?= htmlspecialchars($seg['notas'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
+  </div>
   <!-- SEO -->
+  <div class="form-section">
+    <h2>SEO</h2>
   <div class="form-row">
     <div class="form-group">
       <label for="seo_title">SEO Title (≤160)</label>
@@ -352,11 +363,28 @@ include '../header.php';
       width: 0 !important;
       overflow: hidden !important;
     }
+    /* Reference layout styles (compact) */
+    .article-form { background:#fff; padding:1rem; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.06); width:100%; max-width:100%; box-sizing:border-box; }
+    .form-section { margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #e9ecef; }
+    .form-section:last-of-type { border-bottom:none; }
+    .form-section h2 { margin-bottom:0.5rem; font-size:1.05rem; color:#111; }
+    .form-row { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:0.5rem; }
+    .form-group { margin-bottom:0.6rem; }
+    .form-group label { display:block; margin-bottom:0.25rem; font-weight:600; color:#374151; font-size:0.95rem; }
+    .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="url"], .form-group input[type="datetime-local"], .form-group select, .form-group textarea { width:100%; padding:0.4rem; border:1px solid #d1d5db; border-radius:4px; font-family:inherit; font-size:0.92rem; }
+    .form-group small { display:block; margin-top:0.25rem; color:#6b7280; font-size:0.82rem; }
+    .checkbox-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:0.4rem; }
+    .checkbox-label { display:flex; align-items:center; gap:0.5rem; padding:0.5rem; background:#f9fafb; border-radius:4px; cursor:pointer; transition:background 0.2s; }
+    .checkbox-label:hover { background:#f3f4f6; }
+    .form-actions { display:flex; gap:0.5rem; margin-top:1rem; padding-top:1rem; border-top:1px solid #eef2f5; }
   </style>
   <div id="seo-manual">
     <!-- Los campos SEO arriba funcionan como override cuando este panel está activo -->
   </div>
+  </div>
   <!-- Estado/Publicación -->
+  <div class="form-section">
+    <h2>Publicación</h2>
   <div class="form-row">
     <div class="form-group">
       <label for="autor">Autor</label>
@@ -374,34 +402,37 @@ include '../header.php';
       <input type="datetime-local" id="published_at" name="published_at" value="<?= ($clase['published_at'] ? date('Y-m-d\TH:i', strtotime($clase['published_at'])) : '') ?>" />
     </div>
   </div>
+  </div>
   <!-- Contenido HTML -->
+  <div class="form-section">
+    <h2>Contenido</h2>
   <div class="form-group">
     <label for="contenido_html">Contenido (HTML)</label>
     <textarea id="contenido_html" name="contenido_html" rows="12"><?= htmlspecialchars($clase['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>
   </div>
-  <!-- Áreas y Competencias -->
+  </div>
+  <!-- Taxonomías -->
   <div class="form-section">
+    <h2>Taxonomías</h2>
     <h3>Áreas</h3>
     <div class="checkbox-grid">
       <?php foreach ($areas as $a): ?>
         <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
       <?php endforeach; ?>
     </div>
-  </div>
-  <div class="form-section">
-    <h3>Competencias MEN</h3>
+    <h3 style="margin-top:.5rem">Competencias MEN</h3>
     <div class="checkbox-grid">
       <?php foreach ($competencias as $c): ?>
         <label class="checkbox-label"><input type="checkbox" name="competencias[]" value="<?= (int)$c['id'] ?>" <?= in_array($c['id'], $existing_comp_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>)</label>
       <?php endforeach; ?>
     </div>
-  </div>
   <div class="form-group">
     <label for="tags">Tags (separados por coma)</label>
     <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
   </div>
-  <div class="actions" style="margin-top:1rem;">
+  </div>
+  <div class="form-actions">
     <button type="submit" class="btn">Guardar</button>
     <a href="/admin/clases/index.php" class="btn btn-secondary">Cancelar</a>
     <?php if ($is_edit): ?>
