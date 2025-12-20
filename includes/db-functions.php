@@ -9,13 +9,29 @@
  */
 
 function cdc_get_featured_proyectos($pdo, $limit = 3) {
-    $stmt = $pdo->prepare("SELECT * FROM proyectos WHERE activo = 1 AND destacado = 1 ORDER BY updated_at DESC LIMIT ?");
+    $sql = "SELECT p.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
+            FROM proyectos p
+            LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id
+            LEFT JOIN areas a ON a.id = pa.area_id
+            WHERE p.activo = 1 AND p.destacado = 1
+            GROUP BY p.id
+            ORDER BY p.updated_at DESC
+            LIMIT ?";
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$limit]);
     return $stmt->fetchAll();
 }
 
 function cdc_get_recent_proyectos($pdo, $limit = 6) {
-    $stmt = $pdo->prepare("SELECT * FROM proyectos WHERE activo = 1 ORDER BY updated_at DESC LIMIT ?");
+    $sql = "SELECT p.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
+            FROM proyectos p
+            LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id
+            LEFT JOIN areas a ON a.id = pa.area_id
+            WHERE p.activo = 1
+            GROUP BY p.id
+            ORDER BY p.updated_at DESC
+            LIMIT ?";
+    $stmt = $pdo->prepare($sql);
     $stmt->execute([$limit]);
     return $stmt->fetchAll();
 }

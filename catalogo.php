@@ -17,7 +17,10 @@ function cdc_get_competencias($pdo) {
 function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
     $params = [];
     $where = ["p.activo = 1"];
-    $joins = [];
+    $joins = [
+        "LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id",
+        "LEFT JOIN areas a ON a.id = pa.area_id"
+    ];
 
     if (!empty($filters['ciclo'])) {
         $where[] = "p.ciclo = ?";
@@ -52,7 +55,7 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
         $params[] = $filters['dificultad'];
     }
 
-    $sql = "SELECT p.*
+        $sql = "SELECT p.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
             FROM proyectos p
             " . implode(' ', array_unique($joins)) . "
             WHERE " . implode(' AND ', $where) . "
@@ -70,7 +73,10 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
 function cdc_count_proyectos($pdo, $filters = []) {
     $params = [];
     $where = ["p.activo = 1"];
-    $joins = [];
+    $joins = [
+        "LEFT JOIN proyecto_areas pa ON pa.proyecto_id = p.id",
+        "LEFT JOIN areas a ON a.id = pa.area_id"
+    ];
 
     if (!empty($filters['ciclo'])) {
         $where[] = "p.ciclo = ?";
@@ -243,8 +249,25 @@ include 'includes/header.php';
                             <p class="excerpt"><small><?= h($p['resumen']) ?></small></p>
                             <?php endif; ?>
                             <div class="card-footer">
-                                <span class="read-time"><?= (int)$p['duracion_minutos'] ?> min</span>
-                                <span class="date">Actualizado <?= format_date($p['updated_at'], 'M j, Y') ?></span>
+                                <?php
+                                $edad_label = '';
+                                if (!empty($p['seguridad'])) {
+                                    $seg = json_decode($p['seguridad'], true);
+                                    if (is_array($seg) && isset($seg['edad_min'], $seg['edad_max'])) {
+                                        $edad_label = 'Edad ' . (int)$seg['edad_min'] . '–' . (int)$seg['edad_max'];
+                                    }
+                                }
+                                if ($edad_label === '' && !empty($p['grados'])) {
+                                    $gr = json_decode($p['grados'], true);
+                                    if (is_array($gr) && count($gr) > 0) {
+                                        $minG = min($gr); $maxG = max($gr);
+                                        $edad_label = 'Grados ' . (int)$minG . '°–' . (int)$maxG . '°';
+                                    }
+                                }
+                                $area_label = !empty($p['areas_nombres']) ? $p['areas_nombres'] : '';
+                                ?>
+                                <?php if ($area_label): ?><span class="area">Área: <?= h($area_label) ?></span><?php endif; ?>
+                                <?php if ($edad_label): ?><span class="age"><?= h($edad_label) ?></span><?php endif; ?>
                             </div>
                         </div>
                     </a>
