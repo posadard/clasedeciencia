@@ -2084,6 +2084,11 @@ strong, b {
     font-weight: 600;
 }
 
+.listbox-header strong {
+    color: white;
+    font-weight: 600;
+}
+
 .counter {
     background: rgba(255,255,255,0.2);
     padding: 2px 8px;
