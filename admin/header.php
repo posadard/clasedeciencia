@@ -25,9 +25,12 @@
 <body>
     <!-- SVG sprite for small icons used in admin (kept inline for widest compatibility) -->
     <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;" xmlns="http://www.w3.org/2000/svg">
-        <symbol id="icon-leaf" viewBox="0 0 24 24">
-            <path d="M20 6c-4 0-8 4-10 6S4 18 4 18" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20 6c0 4-4 8-8 10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <symbol id="icon-lupa" viewBox="0 0 24 24">
+            <!-- Lupa (magnifying glass) para el logo del admin -->
+            <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>
+            <ellipse cx="8" cy="8" rx="2" ry="3" fill="currentColor" opacity="0.15" transform="rotate(-35 8 8)"/>
         </symbol>
         <symbol id="icon-dashboard" viewBox="0 0 24 24">
             <rect x="3" y="3" width="8" height="8" stroke="currentColor" stroke-width="1.2" fill="none"/>
@@ -90,7 +93,7 @@
     </svg>
 
     <header class="admin-header">
-        <h1 class="site-title"><svg class="logo-icon" width="20" height="20" aria-hidden="true"><use xlink:href="#icon-leaf"/></svg> Clase de Ciencia - Admin
+        <h1 class="site-title"><svg class="logo-icon" width="20" height="20" aria-hidden="true"><use xlink:href="#icon-lupa"/></svg> Clase de Ciencia - Admin
         <?php if (!empty($_SESSION['admin_debug_mode'])): ?>
           <span style="margin-left:0.5rem;padding:0.2rem 0.4rem;background:#ff9800;color:#000;font-size:0.85rem;font-weight:700;">DEBUG (sin credenciales)</span>
         <?php endif; ?>

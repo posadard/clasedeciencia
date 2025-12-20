@@ -1,15 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Simple leaf favicon for The Green Almanac
-     Uses a circular accent background and a white leaf silhouette.
-     Scalable SVG works well as a favicon in modern browsers. -->
+<!-- Favicon con lupa para Clase de Ciencia
+     Representa investigación, búsqueda del conocimiento y ciencia.
+     Paleta azul institucional con acento amarillo curiosidad. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
-    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
-      <stop offset="0%" stop-color="#7fa87a"/>
-      <stop offset="100%" stop-color="#5f8a5f"/>
+    <linearGradient id="bgGrad" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#3d5ba9"/>
+      <stop offset="100%" stop-color="#1f3c88"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="12" ry="12" fill="url(#g)"/>
-  <path d="M44.5 20.5c-6.2 1.6-12.8 5.8-16.1 10.7-3.6 5.4-3.9 11.4-3.9 11.4s6.4-0.3 11.4-3.9c4.9-3.3 9.2-9.9 10.7-16.1 0.6-2.3-2.2-4.1-2.1-2.1z" fill="#ffffff" opacity="0.98"/>
-  <path d="M22.5 18c4 0.2 9.2 1.7 13.4 4.6 3.3 2.4 5.5 5.3 6.3 6.5-1.6 0.1-4.1 0-6.8-0.6-3.6-0.9-7.4-3.1-10.1-5.8-2.6-2.6-4.8-6.4-2.8-4.7z" fill="#ffffff" opacity="0.92"/>
+  
+  <!-- Fondo redondeado azul científico -->
+  <rect width="64" height="64" rx="12" ry="12" fill="url(#bgGrad)"/>
+  
+  <!-- Lupa / Magnifying Glass -->
+  <!-- Lente circular con borde blanco -->
+  <circle cx="28" cy="28" r="14" fill="none" stroke="#ffffff" stroke-width="3.5" opacity="0.95"/>
+  
+  <!-- Interior de la lente (vidrio con reflejo) -->
+  <circle cx="28" cy="28" r="11" fill="#ffffff" opacity="0.15"/>
+  
+  <!-- Reflejo de luz en el vidrio -->
+  <ellipse cx="24" cy="24" rx="5" ry="7" fill="#ffffff" opacity="0.4" transform="rotate(-35 24 24)"/>
+  
+  <!-- Mango de la lupa -->
+  <rect x="38" y="38" width="4" height="18" rx="2" fill="#ffffff" opacity="0.95" transform="rotate(45 40 47)"/>
+  
+  <!-- Detalle del mango (amarillo curiosidad) -->
+  <rect x="38.5" y="50" width="3" height="4" rx="1" fill="#f9a825" opacity="0.98" transform="rotate(45 40 52)"/>
+  
+  <!-- Símbolo científico dentro de la lupa (átomo simplificado) -->
+  <circle cx="28" cy="28" r="2.5" fill="#f9a825" opacity="0.9"/>
+  <ellipse cx="28" cy="28" rx="7" ry="3" fill="none" stroke="#ffc107" stroke-width="1" opacity="0.7" transform="rotate(30 28 28)"/>
+  <ellipse cx="28" cy="28" rx="7" ry="3" fill="none" stroke="#ffc107" stroke-width="1" opacity="0.7" transform="rotate(-30 28 28)"/>
 </svg>
