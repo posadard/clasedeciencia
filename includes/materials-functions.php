@@ -1,5 +1,128 @@
 <?php
 /**
+ * Clase de Ciencia - Materials Functions (adapted)
+ * Map legacy calls to CdC schema: categorias_materiales, materiales
+ */
+
+// Categories
+function get_material_categories($pdo) {
+    $stmt = $pdo->query("SELECT id, nombre AS name, slug, icono AS icon, descripcion AS description FROM categorias_materiales ORDER BY nombre ASC");
+    return $stmt->fetchAll();
+}
+
+function get_material_category_by_slug($pdo, $slug) {
+    $stmt = $pdo->prepare("SELECT id, nombre AS name, slug, icono AS icon, descripcion AS description FROM categorias_materiales WHERE slug = ?");
+    $stmt->execute([$slug]);
+    return $stmt->fetch();
+}
+
+function get_subcategories_by_category($pdo, $category_id) {
+    // CdC: no subcategories table (return empty)
+    return [];
+}
+
+function get_all_subcategories($pdo) {
+    // CdC: no subcategories
+    return [];
+}
+
+// Materials listing
+function get_materials($pdo, $filters = [], $limit = null, $offset = 0) {
+    $params = [];
+    $where = ["1=1"]; // CdC materiales doesn't have status
+
+    $joins = ["LEFT JOIN categorias_materiales cm ON m.categoria_id = cm.id"];
+
+    if (!empty($filters['category'])) {
+        // filters['category'] is slug
+        $where[] = "cm.slug = ?";
+        $params[] = $filters['category'];
+    }
+
+    if (!empty($filters['search'])) {
+        $where[] = "(m.nombre_comun LIKE ? OR m.nombre_tecnico LIKE ? OR m.descripcion LIKE ?)";
+        $term = '%' . $filters['search'] . '%';
+        $params[] = $term; $params[] = $term; $params[] = $term;
+    }
+
+    $sql = "SELECT 
+                m.id,
+                m.slug,
+                m.nombre_comun AS common_name,
+                m.nombre_tecnico AS technical_name,
+                m.descripcion AS description,
+                cm.nombre AS category_name,
+                cm.slug AS category_slug,
+                cm.icono AS category_icon,
+                NULL AS featured,
+                NULL AS essential,
+                NULL AS difficulty_level,
+                NULL AS chemical_formula,
+                NULL AS cas_number
+            FROM materiales m
+            " . implode(' ', $joins) . "
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY cm.nombre ASC, m.nombre_comun ASC";
+
+    if ($limit !== null) {
+        $sql .= " LIMIT ? OFFSET ?";
+        $params[] = (int)$limit;
+        $params[] = (int)$offset;
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetchAll();
+}
+
+function count_materials($pdo, $filters = []) {
+    $params = [];
+    $where = ["1=1"];
+    $joins = ["LEFT JOIN categorias_materiales cm ON m.categoria_id = cm.id"];
+
+    if (!empty($filters['category'])) {
+        $where[] = "cm.slug = ?";
+        $params[] = $filters['category'];
+    }
+    if (!empty($filters['search'])) {
+        $where[] = "(m.nombre_comun LIKE ? OR m.nombre_tecnico LIKE ? OR m.descripcion LIKE ?)";
+        $term = '%' . $filters['search'] . '%';
+        $params[] = $term; $params[] = $term; $params[] = $term;
+    }
+
+    $sql = "SELECT COUNT(*) AS total
+            FROM materiales m
+            " . implode(' ', $joins) . "
+            WHERE " . implode(' AND ', $where);
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    return (int)($row['total'] ?? 0);
+}
+
+// Material detail
+function get_material_by_slug($pdo, $slug) {
+    $sql = "SELECT 
+                m.*, 
+                cm.nombre AS category_name, cm.slug AS category_slug, cm.icono AS category_icon
+            FROM materiales m
+            LEFT JOIN categorias_materiales cm ON m.categoria_id = cm.id
+            WHERE m.slug = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$slug]);
+    $material = $stmt->fetch();
+    if (!$material) return null;
+    // Placeholder arrays expected by legacy templates
+    $material['other_names_array'] = [];
+    $material['specifications_array'] = [];
+    $material['gallery_images_array'] = [];
+    $material['used_in_articles'] = [];
+    return $material;
+}
+
+// Legacy admin/stat functions from TGA are omitted in CdC adaptation.
+?><?php
+/**
  * The Green Almanac - Materials Database Functions
  * Functions for querying materials, categories, and relationships
  */
