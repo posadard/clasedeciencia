@@ -192,9 +192,6 @@ strong, b {
     color: var(--color-accent);
     text-decoration: none;
     border: none;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem; /* Espacio entre lupa y texto */
 }
 
 .site-title:hover a {
@@ -208,11 +205,6 @@ strong, b {
 
 .site-title::before {
     content: ""; /* icon moved to inline SVG in header for consistent rendering */
-}
-
-/* Logo icon (lupa) */
-.logo-icon {
-    flex-shrink: 0;
 }
 
 .site-tagline {
@@ -329,26 +321,6 @@ strong, b {
     
     .search-input::placeholder {
         font-size: 0.8125rem;
-    }
-    
-    /* Header mobile adjustments */
-    .site-header {
-        padding: 0.75rem 0;
-    }
-    
-    .site-title {
-        font-size: 1.125rem;
-        text-align: center;
-    }
-    
-    .site-title a {
-        font-size: 1.125rem;
-        justify-content: center;
-    }
-    
-    /* Ocultar lupa en mobile para mejor centrado */
-    .logo-icon {
-        display: none;
     }
 }
 
