@@ -394,6 +394,8 @@ include '../header.php';
   </div>
 </form>
 
+<!-- Editor: CKEditor 4 (matches article-edit, no API key) -->
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
 <script>
   const nombreInput = document.getElementById('nombre');
   const slugInput = document.getElementById('slug');
@@ -425,8 +427,12 @@ include '../header.php';
     let descSrc = (resumenInput && resumenInput.value.trim()) ? resumenInput.value.trim() : '';
     if (!descSrc) {
       try {
-        if (window.tinymce) { descSrc = textFromHtml(tinymce.get('contenido_html')?.getContent() || ''); }
-        else { const ta = document.getElementById('contenido_html'); descSrc = textFromHtml(ta ? ta.value : ''); }
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+          descSrc = textFromHtml(CKEDITOR.instances.contenido_html.getData() || '');
+        } else {
+          const ta = document.getElementById('contenido_html');
+          descSrc = textFromHtml(ta ? ta.value : '');
+        }
       } catch(e) { descSrc = ''; }
     }
     const autoDesc = shortenAtWord(descSrc, 160);
@@ -468,43 +474,45 @@ include '../header.php';
   if (seoTitle) seoTitle.addEventListener('input', ()=>{ if (seoTitle.value.length>160) console.log('⚠️ [ClasesEdit] SEO title >160'); });
   if (seoDesc) seoDesc.addEventListener('input', ()=>{ if (seoDesc.value.length>255) console.log('⚠️ [ClasesEdit] SEO description >255'); });
 
-  // Integración TinyMCE estilo article-edit (content)
-  (function initTiny() {
-    const src = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js';
-    const s = document.createElement('script');
-    s.src = src; s.referrerPolicy = 'origin';
-    s.onload = () => {
-      console.log('✅ [ClasesEdit] TinyMCE cargado');
-      try {
-        tinymce.init({
-          selector: '#contenido_html',
+  // Integración CKEditor 4 (como article-edit)
+  (function initCKE() {
+    try {
+      if (window.CKEDITOR) {
+        CKEDITOR.replace('contenido_html', {
           height: 500,
-          menubar: true,
-          plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table help wordcount',
-          toolbar: 'undo redo | styles | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image media | table | code preview fullscreen',
-          content_style: 'body { font-family:Inter, Arial, sans-serif; font-size:14px; }',
-          branding: false,
-          convert_urls: false,
-          image_caption: true,
-          placeholder: 'Escribe el contenido de la guía aquí...',
-          setup: (editor) => {
-            editor.on('change keyup', () => computeSeo());
-          }
+          removePlugins: 'elementspath',
+          resize_enabled: true
         });
-      } catch (e) {
-        console.log('❌ [ClasesEdit] Error iniciando TinyMCE:', e.message);
+        console.log('✅ [ClasesEdit] CKEditor 4 cargado');
+        // Live SEO compute on editor changes
+        const instReady = () => {
+          const inst = CKEDITOR.instances && CKEDITOR.instances.contenido_html;
+          if (inst) {
+            inst.on('change', computeSeo);
+            inst.on('key', computeSeo);
+          }
+        };
+        // If ready now, attach; otherwise wait
+        if (CKEDITOR.instances && CKEDITOR.instances.contenido_html) instReady();
+        else CKEDITOR.on('instanceReady', instReady);
+      } else {
+        console.log('⚠️ [ClasesEdit] CKEditor no disponible, usando textarea simple');
       }
-    };
-    s.onerror = () => console.log('⚠️ [ClasesEdit] No se pudo cargar TinyMCE, usando textarea simple');
-    document.head.appendChild(s);
+    } catch(e) {
+      console.log('❌ [ClasesEdit] Error iniciando CKEditor:', e.message);
+    }
   })();
 
   // Asegurar sincronización del editor antes de enviar
   const formEl = document.querySelector('form');
   if (formEl) {
     formEl.addEventListener('submit', function() {
-      try { if (window.tinymce) { tinymce.triggerSave(); console.log('✅ [ClasesEdit] TinyMCE contenido sincronizado'); } }
-      catch(e) { console.log('⚠️ [ClasesEdit] No se pudo sincronizar TinyMCE:', e.message); }
+      try {
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+          CKEDITOR.instances.contenido_html.updateElement();
+          console.log('✅ [ClasesEdit] CKEditor contenido sincronizado');
+        }
+      } catch(e) { console.log('⚠️ [ClasesEdit] No se pudo sincronizar CKEditor:', e.message); }
       computeSeo();
     });
   }
