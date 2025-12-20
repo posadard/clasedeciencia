@@ -67,7 +67,6 @@
                     <ul>
                         <li><a href="/">Inicio</a></li>
                         <li><a href="/catalogo.php">Catálogo</a></li>
-                        <li><a href="/materials.php">Materiales</a></li>
                         <li><a href="/contact.php">Contacto</a></li>
                     </ul>
                 </nav>

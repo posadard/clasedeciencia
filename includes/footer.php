@@ -13,7 +13,6 @@
                     <ul>
                         <li><a href="/">Home</a></li>
                         <li><a href="/library.php">Library</a></li>
-                        <li><a href="/materials.php">Materials</a></li>
                     </ul>
                 </div>
                 

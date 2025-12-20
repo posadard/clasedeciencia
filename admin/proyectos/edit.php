@@ -1,9 +1,5 @@
 <?php
 require_once '../auth.php';
-$page_title = 'Proyectos - Editar';
-include '../header.php';
-<?php
-require_once '../auth.php';
 
 $is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
 $id = $is_edit ? (int)$_GET['id'] : null;
@@ -89,8 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
     }
   }
-}
-
 }
 
 include '../header.php';

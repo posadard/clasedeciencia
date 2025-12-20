@@ -29,9 +29,27 @@ include 'includes/header.php';
         <p>Explora guías paso a paso, materiales del kit y explicaciones científicas alineadas con competencias MEN.</p>
         <div class="hero-actions">
             <a href="/catalogo.php" class="btn btn-primary">Explorar Catálogo</a>
-            <a href="/materials.php" class="btn btn-secondary">Ver Materiales</a>
         </div>
     </section>
+        <!-- Acceso Rápido por Ciclo -->
+        <section class="sections-overview">
+            <h2>Explorar por Ciclo</h2>
+            <div class="sections-grid">
+                <a href="/catalogo.php?ciclo=1" class="section-card">
+                    <h3>Ciclo 1: Exploración (6°-7°)</h3>
+                    <p>Observar, describir y reconocer fenómenos.</p>
+                </a>
+                <a href="/catalogo.php?ciclo=2" class="section-card">
+                    <h3>Ciclo 2: Experimentación (8°-9°)</h3>
+                    <p>Explicar, comparar y establecer relaciones causales.</p>
+                </a>
+                <a href="/catalogo.php?ciclo=3" class="section-card">
+                    <h3>Ciclo 3: Análisis (10°-11°)</h3>
+                    <p>Analizar, argumentar y conectar con el mundo real.</p>
+                </a>
+            </div>
+        </section>
+
     
     <!-- Proyectos Destacados -->
     <?php if (!empty($featured_projects)): ?>
