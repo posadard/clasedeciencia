@@ -418,6 +418,48 @@ include '../header.php';
     <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>
   </div>
   </div>
+  
+  <!-- Kits de Materiales (Autocomplete con Chips) -->
+  <div class="form-section">
+    <h2>Kits de Materiales</h2>
+  <div class="form-group">
+    <label for="kit_search">Buscar Kits</label>
+    <div class="kit-selector-container">
+      <div class="selected-kits" id="selected-kits">
+        <?php 
+        // Renderizar kits ya seleccionados
+        foreach ($existing_kit_ids as $kit_id) {
+          foreach ($all_kits as $kit) {
+            if ($kit['id'] == $kit_id) {
+              echo '<div class="kit-chip" data-kit-id="' . $kit['id'] . '">';
+              echo '<span>' . htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') . '</span>';
+              echo '<button type="button" class="edit-kit" onclick="editKit(' . $kit['id'] . ')" title="Editar kit">✏️</button>';
+              echo '<button type="button" class="remove-kit" onclick="removeKit(this)" title="Remover kit">×</button>';
+              echo '</div>';
+              break;
+            }
+          }
+        }
+        ?>
+      </div>
+      <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
+      <datalist id="kits_list">
+        <?php foreach ($all_kits as $kit): ?>
+          <?php if ($kit['activo']): ?>
+            <option value="<?= $kit['id'] ?>" data-name="<?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($kit['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>
+              <?= $kit['codigo'] ? ' (' . htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') . ')' : '' ?>
+            </option>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </datalist>
+      <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
+    </div>
+    <small>Escribe para buscar kits. Puedes seleccionar múltiples. El primero será el kit principal.</small>
+    <div id="kits-hidden"></div>
+  </div>
+  </div>
+  
   <!-- Taxonomías -->
   <div class="form-section">
     <h2>Taxonomías</h2>
@@ -528,44 +570,6 @@ include '../header.php';
   <div class="form-group">
     <label for="tags">Tags (separados por coma)</label>
     <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
-  </div>
-  
-  <!-- Kits de Materiales (Autocomplete con Chips) -->
-  <div class="form-group">
-    <label for="kit_search">Kits de Materiales</label>
-    <div class="kit-selector-container">
-      <div class="selected-kits" id="selected-kits">
-        <?php 
-        // Renderizar kits ya seleccionados
-        foreach ($existing_kit_ids as $kit_id) {
-          foreach ($all_kits as $kit) {
-            if ($kit['id'] == $kit_id) {
-              echo '<div class="kit-chip" data-kit-id="' . $kit['id'] . '">';
-              echo '<span>' . htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') . '</span>';
-              echo '<button type="button" class="edit-kit" onclick="editKit(' . $kit['id'] . ')" title="Editar kit">✏️</button>';
-              echo '<button type="button" class="remove-kit" onclick="removeKit(this)" title="Remover kit">×</button>';
-              echo '</div>';
-              break;
-            }
-          }
-        }
-        ?>
-      </div>
-      <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
-      <datalist id="kits_list">
-        <?php foreach ($all_kits as $kit): ?>
-          <?php if ($kit['activo']): ?>
-            <option value="<?= $kit['id'] ?>" data-name="<?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($kit['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
-              <?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>
-              <?= $kit['codigo'] ? ' (' . htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') . ')' : '' ?>
-            </option>
-          <?php endif; ?>
-        <?php endforeach; ?>
-      </datalist>
-      <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
-    </div>
-    <small>Escribe para buscar kits. Puedes seleccionar múltiples. El primero será el kit principal.</small>
-    <div id="kits-hidden"></div>
   </div>
   </div>
   <!-- SEO -->
