@@ -510,11 +510,14 @@ include '../header.php';
     <h2>SEO</h2>
   <div class="form-row">
     <div class="form-group">
-      <label for="seo_title">SEO Title (≤160)</label>
-      <input type="text" id="seo_title" name="seo_title" maxlength="160" value="<?= htmlspecialchars($clase['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+      <label for="seo_title">SEO Title (≤60)</label>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <input type="text" id="seo_title" name="seo_title" maxlength="160" value="<?= htmlspecialchars($clase['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="flex: 1;" />
+        <button type="button" id="btn_generar_seo" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar SEO</button>
+      </div>
     </div>
     <div class="form-group">
-      <label for="seo_description">SEO Description (≤255)</label>
+      <label for="seo_description">SEO Description (≤160)</label>
       <input type="text" id="seo_description" name="seo_description" maxlength="255" value="<?= htmlspecialchars($clase['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
     </div>
   </div>
@@ -600,7 +603,7 @@ include '../header.php';
     const cut = str.slice(0, maxLen);
     return cut.replace(/\s+\S*$/, '').trim();
   }
-  function computeSeo() {
+  function computeSeo(forceRegenerate = false) {
     // Generar SEO Title educativo híbrido
     let verbo = 'Aprende';
     let areaNombre = '';
@@ -663,11 +666,11 @@ include '../header.php';
     if (seoPrevTitle) seoPrevTitle.textContent = autoTitle;
     if (seoPrevDesc) seoPrevDesc.textContent = autoDesc;
     
-    // If manual not enabled and inputs are empty, mirror preview into inputs
-    if (!seoToggle?.checked) {
-      if (seoTitleInput && !seoTitleInput.value) seoTitleInput.value = autoTitle;
-      if (seoDescInput && !seoDescInput.value) seoDescInput.value = autoDesc;
-      console.log('🔍 [SEO] autogenerados:', {verbo, area: areaNombre, title: autoTitle.substring(0,50)+'...'});
+    // If manual not enabled and inputs are empty (or forceRegenerate), mirror preview into inputs
+    if (!seoToggle?.checked || forceRegenerate) {
+      if (seoTitleInput && (!seoTitleInput.value || forceRegenerate)) seoTitleInput.value = autoTitle;
+      if (seoDescInput && (!seoDescInput.value || forceRegenerate)) seoDescInput.value = autoDesc;
+      console.log('🔍 [SEO] autogenerados:', {verbo, area: areaNombre, title: autoTitle.substring(0,50)+'...', forced: forceRegenerate});
     }
   }
   // Toggle manual panel
@@ -701,6 +704,40 @@ include '../header.php';
       slugInput.value = s;
       console.log('⚡ [ClasesEdit] slug generado con botón:', s);
       computeSeo();
+    });
+  }
+  
+  // Botón generar SEO
+  const btnGenerarSeo = document.getElementById('btn_generar_seo');
+  if (btnGenerarSeo) {
+    btnGenerarSeo.addEventListener('click', () => {
+      if (!nombreInput.value.trim()) {
+        alert('Por favor ingresa el nombre de la clase primero');
+        nombreInput.focus();
+        return;
+      }
+      const areasChecked = document.querySelectorAll('input[name="areas[]"]:checked');
+      const compSelected = document.getElementById('selected-list')?.querySelectorAll('.competencia-item');
+      
+      if (areasChecked.length === 0) {
+        alert('Por favor selecciona al menos un área para generar un SEO educativo óptimo');
+        return;
+      }
+      if (!compSelected || compSelected.length === 0) {
+        alert('Por favor asigna al menos una competencia para un SEO más descriptivo');
+        return;
+      }
+      
+      computeSeo(true); // Force regenerate
+      console.log('⚡ [ClasesEdit] SEO regenerado manualmente');
+      
+      // Visual feedback
+      seoTitleInput.style.background = '#e6f7ff';
+      seoDescInput.style.background = '#e6f7ff';
+      setTimeout(() => {
+        seoTitleInput.style.background = '';
+        seoDescInput.style.background = '';
+      }, 1000);
     });
   }
   
