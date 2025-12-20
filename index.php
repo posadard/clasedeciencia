@@ -1,28 +1,22 @@
 <?php
 /**
- * Homepage - The Green Almanac
+ * Homepage - Clase de Ciencia (adaptado)
  */
 
 require_once 'config.php';
 require_once 'includes/functions.php';
 require_once 'includes/db-functions.php';
-require_once 'includes/materials-functions.php';
+// Nota: el módulo de materiales se adaptará luego al esquema CdC
 
-$page_title = 'Home';
-$page_description = 'Practical chemistry guidance for homesteaders and farmers - Simple, safe methods using common chemicals';
+$page_title = 'Inicio';
+$page_description = 'Proyectos científicos interactivos para estudiantes colombianos (6°-11°).';
 $canonical_url = SITE_URL . '/';
 
-// Get featured articles
-$featured_articles = get_featured_articles($pdo, 3);
-
-// Get recent articles
-$recent_articles = get_articles($pdo, [], 6);
-
-// Get featured materials
-$featured_materials = get_featured_materials($pdo, 6);
-
-// Get all sections for quick links
-$sections = get_sections($pdo);
+// Proyectos destacados y recientes (CdC)
+$featured_projects = cdc_get_featured_proyectos($pdo, 3);
+$recent_projects = cdc_get_recent_proyectos($pdo, 6);
+// Áreas para acceso rápido
+$areas = cdc_get_areas($pdo);
 
 include 'includes/header.php';
 ?>
@@ -30,34 +24,33 @@ include 'includes/header.php';
 <div class="container">
     <!-- Hero Section -->
     <section class="hero">
-        <h2>Welcome to <?= SITE_NAME ?></h2>
-        <p class="hero-subtitle">Practical chemistry guidance for homesteaders and farmers</p>
-        <p>Simple, safe methods using common chemicals. Low-bandwidth, printable content for the modern homestead.</p>
+        <h2>Bienvenido a <?= SITE_NAME ?></h2>
+        <p class="hero-subtitle">Proyectos científicos para grados 6°-11°</p>
+        <p>Explora guías paso a paso, materiales del kit y explicaciones científicas alineadas con competencias MEN.</p>
         <div class="hero-actions">
-            <a href="/library.php" class="btn btn-primary">Browse Library</a>
-            <a href="https://shop.chemicalstore.com/?utm_source=thegreenalmanac&utm_medium=referral&utm_campaign=homepage_hero" target="_blank" rel="noopener" class="btn btn-secondary">Look for materials</a>
+            <a href="/catalogo.php" class="btn btn-primary">Explorar Catálogo</a>
+            <a href="/materials.php" class="btn btn-secondary">Ver Materiales</a>
         </div>
     </section>
     
-    <!-- Featured Articles -->
-    <?php if (!empty($featured_articles)): ?>
+    <!-- Proyectos Destacados -->
+    <?php if (!empty($featured_projects)): ?>
     <section class="featured-articles">
-        <h2>Featured Articles</h2>
+        <h2>Proyectos Destacados</h2>
         <div class="articles-grid featured">
-            <?php foreach ($featured_articles as $article): ?>
-            <article class="article-card featured" data-href="/article.php?slug=<?= h($article['slug']) ?>">
-                <a class="card-link" href="/article.php?slug=<?= h($article['slug']) ?>">
+            <?php foreach ($featured_projects as $p): ?>
+            <article class="article-card featured" data-href="/proyecto.php?slug=<?= h($p['slug']) ?>">
+                <a class="card-link" href="/proyecto.php?slug=<?= h($p['slug']) ?>">
                     <div class="card-content">
                         <div class="card-meta">
-                            <span class="section-badge"><?= h($article['section_name']) ?></span>
-                            <span class="difficulty-badge difficulty-<?= h($article['difficulty']) ?>"><?= h(ucfirst($article['difficulty'])) ?></span>
+                            <span class="section-badge">Ciclo <?= h($p['ciclo']) ?></span>
+                            <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                         </div>
-                        <h3><?= h($article['title']) ?></h3>
-                        <p class="excerpt"><?= h($article['excerpt']) ?></p>
+                        <h3><?= h($p['nombre']) ?></h3>
+                        <p class="excerpt"><?= h($p['resumen']) ?></p>
                         <div class="card-footer">
-                            <span class="format"><?= h(ucfirst($article['format'])) ?></span>
-                            <span class="read-time"><?= h($article['read_time_min']) ?> min read</span>
-                            <span class="date"><?= format_date($article['published_at']) ?></span>
+                            <span class="read-time"><?= (int)$p['duracion_minutos'] ?> min</span>
+                            <span class="date">Actualizado <?= format_date($p['updated_at']) ?></span>
                         </div>
                     </div>
                 </a>
@@ -67,66 +60,38 @@ include 'includes/header.php';
     </section>
     <?php endif; ?>
     
-    <!-- Sections Quick Access -->
+    <!-- Acceso Rápido por Área -->
     <section class="sections-overview">
-        <h2>Browse by Section</h2>
+        <h2>Explorar por Área</h2>
         <div class="sections-grid">
-            <?php foreach ($sections as $section): ?>
-            <a href="/section.php?slug=<?= h($section['slug']) ?>" class="section-card">
-                <h3><?= h($section['name']) ?></h3>
-                <p><?= h($section['description']) ?></p>
+            <?php foreach ($areas as $a): ?>
+            <a href="/catalogo.php?area=<?= h($a['slug']) ?>" class="section-card">
+                <h3><?= h($a['nombre']) ?></h3>
+                <p><?= h($a['descripcion']) ?></p>
             </a>
             <?php endforeach; ?>
         </div>
     </section>
     
-    <!-- Featured Materials -->
-    <?php if (!empty($featured_materials)): ?>
-    <section class="featured-materials">
-        <h2>Essential Materials & Equipment</h2>
-        <p class="section-subtitle">Quality supplies for your homestead projects</p>
-        <div class="materials-grid">
-            <?php foreach ($featured_materials as $material): ?>
-            <a href="/material.php?slug=<?= h($material['slug']) ?>" class="material-card">
-                <div class="material-header">
-                    <span class="material-icon"><?= $material['category_icon'] ?></span>
-                    <span class="material-category"><?= h($material['category_name']) ?></span>
-                </div>
-                <h3><?= h($material['common_name']) ?></h3>
-                <?php if ($material['technical_name']): ?>
-                <p class="material-technical"><?= h($material['technical_name']) ?></p>
-                <?php endif; ?>
-                <?php if ($material['chemical_formula']): ?>
-                <p class="material-formula"><?= h($material['chemical_formula']) ?></p>
-                <?php endif; ?>
-                <p class="material-description"><?= h(substr($material['description'], 0, 100)) ?>...</p>
-            </a>
-            <?php endforeach; ?>
-        </div>
-        <div class="text-center">
-            <a href="/materials.php" class="btn btn-secondary">View All Materials</a>
-        </div>
-    </section>
-    <?php endif; ?>
+    <!-- Materiales (se adaptará al esquema CdC en una fase posterior) -->
     
-    <!-- Recent Articles -->
-    <?php if (!empty($recent_articles)): ?>
+    <!-- Proyectos Recientes -->
+    <?php if (!empty($recent_projects)): ?>
     <section class="recent-articles">
-        <h2>Recent Articles</h2>
+        <h2>Proyectos Recientes</h2>
         <div class="articles-grid">
-            <?php foreach ($recent_articles as $article): ?>
-            <article class="article-card" data-href="/article.php?slug=<?= h($article['slug']) ?>">
-                <a class="card-link" href="/article.php?slug=<?= h($article['slug']) ?>">
+            <?php foreach ($recent_projects as $p): ?>
+            <article class="article-card" data-href="/proyecto.php?slug=<?= h($p['slug']) ?>">
+                <a class="card-link" href="/proyecto.php?slug=<?= h($p['slug']) ?>">
                     <div class="card-content">
                         <div class="card-meta">
-                            <span class="section-badge"><?= h($article['section_name']) ?></span>
-                            <span class="difficulty-badge difficulty-<?= h($article['difficulty']) ?>"><?= h(ucfirst($article['difficulty'])) ?></span>
+                            <span class="section-badge">Ciclo <?= h($p['ciclo']) ?></span>
+                            <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                         </div>
-                        <h3><?= h($article['title']) ?></h3>
-                        <p class="excerpt"><?= h($article['excerpt']) ?></p>
+                        <h3><?= h($p['nombre']) ?></h3>
+                        <p class="excerpt"><?= h($p['resumen']) ?></p>
                         <div class="card-footer">
-                            <span class="format"><?= h(ucfirst($article['format'])) ?></span>
-                            <span class="read-time"><?= h($article['read_time_min']) ?> min read</span>
+                            <span class="read-time"><?= (int)$p['duracion_minutos'] ?> min</span>
                         </div>
                     </div>
                 </a>
@@ -134,7 +99,7 @@ include 'includes/header.php';
             <?php endforeach; ?>
         </div>
         <div class="text-center">
-            <a href="/library.php" class="btn btn-secondary">View All Articles</a>
+            <a href="/catalogo.php" class="btn btn-secondary">Ver Catálogo</a>
         </div>
     </section>
     <?php endif; ?>
@@ -143,17 +108,23 @@ include 'includes/header.php';
     <section class="quick-links">
         <div class="quick-links-grid">
             <div class="quick-link-card">
-                <h3>Look for materials</h3>
-                <p>Purchase quality chemicals and supplies for your homestead.</p>
-                <a href="https://shop.chemicalstore.com/?utm_source=thegreenalmanac&utm_medium=referral&utm_campaign=homepage_quicklink" target="_blank" rel="noopener">Visit Store &rarr;</a>
+                <h3>Catálogo</h3>
+                <p>Explora proyectos por ciclo, grado y área.</p>
+                <a href="/catalogo.php">Ir al catálogo &rarr;</a>
             </div>
             <div class="quick-link-card">
-                <h3>Contact Us</h3>
-                <p>Questions or suggestions? Get in touch with our team.</p>
-                <a href="/contact.php">Contact &rarr;</a>
+                <h3>Contacto</h3>
+                <p>¿Preguntas o sugerencias? Escríbenos.</p>
+                <a href="/contact.php">Contacto &rarr;</a>
             </div>
         </div>
     </section>
 </div>
+
+<script>
+console.log('✅ [home] Proyectos destacados:', <?= isset($featured_projects) ? count($featured_projects) : 0 ?>);
+console.log('✅ [home] Proyectos recientes:', <?= isset($recent_projects) ? count($recent_projects) : 0 ?>);
+console.log('✅ [home] Áreas disponibles:', <?= isset($areas) ? count($areas) : 0 ?>);
+</script>
 
 <?php include 'includes/footer.php'; ?>

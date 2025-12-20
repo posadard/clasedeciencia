@@ -4,11 +4,39 @@
  */
 
 /**
+ * Clase de Ciencia - Proyecto/Áreas helpers (CdC schema)
+ * Lightweight adapters used by homepage and catalog while we migrate.
+ */
+
+function cdc_get_featured_proyectos($pdo, $limit = 3) {
+    $stmt = $pdo->prepare("SELECT * FROM proyectos WHERE activo = 1 AND destacado = 1 ORDER BY updated_at DESC LIMIT ?");
+    $stmt->execute([$limit]);
+    return $stmt->fetchAll();
+}
+
+function cdc_get_recent_proyectos($pdo, $limit = 6) {
+    $stmt = $pdo->prepare("SELECT * FROM proyectos WHERE activo = 1 ORDER BY updated_at DESC LIMIT ?");
+    $stmt->execute([$limit]);
+    return $stmt->fetchAll();
+}
+
+function cdc_get_areas($pdo) {
+    $stmt = $pdo->query("SELECT id, nombre, slug, color, descripcion FROM areas ORDER BY nombre");
+    return $stmt->fetchAll();
+}
+
+/**
  * Get all sections
  */
 function get_sections($pdo) {
-    $stmt = $pdo->query("SELECT * FROM sections ORDER BY sort_order ASC");
-    return $stmt->fetchAll();
+    // Legacy TGA: sections table no longer exists in CdC.
+    // Keep function for backward compatibility but return empty array in CdC context.
+    try {
+        $stmt = $pdo->query("SELECT * FROM sections ORDER BY sort_order ASC");
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        return [];
+    }
 }
 
 /**
@@ -32,16 +60,20 @@ function get_all_tags($pdo) {
  * Get featured articles for homepage
  */
 function get_featured_articles($pdo, $limit = 3) {
-    $sql = "SELECT a.*, s.name as section_name, s.slug as section_slug
-            FROM articles a
-            LEFT JOIN sections s ON a.section_id = s.id
-            WHERE a.status = 'published' AND a.featured = 1
-            ORDER BY a.published_at DESC
-            LIMIT ?";
-    
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$limit]);
-    return $stmt->fetchAll();
+    // Legacy TGA function; CdC uses proyectos. Return empty in CdC to avoid fatal errors.
+    try {
+        $sql = "SELECT a.*, s.name as section_name, s.slug as section_slug
+                FROM articles a
+                LEFT JOIN sections s ON a.section_id = s.id
+                WHERE a.status = 'published' AND a.featured = 1
+                ORDER BY a.published_at DESC
+                LIMIT ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        return [];
+    }
 }
 
 /**
@@ -117,9 +149,13 @@ function get_articles($pdo, $filters = [], $limit = null, $offset = 0) {
         $params[] = $offset;
     }
     
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt->fetchAll();
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        return [];
+    }
 }
 
 /**
@@ -192,10 +228,14 @@ function count_articles($pdo, $filters = []) {
                 ) as filtered";
     }
     
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $result = $stmt->fetch();
-    return $result['total'] ?? 0;
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $result = $stmt->fetch();
+        return $result['total'] ?? 0;
+    } catch (Exception $e) {
+        return 0;
+    }
 }
 
 /**
