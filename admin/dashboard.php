@@ -9,11 +9,25 @@ require_once 'auth.php';
 $page_title = 'Panel';
 
 // Helper seguro para conteos
+$tableExists = function (PDO $pdo, string $table) {
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
+        if (!$stmt) { return false; }
+        $stmt->execute([$table]);
+        return ((int)$stmt->fetchColumn()) > 0;
+    } catch (PDOException $e) {
+        error_log('Admin table exists check error: ' . $e->getMessage());
+        return false;
+    }
+};
+
 $getCount = function (PDO $pdo, string $sql) {
     try {
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([]);
-        return (int)$stmt->fetchColumn();
+        if (!$stmt) { return 0; }
+        if (!$stmt->execute([])) { return 0; }
+        $val = $stmt->fetchColumn();
+        return is_numeric($val) ? (int)$val : 0;
     } catch (PDOException $e) {
         error_log('Admin count error: ' . $e->getMessage());
         return 0;
@@ -23,11 +37,11 @@ $getCount = function (PDO $pdo, string $sql) {
 // Estadísticas principales
 try {
     $stats = [
-        'proyectos' => $getCount($pdo, "SELECT COUNT(*) FROM proyectos WHERE activo = 1"),
-        'materiales' => $getCount($pdo, "SELECT COUNT(*) FROM materiales"),
-        'contratos' => $getCount($pdo, "SELECT COUNT(*) FROM contratos"),
-        'entregas' => $getCount($pdo, "SELECT COUNT(*) FROM entregas"),
-        'lotes' => $getCount($pdo, "SELECT COUNT(*) FROM lotes_kits"),
+        'proyectos' => $tableExists($pdo, 'proyectos') ? $getCount($pdo, "SELECT COUNT(*) FROM proyectos WHERE activo = 1") : 0,
+        'materiales' => $tableExists($pdo, 'materiales') ? $getCount($pdo, "SELECT COUNT(*) FROM materiales") : 0,
+        'contratos' => $tableExists($pdo, 'contratos') ? $getCount($pdo, "SELECT COUNT(*) FROM contratos") : 0,
+        'entregas' => $tableExists($pdo, 'entregas') ? $getCount($pdo, "SELECT COUNT(*) FROM entregas") : 0,
+        'lotes' => $tableExists($pdo, 'lotes_kits') ? $getCount($pdo, "SELECT COUNT(*) FROM lotes_kits") : 0,
     ];
 } catch (PDOException $e) {
     error_log('Admin stats error: ' . $e->getMessage());
@@ -36,9 +50,16 @@ try {
 
 // Proyectos recientes
 try {
-    $stmt = $pdo->prepare("\n        SELECT id, nombre, slug, ciclo, updated_at, activo, destacado\n        FROM proyectos\n        ORDER BY updated_at DESC\n        LIMIT 5\n    ");
-    $stmt->execute([]);
-    $recent_proyectos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if ($tableExists($pdo, 'proyectos')) {
+        $stmt = $pdo->prepare("\n            SELECT id, nombre, slug, ciclo, updated_at, activo, destacado\n            FROM proyectos\n            ORDER BY updated_at DESC\n            LIMIT 5\n        ");
+        if ($stmt && $stmt->execute([])) {
+            $recent_proyectos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $recent_proyectos = [];
+        }
+    } else {
+        $recent_proyectos = [];
+    }
 } catch (PDOException $e) {
     error_log('Admin recent proyectos error: ' . $e->getMessage());
     $recent_proyectos = [];
@@ -46,11 +67,15 @@ try {
 
 // IA actividad (últimos 7 días)
 try {
-    $ia_stats = [
-        'consultas' => $getCount($pdo, "SELECT COUNT(*) FROM ia_logs WHERE tipo_evento = 'consulta' AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
-        'respuestas' => $getCount($pdo, "SELECT COUNT(*) FROM ia_logs WHERE tipo_evento = 'respuesta' AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
-        'guardrails' => $getCount($pdo, "SELECT COUNT(*) FROM ia_logs WHERE tipo_evento = 'guardrail_activado' AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
-    ];
+    if ($tableExists($pdo, 'ia_logs')) {
+        $ia_stats = [
+            'consultas' => $getCount($pdo, "SELECT COUNT(*) FROM ia_logs WHERE tipo_evento = 'consulta' AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+            'respuestas' => $getCount($pdo, "SELECT COUNT(*) FROM ia_logs WHERE tipo_evento = 'respuesta' AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+            'guardrails' => $getCount($pdo, "SELECT COUNT(*) FROM ia_logs WHERE tipo_evento = 'guardrail_activado' AND fecha_hora >= DATE_SUB(NOW(), INTERVAL 7 DAY)"),
+        ];
+    } else {
+        $ia_stats = ['consultas' => 0, 'respuestas' => 0, 'guardrails' => 0];
+    }
 } catch (PDOException $e) {
     error_log('Admin IA stats error: ' . $e->getMessage());
     $ia_stats = ['consultas' => 0, 'respuestas' => 0, 'guardrails' => 0];
