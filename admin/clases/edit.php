@@ -220,7 +220,11 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="slug">Slug</label>
-    <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($clase['slug'], ENT_QUOTES, 'UTF-8') ?>" placeholder="auto si se deja vacío" />
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($clase['slug'], ENT_QUOTES, 'UTF-8') ?>" placeholder="se genera automáticamente" style="flex: 1;" />
+      <button type="button" id="btn_generar_slug" style="padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar</button>
+    </div>
+    <small class="hint">URL amigable. Ejemplo: radio-de-cristal</small>
   </div>
   <div class="form-group">
     <label for="ciclo">Ciclo</label>
@@ -500,6 +504,24 @@ include '../header.php';
     }
     computeSeo();
   });
+  
+  // Botón generar slug
+  const btnGenerarSlug = document.getElementById('btn_generar_slug');
+  if (btnGenerarSlug) {
+    btnGenerarSlug.addEventListener('click', () => {
+      const nombreVal = nombreInput.value.trim();
+      if (!nombreVal) {
+        alert('Por favor ingresa el nombre de la clase primero');
+        nombreInput.focus();
+        return;
+      }
+      const s = nombreVal.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+      slugInput.value = s;
+      console.log('⚡ [ClasesEdit] slug generado con botón:', s);
+      computeSeo();
+    });
+  }
+  
   console.log('ℹ️ [ClasesEdit] Campo Sección ocultado (no requerido)');
   if (slugInput) slugInput.addEventListener('input', computeSeo);
   if (resumenInput) resumenInput.addEventListener('input', computeSeo);
