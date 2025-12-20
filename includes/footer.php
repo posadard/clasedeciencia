@@ -45,5 +45,9 @@
     </footer>
     
     <script src="/assets/js/main.js"></script>
+    <?php if (basename($_SERVER['PHP_SELF']) === 'index.php'): ?>
+    <!-- Home Search - Solo en homepage -->
+    <script src="/assets/js/home-search.js"></script>
+    <?php endif; ?>
 </body>
 </html>

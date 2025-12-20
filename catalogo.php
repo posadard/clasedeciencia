@@ -121,6 +121,16 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
         $where[] = "c.dificultad = ?";
         $params[] = $filters['dificultad'];
     }
+    
+    // Búsqueda por texto
+    if (!empty($filters['busqueda'])) {
+        $busqueda = '%' . $filters['busqueda'] . '%';
+        $where[] = "(c.nombre LIKE ? OR c.resumen LIKE ? OR c.objetivo_aprendizaje LIKE ? OR a.nombre LIKE ?)";
+        $params[] = $busqueda;
+        $params[] = $busqueda;
+        $params[] = $busqueda;
+        $params[] = $busqueda;
+    }
 
     // Determinar ordenamiento según sort
     $sort = $filters['sort'] ?? 'recomendados';
@@ -183,6 +193,16 @@ function cdc_count_proyectos($pdo, $filters = []) {
         $where[] = "c.dificultad = ?";
         $params[] = $filters['dificultad'];
     }
+    
+    // Búsqueda por texto
+    if (!empty($filters['busqueda'])) {
+        $busqueda = '%' . $filters['busqueda'] . '%';
+        $where[] = "(c.nombre LIKE ? OR c.resumen LIKE ? OR c.objetivo_aprendizaje LIKE ? OR a.nombre LIKE ?)";
+        $params[] = $busqueda;
+        $params[] = $busqueda;
+        $params[] = $busqueda;
+        $params[] = $busqueda;
+    }
 
     $sql = "SELECT COUNT(DISTINCT c.id) AS total
             FROM clases c
@@ -203,6 +223,7 @@ if (isset($_GET['ciclo']) && in_array((int)$_GET['ciclo'], $ciclos_validos, true
 if (isset($_GET['grado'])) $filters['grado'] = $_GET['grado'];
 if (isset($_GET['area'])) $filters['area'] = $_GET['area'];
 if (isset($_GET['competencia'])) $filters['competencia'] = $_GET['competencia'];
+if (isset($_GET['busqueda']) && trim($_GET['busqueda']) !== '') $filters['busqueda'] = trim($_GET['busqueda']);
 if (isset($_GET['dificultad'])) $filters['dificultad'] = $_GET['dificultad'];
 if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
@@ -301,6 +322,13 @@ include 'includes/header.php';
         </aside>
         <div class="library-content">
             <div class="results-header">
+                <?php if (!empty($filters['busqueda'])): ?>
+                <div class="search-active-banner">
+                    <span class="search-term">🔍 Resultados para: <strong><?= h($filters['busqueda']) ?></strong></span>
+                    <a href="/catalogo.php" class="clear-search">✕ Limpiar búsqueda</a>
+                </div>
+                <?php endif; ?>
+                
                 <p class="results-count">
                     Mostrando <?= count($proyectos) ?> de <?= $total ?> clases
                     <?php if ($total > POSTS_PER_PAGE): ?>
