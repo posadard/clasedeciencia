@@ -29,8 +29,10 @@ if (isset($_GET['slug_dinamico']) && !empty($_GET['slug_dinamico'])) {
             $_GET['area'] = $area_encontrada['slug'];
             unset($_GET['slug_dinamico']);
         } else {
-            // No es ciclo ni área - redirigir a proyecto.php
-            header('Location: /proyecto.php?slug=' . urlencode($slug_dinamico));
+            // No es ciclo ni área - es un proyecto, incluir proyecto.php
+            $_GET['slug'] = $slug_dinamico;
+            unset($_GET['slug_dinamico']);
+            include 'proyecto.php';
             exit;
         }
     }

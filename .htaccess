@@ -22,16 +22,6 @@ RewriteCond %{REQUEST_URI} !^/(admin|api|assets|includes|base_paginas|marco)/
 RewriteCond %{REQUEST_URI} !\.php$
 RewriteCond %{REQUEST_URI} !\.(css|js|jpg|jpeg|png|gif|svg|webp|ico|txt|xml|sql|md)$
 RewriteRule ^([a-z0-9-]+)$ /catalogo.php?slug_dinamico=$1 [L,QSA]
-
-# Fallback para proyectos si catalogo.php no encuentra ciclo/área
-# Reescribir /{slug} a /proyecto.php?slug={slug}
-# Excluir archivos y directorios existentes
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/(admin|api|assets|includes|base_paginas|marco)/
-RewriteCond %{REQUEST_URI} !\.(php|css|js|jpg|jpeg|png|gif|svg|webp|ico|txt|xml|sql|md)$
-# Reescribir solo slugs válidos (letras minúsculas, números, guiones)
-RewriteRule ^([a-z0-9-]+)$ /proyecto.php?slug=$1 [L,QSA]
 # ============================================================
 
 # Force HTTPS (uncomment in production)
