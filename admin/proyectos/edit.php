@@ -86,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
     }
   }
+  }
 }
 
 include '../header.php';
@@ -159,9 +160,4 @@ include '../header.php';
     }
   });
 </script>
-
-<?php include '../footer.php'; ?>
-
-</script>
-
 <?php include '../footer.php'; ?>
