@@ -155,11 +155,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($canonical_url === '') { $canonical_url = '/proyecto.php?slug=' . $slug; }
           echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ', "auto canon:", ' . json_encode($canonical_url) . ');</script>';
           // Transacción para clase + relaciones
-          <form method="POST" class="article-form">
+          $pdo->beginTransaction();
           if ($is_edit) {
-            <!-- Información básica -->
-            <div class="form-section">
-              <h2>Información básica</h2>
+            $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, seccion_id=?, updated_at=NOW() WHERE id=?');
             $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id, $id]);
             // Limpiar relaciones
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
@@ -229,7 +227,6 @@ include '../header.php';
     <select id="ciclo" name="ciclo" required>
       <option value="">Selecciona</option>
       <option value="1" <?= $clase['ciclo']==='1'?'selected':'' ?>>1 (6°-7°)</option>
-            </div>
       <option value="2" <?= $clase['ciclo']==='2'?'selected':'' ?>>2 (8°-9°)</option>
       <option value="3" <?= $clase['ciclo']==='3'?'selected':'' ?>>3 (10°-11°)</option>
     </select>
