@@ -416,8 +416,8 @@ strong, b {
 /* Cards de Ciclos Educativos - Diseño Mejorado */
 .ciclos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.25rem;
     margin-top: 2rem;
 }
 
@@ -573,9 +573,15 @@ strong, b {
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+    .ciclos-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media (max-width: 768px) {
     .ciclos-grid {
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
     
@@ -587,6 +593,12 @@ strong, b {
         width: 3.5rem;
         height: 3.5rem;
         font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .ciclos-grid {
+        grid-template-columns: 1fr;
     }
 }
 
