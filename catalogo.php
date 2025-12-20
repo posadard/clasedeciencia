@@ -14,6 +14,37 @@ function cdc_get_competencias($pdo) {
     return $stmt->fetchAll();
 }
 
+function cdc_get_ciclos($pdo, $activo_only = true) {
+    try {
+        $sql = "SELECT numero, nombre, slug, edad_min, edad_max, grados, grados_texto, 
+                       proposito, explicacion, nivel_educativo, isced_level, activo, orden 
+                FROM ciclos ";
+        if ($activo_only) {
+            $sql .= "WHERE activo = 1 ";
+        }
+        $sql .= "ORDER BY orden ASC, numero ASC";
+        
+        $stmt = $pdo->query($sql);
+        $rows = $stmt->fetchAll();
+        
+        // Crear resumen del propósito (primera oración)
+        foreach ($rows as &$row) {
+            $proposito = $row['proposito'] ?? '';
+            if (!empty($proposito)) {
+                $sentences = preg_split('/(?<=[.!?])\s+/', $proposito, 2);
+                $row['proposito_corto'] = $sentences[0] ?? '';
+            } else {
+                $row['proposito_corto'] = '';
+            }
+        }
+        
+        return $rows;
+    } catch (Exception $e) {
+        error_log('Error en cdc_get_ciclos: ' . $e->getMessage());
+        return [];
+    }
+}
+
 function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
     $params = [];
     $where = ["c.activo = 1"];
