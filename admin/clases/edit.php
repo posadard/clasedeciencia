@@ -142,8 +142,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($exists > 0) {
           $error_msg = 'El slug ya existe. Elige otro.';
         } else {
-          // Autogenerar SEO si vienen vacíos
-          if ($seo_title === '') { $seo_title = $nombre; }
+          // Autogenerar SEO educativo si vienen vacíos
+          if ($seo_title === '') {
+            // Enfoque híbrido: "Clase de Ciencia - [Verbo de Competencia] [Área]: [Nombre]"
+            $verbo = 'Aprende'; // default
+            $area_nombre = '';
+            
+            // Extraer verbo de la primera competencia seleccionada
+            if (!empty($comp_sel) && !empty($competencias)) {
+              foreach ($competencias as $comp) {
+                if (in_array($comp['id'], $comp_sel)) {
+                  // Extraer verbo (primera palabra del nombre de competencia)
+                  $palabras = explode(' ', $comp['nombre']);
+                  if (count($palabras) > 0) {
+                    $verbo = $palabras[0]; // "Formulo", "Observo", "Establezco", etc.
+                    break;
+                  }
+                }
+              }
+            }
+            
+            // Obtener nombre de la primera área seleccionada
+            if (!empty($areas_sel) && !empty($areas)) {
+              foreach ($areas as $area) {
+                if (in_array($area['id'], $areas_sel)) {
+                  $area_nombre = $area['nombre']; // "Física", "Química", etc.
+                  break;
+                }
+              }
+            }
+            
+            // Construir título con límite de 60 chars
+            $base = 'Clase de Ciencia - ';
+            if ($area_nombre !== '') {
+              // Formato: "Clase de Ciencia - [Verbo] [Área]: [Nombre]"
+              $middle = $verbo . ' ' . $area_nombre . ': ';
+              $max_nombre = 60 - strlen($base) - strlen($middle);
+              $nombre_corto = strlen($nombre) > $max_nombre ? substr($nombre, 0, $max_nombre-3) . '...' : $nombre;
+              $seo_title = $base . $middle . $nombre_corto;
+            } else {
+              // Fallback sin área: "Clase de Ciencia - [Nombre]"
+              $max_nombre = 60 - strlen($base);
+              $nombre_corto = strlen($nombre) > $max_nombre ? substr($nombre, 0, $max_nombre-3) . '...' : $nombre;
+              $seo_title = $base . $nombre_corto;
+            }
+          }
+          
+          // SEO Description con límite 160
           $desc_source = $resumen !== '' ? $resumen : strip_tags($contenido_html);
           $desc_source = preg_replace('/\s+/', ' ', $desc_source);
           if ($seo_description === '') {
@@ -556,7 +601,51 @@ include '../header.php';
     return cut.replace(/\s+\S*$/, '').trim();
   }
   function computeSeo() {
-    const autoTitle = (nombreInput && nombreInput.value) ? nombreInput.value.trim() : '';
+    // Generar SEO Title educativo híbrido
+    let verbo = 'Aprende';
+    let areaNombre = '';
+    
+    // Extraer verbo de la primera competencia seleccionada
+    const selectedListDiv = document.getElementById('selected-list');
+    if (selectedListDiv) {
+      const firstComp = selectedListDiv.querySelector('.competencia-item');
+      if (firstComp) {
+        const nombreComp = firstComp.getAttribute('data-nombre');
+        if (nombreComp) {
+          const palabras = nombreComp.split(' ');
+          if (palabras.length > 0) {
+            verbo = palabras[0]; // "Formulo", "Observo", etc.
+          }
+        }
+      }
+    }
+    
+    // Extraer área seleccionada
+    const areasCheckboxes = document.querySelectorAll('input[name="areas[]"]:checked');
+    if (areasCheckboxes.length > 0) {
+      const areaLabel = areasCheckboxes[0].closest('label');
+      if (areaLabel) {
+        areaNombre = areaLabel.textContent.trim();
+      }
+    }
+    
+    // Construir título educativo con límite 60 chars
+    const base = 'Clase de Ciencia - ';
+    const nombreVal = (nombreInput && nombreInput.value) ? nombreInput.value.trim() : '';
+    let autoTitle = '';
+    
+    if (areaNombre !== '') {
+      const middle = verbo + ' ' + areaNombre + ': ';
+      const maxNombre = 60 - base.length - middle.length;
+      const nombreCorto = nombreVal.length > maxNombre ? nombreVal.substring(0, maxNombre-3) + '...' : nombreVal;
+      autoTitle = base + middle + nombreCorto;
+    } else {
+      const maxNombre = 60 - base.length;
+      const nombreCorto = nombreVal.length > maxNombre ? nombreVal.substring(0, maxNombre-3) + '...' : nombreVal;
+      autoTitle = base + nombreCorto;
+    }
+    
+    // Generar descripción
     let descSrc = (resumenInput && resumenInput.value.trim()) ? resumenInput.value.trim() : '';
     if (!descSrc) {
       try {
@@ -569,14 +658,16 @@ include '../header.php';
       } catch(e) { descSrc = ''; }
     }
     const autoDesc = shortenAtWord(descSrc, 160);
+    
     // Render preview
     if (seoPrevTitle) seoPrevTitle.textContent = autoTitle;
     if (seoPrevDesc) seoPrevDesc.textContent = autoDesc;
-    // If manual not enabled and inputs are empty, mirror preview into inputs (for visibility but still overrideable)
+    
+    // If manual not enabled and inputs are empty, mirror preview into inputs
     if (!seoToggle?.checked) {
       if (seoTitleInput && !seoTitleInput.value) seoTitleInput.value = autoTitle;
       if (seoDescInput && !seoDescInput.value) seoDescInput.value = autoDesc;
-      console.log('🔍 [SEO] autogenerados (preview)');
+      console.log('🔍 [SEO] autogenerados:', {verbo, area: areaNombre, title: autoTitle.substring(0,50)+'...'});
     }
   }
   // Toggle manual panel
@@ -616,6 +707,25 @@ include '../header.php';
   console.log('ℹ️ [ClasesEdit] Campo Sección ocultado (no requerido)');
   if (slugInput) slugInput.addEventListener('input', computeSeo);
   if (resumenInput) resumenInput.addEventListener('input', computeSeo);
+  
+  // Actualizar SEO cuando cambien áreas o competencias
+  document.querySelectorAll('input[name="areas[]"]').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      console.log('🔍 [SEO] Área cambiada, recalculando...');
+      computeSeo();
+    });
+  });
+  
+  // Observar cambios en el dual listbox de competencias (cuando se seleccionen/deseleccionen)
+  const selectedListDiv = document.getElementById('selected-list');
+  if (selectedListDiv) {
+    const observer = new MutationObserver(() => {
+      console.log('🔍 [SEO] Competencias cambiadas, recalculando...');
+      computeSeo();
+    });
+    observer.observe(selectedListDiv, { childList: true, subtree: true });
+  }
+  
   // Validación simple de SEO
   const seoTitle = document.getElementById('seo_title');
   const seoDesc = document.getElementById('seo_description');
