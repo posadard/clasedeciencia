@@ -41,7 +41,7 @@ $recursos = $stmt->fetchAll();
 
 $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Ciencia');
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
-$canonical_url = $proyecto['canonical_url'] ?: (SITE_URL . '/' . $proyecto['slug']);
+$canonical_url = SITE_URL . '/' . $proyecto['slug'];
 
 // Schema.org básico HowTo
 $schema = [
