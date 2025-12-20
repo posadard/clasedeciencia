@@ -52,6 +52,8 @@ $ciclos_list = [];
 $existing_area_ids = [];
 $existing_comp_ids = [];
 $existing_tags = [];
+$all_kits = [];
+$existing_kit_ids = [];
 try {
   $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {}
@@ -78,7 +80,17 @@ if ($is_edit) {
     $tags_rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
     $existing_tags = $tags_rows ?: [];
   } catch (PDOException $e) {}
+  try {
+    $stmt = $pdo->prepare('SELECT kit_id FROM clase_kits WHERE clase_id = ? ORDER BY sort_order');
+    $stmt->execute([$id]);
+    $existing_kit_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+  } catch (PDOException $e) {}
 }
+
+// Cargar todos los kits disponibles
+try {
+  $all_kits = $pdo->query('SELECT id, nombre, codigo, activo FROM kits ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {}
 
 // Guardar
 $error_msg = '';
@@ -118,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $comp_sel = isset($_POST['competencias']) && is_array($_POST['competencias']) ? array_map('intval', $_POST['competencias']) : [];
     $tags_input = isset($_POST['tags']) ? trim($_POST['tags']) : '';
     $tags_list = array_values(array_filter(array_map(function($t){ return trim($t); }, explode(',', $tags_input))));
+    $kits_sel = isset($_POST['kits']) && is_array($_POST['kits']) ? array_map('intval', $_POST['kits']) : [];
 
     if ($slug === '' && $nombre !== '') {
       $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nombre));
@@ -209,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_competencias WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_tags WHERE clase_id = ?')->execute([$id]);
+            $pdo->prepare('DELETE FROM clase_kits WHERE clase_id = ?')->execute([$id]);
           } else {
             $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
             $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html]);
@@ -227,6 +241,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if (!empty($tags_list)) {
             $ins = $pdo->prepare('INSERT INTO clase_tags (clase_id, tag) VALUES (?, ?)');
             foreach ($tags_list as $tg) { if ($tg !== '') { $ins->execute([$id, $tg]); } }
+          }
+          if (!empty($kits_sel)) {
+            $ins = $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?, ?, ?, ?)');
+            $sort = 1;
+            foreach ($kits_sel as $kid) { 
+              $es_principal = ($sort === 1) ? 1 : 0; // Primer kit es principal
+              $ins->execute([$id, (int)$kid, $sort++, $es_principal]); 
+            }
           }
           $pdo->commit();
           echo '<script>console.log("✅ [ClasesEdit] Clase guardada con relaciones");</script>';
@@ -506,6 +528,32 @@ include '../header.php';
   <div class="form-group">
     <label for="tags">Tags (separados por coma)</label>
     <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
+  </div>
+  
+  <!-- Kits Asociados -->
+  <div class="form-group">
+    <label>Kits de Materiales</label>
+    <div class="checkbox-grid">
+      <?php foreach ($all_kits as $kit): ?>
+        <label class="checkbox-label">
+          <input type="checkbox" name="kits[]" value="<?= $kit['id'] ?>" 
+            <?= in_array($kit['id'], $existing_kit_ids) ? 'checked' : '' ?>
+            <?= $kit['activo'] ? '' : 'disabled' ?>>
+          <span><?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+          <?php if (!$kit['activo']): ?>
+            <small style="color: #999;">(Inactivo)</small>
+          <?php endif; ?>
+        </label>
+      <?php endforeach; ?>
+    </div>
+    <small>Selecciona los kits de materiales asociados a esta clase. El primer kit será el principal.</small>
+    <?php if ($is_edit && !empty($existing_kit_ids)): ?>
+      <div style="margin-top: 8px;">
+        <a href="/admin/kits/edit.php?id=<?= $existing_kit_ids[0] ?>" target="_blank" class="btn btn-secondary" style="font-size: 0.85rem; padding: 4px 12px;">
+          Ver/Editar Kit Principal
+        </a>
+      </div>
+    <?php endif; ?>
   </div>
   </div>
   <!-- SEO -->
