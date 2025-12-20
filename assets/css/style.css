@@ -346,6 +346,13 @@ strong, b {
     /* Ocultar lupa en mobile para mejor centrado */
     .logo-icon {
         display: none;
+        margin-right: 0 !important;
+    }
+    
+    /* Asegurar centrado perfecto del texto */
+    .site-title a {
+        justify-content: center !important;
+        margin: 0 auto;
     }
 }
 
