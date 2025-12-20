@@ -358,13 +358,40 @@ include '../header.php';
         <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
       <?php endforeach; ?>
     </div>
-    <h3 style="margin-top:.5rem">Competencias MEN</h3>
-    <div class="checkbox-grid">
-      <?php foreach ($competencias as $c): ?>
-        <label class="checkbox-label"><input type="checkbox" name="competencias[]" value="<?= (int)$c['id'] ?>" <?= in_array($c['id'], $existing_comp_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>)</label>
-      <?php endforeach; ?>
-    </div>
-  <div class="form-group">
+    
+    <h3 style="margin-top:1.5rem">Competencias MEN</h3>
+    <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">Selecciona las competencias desarrolladas en esta clase. Pasa el cursor sobre cada competencia para ver su descripción.</p>
+    
+    <?php 
+    // Agrupar competencias por subcategoría
+    $competencias_agrupadas = [];
+    foreach ($competencias as $c) {
+        $subcat = $c['subcategoria'] ?? 'Otras';
+        if (!isset($competencias_agrupadas[$subcat])) {
+            $competencias_agrupadas[$subcat] = [];
+        }
+        $competencias_agrupadas[$subcat][] = $c;
+    }
+    ?>
+    
+    <?php foreach ($competencias_agrupadas as $subcategoria => $comps): ?>
+      <div class="competencia-group">
+        <h4 class="competencia-group-title"><?= htmlspecialchars($subcategoria, ENT_QUOTES, 'UTF-8') ?></h4>
+        <div class="competencia-chips">
+          <?php foreach ($comps as $c): ?>
+            <label class="competencia-chip" title="<?= htmlspecialchars($c['explicacion'] ?? '', ENT_QUOTES, 'UTF-8') ?>">
+              <input type="checkbox" name="competencias[]" value="<?= (int)$c['id'] ?>" <?= in_array($c['id'], $existing_comp_ids) ? 'checked' : '' ?>>
+              <span class="chip-content">
+                <span class="chip-codigo"><?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="chip-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+              </span>
+            </label>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
+    
+  <div class="form-group" style="margin-top: 1.5rem;">
     <label for="tags">Tags (separados por coma)</label>
     <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
   </div>
@@ -421,6 +448,25 @@ include '../header.php';
     .form-group input[type="text"], .form-group input[type="number"], .form-group input[type="url"], .form-group input[type="datetime-local"], .form-group select, .form-group textarea { width:100%; padding:0.4rem; border:1px solid #d1d5db; border-radius:4px; font-family:inherit; font-size:0.92rem; }
     .form-group small { display:block; margin-top:0.25rem; color:#6b7280; font-size:0.82rem; }
     .checkbox-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:0.4rem; }
+    
+    /* Competencias agrupadas por subcategoría */
+    .competencia-group { margin-bottom: 1.5rem; }
+    .competencia-group-title { font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 2px solid #e5e7eb; }
+    .competencia-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .competencia-chip { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 0.875rem; position: relative; }
+    .competencia-chip:hover { background: #e5e7eb; border-color: #9ca3af; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .competencia-chip input[type="checkbox"] { width: auto; margin: 0; }
+    .competencia-chip input[type="checkbox"]:checked + .chip-content { font-weight: 600; }
+    .competencia-chip:has(input:checked) { background: #dbeafe; border-color: #3b82f6; }
+    .chip-content { display: flex; flex-direction: column; gap: 0.125rem; }
+    .chip-codigo { font-size: 0.75rem; color: #6b7280; font-weight: 500; }
+    .chip-nombre { color: #111827; line-height: 1.3; }
+    .competencia-chip:has(input:checked) .chip-codigo { color: #2563eb; }
+    .competencia-chip:has(input:checked) .chip-nombre { color: #1e40af; }
+    /* Tooltip nativo mejorado */
+    .competencia-chip[title]:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: 0.5rem; padding: 0.75rem; background: #1f2937; color: white; font-size: 0.75rem; line-height: 1.4; border-radius: 6px; white-space: normal; max-width: 300px; width: max-content; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.2); pointer-events: none; }
+    .competencia-chip[title]:hover::before { content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); margin-bottom: -0.25rem; border: 6px solid transparent; border-top-color: #1f2937; z-index: 1000; }
+    
     .checkbox-label { display:flex; align-items:center; gap:0.5rem; padding:0.5rem; background:#f9fafb; border-radius:4px; cursor:pointer; transition:background 0.2s; }
     .checkbox-label:hover { background:#f3f4f6; }
     .form-actions { display:flex; gap:0.5rem; margin-top:1rem; padding-top:1rem; border-top:1px solid #eef2f5; }
