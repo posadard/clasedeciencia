@@ -68,7 +68,7 @@ include 'includes/header.php';
 ?>
 <div class="container article-page">
     <div class="breadcrumb">
-        <a href="/">Inicio</a> / <a href="/clases">Catálogo</a> / <strong><?= h($proyecto['nombre']) ?></strong>
+        <a href="/">Inicio</a> / <a href="/clases">Clases</a> / <strong><?= h($proyecto['nombre']) ?></strong>
     </div>
     <article>
         <header class="article-header">
