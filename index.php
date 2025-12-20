@@ -27,7 +27,7 @@ include 'includes/header.php';
     <section class="hero">
         <h2>Bienvenido a <?= SITE_NAME ?></h2>
         <p class="hero-subtitle">Plataforma de formación científica para grados 1° a 11°</p>
-        <p>Fortalece competencias científicas mediante guías interactivas, proyectos experimentales y asistencia con inteligencia artificial, siguiendo prácticas educativas reconocidas internacionalmente.</p>
+        <p>Apoya y fortalece el desarrollo de competencias científicas con guías interactivas, proyectos prácticos y orientación personalizada para cada proceso de aprendizaje.</p>
         <div class="hero-actions">
             <a href="/catalogo.php" class="btn btn-primary">Explorar Clases</a>
         </div>
