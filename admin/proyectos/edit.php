@@ -100,20 +100,20 @@ include '../header.php';
 </div>
 
 <?php if ($error_msg !== ''): ?>
-  <div class="alert alert-warning"><?= htmlspecialchars($error_msg, ENT_QUOTES, 'UTF-8') ?></div>
+  <div class="message error"><?= htmlspecialchars($error_msg, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
 
-<form method="POST" class="form-standard">
+<form method="POST">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-  <div class="form-row">
+  <div class="form-group">
     <label for="nombre">Nombre</label>
     <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($proyecto['nombre'], ENT_QUOTES, 'UTF-8') ?>" required />
   </div>
-  <div class="form-row">
+  <div class="form-group">
     <label for="slug">Slug</label>
     <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($proyecto['slug'], ENT_QUOTES, 'UTF-8') ?>" placeholder="auto si se deja vacío" />
   </div>
-  <div class="form-row">
+  <div class="form-group">
     <label for="ciclo">Ciclo</label>
     <select id="ciclo" name="ciclo" required>
       <option value="">Selecciona</option>
@@ -122,22 +122,22 @@ include '../header.php';
       <option value="3" <?= $proyecto['ciclo']==='3'?'selected':'' ?>>3 (10°-11°)</option>
     </select>
   </div>
-  <div class="form-row">
-    <label class="checkbox"><input type="checkbox" name="activo" <?= ((int)$proyecto['activo']) ? 'checked' : '' ?> /> Activo</label>
+  <div class="form-group">
+    <label><input type="checkbox" name="activo" <?= ((int)$proyecto['activo']) ? 'checked' : '' ?> /> Activo</label>
   </div>
-  <div class="form-row">
-    <label class="checkbox"><input type="checkbox" name="destacado" <?= ((int)$proyecto['destacado']) ? 'checked' : '' ?> /> Destacado</label>
+  <div class="form-group">
+    <label><input type="checkbox" name="destacado" <?= ((int)$proyecto['destacado']) ? 'checked' : '' ?> /> Destacado</label>
   </div>
-  <div class="form-row">
+  <div class="form-group">
     <label for="resumen">Resumen</label>
     <textarea id="resumen" name="resumen" rows="3" placeholder="Descripción corta..."><?= htmlspecialchars($proyecto['resumen'], ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
-  <div class="form-row">
+  <div class="form-group">
     <label for="objetivo_aprendizaje">Objetivo de aprendizaje</label>
     <textarea id="objetivo_aprendizaje" name="objetivo_aprendizaje" rows="4" placeholder="Competencias MEN y objetivos..."><?= htmlspecialchars($proyecto['objetivo_aprendizaje'], ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
-  <div class="form-actions">
-    <button type="submit" class="btn btn-primary">Guardar</button>
+  <div class="actions" style="margin-top:1rem;">
+    <button type="submit" class="btn">Guardar</button>
     <a href="/admin/proyectos/index.php" class="btn btn-secondary">Cancelar</a>
     <?php if ($is_edit): ?>
       <a href="/proyecto.php?slug=<?= htmlspecialchars($proyecto['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn">Ver público</a>

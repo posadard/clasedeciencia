@@ -34,10 +34,11 @@ include '../header.php';
   </script>
 </div>
 
-<!-- Filtros -->
-<div class="filters-bar">
-  <form method="GET" class="filters-form">
-    <div class="filter-group">
+<!-- Filtros (usa clases del admin: card, form-group, btn, btn-secondary) -->
+<div class="card" style="margin-bottom:1rem;">
+  <h3 style="margin:0 0 1rem 0;">Filtros</h3>
+  <form method="GET">
+    <div class="form-group">
       <label for="ciclo">Ciclo:</label>
       <select name="ciclo" id="ciclo" onchange="this.form.submit()">
         <option value="">Todos</option>
@@ -46,7 +47,7 @@ include '../header.php';
         <option value="3" <?= $ciclo==='3'?'selected':'' ?>>3 (10°-11°)</option>
       </select>
     </div>
-    <div class="filter-group">
+    <div class="form-group">
       <label for="activo">Estado:</label>
       <select name="activo" id="activo" onchange="this.form.submit()">
         <option value="">Todos</option>
@@ -54,12 +55,12 @@ include '../header.php';
         <option value="0" <?= $activo==='0'?'selected':'' ?>>Inactivos</option>
       </select>
     </div>
-    <div class="filter-group search-group">
+    <div class="form-group">
       <label for="search">Buscar:</label>
       <input type="text" id="search" name="search" value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" placeholder="Nombre o slug..." />
-      <button type="submit" class="btn btn-sm">🔍 Buscar</button>
+      <button type="submit" class="btn">🔍 Buscar</button>
       <?php if ($ciclo || $activo || $search): ?>
-        <a href="/admin/proyectos/index.php" class="btn btn-sm btn-secondary">Limpiar</a>
+        <a href="/admin/proyectos/index.php" class="btn btn-secondary">Limpiar</a>
       <?php endif; ?>
     </div>
   </form>
@@ -71,10 +72,10 @@ include '../header.php';
 </div>
 
 <?php if (empty($proyectos)): ?>
-  <div class="empty-state">
-    <p>No hay proyectos.</p>
-    <a href="/admin/proyectos/edit.php" class="btn btn-primary">Crear Proyecto</a>
+  <div class="message info">
+    No hay proyectos.
   </div>
+  <p><a href="/admin/proyectos/edit.php" class="btn">Crear Proyecto</a></p>
 <?php else: ?>
   <table class="data-table">
     <thead>
@@ -91,7 +92,7 @@ include '../header.php';
       <?php foreach ($proyectos as $p): ?>
       <tr>
         <td><?= (int)$p['id'] ?></td>
-        <td><strong><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></strong><br><small class="text-muted"><?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?></small></td>
+        <td><strong><?= htmlspecialchars($p['nombre'], ENT_QUOTES, 'UTF-8') ?></strong><br><small class="help-text"><?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?></small></td>
         <td><?= htmlspecialchars($p['ciclo'], ENT_QUOTES, 'UTF-8') ?></td>
         <td>
           <span style="padding:0.25rem 0.5rem;background:<?= ((int)$p['activo']) ? '#4caf50' : '#ff9800' ?>;color:#fff;font-size:0.75rem;font-weight:600;">
@@ -100,8 +101,8 @@ include '../header.php';
         </td>
         <td><?= htmlspecialchars(date('Y-m-d', strtotime($p['updated_at'])), ENT_QUOTES, 'UTF-8') ?></td>
         <td class="actions">
-          <a href="/proyecto.php?slug=<?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-sm btn-secondary">Ver</a>
-          <a href="/admin/proyectos/edit.php?id=<?= (int)$p['id'] ?>" class="btn btn-sm btn-edit">Editar</a>
+          <a href="/proyecto.php?slug=<?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn btn-secondary action-btn">Ver</a>
+          <a href="/admin/proyectos/edit.php?id=<?= (int)$p['id'] ?>" class="btn action-btn">Editar</a>
         </td>
       </tr>
       <?php endforeach; ?>
