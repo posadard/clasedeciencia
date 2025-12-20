@@ -67,14 +67,13 @@
             <div class="header-content">
                 <h1 class="site-title">
                     <a href="/">
-                        <svg class="logo-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 0.3rem;">
+                        <svg class="logo-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle;">
                             <!-- Lupa (magnifying glass) -->
                             <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                             <line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                             <circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>
                             <ellipse cx="8" cy="8" rx="2" ry="3" fill="currentColor" opacity="0.15" transform="rotate(-35 8 8)"/>
-                        </svg>
-                        <?= SITE_NAME ?>
+                        </svg><?= SITE_NAME ?>
                     </a>
                 </h1>
                 <nav class="main-nav" aria-label="Main Navigation">

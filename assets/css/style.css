@@ -210,6 +210,7 @@ strong, b {
 /* Logo icon (lupa) */
 .logo-icon {
     flex-shrink: 0;
+    margin-right: 0.3rem; /* Espacio entre lupa y texto en desktop */
 }
 
 .site-tagline {
@@ -346,13 +347,6 @@ strong, b {
     /* Ocultar lupa en mobile para mejor centrado */
     .logo-icon {
         display: none;
-        margin-right: 0 !important;
-    }
-    
-    /* Asegurar centrado perfecto del texto */
-    .site-title a {
-        justify-content: center !important;
-        margin: 0 auto;
     }
 }
 
