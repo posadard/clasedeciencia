@@ -279,11 +279,11 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="resumen">Resumen</label>
-    <textarea id="resumen" name="resumen" rows="3" placeholder="Descripción corta..."><?= htmlspecialchars($clase['resumen'], ENT_QUOTES, 'UTF-8') ?></textarea>
+    <textarea id="resumen" name="resumen" rows="2" placeholder="Descripción corta..."><?= htmlspecialchars($clase['resumen'], ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
   <div class="form-group">
     <label for="objetivo_aprendizaje">Objetivo de aprendizaje</label>
-    <textarea id="objetivo_aprendizaje" name="objetivo_aprendizaje" rows="4" placeholder="Competencias MEN y objetivos..."><?= htmlspecialchars($clase['objetivo_aprendizaje'], ENT_QUOTES, 'UTF-8') ?></textarea>
+    <textarea id="objetivo_aprendizaje" name="objetivo_aprendizaje" rows="2" placeholder="Competencias MEN y objetivos..."><?= htmlspecialchars($clase['objetivo_aprendizaje'], ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
   <!-- Multimedia -->
   <div class="form-section">
@@ -315,7 +315,7 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="seg_notas">Notas de seguridad</label>
-    <textarea id="seg_notas" name="seg_notas" rows="3"><?= htmlspecialchars($seg['notas'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <textarea id="seg_notas" name="seg_notas" rows="2"><?= htmlspecialchars($seg['notas'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
   </div>
   <!-- Estado/Publicación -->
