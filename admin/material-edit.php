@@ -232,43 +232,10 @@ include 'header.php';
                 <label>
                     <input type="checkbox" name="essential" value="1" <?= !empty($material['essential']) ? 'checked' : '' ?>>
                     <svg class="admin-icon" width="12" height="12" aria-hidden="true"><use xlink:href="#icon-check"/></svg> Essential (core material)
-                </label>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Chemical/Scientific Fields (for Substances) -->
-    <div class="form-section category-specific" id="substance-fields" style="display: none;">
-        <h2>Chemical/Scientific Information</h2>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label for="chemical_formula">Chemical Formula</label>
-                <input type="text" id="chemical_formula" name="chemical_formula"
-                       value="<?= htmlspecialchars($material['chemical_formula'] ?? '') ?>"
-                       placeholder="e.g., NaOH, H2SO4">
-                <small>For chemical substances only</small>
-            </div>
-            
-            <div class="form-group">
-                <label for="cas_number">CAS Number</label>
-                <input type="text" id="cas_number" name="cas_number"
-                       value="<?= htmlspecialchars($material['cas_number'] ?? '') ?>"
-                       placeholder="e.g., 1310-73-2">
-                <small>CAS Registry Number</small>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Equipment/Tool Fields -->
-    <div class="form-section category-specific" id="equipment-fields" style="display: none;">
-        <h2>Specifications & Maintenance</h2>
-        
-        <div class="form-group">
-            <label for="specifications">Technical Specifications</label>
-            <?php $specs_init = json_decode($material['specifications'] ?? '{}', true) ?: []; ?>
-            <input type="hidden" id="specifications" name="specifications" value='<?= htmlspecialchars($material['specifications'] ?? '') ?>'>
-            <div id="specs-editor" data-initial='<?= htmlspecialchars(json_encode($specs_init)) ?>'>
+                <?php
+                // Redirigir al módulo CdC
+                header('Location: /admin/materiales/edit.php' . (isset($_GET['id']) ? ('?id=' . urlencode($_GET['id'])) : ''));
+                exit;
                 <div class="specs-rows">
                     <!-- Rows will be rendered by JavaScript -->
                 </div>
