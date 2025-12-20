@@ -496,8 +496,8 @@ include '../header.php';
       if (window.CKEDITOR) {
         CKEDITOR.replace('contenido_html', {
           height: 500,
-          // Oculta ruta de elementos y desactiva notificaciones para evitar banner inseguro
-          removePlugins: 'elementspath,notification,notificationaggregator',
+          // Mantener plugins requeridos; solo ocultar elementspath
+          removePlugins: 'elementspath',
           resize_enabled: true
         });
         console.log('✅ [ClasesEdit] CKEditor 4 cargado');
