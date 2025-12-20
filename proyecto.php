@@ -5,7 +5,7 @@ require_once 'includes/functions.php';
 
 $slug = isset($_GET['slug']) ? $_GET['slug'] : '';
 if (!$slug) {
-    header('Location: /catalogo.php');
+    header('Location: /clases');
     exit;
 }
 
@@ -14,7 +14,7 @@ $stmt = $pdo->prepare("SELECT * FROM clases WHERE slug = ? AND activo = 1");
 $stmt->execute([$slug]);
 $proyecto = $stmt->fetch();
 if (!$proyecto) {
-    header('Location: /catalogo.php');
+    header('Location: /clases');
     exit;
 }
 
@@ -68,7 +68,7 @@ include 'includes/header.php';
 ?>
 <div class="container article-page">
     <div class="breadcrumb">
-        <a href="/">Inicio</a> / <a href="/catalogo.php">Catálogo</a> / <strong><?= h($proyecto['nombre']) ?></strong>
+        <a href="/">Inicio</a> / <a href="/clases">Catálogo</a> / <strong><?= h($proyecto['nombre']) ?></strong>
     </div>
     <article>
         <header class="article-header">

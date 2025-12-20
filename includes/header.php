@@ -66,7 +66,7 @@
                 <nav class="main-nav" aria-label="Main Navigation">
                     <ul>
                         <li><a href="/">Inicio</a></li>
-                        <li><a href="/catalogo.php">Clases</a></li>
+                        <li><a href="/clases">Clases</a></li>
                         <li><a href="/contact.php">Contacto</a></li>
                     </ul>
                 </nav>

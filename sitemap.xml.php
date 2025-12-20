@@ -22,7 +22,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     
     <!-- Catálogo -->
     <url>
-        <loc><?= h(SITE_URL) ?>/catalogo.php</loc>
+        <loc><?= h(SITE_URL) ?>/clases</loc>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>

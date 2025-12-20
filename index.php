@@ -29,7 +29,7 @@ include 'includes/header.php';
         <p class="hero-subtitle">Plataforma de formación científica para grados 1° a 11°</p>
         <p>Apoya y fortalece el desarrollo de competencias científicas con guías interactivas, proyectos prácticos y orientación personalizada para cada proceso de aprendizaje.</p>
         <div class="hero-actions">
-            <a href="/catalogo.php" class="btn btn-primary">Explorar Clases</a>
+            <a href="/clases" class="btn btn-primary">Explorar Clases</a>
         </div>
     </section>
         <!-- Acceso Rápido por Ciclo -->
@@ -37,7 +37,7 @@ include 'includes/header.php';
             <h2>Explorar por Ciclo</h2>
             <div class="sections-grid">
                 <?php foreach ($ciclos as $c): ?>
-                <a href="/catalogo.php?ciclo=<?= h($c['numero']) ?>" class="section-card">
+                <a href="/clases?ciclo=<?= h($c['numero']) ?>" class="section-card">
                     <h3>Ciclo <?= h($c['numero']) ?>: <?= h($c['nombre']) ?> (<?= h($c['grados_texto']) ?>)</h3>
                     <p><?= h($c['proposito_corto']) ?></p>
                 </a>
@@ -100,7 +100,7 @@ include 'includes/header.php';
         <h2>Explorar por Área</h2>
         <div class="sections-grid">
             <?php foreach ($areas as $a): ?>
-            <a href="/catalogo.php?area=<?= h($a['slug']) ?>" class="section-card area-card">
+            <a href="/clases?area=<?= h($a['slug']) ?>" class="section-card area-card">
                 <h3><?= h($a['nombre']) ?></h3>
                 <p class="area-description"><?= h($a['descripcion']) ?></p>
             </a>
@@ -157,7 +157,7 @@ include 'includes/header.php';
             <?php endforeach; ?>
         </div>
         <div class="text-center">
-            <a href="/catalogo.php" class="btn btn-secondary">Ver Clases</a>
+            <a href="/clases" class="btn btn-secondary">Ver Clases</a>
         </div>
     </section>
     <?php endif; ?>
@@ -168,7 +168,7 @@ include 'includes/header.php';
             <div class="quick-link-card">
                 <h3>Clases</h3>
                 <p>Explora clases por ciclo, grado y área.</p>
-                <a href="/catalogo.php">Ir a las clases &rarr;</a>
+                <a href="/clases">Ir a las clases &rarr;</a>
             </div>
             <div class="quick-link-card">
                 <h3>Contacto</h3>
