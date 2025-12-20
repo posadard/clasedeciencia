@@ -285,7 +285,19 @@ include '../header.php';
   <!-- Información básica -->
   <div class="form-group">
     <label for="nombre">Nombre</label>
-    <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($clase['nombre'], ENT_QUOTES, 'UTF-8') ?>" required />
+    <div style="display: flex; gap: 20px; align-items: center;">
+      <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($clase['nombre'], ENT_QUOTES, 'UTF-8') ?>" required style="flex: 1;" />
+      <label class="switch-label">
+        <input type="checkbox" name="activo" class="switch-input" <?= ((int)$clase['activo']) ? 'checked' : '' ?> />
+        <span class="switch-slider"></span>
+        <span class="switch-text">✓ Activo</span>
+      </label>
+      <label class="switch-label">
+        <input type="checkbox" name="destacado" class="switch-input" <?= ((int)$clase['destacado']) ? 'checked' : '' ?> />
+        <span class="switch-slider"></span>
+        <span class="switch-text">⭐ Destacado</span>
+      </label>
+    </div>
   </div>
   <div class="form-group">
     <label for="slug">Slug</label>
@@ -336,12 +348,6 @@ include '../header.php';
       <label for="duracion_minutos">Duración (min)</label>
       <input type="number" id="duracion_minutos" name="duracion_minutos" value="<?= htmlspecialchars((string)($clase['duracion_minutos'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" min="1" />
     </div>
-  </div>
-  <div class="form-group">
-    <label><input type="checkbox" name="activo" <?= ((int)$clase['activo']) ? 'checked' : '' ?> /> Activo</label>
-  </div>
-  <div class="form-group">
-    <label><input type="checkbox" name="destacado" <?= ((int)$clase['destacado']) ? 'checked' : '' ?> /> Destacado</label>
   </div>
   <div class="form-group">
     <label for="orden_popularidad">Orden de popularidad</label>
@@ -463,7 +469,16 @@ include '../header.php';
   <!-- Taxonomías -->
   <div class="form-section">
     <h2>Taxonomías</h2>
-    <h3>Áreas</h3>
+    
+    <!-- Tags -->
+    <div class="form-group">
+      <label for="tags">Tags (separados por coma)</label>
+      <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
+      <small>Palabras clave para búsqueda y categorización</small>
+    </div>
+    
+    <!-- Áreas -->
+    <h3 style="margin-top: 1rem;">Áreas</h3>
     <div class="checkbox-grid">
       <?php foreach ($areas as $a): ?>
         <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
@@ -566,11 +581,6 @@ include '../header.php';
       <!-- Hidden inputs para enviar al servidor -->
       <div id="competencias-hidden"></div>
     </div>
-    
-  <div class="form-group">
-    <label for="tags">Tags (separados por coma)</label>
-    <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
-  </div>
   </div>
   <!-- SEO -->
   <div class="form-section">
@@ -688,6 +698,57 @@ include '../header.php';
       outline: none;
       border-color: #1f3c88;
       box-shadow: 0 0 0 3px rgba(31,60,136,0.1);
+    }
+    
+    /* Modern toggle switches */
+    .switch-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #f3f4f6;
+      transition: background 0.2s;
+    }
+    .switch-label:hover {
+      background: #e5e7eb;
+    }
+    .switch-input {
+      position: relative;
+      width: 42px;
+      height: 22px;
+      appearance: none;
+      background: #cbd5e1;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .switch-input:checked {
+      background: #10b981;
+    }
+    .switch-input::before {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .switch-input:checked::before {
+      transform: translateX(20px);
+    }
+    .switch-text {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #374151;
+      white-space: nowrap;
     }
     .autocomplete-dropdown {
       position: absolute;
