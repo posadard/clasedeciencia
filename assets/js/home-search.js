@@ -54,17 +54,22 @@ class ClaseDeCienciaSearch {
         headers: { 'Accept': 'application/json' }
       });
       
+      console.log('📡 [ClaseDeCienciaSearch] Response status:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log('❌ [ClaseDeCienciaSearch] Error response:', errorText);
         throw new Error(`HTTP ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('📊 [ClaseDeCienciaSearch] API data:', data);
       
       if (data.success && Array.isArray(data.proyectos)) {
         this.proyectosData = data.proyectos;
-        console.log('✅ [ClaseDeCienciaSearch] API response:', data.total, 'proyectos');
+        console.log('✅ [ClaseDeCienciaSearch] API response:', data.total, 'proyectos cargados');
       } else {
-        console.log('❌ [ClaseDeCienciaSearch] API error:', data);
+        console.log('❌ [ClaseDeCienciaSearch] API error:', data.error || 'Formato inválido');
         this.proyectosData = [];
       }
     } catch (error) {

@@ -8,7 +8,21 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: public, max-age=3600'); // Cache 1 hora
 
+// Mostrar errores en desarrollo (desactivar en producción)
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // No mostrar en output HTML, solo log
+
 require_once dirname(__DIR__) . '/config.php';
+
+if (!isset($pdo)) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error de conexión a base de datos',
+        'timestamp' => time()
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 try {
     // Query optimizado: todas las clases activas con sus relaciones
@@ -24,19 +38,20 @@ try {
             c.resumen,
             c.imagen_portada,
             c.destacado,
-            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas,
-            GROUP_CONCAT(DISTINCT t.nombre ORDER BY t.nombre SEPARATOR ', ') AS tags
+            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas
         FROM clases c
         LEFT JOIN clase_areas ca ON ca.clase_id = c.id
         LEFT JOIN areas a ON a.id = ca.area_id
-        LEFT JOIN clase_tags ct ON ct.clase_id = c.id
-        LEFT JOIN tags t ON t.id = ct.tag_id
         WHERE c.activo = 1
         GROUP BY c.id
         ORDER BY c.destacado DESC, c.orden_popularidad DESC
     ");
     
     $clases = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    if ($clases === false) {
+        throw new Exception('Error al ejecutar query: ' . print_r($pdo->errorInfo(), true));
+    }
     
     // Procesar datos para búsqueda
     $proyectos = [];
@@ -71,19 +86,17 @@ try {
             'subject' => $clase['areas'] ?? 'General',
             'difficulty' => $dificultad,
             'duration' => $clase['duracion_minutos'] ? $clase['duracion_minutos'] . ' min' : '',
-            'description' => $clase['resumen'],
+            'description' => $clase['resumen'] ?? '',
             'ciclo' => (int)$clase['ciclo'],
             'ciclo_nombre' => $ciclo_nombre,
             'grados' => $grados_texto,
-            'tags' => $clase['tags'] ?? '',
             'image' => $clase['imagen_portada'] ?? '/assets/images/placeholder-proyecto.jpg',
             'featured' => (bool)$clase['destacado'],
             // Campos para búsqueda (lowercase para comparación)
             'search_text' => strtolower(implode(' ', [
-                $clase['nombre'],
-                $clase['resumen'],
+                $clase['nombre'] ?? '',
+                $clase['resumen'] ?? '',
                 $clase['areas'] ?? '',
-                $clase['tags'] ?? '',
                 $ciclo_nombre,
                 $grados_texto,
                 $dificultad
@@ -104,7 +117,19 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Error al consultar proyectos',
+        'error' => 'Error al consultar proyectos: ' . $e->getMessage(),
+        'code' => $e->getCode(),
+        'timestamp' => time()
+    ], JSON_UNESCAPED_UNICODE);
+    
+    error_log('API clases-data PDO error: ' . $e->getMessage() . ' | Code: ' . $e->getCode());
+    
+} catch (Exception $e) {
+    // Otros errores
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'error' => 'Error general: ' . $e->getMessage(),
         'timestamp' => time()
     ], JSON_UNESCAPED_UNICODE);
     
