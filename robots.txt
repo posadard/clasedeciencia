@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://clasedeciencia.com/sitemap.xml
