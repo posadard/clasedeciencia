@@ -1,0 +1,294 @@
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft FrontPage 4.0">
+<TITLE></TITLE>
+</HEAD>
+<BODY bgColor=white >
+<p><font face="Verdana" size="2">Following are samples of JavaScript codes for
+certain actions used in creating a game.</font></p>
+<TABLE width="500">
+<TR><TD>
+<P>
+<font face="Verdana" size="2">
+<b>1. Write an image to a particular position of the screen using Javascript:</b><br>
+Image is an object of a window. To display an image, you need to write an image object to screen and</font> 
+<TEXTAREA name=t1 rows=6 cols=50>
+To display an image:
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img1' src='AS.jpg' style='position:absolute; top:60; left:559; display:inline'>");
+</SCRIPT>
+</TEXTAREA>
+
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img1' src='AS.jpg' style='position:absolute; top:60; left:559; display:inline'>");
+</SCRIPT>
+
+</P>
+<P>
+ <font face="Verdana" size="2">
+ <b>2. Make an image disappeared using Javascript: </b><br>
+Example: click the image and it will disappear</font>
+<TEXTAREA name=t2 rows=8 cols=50>
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img2' src='AS.jpg' onclick='hidden()' style='position:absolute; top:250; left:559; display:inline'>");
+
+function hidden()
+{
+	//the "style.display" property of img object decides to show or disappear a image
+	img2.style.display = "none";
+}
+</SCRIPT>
+
+</TEXTAREA>
+
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img2' src='AS.jpg' onclick='hidden()' style='position:absolute; top:250; left:559; display:inline'>");
+
+function hidden()
+{
+	//the "style.display" property of img object decides to show or disappear a image
+	img2.style.display = "none";
+}
+</SCRIPT>
+</P>
+
+<P>
+<font face="Verdana" size="2">
+<b>3: Automatically move a image in a desired area using Javascript:</b><br>
+Moving of an image is actually changing the position(x,y) of the image. To move image in horizontal direction, 
+you only change X; to move image in parpendicular direction, you change Y only; other situation, you can change 
+both X and Y. <br> 
+Click the image to start moving, click "stop" button to stop moving.</font><br>
+<TEXTAREA name=t3 rows=8 cols=50>
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img3' src='AS.jpg' onclick='move()' style='position:absolute; top:430; left:559; display:inline'>");
+document.write("<input type='button' value='stop' onclick='stop()' style='position:absolute; top:400; left:559'>");
+
+var moveflag = 0;
+var X=559; //550 < X < 850
+var Y=430; //400 < Y < 600
+var dx=5; //dx=0 for parpendicular moving
+var dy=5; //dy=0 for horizontal moving
+var speed=100; //change to smaller number to reach higher speed
+var timerID;
+
+function move()
+{
+	X=X+dx;
+	Y=Y+dy;
+	checkbound();
+	img3.style.top=Y;
+	img3.style.left=X;
+	timerID = setTimeout("move()",100);
+
+}
+
+function stop()
+{
+	clearTimeout(timerID);
+}
+
+//check the boundary and bounce it back when the image out of the area
+function checkbound()
+{
+	if (Y>600 || Y<400)
+	{
+		dy=-dy;
+	}
+	if (X>850 || X<550)
+	{
+		dx=-dx;
+	}
+
+}
+</SCRIPT>
+</TEXTAREA> 
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img3' src='AS.jpg' onclick='move()' style='position:absolute; top:430; left:559; display:inline'>");
+document.write("<input type='button' value='stop' onclick='stop()' style='position:absolute; top:400; left:559'>");
+
+var moveflag = 0;
+var X=559; //550 < X < 850
+var Y=430; //400 < Y < 600
+var dx=5; //dx=0 for parpendicular moving
+var dy=5; //dy=0 for horizontal moving
+var speed=100; //change to smaller number to reach higher speed
+var timerID;
+
+function move()
+{
+	X=X+dx;
+	Y=Y+dy;
+	checkbound();
+	img3.style.top=Y;
+	img3.style.left=X;
+	timerID = setTimeout("move()",100);
+
+}
+
+function stop()
+{
+	clearTimeout(timerID);
+}
+
+//check the boundary and bounce it back when the image out of the area
+function checkbound()
+{
+	if (Y>600 || Y<400)
+	{
+		dy=-dy;
+	}
+	if (X>850 || X<550)
+	{
+		dx=-dx;
+	}
+
+}
+</SCRIPT>
+</P>
+<P>
+<font face="Verdana" size="2">
+<b> 4. Use mouse to control the movement of a image: </b> <br>
+Mouse actions are events and you can define functions to handle those events. In this sample, we defined an handler for onMouseMove 
+event so that the image will move following the move of mouse. Click the image to turn the handler on and click it again to turn it off.</font>
+<TEXTAREA name=t3 rows=8 cols=50>
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img4' src='AS.jpg' onclick='movebymouse()' style='position:absolute; top:730; left:559; display:inline'>");
+
+//mousemoveflag indicates to turn the move on or off
+var mousemoveflag = 0;
+function movebymouse()
+{
+	if (mousemoveflag == 0)
+	{
+		document.onmousemove = move1; //assign a handler function "move1" to the onmousemove event
+		mousemoveflag = 1;
+	}
+	else
+		mousemoveflag = 0;
+		
+}
+
+function move1()
+{
+	if (mousemoveflag == 1)
+	{
+		//set the image position(X,Y) to the event(mousemove) position(X,Y)
+		img4.style.top = event.screenY ;
+		img4.style.left = event.screenX - 20 ;
+	}
+}	
+</SCRIPT>
+</TextArea>
+
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img4' src='AS.jpg' onclick='movebymouse()' width='60' height='60' style='position:absolute; top:730; left:559; display:inline'>");
+
+//mousemoveflag indicates to turn the move on or off
+var mousemoveflag = 0;
+function movebymouse()
+{
+	if (mousemoveflag == 0)
+	{
+		document.onmousemove = move1; //assign a handler function "move1" to the onmousemove event
+		mousemoveflag = 1;
+	}
+	else
+		mousemoveflag = 0;
+		
+}
+
+function move1()
+{
+	if (mousemoveflag == 1)
+	{
+		//set the image position(X,Y) to the event(mousemove) position(X,Y)
+		img4.style.top = event.offsetY ;
+		img4.style.left = event.offsetX;
+	}
+}	
+</SCRIPT>
+</P>
+<P>
+<font face="Verdana" size="2">
+<b> 5. Use keyboard to control the move of an image: </b><br>
+Keyboard typing is another kind of event and you also can define functions to handle those events. In this sample, we defined an handler for onKeyPress 
+event so that the image will move in different direction based on the key you type. Click the image to turn the handler on and click it again to turn it off.
+"i": move image up, "k": move image down, "j": move image left, "k": move image right.</font>
+<TEXTAREA name=t3 rows=8 cols=50>
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img5' src='AS.jpg' onclick='movebykey()' style='position:absolute; top:930; left:559; display:inline'>");
+
+//keymoveflag indicates to turn the move on or off
+var keymoveflag = 0;
+function movebykey()
+{
+	if (keymoveflag == 0)
+	{
+		document.onkeypress = move2; //assign a handler function "move2" to the onkeypress event
+		keymoveflag = 1;
+	}
+	else
+		keymoveflag = 0;
+		
+}
+
+function move2()
+{
+	if (keymoveflag == 1)
+	{
+		var keycode = event.keyCode ;
+		//set the image position(X,Y), based on the keycode pressed
+		
+		var interval = 10; //indicates how far to move for each key press
+		var character=String.fromCharCode(keycode);
+		if (character=="i") img5.style.top = parseInt(img5.style.top) - interval;
+		if (character=="k") img5.style.top = parseInt(img5.style.top) + interval;
+		if (character=="j") img5.style.left = parseInt(img5.style.left) - interval;
+		if (character=="l") img5.style.left = parseInt(img5.style.left) + interval;
+
+	}
+}	
+</SCRIPT>
+</TextArea>
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<img id='img5' src='AS.jpg' onclick='movebykey()' style='position:absolute; top:930; left:559; display:inline'>");
+
+//keymoveflag indicates to turn the move on or off
+var keymoveflag = 0;
+function movebykey()
+{
+	if (keymoveflag == 0)
+	{
+		document.onkeypress = move2; //assign a handler function "move2" to the onkeypress event
+		keymoveflag = 1;
+	}
+	else
+		keymoveflag = 0;
+		
+}
+
+function move2()
+{
+	if (keymoveflag == 1)
+	{
+		var keycode = event.keyCode ;
+		//set the image position(X,Y), based on the keycode pressed
+		
+		var interval = 10; //indicates how far to move for each key press
+		var character=String.fromCharCode(keycode);
+		if (character=="i") img5.style.top = parseInt(img5.style.top) - interval;
+		if (character=="k") img5.style.top = parseInt(img5.style.top) + interval;
+		if (character=="j") img5.style.left = parseInt(img5.style.left) - interval;
+		if (character=="l") img5.style.left = parseInt(img5.style.left) + interval;
+		
+	}
+}	
+</SCRIPT>
+</P>
+
+
+</TD></TR>
+</TABLE>
+</BODY>
+</HTML>

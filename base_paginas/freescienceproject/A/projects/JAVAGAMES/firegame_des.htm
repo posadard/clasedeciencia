@@ -1,0 +1,201 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>1</title>
+</head>
+
+<body>
+
+<p><font face="Verdana" size="2">1. Javascript codes are embedded in html codes. Therefore we create a html
+page first. Following are some html tags, on the body tag, we defined an function 
+"movebykey()" to handle the event "onkeypress", which we will describe in detail later.</font></p>
+<p><font color="#0000FF" face="Arial" size="2">&lt;HTML><br>
+&lt;HEAD><br>
+&lt;TITLE>&lt;/TITLE><br>
+&lt;/HEAD><br>
+&lt;BODY onKeyPress="movebykey()"><br>
+<br>
+&lt;P>&amp;nbsp;&lt;/P></font></p>
+
+<p><font face="Verdana" size="2">2. Javascript codes start and end with &quot;script&quot; tag as showed
+below.<br>
+The &quot;document.write&quot; statements can write objects to the screen
+of the browser. In the first &quot;document.write&quot; screen, it writes an
+&quot;FORM&quot; object, which includes a textfield and two buttons. The second
+&quot;document.write&quot; defines a table with a 500x500 pixels area, and the
+position of the table is determined by the &quot;style&quot; property which
+defines the X-Y coordinates of left-top corner of the table. The following three
+&quot;document.write&quot; statements are to write three image objects: canon,
+plane and ball to certain positions of the screen. "ID" property give an image a
+unique id which can be referred later in the program. The &quot;src&quot;
+property defines the source of the image. Also the &quot;style&quot;
+property is used to define the position and to determine if to show (display:inline) or not show (display:none)
+the image.&nbsp;</font></p>
+
+<p> &nbsp;&nbsp;<font color="#0000FF" face="Arial" size="2"><br>
+&lt;SCRIPT LANGUAGE="JavaScript"><br>
+<br>
+document.write(&quot;&lt;FORM id='input'>Please enter the angle (-90-+90) and click the 'Fire' button to start:&lt;INPUT id='angle' size=6>&lt;INPUT type='button' onclick='fire()' id='firebtn' value='FIRE'>&amp;nbsp;&amp;nbsp;&lt;INPUT type='button' onclick='initiate()' value='Re-Play'>&lt;/FORM>")<br>
+<br>
+document.write("&lt;Table border=1 width='500' height='500'&nbsp;
+style='position:absolute;top:130;left:100'&gt;&lt;tr>&lt;td>&lt;/td>&lt;/tr>&lt;/table>");<br>
+document.write("&lt;img id='canon' src='canon.jpg' style='position:absolute; top:345; left:10; display:inline'>");<br>
+document.write("&lt;img id='plane' src='plane.jpg' style='position:absolute; top:335; left:450; display:inline'>");<br>
+document.write("&lt;img id='ball' src='ball.gif' style='position:absolute; top:360; left:110; display:none'>");<br>
+</font></p>
+
+<p><font face="Verdana" size="2">3. Define some variables for the program in
+Javascript:</font></p>
+
+<p>
+<font color="#0000FF" face="Arial" size="2">
+<br>
+//ball position<br>
+var X=110;&nbsp;<br>
+var Y=360;&nbsp;<br>
+//plane position<br>
+var targetX;<br>
+var targetY;<br>
+//fire angle of the canon <br>
+var angle=0;<br>
+//increasement of x and y for each move of the ball<br> 
+var dx=10;<br>
+var dy; <br>
+//return value of setTimeout function <br>
+var timerID=null;<br>
+//flag to indicate the end of game <br>
+var endflag = 0;<br>
+</font></p>
+
+<p><font face="Verdana" size="2">4. Define functions used by this game program in Javascript.<br>
+
+After you open the page, the &quot;movebykey&quot; function will be called
+because we load it on the body tage as above, and it will listen to the key
+press event. When you press key &quot;j&quot;, the plane will move to the left.
+Similarly, key &quot;l&quot; move the plane to right, key &quot;i&quot; move the
+plane up and key &quot;k&quot; move it down. All those responding move of the
+plane image is defined in the function of movebykey().<br>
+
+
+After you enter an angle value and click the &quot;FIRE&quot; button, the fire()
+function will be called because we defined the fire() function as the handler
+for the &quot;onclick&quot; event of &quot;Fire&quot; button as above.
+&quot;fire()&quot; function intake the angle input and decide the value of
+increasement of y based on the angle. It also determine the target (the plane
+image) position, make the ball image visible and call the move()
+function.&nbsp;&nbsp;<br>
+
+
+&quot;move()&quot; function is the function responsible for the moving of the
+ball. As long as the &quot;endflag&quot; value is &quot;0&quot;, the ball keeps
+moving. Before each move, it check whether the ball is out of area (by call
+chkboundry() ) or it hits the target plane (by call chktarget() ). If the ball
+hit boundary, it will disappear as defined in the &quot;chkboundry&quot;
+function. If the ball hit the plane, both the ball and the plane will disappear
+as defined in the &quot;chktarget()&quot; function.&nbsp;<br>
+
+"initiate()" function will be called when you click "Re-Play" button. It will reset 
+values of all the variables back to the initial states so that you can play the game again.</font>
+
+<font color="#0000FF" face="Arial" size="2">
+<br>
+<br>
+function fire()<br>
+{<br>
+	angle = parseFloat(document.forms[0].angle.value);<br>
+	dy = (-1)* dx * Math.tan(angle/180);<br>
+<br>
+	ball.style.display = "inline";<br>
+	targetX = parseInt(plane.style.left.substring(0, plane.style.left.length-2)) + 32;<br>
+	targetY = parseInt(plane.style.top.substring(0, plane.style.top.length-2)) + 25;<br>
+<br>
+	move();<br>
+}<br>
+<br>
+<br>
+function move()<br>
+{<br>
+	X=X+dx;<br>
+	Y=Y+dy;<br>
+	chkboundary();<br>
+	chktarget();<br>
+	if (endflag == 0)<br>
+	{&nbsp;<br>
+		ball.style.top=Y;<br>
+		ball.style.left=X;<br>
+		timerID = setTimeout("move()",50);<br>
+	}<br>
+}<br>
+<br>
+function chkboundary()<br>
+{<br>
+	if (Y>600 || Y&lt;100 || X>580)<br>
+	{<br>
+		endflag = 1;<br>
+		ball.style.display = "none";<br>
+	}&nbsp;<br>
+}<br>
+<br>
+function chktarget()<br>
+{<br>
+	var centerX = X + 5;<br>
+	var centerY = Y + 5;<br>
+<br>
+	var distance = Math.sqrt((targetX-centerX)*(targetX-centerX) + (targetY-centerY)*(targetY-centerY))<br>
+<br>
+	if ( distance &lt; 30  )<br>
+	{<br>
+		endflag = 1;<br>
+		plane.style.display = "none";<br>
+		ball.style.display = "none";<br>
+	}&nbsp;<br>
+}<br>
+<br>
+<br>
+function movebykey()<br>
+{<br>
+		var keycode = event.keyCode ;<br>
+		//set the image position(X,Y), based on the keycode pressed<br>
+<br>
+		var interval = 10; //indicates how far to move for each key press<br>
+		var character=String.fromCharCode(keycode);<br>
+		if (character=="i") plane.style.top = parseInt(plane.style.top.substring(0, plane.style.top.length-2)) - interval;<br>
+		if (character=="k") plane.style.top = parseInt(plane.style.top.substring(0, plane.style.top.length-2)) + interval;<br>
+		if (character=="j") plane.style.left = parseInt(plane.style.left.substring(0, plane.style.left.length-2)) - interval;<br>
+		if (character=="l") plane.style.left = parseInt(plane.style.left.substring(0, plane.style.left.length-2)) + interval;<br>
+<br>
+}</font></p>
+
+<p><font color="#0000FF" face="Arial" size="2">
+function initiate()<br>
+{<br>
+	endflag = 0;<br>
+	document.forms[0].angle.value = "" ;<br>
+clearTimeout(timerID);<br>
+<br>
+	X=110;<br>
+	Y=360;<br>
+	ball.style.left = 110;<br>
+	ball.style.top = 360;<br>
+	ball.style.display = "none";<br>
+<br>
+	plane.style.left = 450;<br>
+	plane.style.top = 335;<br>
+	plane.style.display = "inline";<br>
+}<br>
+&nbsp;</font></p>
+
+<p><font face="Verdana" size="2">5. End of the javascript codes and html codes.</font></p>
+
+<p><font color="#0000FF" face="Arial" size="2"><br>
+&lt;/SCRIPT><br>
+&lt;P>&amp;nbsp;&lt;/P><br>
+&lt;/BODY><br>
+&lt;/HTML></font></p>
+
+</body>
+
+</html>

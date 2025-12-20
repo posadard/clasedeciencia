@@ -1,0 +1,233 @@
+# FreeScienceProject.com - Modern Web Configuration
+RewriteEngine on
+
+# Dynamic Project Routing System - Using independent folder
+# Route /scienceproject/PROJECT_ID to scienceproject handler (completely independent)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^scienceproject/([A-Z0-9]{5})/?$ /scienceproject/handler.php?project_id=$1 [L,QSA]
+
+# Handle /projects/ explicitly (for index page) - ONLY exact match
+RewriteRule ^projects/?$ /projects/index.php [L]
+
+# Test rules below main functionality
+# Test rule for scienceproject folder
+RewriteRule ^test-scienceproject/([A-Z0-9]+)$ /scienceproject/handler.php?project_id=$1 [L,QSA]
+
+# Test rule for dynamic folder
+RewriteRule ^test-dynamic/([A-Z0-9]+)$ /projects/dynamic/handler.php?project_id=$1 [L,QSA]
+
+# Test rule with parameter - test if parameters work
+RewriteRule ^test-param/([A-Z0-9]+)$ /projects/test.php?test_param=$1 [L,QSA]
+
+# Test rule - simple redirect to test if rewrite is working  
+RewriteRule ^test-rewrite$ /projects/test.php [L]
+
+# Set default index files for project directories
+DirectoryIndex index.php index.html index.htm
+
+# Redirect old .htm extensions to .php for category pages
+RewriteRule ^primary_projects\.htm$ /primary_projects.php [R=301,L]
+RewriteRule ^elementary_projects\.htm$ /elementary_projects.php [R=301,L]
+RewriteRule ^intermediate_projects\.htm$ /intermediate_projects.php [R=301,L]
+RewriteRule ^senior_projects\.htm$ /senior_projects.php [R=301,L]
+
+# Redirect projects directory index (only for .htm extension)
+RewriteRule ^projects/index\.htm$ /projects/ [R=301,L]
+
+# Redirect specific project old html pages to new PHP directory pages
+RewriteRule ^projects/airbattery/index\.html$ /projects/airbattery/ [R=301,L]
+RewriteRule ^projects/batteries/batteries\.html$ /projects/batteries/ [R=301,L]
+RewriteRule ^projects/Boat/index\.html$ /projects/Boat/ [R=301,L]
+
+# Comprehensive project HTML to PHP redirects (future-proofing for modernization)
+# Physics & Electricity Projects
+RewriteRule ^projects/ElectricBell/index\.html$ /projects/ElectricBell/ [R=301,L]
+RewriteRule ^projects/electricity/index\.html$ /projects/electricity/ [R=301,L]
+RewriteRule ^projects/electromagnet/index\.html$ /projects/electromagnet/ [R=301,L]
+RewriteRule ^projects/electromotor/index\.html$ /projects/electromotor/ [R=301,L]
+RewriteRule ^projects/Electromagnetix/index\.html$ /projects/Electromagnetix/ [R=301,L]
+RewriteRule ^projects/FruitElectricity/index\.html$ /projects/FruitElectricity/ [R=301,L]
+RewriteRule ^projects/PotatoElectricity/index\.html$ /projects/PotatoElectricity/ [R=301,L]
+RewriteRule ^projects/SaltElectricity/index\.html$ /projects/SaltElectricity/ [R=301,L]
+RewriteRule ^projects/FloatingRings/index\.html$ /projects/FloatingRings/ [R=301,L]
+RewriteRule ^projects/levitation_experiment/index\.html$ /projects/levitation_experiment/ [R=301,L]
+RewriteRule ^projects/magnetlevitation/index\.html$ /projects/magnetlevitation/ [R=301,L]
+
+# Engineering & Construction Projects
+RewriteRule ^projects/KITWG/index\.html$ /projects/KITWG/ [R=301,L]
+RewriteRule ^projects/CrystalRadio/index\.html$ /projects/CrystalRadio/ [R=301,L]
+RewriteRule ^projects/SteamBoat/index\.html$ /projects/SteamBoat/ [R=301,L]
+RewriteRule ^projects/pulley/index\.html$ /projects/pulley/ [R=301,L]
+
+# Chemistry & Biology Projects
+RewriteRule ^projects/Cookedbeens/index\.html$ /projects/Cookedbeens/ [R=301,L]
+RewriteRule ^projects/DNAmodel/index\.html$ /projects/DNAmodel/ [R=301,L]
+RewriteRule ^projects/MoldExperiment/index\.html$ /projects/MoldExperiment/ [R=301,L]
+RewriteRule ^projects/Saltwater/index\.html$ /projects/Saltwater/ [R=301,L]
+RewriteRule ^projects/slime/index\.html$ /projects/slime/ [R=301,L]
+RewriteRule ^projects/starch1/index\.html$ /projects/starch1/ [R=301,L]
+RewriteRule ^projects/starch1/Starch%20Experiment\.htm$ /projects/starch1/ [R=301,L]
+RewriteRule ^projects/WaterinOrange/index\.html$ /projects/WaterinOrange/ [R=301,L]
+RewriteRule ^projects/watercycle/index\.html$ /projects/watercycle/ [R=301,L]
+
+# Plant & Biology Projects
+RewriteRule ^projects/plantdetergent/index\.html$ /projects/plantdetergent/ [R=301,L]
+RewriteRule ^projects/plantlight1/index\.html$ /projects/plantlight1/ [R=301,L]
+RewriteRule ^projects/plantlight2/index\.html$ /projects/plantlight2/ [R=301,L]
+RewriteRule ^projects/plantmusic/index\.html$ /projects/plantmusic/ [R=301,L]
+RewriteRule ^projects/plantvitamin/index\.html$ /projects/plantvitamin/ [R=301,L]
+RewriteRule ^projects/triops/index\.html$ /projects/triops/ [R=301,L]
+
+# Earth Science & Space Projects
+RewriteRule ^projects/Solar_Science_1/index\.html$ /projects/Solar_Science_1/ [R=301,L]
+RewriteRule ^projects/SolarSystem/index\.html$ /projects/SolarSystem/ [R=301,L]
+RewriteRule ^projects/volcano1/index\.html$ /projects/volcano1/ [R=301,L]
+RewriteRule ^projects/volcano2/index\.html$ /projects/volcano2/ [R=301,L]
+
+# Special Projects & Kits
+RewriteRule ^projects/Copy_of_FruitClock/index\.html$ /projects/Copy_of_FruitClock/ [R=301,L]
+RewriteRule ^projects/EDFMB/index\.html$ /projects/EDFMB/ [R=301,L]
+RewriteRule ^projects/EDMOTOR/index\.html$ /projects/EDMOTOR/ [R=301,L]
+RewriteRule ^projects/EDMUMM/index\.html$ /projects/EDMUMM/ [R=301,L]
+RewriteRule ^projects/eggfloatation/index\.html$ /projects/eggfloatation/ [R=301,L]
+RewriteRule ^projects/fingerkita/index\.html$ /projects/fingerkita/ [R=301,L]
+RewriteRule ^projects/fingerkitb/index\.html$ /projects/fingerkitb/ [R=301,L]
+RewriteRule ^projects/Fluorescent/index\.html$ /projects/Fluorescent/ [R=301,L]
+RewriteRule ^projects/InvisibleFluorescentInk/index\.html$ /projects/InvisibleFluorescentInk/ [R=301,L]
+RewriteRule ^projects/magic/index\.html$ /projects/magic/ [R=301,L]
+RewriteRule ^projects/Mummies/index\.html$ /projects/Mummies/ [R=301,L]
+RewriteRule ^projects/triops/index\.html$ /projects/triops/ [R=301,L]
+
+<Files 403.shtml>
+order allow,deny
+allow from all
+</Files>
+
+deny from 194.44.31.0/24
+deny from 216.244.66.0/24
+deny from 194.44.31.54
+deny from 45.76.31.158
+deny from 68.66.216.41
+deny from 64.176.163.55
+
+RewriteCond %{HTTP_REFERER} !^http://feetcounter.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://feetcounter.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://feetcounter.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://feetcounter.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://freescienceproject.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://freescienceproject.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://freescienceproject.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://freescienceproject.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://schoolorders.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://schoolorders.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://schoolorders.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://schoolorders.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://sciencematerial.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://sciencematerial.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://sciencematerial.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://sciencematerial.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://siliwater.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://siliwater.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://siliwater.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://siliwater.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://woodengenerator.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://woodengenerator.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://woodengenerator.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://woodengenerator.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.feetcounter.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.feetcounter.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.feetcounter.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.feetcounter.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.freescienceproject.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.freescienceproject.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.freescienceproject.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.freescienceproject.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.schoolorders.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.schoolorders.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.schoolorders.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.schoolorders.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.sciencematerial.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.sciencematerial.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.sciencematerial.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.sciencematerial.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.siliwater.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.siliwater.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.siliwater.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.siliwater.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.woodengenerator.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.woodengenerator.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.woodengenerator.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^http://www.woodengenerator.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://feetcounter.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://feetcounter.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://feetcounter.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://feetcounter.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://freescienceproject.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://freescienceproject.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://freescienceproject.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://freescienceproject.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://schoolorders.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://schoolorders.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://schoolorders.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://schoolorders.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://sciencematerial.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://sciencematerial.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://sciencematerial.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://sciencematerial.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://siliwater.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://siliwater.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://siliwater.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://siliwater.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://woodengenerator.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://woodengenerator.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://woodengenerator.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://woodengenerator.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.feetcounter.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.feetcounter.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.feetcounter.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.feetcounter.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.freescienceproject.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.freescienceproject.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.freescienceproject.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.freescienceproject.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.schoolorders.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.schoolorders.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.schoolorders.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.schoolorders.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.sciencematerial.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.sciencematerial.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.sciencematerial.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.sciencematerial.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.siliwater.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.siliwater.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.siliwater.com.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.siliwater.com.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.toys2000.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.woodengenerator.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.woodengenerator.com$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.woodengenerator.toys2000.com/.*$      [NC]
+RewriteCond %{HTTP_REFERER} !^https://www.woodengenerator.toys2000.com$      [NC]
+RewriteRule .*\.(jpg|jpeg|gif|png|bmp)$ - [F,NC]
+
+# Block Scrapy user agent
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTP_USER_AGENT} Scrapy [NC]
+RewriteRule ^.* - [F,L]
+</IfModule>
+
+# Block malicious IPs
+<Limit GET POST>
+    order allow,deny
+    allow from all
+    deny from 34.56.213.140
+    deny from 34.136.171.125
+</Limit>

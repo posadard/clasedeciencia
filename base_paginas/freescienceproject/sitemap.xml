@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" 
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://freescienceproject.com/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://freescienceproject.com/images/freescienceproject02.jpg</image:loc>
+      <image:title>Free Science Project - Educational STEM Resources</image:title>
+      <image:caption>Free science fair project ideas and educational resources for K-12 students</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Grade Level Category Pages (Updated URLs) -->
+  <url>
+    <loc>https://freescienceproject.com/primary_projects.php</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://freescienceproject.com/elementary_projects.php</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://freescienceproject.com/intermediate_projects.php</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <url>
+    <loc>https://freescienceproject.com/senior_projects.php</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Project Index -->
+  <url>
+    <loc>https://freescienceproject.com/projects/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Modernized Project Pages - Electricity & Physics -->
+  <url>
+    <loc>https://freescienceproject.com/projects/FruitElectricity/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://freescienceproject.com/projects/FruitElectricity/lemonpower.jpg</image:loc>
+      <image:title>Make Electricity from Fruits - Science Project</image:title>
+      <image:caption>Learn how to generate electricity using fruits in this engaging science experiment</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/PotatoElectricity/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/airbattery/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://freescienceproject.com/images/air_battery_1.jpg</image:loc>
+      <image:title>Air Battery - Make Electricity from Saltwater</image:title>
+      <image:caption>Revolutionary method to generate electricity using air and saltwater</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/electromagnet/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://freescienceproject.com/images/electromagnet.jpg</image:loc>
+      <image:title>Electromagnet Projects - Physics Experiments</image:title>
+      <image:caption>Build working electromagnets and explore magnetic fields</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/electricity/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/electromotor/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/ElectricBell/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/batteries/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Engineering & Construction Projects -->
+  <url>
+    <loc>https://freescienceproject.com/projects/KITWG/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/CrystalRadio/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/SteamBoat/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/pulley/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Boat/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Biology & Life Science Projects -->
+  <url>
+    <loc>https://freescienceproject.com/projects/DNAmodel/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <image:image>
+      <image:loc>https://freescienceproject.com/images/DNA_model5.jpg</image:loc>
+      <image:title>DNA Double Helix Model - Biology Science Project</image:title>
+      <image:caption>Build an accurate 3D model of DNA structure to learn about genetics</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/MoldExperiment/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/triops/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Cookedbeens/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Plant Science Projects -->
+  <url>
+    <loc>https://freescienceproject.com/projects/plantvitamin/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/plantlight1/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/plantlight2/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/plantmusic/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/plantdetergent/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Chemistry & Earth Science -->
+  <url>
+    <loc>https://freescienceproject.com/projects/watercycle/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/WaterinOrange/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Saltwater/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/starch1/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/volcano1/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/volcano2/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Space & Solar Science -->
+  <url>
+    <loc>https://freescienceproject.com/projects/Solar_Science_1/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/SolarSystem/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Magnetism & Levitation -->
+  <url>
+    <loc>https://freescienceproject.com/projects/magnetlevitation/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/levitation_experiment/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/FloatingRings/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Additional Projects (May need modernization) -->
+  <url>
+    <loc>https://freescienceproject.com/projects/eggfloatation/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Fluorescent/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/InvisibleFluorescentInk/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/magic/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/slime/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Electromagnetix/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/SaltElectricity/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Mummies/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/Copy_of_FruitClock/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/fingerkita/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/fingerkitb/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/EDFMB/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/EDMOTOR/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://freescienceproject.com/projects/EDMUMM/</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Static Project Pages -->
+  <url>
+    <loc>https://freescienceproject.com/projects/ClearorOpaque.htm</loc>
+    <lastmod>2025-10-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+</urlset>

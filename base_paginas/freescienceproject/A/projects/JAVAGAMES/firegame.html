@@ -1,0 +1,129 @@
+<HTML>
+<HEAD>
+<META NAME="GENERATOR" Content="Microsoft FrontPage 4.0">
+<TITLE></TITLE>
+</HEAD>
+<BODY onKeyPress="movebykey()">
+
+<P><b><font face="Verdana" size="2">How to play?</font></b>
+</P>
+<P><font face="Verdana" size="2">First use the keys J, K, L and I to position
+the airplane somewhere in the page.<br>
+Then type a shooting angle (between 1 to 90) for cannon and click on fire.</font>
+</P>
+<SCRIPT LANGUAGE="JavaScript">
+document.write("<FORM id='input'><INPUT id='angle' size=6 value=1><INPUT type='button' onclick='fire()' id='firebtn' value='FIRE'>&nbsp;&nbsp;<INPUT type='button' onclick='initiate()' value='Re-Play'></FORM>")
+
+document.write("<Table border=1 width='500' height='500' style='position:absolute;top:130;left:100'><tr><td></td></tr></table>");
+document.write("<img id='canon' src='canon.jpg' style='position:absolute; top:345; left:10; display:inline'>");
+document.write("<img id='plane' src='plane.jpg' style='position:absolute; top:335; left:450; display:inline'>");
+document.write("<img id='ball' src='ball.gif' style='position:absolute; top:360; left:110; display:none'>");
+
+//ball starting position
+var X=110; 
+var Y=360; 
+var targetX;
+var targetY;
+var angle=0;
+var dx=10; //change to higher number to reach higher speed
+var dy=0; 
+var timerID=null;
+var endflag = 0;
+var failflag = 0;
+
+function initiate()
+{
+	endflag = 0;
+	failflag = 0;
+	document.forms[0].angle.value = "" ;
+	clearTimeout(timerID);
+	
+	X=110;
+	Y=360;
+	ball.style.left = 110;
+	ball.style.top = 360;
+	ball.style.display = "none";
+	
+	plane.style.left = 450;
+	plane.style.top = 335;
+	plane.style.display = "inline";
+}
+
+function fire()
+{
+	angle = parseFloat(document.forms[0].angle.value);
+	dy = (-1)* dx * Math.tan(angle/180*3.14);
+	
+	ball.style.display = "inline";
+	targetX = parseInt(plane.style.left.substring(0, plane.style.left.length-2)) + 32;
+	targetY = parseInt(plane.style.top.substring(0, plane.style.top.length-2)) + 25;
+		
+	move();
+}
+
+
+function move()
+{
+	X=X+dx;
+	Y=Y+dy;
+	chkboundary();
+	chktarget();
+	if (endflag == 0)
+	{ 
+		ball.style.top=Y;
+		ball.style.left=X;
+		timerID = setTimeout("move()",150);
+	}
+	else 
+	{
+		if (failflag == 1)
+		{
+			initiate();
+		}
+	}
+}
+
+function chkboundary()
+{
+	if (Y>600 || Y<100 || X>580)
+	{
+		endflag = 1;
+		ball.style.display = "none";
+		
+		failflag = 1;
+	}	
+}
+
+function chktarget()
+{
+	var centerX = X + 5;
+	var centerY = Y + 5;
+
+	var distance = Math.sqrt((targetX-centerX)*(targetX-centerX) + (targetY-centerY)*(targetY-centerY))
+
+	if ( distance < 30  )
+	{
+		endflag = 1;
+		plane.style.display = "none";
+		ball.style.display = "none";
+	}	
+}
+
+
+function movebykey()
+{
+		var keycode = event.keyCode ;
+		//set the image position(X,Y), based on the keycode pressed
+		
+		var interval = 10; //indicates how far to move for each key press
+		var character=String.fromCharCode(keycode);
+		if (character=="i") plane.style.top = parseInt(plane.style.top.substring(0, plane.style.top.length-2)) - interval;
+		if (character=="k") plane.style.top = parseInt(plane.style.top.substring(0, plane.style.top.length-2)) + interval;
+		if (character=="j") plane.style.left = parseInt(plane.style.left.substring(0, plane.style.left.length-2)) - interval;
+		if (character=="l") plane.style.left = parseInt(plane.style.left.substring(0, plane.style.left.length-2)) + interval;
+
+}	
+</SCRIPT>
+<P>&nbsp;</P>
+</BODY>
+</HTML>
