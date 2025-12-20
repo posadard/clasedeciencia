@@ -1,0 +1,283 @@
+Project Name
+
+The Green Chemicalstore Almanac — a simple, fast, SEO-optimized online magazine of publications with sections, filters, and references to SDS PDFs and ChemicalStore products.
+
+Purpose & Goals
+
+• Publish short, practical articles and references (dictionary, tables, essentials).
+• Organize content by section and support multi-facet filters per section.
+• Optimize every article for SEO, GEO, and schema.org.
+• Drive traffic to ChemicalStore.com with consistent UTM parameters.
+• Keep Safety as an external SDS list (sds.chemicalstore.com).
+• Keep Issues as a simple Contact page to email office@chemicalstore.com
+.
+
+Audience
+
+General homestead/farming users (including Amish/Mennonite communities) seeking plain-language chemistry guidance with low-bandwidth pages and printable layouts.
+
+Scope (MVP)
+
+• Static or lightly dynamic site with: Home, Library (catalog of publications with filters), Section pages, Article pages, Dictionary A-Z, Essentials, Safety (external), Issues (Contact), About/Contact, Terms/Privacy, Sitemap.
+• Admin/authoring via a lightweight CMS or static content repo.
+• No user accounts, no payments on this domain.
+
+Non-Goals (MVP)
+
+• No complex e-commerce.
+• No heavy client-side frameworks required.
+• No comment system.
+• No complex faceted counts (approximate filtering is acceptable).
+
+Information Architecture (Frontend)
+
+Header (global): Sections nav + Search.
+Sidebar (per listing): Filters for Section, Tags, Season, Chemicals, Difficulty, Format, Issue/Year.
+Content area: Card/grid of publications.
+Footer (basic): About, Contact, Terms, Privacy, Sitemap.
+
+Primary Routes
+
+/ — Home (featured posts + quick links)
+
+/library/ — Master listing with filters (server-side GET params)
+
+/section/{slug}/ — Prefiltered listing using same filter UI
+
+/articles/{slug}/ — Article detail
+
+/dictionary/ and /dictionary/{slug}/ — Dictionary index and entry
+
+/essentials/ and /essentials/{slug}/ — Essential products/inputs
+
+/safety/ — Safety page linking out to https://sds.chemicalstore.com/
+
+/issues/ — Contact page emailing office@chemicalstore.com
+
+/about/, /contact/, /terms/, /privacy/, /sitemap.xml, /robots.txt
+
+Query Parameters for Filtering (example)
+
+/library/?section=home-workshop
+&tags=rust,cleaning
+&season=Spring
+&chemicals=sodium-carbonate
+&difficulty=basic
+&format=howto
+&issue=fall-2025
+&page=1
+
+Content Types (Minimum Fields)
+
+Article
+
+title, slug, excerpt (≤ 160 chars), cover_image
+
+section (one), tags[], season[], chemicals[]
+
+format {howto|reference|story|recipe}, difficulty {basic|intermediate|advanced}
+
+read_time_min, author, published_at, status {draft|published}
+
+body (Markdown/HTML)
+
+SEO overrides: seo_title, seo_description, canonical_url
+
+Outbound CTAs: chemicalstore_cta[] (label + url with UTM)
+
+DictionaryEntry (Chemical)
+
+slug, common_names[], chemical_name, formula, CAS
+
+aliases[], short_uses, safety_note
+
+Rel: related_articles[], related_essentials[]
+
+Essential (Product/Input)
+
+name, slug, sku, packs[], sds_url, short_note, buy_url (with UTM)
+
+Rel: related_chemicals[]
+
+Issue (Editorial grouping)
+
+title, slug, period_label, intro, articles[] (optional in MVP)
+
+Taxonomies
+
+• Section: Calendar & Seasons; Farming & Garden; Home & Workshop; Dictionary; Safety; Essentials; Issues.
+• Tags: free-form topical labels.
+• Season: Spring, Summer, Fall, Winter.
+• Chemicals: reference to DictionaryEntry.
+• Format: howto, reference, story, recipe.
+• Difficulty: basic, intermediate, advanced.
+• Issue/Year: optional editorial grouping.
+
+Filtering Logic (Server-Side)
+
+Read GET params and filter posts by exact Section, AND-logic on multiple tags/chemicals (configurable to OR if needed).
+
+Sort by published_at DESC, with optional featured override.
+
+Pagination by page param.
+
+All filters reflected in URL (shareable, crawlable).
+
+SQL-like pseudo
+
+WHERE p.status='published'
+AND (:section IS NULL OR p.section_id=:section)
+AND (:difficulty IS NULL OR p.difficulty=:difficulty)
+AND (:issue IS NULL OR p.issue_id=:issue)
+AND (:format_list IS NULL OR p.format IN (:format_list))
+AND (:tags IS NULL OR t.slug IN (:tags))
+AND (:chems IS NULL OR c.slug IN (:chems))
+GROUP BY p.id
+HAVING
+  (:tags IS NULL OR COUNT(DISTINCT t.slug FILTER (WHERE t.slug IN (:tags))) = :tags_count)
+AND
+  (:chems IS NULL OR COUNT(DISTINCT c.slug FILTER (WHERE c.slug IN (:chems))) = :chems_count)
+ORDER BY p.published_at DESC
+LIMIT :limit OFFSET :offset;
+
+SEO / GEO / Schema.org (Technical Minimum)
+
+• Unique <title> and <meta name="description"> per page.
+• rel="canonical" on articles and listings.
+• hreflang if adding Spanish later (/es/).
+• OpenGraph/Twitter tags for sharable cards.
+• sitemap.xml includes home, sections, paginated listings, articles, dictionary, essentials, issues.
+• robots.txt allows crawling, blocks /admin.
+• JSON-LD:
+
+Article for articles
+
+HowTo for step-by-step content
+
+ItemList for listing pages
+
+Product (minimal) for Essentials linking to ChemicalStore
+• GEO meta (optional): default country/region in global layout; override per article if local.
+
+External Integrations
+
+• Safety: link out to https://sds.chemicalstore.com/ (no mirror).
+• Issues (Contact): either mailto:office@chemicalstore.com or a small /api/contact endpoint that relays via SMTP.
+• ChemicalStore traffic: all outbound product links append UTM defaults:
+
+utm_source=thegreenalmanac&utm_medium=referral&utm_campaign={context}
+
+Performance & Accessibility
+
+• Static generation (SSG) recommended; HTML first, minimal JS.
+• Monochrome theme, high contrast; print CSS for articles/dictionary/tables.
+• Images pre-scaled and lazy-loaded; no heavy libraries.
+
+Suggested Tech Stack (MVP)
+
+• Static site: Eleventy or Astro (SSG) OR Next.js (SSG).
+• Content storage: Markdown/MDX with front-matter; optional Decap/Netlify CMS.
+• Hosting/CDN: Netlify, Vercel, or Cloudflare Pages.
+• Optional serverless functions: /api/contact.
+
+Repository Structure (Starter)
+/
+├─ src/
+│  ├─ content/
+│  │  ├─ articles/
+│  │  ├─ dictionary/
+│  │  ├─ essentials/
+│  │  └─ issues/
+│  ├─ layouts/
+│  ├─ pages/
+│  │  ├─ index.(html|astro|njk)
+│  │  ├─ library.(html|astro|njk)
+│  │  ├─ section/[slug].*
+│  │  ├─ articles/[slug].*
+│  │  ├─ dictionary/[slug].*
+│  │  ├─ essentials/[slug].*
+│  │  ├─ safety/index.*
+│  │  ├─ issues/index.*
+│  │  ├─ about/index.*
+│  │  ├─ contact/index.*
+│  │  ├─ terms/index.*
+│  │  └─ privacy/index.*
+│  ├─ components/
+│  │  ├─ Header.*, Footer.*, SidebarFilters.*, Card.*, Pagination.*
+│  ├─ lib/
+│  │  ├─ filters.js
+│  │  ├─ seo.js (title/description/canonical + JSON-LD builders)
+│  │  └─ utm.js
+│  └─ styles/
+│     ├─ base.css
+│     ├─ layout.css
+│     └─ print.css
+├─ public/ (static assets)
+├─ package.json
+├─ sitemap.config.(js|json)
+└─ robots.txt
+
+Acceptance Criteria (MVP)
+
+Library and Section listings accept server-side filters via GET params; URLs are shareable.
+
+Each article renders valid JSON-LD (Article; HowTo when applicable).
+
+Essentials pages render minimal Product JSON-LD and include outbound links to ChemicalStore with UTM.
+
+Safety page links to https://sds.chemicalstore.com/.
+
+Issues page allows contacting office@chemicalstore.com (mailto or function).
+
+Sitemap and robots are generated; pages pass basic Lighthouse SEO checks.
+
+Print styles produce clean black-and-white prints for Article and Dictionary pages.
+
+Pages load fast on low bandwidth; no JS required to read content or navigate filters.
+
+Example Front-Matter (Authoring)
+
+Article
+
+type: article
+title: Restoring Rusty Tools with Washing Soda
+slug: restoring-rusty-tools-washing-soda
+excerpt: A simple, safe method using sodium carbonate.
+section: home-workshop
+tags: [rust, cleaning]
+season: [Spring, Fall]
+chemicals: [sodium-carbonate]
+format: howto
+difficulty: basic
+read_time_min: 8
+author: Staff
+published_at: 2025-10-06
+chemicalstore_cta:
+  - label: "Buy Washing Soda at ChemicalStore"
+    url: "https://chemicalstore.com/...?...utm_source=thegreenalmanac&utm_medium=referral&utm_campaign=article_footer"
+
+
+DictionaryEntry
+
+type: dictionary
+slug: sodium-carbonate
+common_names: ["washing soda", "soda ash"]
+chemical_name: Sodium Carbonate
+formula: Na2CO3
+CAS: "497-19-8"
+aliases: ["carbonate of soda"]
+short_uses: "Laundry booster, descaling, degreasing."
+safety_note: "Irritant; avoid eye contact; keep dry."
+
+
+Essential
+
+type: essential
+name: Sodium Hydroxide (Lye)
+slug: sodium-hydroxide-naoh
+sku: NAOH-1LB
+packs: ["1 lb","10 lb","50 lb"]
+sds_url: "https://sds.chemicalstore.com/naoh.pdf"
+short_note: "High-purity flakes for soapmaking; store sealed."
+buy_url: "https://chemicalstore.com/...?...utm_source=thegreenalmanac&utm_medium=referral&utm_campaign=essentials"
+related_chemicals: [sodium-hydroxide]
