@@ -34,11 +34,10 @@ include '../header.php';
   </script>
 </div>
 
-<!-- Filtros (usa clases del admin: card, form-group, btn, btn-secondary) -->
-<div class="card" style="margin-bottom:1rem;">
-  <h3 style="margin:0 0 1rem 0;">Filtros</h3>
-  <form method="GET">
-    <div class="form-group">
+<!-- Filtros (alineado al estilo del admin de materiales) -->
+<div class="filters-bar">
+  <form method="GET" class="filters-form">
+    <div class="filter-group">
       <label for="ciclo">Ciclo:</label>
       <select name="ciclo" id="ciclo" onchange="this.form.submit()">
         <option value="">Todos</option>
@@ -47,7 +46,7 @@ include '../header.php';
         <option value="3" <?= $ciclo==='3'?'selected':'' ?>>3 (10°-11°)</option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="filter-group">
       <label for="activo">Estado:</label>
       <select name="activo" id="activo" onchange="this.form.submit()">
         <option value="">Todos</option>
@@ -55,12 +54,12 @@ include '../header.php';
         <option value="0" <?= $activo==='0'?'selected':'' ?>>Inactivos</option>
       </select>
     </div>
-    <div class="form-group">
+    <div class="filter-group search-group">
       <label for="search">Buscar:</label>
       <input type="text" id="search" name="search" value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" placeholder="Nombre o slug..." />
-      <button type="submit" class="btn">🔍 Buscar</button>
+      <button type="submit" class="btn btn-sm">🔍 Buscar</button>
       <?php if ($ciclo || $activo || $search): ?>
-        <a href="/admin/proyectos/index.php" class="btn btn-secondary">Limpiar</a>
+        <a href="/admin/proyectos/index.php" class="btn btn-sm btn-secondary">Limpiar</a>
       <?php endif; ?>
     </div>
   </form>
@@ -109,5 +108,50 @@ include '../header.php';
     </tbody>
   </table>
 <?php endif; ?>
+
+<!-- Inline styles to mirror materials admin search UI -->
+<style>
+.filters-bar {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.filters-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.filter-group label {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.filter-group select,
+.filter-group input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 200px;
+}
+.search-group {
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+}
+.search-group input {
+  flex: 1;
+}
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+}
+</style>
 
 <?php include '../footer.php'; ?>
