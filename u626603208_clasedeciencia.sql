@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 20, 2025 at 01:08 AM
+-- Generation Time: Dec 20, 2025 at 01:15 AM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -20,6 +20,122 @@ SET time_zone = "+00:00";
 --
 -- Database: `u626603208_clasedeciencia`
 --
+
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_buscar_respuesta_cache` (IN `p_proyecto_id` INT, IN `p_pregunta` VARCHAR(500))   BEGIN
+    DECLARE v_pregunta_norm VARCHAR(500);
+    
+    -- Normalizar pregunta (lowercase, sin acentos)
+    SET v_pregunta_norm = LOWER(TRIM(p_pregunta));
+    
+    -- Buscar respuesta exacta
+    SELECT 
+        id,
+        respuesta,
+        veces_usada
+    FROM ia_respuestas_cache
+    WHERE proyecto_id = p_proyecto_id 
+        AND pregunta_normalizada = v_pregunta_norm
+        AND activa = 1
+    LIMIT 1;
+    
+    -- Si no hay exacta, actualizar contador
+    IF FOUND_ROWS() > 0 THEN
+        UPDATE ia_respuestas_cache 
+        SET veces_usada = veces_usada + 1,
+            ultima_vez_usada = NOW()
+        WHERE proyecto_id = p_proyecto_id 
+            AND pregunta_normalizada = v_pregunta_norm;
+    END IF;
+END$$
+
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_limpiar_sesiones_antiguas` ()   BEGIN
+    -- Marcar sesiones inactivas > 1 hora como timeout
+    UPDATE ia_sesiones
+    SET estado = 'timeout'
+    WHERE estado = 'activa' 
+        AND fecha_ultima_interaccion < DATE_SUB(NOW(), INTERVAL 1 HOUR);
+    
+    -- Opcional: Eliminar logs muy antiguos (> 90 días)
+    -- DELETE FROM ia_logs WHERE fecha_hora < DATE_SUB(NOW(), INTERVAL 90 DAY);
+END$$
+
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_obtener_contexto_proyecto` (IN `p_proyecto_id` INT)   BEGIN
+    SELECT * FROM v_proyecto_contexto_ia WHERE proyecto_id = p_proyecto_id;
+    
+    SELECT * FROM v_proyecto_materiales_detalle WHERE proyecto_id = p_proyecto_id;
+    
+    SELECT url, tipo, titulo 
+    FROM recursos_multimedia 
+    WHERE proyecto_id = p_proyecto_id 
+    ORDER BY orden;
+END$$
+
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_registrar_interaccion_ia` (IN `p_sesion_id` INT, IN `p_proyecto_id` INT, IN `p_pregunta` TEXT, IN `p_respuesta` TEXT, IN `p_tokens` INT, IN `p_tiempo_ms` INT, IN `p_modelo` VARCHAR(100), IN `p_costo` DECIMAL(10,6), IN `p_guardrail_activado` BOOLEAN)   BEGIN
+    -- Insertar mensajes
+    INSERT INTO ia_mensajes (sesion_id, rol, contenido, tokens, metadata)
+    VALUES 
+        (p_sesion_id, 'user', p_pregunta, 0, JSON_OBJECT('timestamp', NOW())),
+        (p_sesion_id, 'assistant', p_respuesta, p_tokens, JSON_OBJECT('modelo', p_modelo));
+    
+    -- Actualizar sesión
+    UPDATE ia_sesiones 
+    SET total_mensajes = total_mensajes + 2,
+        tokens_usados = tokens_usados + p_tokens,
+        fecha_ultima_interaccion = NOW()
+    WHERE id = p_sesion_id;
+    
+    -- Log
+    INSERT INTO ia_logs (sesion_id, proyecto_id, tipo_evento, tokens_usados, tiempo_respuesta_ms, modelo_usado, costo_estimado)
+    VALUES (p_sesion_id, p_proyecto_id, 'respuesta', p_tokens, p_tiempo_ms, p_modelo, p_costo);
+    
+    -- Si hubo guardrail
+    IF p_guardrail_activado THEN
+        INSERT INTO ia_logs (sesion_id, proyecto_id, tipo_evento, descripcion)
+        VALUES (p_sesion_id, p_proyecto_id, 'guardrail_activado', 'Contenido de seguridad detectado');
+    END IF;
+    
+    -- Actualizar stats por proyecto
+    INSERT INTO ia_stats_proyecto (proyecto_id, total_consultas, total_sesiones, tokens_totales, ultima_consulta)
+    VALUES (p_proyecto_id, 1, 1, p_tokens, NOW())
+    ON DUPLICATE KEY UPDATE
+        total_consultas = total_consultas + 1,
+        tokens_totales = tokens_totales + p_tokens,
+        ultima_consulta = NOW();
+END$$
+
+--
+-- Functions
+--
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` FUNCTION `fn_es_pregunta_peligrosa` (`pregunta` TEXT) RETURNS TINYINT(1) DETERMINISTIC BEGIN
+    DECLARE palabras_json JSON;
+    DECLARE palabra VARCHAR(255);
+    DECLARE i INT DEFAULT 0;
+    DECLARE total INT;
+    
+    -- Obtener lista de palabras peligro
+    SELECT valor INTO palabras_json 
+    FROM configuracion_ia 
+    WHERE clave = 'palabras_peligro';
+    
+    SET total = JSON_LENGTH(palabras_json);
+    
+    -- Verificar cada palabra
+    WHILE i < total DO
+        SET palabra = JSON_UNQUOTE(JSON_EXTRACT(palabras_json, CONCAT('$[', i, ']')));
+        IF LOWER(pregunta) LIKE CONCAT('%', LOWER(palabra), '%') THEN
+            RETURN TRUE;
+        END IF;
+        SET i = i + 1;
+    END WHILE;
+    
+    RETURN FALSE;
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -344,6 +460,20 @@ CREATE TABLE `ia_respuestas_cache` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Triggers `ia_respuestas_cache`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_actualizar_cache_stats` AFTER UPDATE ON `ia_respuestas_cache` FOR EACH ROW BEGIN
+    IF NEW.veces_usada > OLD.veces_usada THEN
+        -- Registrar que se usó caché (reduce costos)
+        INSERT INTO ia_logs (proyecto_id, tipo_evento, descripcion, tokens_usados, costo_estimado)
+        VALUES (NEW.proyecto_id, 'consulta', 'Respuesta desde caché', 0, 0.00);
+    END IF;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -608,6 +738,108 @@ CREATE TABLE `recursos_multimedia` (
   `orden` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_ia_dashboard`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_ia_dashboard` (
+`fecha` date
+,`sesiones_unicas` bigint(21)
+,`total_eventos` bigint(21)
+,`total_consultas` decimal(22,0)
+,`total_errores` decimal(22,0)
+,`alertas_seguridad` decimal(22,0)
+,`tokens_totales` decimal(32,0)
+,`tiempo_promedio_ms` decimal(14,4)
+,`costo_total` decimal(32,6)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_ia_preguntas_frecuentes`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_ia_preguntas_frecuentes` (
+`proyecto` varchar(255)
+,`pregunta` text
+,`veces_preguntada` bigint(21)
+,`ultima_vez` timestamp
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_proyectos_populares_ia`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_proyectos_populares_ia` (
+`id` int(11)
+,`nombre` varchar(255)
+,`ciclo` enum('1','2','3')
+,`sesiones_ia` bigint(21)
+,`total_interacciones` decimal(32,0)
+,`promedio_mensajes` decimal(14,4)
+,`ultima_consulta` timestamp
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_proyecto_contexto_ia`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_proyecto_contexto_ia` (
+`proyecto_id` int(11)
+,`nombre` varchar(255)
+,`slug` varchar(255)
+,`ciclo` enum('1','2','3')
+,`grados` longtext
+,`duracion_minutos` int(11)
+,`dificultad` enum('facil','medio','dificil')
+,`resumen` text
+,`objetivo_aprendizaje` text
+,`seguridad` longtext
+,`areas` longtext
+,`competencias` longtext
+,`introduccion` text
+,`materiales_kit` longtext
+,`materiales_adicionales` longtext
+,`seccion_seguridad` text
+,`pasos` longtext
+,`explicacion_cientifica` text
+,`conceptos_clave` longtext
+,`conexiones_realidad` text
+,`para_profundizar` text
+,`prompt_contexto` text
+,`conocimientos_previos` longtext
+,`enfoque_pedagogico` text
+,`preguntas_frecuentes` longtext
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_proyecto_materiales_detalle`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_proyecto_materiales_detalle` (
+`proyecto_id` int(11)
+,`proyecto_nombre` varchar(255)
+,`material_id` int(11)
+,`nombre_comun` varchar(255)
+,`nombre_tecnico` varchar(255)
+,`descripcion` text
+,`cantidad` varchar(50)
+,`es_incluido_kit` tinyint(1)
+,`notas` text
+,`advertencias_seguridad` text
+,`manejo_recomendado` text
+,`categoria` varchar(100)
+);
+
 --
 -- Indexes for dumped tables
 --
@@ -627,7 +859,8 @@ ALTER TABLE `analytics_visitas`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_proyecto` (`proyecto_id`),
   ADD KEY `idx_fecha` (`fecha_hora`),
-  ADD KEY `idx_departamento` (`departamento`);
+  ADD KEY `idx_departamento` (`departamento`),
+  ADD KEY `idx_analytics_geografia` (`departamento`,`ciudad`,`fecha_hora`);
 
 --
 -- Indexes for table `areas`
@@ -648,6 +881,7 @@ ALTER TABLE `categorias_materiales`
 --
 ALTER TABLE `competencias`
   ADD PRIMARY KEY (`id`);
+ALTER TABLE `competencias` ADD FULLTEXT KEY `ft_competencias` (`nombre`,`descripcion`);
 
 --
 -- Indexes for table `configuracion_ia`
@@ -660,7 +894,8 @@ ALTER TABLE `configuracion_ia`
 -- Indexes for table `contratos`
 --
 ALTER TABLE `contratos`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_contratos_activos` (`estado`,`fecha_inicio`,`fecha_fin`);
 
 --
 -- Indexes for table `contrato_proyectos`
@@ -689,6 +924,7 @@ ALTER TABLE `entrega_lotes`
 ALTER TABLE `guias`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_proyecto_activa` (`proyecto_id`,`activa`);
+ALTER TABLE `guias` ADD FULLTEXT KEY `ft_guias_contenido` (`introduccion`,`explicacion_cientifica`,`conexiones_realidad`,`para_profundizar`);
 
 --
 -- Indexes for table `ia_guardrails_log`
@@ -697,7 +933,8 @@ ALTER TABLE `ia_guardrails_log`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_tipo` (`tipo_alerta`),
   ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`);
+  ADD KEY `idx_fecha` (`fecha_hora`),
+  ADD KEY `idx_guardrails_proyecto` (`proyecto_id`,`tipo_alerta`,`fecha_hora`);
 
 --
 -- Indexes for table `ia_logs`
@@ -706,7 +943,8 @@ ALTER TABLE `ia_logs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_tipo_evento` (`tipo_evento`),
   ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`);
+  ADD KEY `idx_fecha` (`fecha_hora`),
+  ADD KEY `idx_logs_analytics` (`fecha_hora`,`tipo_evento`,`proyecto_id`);
 
 --
 -- Indexes for table `ia_mensajes`
@@ -714,7 +952,8 @@ ALTER TABLE `ia_logs`
 ALTER TABLE `ia_mensajes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_sesion` (`sesion_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`);
+  ADD KEY `idx_fecha` (`fecha_hora`),
+  ADD KEY `idx_mensajes_conversacion` (`sesion_id`,`fecha_hora`);
 
 --
 -- Indexes for table `ia_respuestas_cache`
@@ -722,6 +961,7 @@ ALTER TABLE `ia_mensajes`
 ALTER TABLE `ia_respuestas_cache`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_proyecto_pregunta` (`proyecto_id`,`pregunta_normalizada`(255));
+ALTER TABLE `ia_respuestas_cache` ADD FULLTEXT KEY `ft_cache_preguntas` (`pregunta_normalizada`,`pregunta_original`);
 
 --
 -- Indexes for table `ia_sesiones`
@@ -730,7 +970,8 @@ ALTER TABLE `ia_sesiones`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_sesion_hash` (`sesion_hash`),
   ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_inicio`);
+  ADD KEY `idx_fecha` (`fecha_inicio`),
+  ADD KEY `idx_sesiones_activas` (`estado`,`fecha_ultima_interaccion`);
 
 --
 -- Indexes for table `ia_stats_proyecto`
@@ -760,6 +1001,7 @@ ALTER TABLE `materiales`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `slug` (`slug`),
   ADD KEY `idx_categoria` (`categoria_id`);
+ALTER TABLE `materiales` ADD FULLTEXT KEY `ft_materiales` (`nombre_comun`,`nombre_tecnico`,`descripcion`);
 
 --
 -- Indexes for table `prompts_proyecto`
@@ -776,21 +1018,26 @@ ALTER TABLE `proyectos`
   ADD UNIQUE KEY `slug` (`slug`),
   ADD KEY `idx_ciclo` (`ciclo`),
   ADD KEY `idx_activo` (`activo`),
-  ADD KEY `idx_destacado` (`destacado`);
+  ADD KEY `idx_destacado` (`destacado`),
+  ADD KEY `idx_busqueda_proyectos` (`ciclo`,`dificultad`,`activo`,`destacado`),
+  ADD KEY `idx_popularidad` (`activo`,`orden_popularidad` DESC);
+ALTER TABLE `proyectos` ADD FULLTEXT KEY `ft_proyectos_busqueda` (`nombre`,`resumen`,`objetivo_aprendizaje`);
 
 --
 -- Indexes for table `proyecto_areas`
 --
 ALTER TABLE `proyecto_areas`
   ADD PRIMARY KEY (`proyecto_id`,`area_id`),
-  ADD KEY `fk_pa_area` (`area_id`);
+  ADD KEY `fk_pa_area` (`area_id`),
+  ADD KEY `idx_area_proyecto` (`area_id`,`proyecto_id`);
 
 --
 -- Indexes for table `proyecto_competencias`
 --
 ALTER TABLE `proyecto_competencias`
   ADD PRIMARY KEY (`proyecto_id`,`competencia_id`),
-  ADD KEY `fk_pc_competencia` (`competencia_id`);
+  ADD KEY `fk_pc_competencia` (`competencia_id`),
+  ADD KEY `idx_competencia_proyecto` (`competencia_id`,`proyecto_id`);
 
 --
 -- Indexes for table `proyecto_materiales`
@@ -923,6 +1170,51 @@ ALTER TABLE `proyectos`
 --
 ALTER TABLE `recursos_multimedia`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_ia_dashboard`
+--
+DROP TABLE IF EXISTS `v_ia_dashboard`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_ia_dashboard`  AS SELECT cast(`l`.`fecha_hora` as date) AS `fecha`, count(distinct `l`.`sesion_id`) AS `sesiones_unicas`, count(`l`.`id`) AS `total_eventos`, sum(case when `l`.`tipo_evento` = 'consulta' then 1 else 0 end) AS `total_consultas`, sum(case when `l`.`tipo_evento` = 'error' then 1 else 0 end) AS `total_errores`, sum(case when `l`.`tipo_evento` = 'guardrail_activado' then 1 else 0 end) AS `alertas_seguridad`, sum(`l`.`tokens_usados`) AS `tokens_totales`, avg(`l`.`tiempo_respuesta_ms`) AS `tiempo_promedio_ms`, sum(`l`.`costo_estimado`) AS `costo_total` FROM `ia_logs` AS `l` GROUP BY cast(`l`.`fecha_hora` as date) ORDER BY cast(`l`.`fecha_hora` as date) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_ia_preguntas_frecuentes`
+--
+DROP TABLE IF EXISTS `v_ia_preguntas_frecuentes`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_ia_preguntas_frecuentes`  AS SELECT `p`.`nombre` AS `proyecto`, `im`.`contenido` AS `pregunta`, count(0) AS `veces_preguntada`, max(`im`.`fecha_hora`) AS `ultima_vez` FROM ((`ia_mensajes` `im` join `ia_sesiones` `s` on(`im`.`sesion_id` = `s`.`id`)) left join `proyectos` `p` on(`s`.`proyecto_id` = `p`.`id`)) WHERE `im`.`rol` = 'user' GROUP BY `s`.`proyecto_id`, `im`.`contenido` HAVING count(0) >= 3 ORDER BY count(0) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_proyectos_populares_ia`
+--
+DROP TABLE IF EXISTS `v_proyectos_populares_ia`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_proyectos_populares_ia`  AS SELECT `p`.`id` AS `id`, `p`.`nombre` AS `nombre`, `p`.`ciclo` AS `ciclo`, count(distinct `s`.`id`) AS `sesiones_ia`, sum(`s`.`total_mensajes`) AS `total_interacciones`, avg(`s`.`total_mensajes`) AS `promedio_mensajes`, max(`s`.`fecha_ultima_interaccion`) AS `ultima_consulta` FROM (`proyectos` `p` left join `ia_sesiones` `s` on(`p`.`id` = `s`.`proyecto_id`)) GROUP BY `p`.`id` ORDER BY count(distinct `s`.`id`) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_proyecto_contexto_ia`
+--
+DROP TABLE IF EXISTS `v_proyecto_contexto_ia`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_proyecto_contexto_ia`  AS SELECT `p`.`id` AS `proyecto_id`, `p`.`nombre` AS `nombre`, `p`.`slug` AS `slug`, `p`.`ciclo` AS `ciclo`, `p`.`grados` AS `grados`, `p`.`duracion_minutos` AS `duracion_minutos`, `p`.`dificultad` AS `dificultad`, `p`.`resumen` AS `resumen`, `p`.`objetivo_aprendizaje` AS `objetivo_aprendizaje`, `p`.`seguridad` AS `seguridad`, group_concat(distinct `a`.`nombre` separator ', ') AS `areas`, (select group_concat(`c`.`nombre` separator '|') from (`proyecto_competencias` `pc` join `competencias` `c` on(`pc`.`competencia_id` = `c`.`id`)) where `pc`.`proyecto_id` = `p`.`id`) AS `competencias`, `g`.`introduccion` AS `introduccion`, `g`.`materiales_kit` AS `materiales_kit`, `g`.`materiales_adicionales` AS `materiales_adicionales`, `g`.`seccion_seguridad` AS `seccion_seguridad`, `g`.`pasos` AS `pasos`, `g`.`explicacion_cientifica` AS `explicacion_cientifica`, `g`.`conceptos_clave` AS `conceptos_clave`, `g`.`conexiones_realidad` AS `conexiones_realidad`, `g`.`para_profundizar` AS `para_profundizar`, `pr`.`prompt_contexto` AS `prompt_contexto`, `pr`.`conocimientos_previos` AS `conocimientos_previos`, `pr`.`enfoque_pedagogico` AS `enfoque_pedagogico`, `pr`.`preguntas_frecuentes` AS `preguntas_frecuentes` FROM ((((`proyectos` `p` left join `proyecto_areas` `pa` on(`p`.`id` = `pa`.`proyecto_id`)) left join `areas` `a` on(`pa`.`area_id` = `a`.`id`)) left join `guias` `g` on(`p`.`id` = `g`.`proyecto_id` and `g`.`activa` = 1)) left join `prompts_proyecto` `pr` on(`p`.`id` = `pr`.`proyecto_id` and `pr`.`activo` = 1)) WHERE `p`.`activo` = 1 GROUP BY `p`.`id` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_proyecto_materiales_detalle`
+--
+DROP TABLE IF EXISTS `v_proyecto_materiales_detalle`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_proyecto_materiales_detalle`  AS SELECT `p`.`id` AS `proyecto_id`, `p`.`nombre` AS `proyecto_nombre`, `m`.`id` AS `material_id`, `m`.`nombre_comun` AS `nombre_comun`, `m`.`nombre_tecnico` AS `nombre_tecnico`, `m`.`descripcion` AS `descripcion`, `pm`.`cantidad` AS `cantidad`, `pm`.`es_incluido_kit` AS `es_incluido_kit`, `pm`.`notas` AS `notas`, `m`.`advertencias_seguridad` AS `advertencias_seguridad`, `m`.`manejo_recomendado` AS `manejo_recomendado`, `c`.`nombre` AS `categoria` FROM (((`proyectos` `p` join `proyecto_materiales` `pm` on(`p`.`id` = `pm`.`proyecto_id`)) join `materiales` `m` on(`pm`.`material_id` = `m`.`id`)) left join `categorias_materiales` `c` on(`m`.`categoria_id` = `c`.`id`)) WHERE `p`.`activo` = 1 ;
 
 --
 -- Constraints for dumped tables
