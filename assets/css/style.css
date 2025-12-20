@@ -441,6 +441,7 @@ strong, b {
     color: white;
 }
 .section-card:hover h3, .section-card:focus h3 { color: white; }
+.section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
 
 /* Make the link look like a pill/button on small screens */
