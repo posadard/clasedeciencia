@@ -8,7 +8,7 @@
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'u626603208_clasedeciencia');
 define('DB_USER', 'u626603208_clasedeciencia');
-define('DB_PASS', '/E:yI!c5A*');
+define('DB_PASS', ':;3y>|mn~X0t');
 define('DB_CHARSET', 'utf8mb4');
 
 // Site Configuration
