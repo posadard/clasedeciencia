@@ -1,5 +1,6 @@
 <?php
 require_once '../auth.php';
+/** @var \PDO $pdo */
 
 $is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
 $id = $is_edit ? (int)$_GET['id'] : null;
