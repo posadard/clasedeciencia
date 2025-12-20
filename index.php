@@ -84,8 +84,8 @@ include 'includes/header.php';
             <a href="/<?= h($a['slug']) ?>" class="area-card-simple">
                 <div class="area-card-header">
                     <h3 class="area-nombre"><?= h($a['nombre']) ?></h3>
-                    <span class="area-contador"><?= h($a['total_proyectos']) ?></span>
                 </div>
+                <span class="area-contador"><?= h($a['total_proyectos']) ?> <?= $a['total_proyectos'] == 1 ? 'clase' : 'clases' ?></span>
                 <?php if (!empty($a['descripcion'])): ?>
                 <p class="area-descripcion"><?= h($a['descripcion']) ?></p>
                 <?php endif; ?>
