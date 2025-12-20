@@ -1,50 +1,33 @@
 /*
- * Clase de Ciencia - Stylesheet Principal
- * Diseño educativo científico con paleta azul institucional
- * Paleta: Azul profundo (confianza), Verde científico (crecimiento), Amarillo (curiosidad)
+ * The Green Almanac - Modern Vintage Stylesheet
+ * Clean, modern design with vintage botanical touches
+ * Color palette: Whites, Greens, Blacks
  */
 
 /* === CSS Variables === */
 :root {
-    /* Colores Principales - Azul Científico */
-    --color-primary: #1f3c88;        /* Azul profundo (confianza y conocimiento) */
-    --color-primary-light: #3d5ba9;  /* Azul medio */
-    --color-primary-dark: #152a5e;   /* Azul muy oscuro */
+    /* Colors */
+    --color-primary: #0f3b1f;        /* Dark forest green (deeper) */
+    --color-primary-light: #24522f;  /* Medium forest green */
+    --color-accent: #4a7c59;         /* Sage green */
+    --color-accent-light: #6f9a6f;   /* Light sage */
+    --color-success: #4e8f4e;        /* Muted green */
     
-    /* Colores Secundarios - Verde Aprendizaje */
-    --color-secondary: #2e7d32;      /* Verde científico (crecimiento) */
-    --color-secondary-light: #4caf50;/* Verde claro */
-    --color-secondary-dark: #1b5e20; /* Verde oscuro */
+    --color-text: #1a1a1a;           /* Almost black */
+    --color-text-light: #4a5568;     /* Gray text */
+    --color-text-muted: #718096;     /* Muted gray */
     
-    /* Colores de Acento - Amarillo Curiosidad */
-    --color-accent: #f9a825;         /* Amarillo suave (curiosidad y descubrimiento) */
-    --color-accent-light: #ffc107;   /* Amarillo brillante */
-    --color-accent-dark: #f57f17;    /* Amarillo oscuro */
+    --color-bg: #ffffff;             /* Pure white */
+    --color-bg-alt: #f8faf9;         /* Off-white with green tint */
+    --color-bg-light: #f0f4f2;       /* Light green-gray */
+    --color-bg-dark: #e8ede9;        /* Darker green-gray */
     
-    /* Estados y Utilidades */
-    --color-success: #2e7d32;        /* Verde - confirmación */
-    --color-warning: #f9a825;        /* Amarillo - advertencia */
-    --color-error: #d32f2f;          /* Rojo - error */
-    --color-info: #1976d2;           /* Azul claro - información */
-    
-    /* Texto */
-    --color-text: #2b2b2b;           /* Gris oscuro profesional */
-    --color-text-light: #5f6368;     /* Gris medio */
-    --color-text-muted: #80868b;     /* Gris claro */
-    
-    /* Fondos */
-    --color-bg: #ffffff;             /* Blanco puro */
-    --color-bg-alt: #f4f6f8;         /* Gris muy claro */
-    --color-bg-light: #e8eaf0;       /* Gris claro */
-    --color-bg-dark: #d4d8dd;        /* Gris medio */
-    
-    /* Bordes */
-    --color-border: #d4d8dd;         /* Gris suave */
-    --color-border-light: #e8eaf0;   /* Muy claro */
+    --color-border: #d1d9d4;         /* Soft green-gray border */
+    --color-border-light: #e5ebe7;   /* Very light border */
     
     /* Fonts */
-    --font-body: Georgia, 'Times New Roman', serif;
-    --font-heading: 'Goudy Old Style', 'Georgia', serif;
+    --font-body: Georgia, 'Times New Roman', serif; /* vintage feel: serif body */
+    --font-heading: 'Goudy Old Style', 'Georgia', serif; /* vintage headings */
     --font-mono: 'Courier New', Courier, monospace;
     
     /* Spacing */
@@ -56,15 +39,15 @@
     --spacing-2xl: 2rem;
     
     /* Layout */
-    --max-width: 1400px;
+    --max-width: 1400px; /* allow wider content to use available space */
     --max-width-narrow: 800px;
     --border-radius: 8px;
     --border-radius-sm: 4px;
     
     /* Shadows */
-    --shadow-sm: 0 1px 3px rgba(31, 60, 136, 0.1);
-    --shadow-md: 0 4px 6px rgba(31, 60, 136, 0.1);
-    --shadow-lg: 0 10px 15px rgba(31, 60, 136, 0.15);
+    --shadow-sm: 0 1px 3px rgba(26, 71, 42, 0.1);
+    --shadow-md: 0 4px 6px rgba(26, 71, 42, 0.1);
+    --shadow-lg: 0 10px 15px rgba(26, 71, 42, 0.1);
 }
 
 /* === Reset & Base === */
@@ -94,7 +77,7 @@ body::before {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    background-image: radial-gradient(rgba(31, 60, 136, 0.01) 1px, transparent 1px);
+    background-image: radial-gradient(rgba(0,0,0,0.01) 1px, transparent 1px);
     background-size: 40px 40px;
     opacity: 0.03;
     z-index: 0;
@@ -122,15 +105,15 @@ p {
 }
 
 a {
-    color: var(--color-primary);
+    color: var(--color-accent);
     text-decoration: none;
     transition: color 0.2s ease, border-color 0.2s ease;
     border-bottom: 1px solid transparent;
 }
 
 a:hover {
-    color: var(--color-primary-light);
-    border-bottom-color: var(--color-accent);
+    color: var(--color-primary);
+    border-bottom-color: var(--color-accent-light);
 }
 
 strong, b {
@@ -170,15 +153,17 @@ strong, b {
 
 .site-title {
     font-size: 2rem;
-    /* Amarillo curiosidad para destacar el título */
-    color: var(--color-accent);
+    /* use accent light color for a softer green title per request */
+    color: var(--color-accent-light);
     text-decoration: none;
+    /* reduce visual weight a bit so the header looks less heavy */
     font-weight: 500;
     letter-spacing: -0.02em;
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     border: none;
+    /* slightly stronger shadow to improve legibility against textured backgrounds */
     text-shadow: 0 1px 0 rgba(0,0,0,0.18);
 }
 
@@ -189,13 +174,13 @@ strong, b {
 
 /* Ensure the anchor inside the site title uses the intended color (overrides global a{} rule) */
 .site-title a {
-    color: var(--color-accent);
+    color: var(--color-accent-light);
     text-decoration: none;
     border: none;
 }
 
 .site-title:hover a {
-    color: var(--color-accent-light);
+    color: var(--color-accent);
 }
 
 .site-title a:focus {
@@ -233,7 +218,7 @@ strong, b {
 
 .main-nav a:hover {
     background: rgba(255, 255, 255, 0.1);
-    border-color: var(--color-accent);
+    border-color: var(--color-accent-light);
     color: white;
 }
 
@@ -416,14 +401,14 @@ strong, b {
 /* Browse by Section: make the tiles look like green action buttons */
 .section-card {
     display: block;
-    background: linear-gradient(180deg, rgba(31, 60, 136, 0.06), rgba(31, 60, 136, 0.02));
-    border: 1px solid rgba(31, 60, 136, 0.12);
+    background: linear-gradient(180deg, rgba(74,124,89,0.06), rgba(74,124,89,0.02));
+    border: 1px solid rgba(46,79,46,0.12);
     border-radius: 10px;
     padding: 1rem;
     text-decoration: none;
     color: var(--color-primary);
     transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-    box-shadow: 0 2px 6px rgba(31, 60, 136, 0.03);
+    box-shadow: 0 2px 6px rgba(15,59,31,0.03);
 }
 .section-card h3 { margin: 0 0 0.25rem 0; color: var(--color-primary); font-size: 1.15rem; }
 .section-card p { 
@@ -436,12 +421,12 @@ strong, b {
 .section-card:hover,
 .section-card:focus {
     transform: translateY(-3px);
-    box-shadow: 0 8px 22px rgba(31, 60, 136, 0.12);
-    background: linear-gradient(180deg, var(--color-primary), rgba(31, 60, 136, 0.06));
+    box-shadow: 0 8px 22px rgba(15,59,31,0.08);
+    background: linear-gradient(180deg, var(--color-accent-light), rgba(74,124,89,0.06));
     color: white;
 }
 .section-card:hover h3, .section-card:focus h3 { color: white; }
-.section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
+.section-card:focus { outline: 3px solid rgba(74,124,89,0.14); outline-offset: 2px; }
 
 /* Make the link look like a pill/button on small screens */
 @media (max-width: 480px) {
@@ -485,11 +470,11 @@ strong, b {
 
 /* Affordance for cards made clickable by JS */
 .is-clickable { cursor: pointer; }
-.is-clickable:focus { outline: 3px solid rgba(31, 60, 136, 0.18); outline-offset: 3px; }
+.is-clickable:focus { outline: 3px solid rgba(74,124,89,0.18); outline-offset: 3px; }
 
 .article-card:hover,
 .card:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-accent-light);
     transform: translateY(-2px);
 }
 
@@ -521,7 +506,7 @@ strong, b {
 .card-link:focus { outline: none; }
 
 .article-card h3 a:hover {
-    color: var(--color-primary-light);
+    color: var(--color-accent);
 }
 
 .card-meta {
@@ -573,13 +558,13 @@ strong, b {
 }
 
 .difficulty-basic {
-    background: var(--color-secondary);
+    background: var(--color-success);
     color: white;
 }
 
 .difficulty-intermediate {
     background: var(--color-accent);
-    color: var(--color-text);
+    color: white;
 }
 
 .difficulty-advanced {
@@ -588,8 +573,8 @@ strong, b {
 }
 
 .format-badge {
-    background: var(--color-accent);
-    color: var(--color-text);
+    background: var(--color-accent-light);
+    color: white;
 }
 
 .season-badge {
@@ -651,8 +636,8 @@ strong, b {
 .filter-group select:focus,
 .filter-group input:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
 }
 
 .filter-actions {
@@ -1937,8 +1922,8 @@ strong, b {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(31, 60, 136, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
 }
 
 .form-group textarea {
@@ -2019,22 +2004,17 @@ strong, b {
 
 .message.success {
     background: #e8f5e9;
-    border-color: var(--color-secondary);
+    border-color: #4caf50;
 }
 
 .message.error {
     background: #ffebee;
-    border-color: var(--color-error);
+    border-color: #f44336;
 }
 
 .message.info {
     background: #e3f2fd;
-    border-color: var(--color-info);
-}
-
-.message.warning {
-    background: #fff9e6;
-    border-color: var(--color-warning);
+    border-color: #2196f3;
 }
 
 /* === Admin Actions === */
@@ -2073,7 +2053,7 @@ strong, b {
 
 .listbox-header {
     padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-primary);
+    background: var(--color-accent);
     color: white;
     border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
     display: flex;
@@ -2180,7 +2160,7 @@ strong, b {
     padding: 2px 6px;
     border-radius: var(--border-radius-sm);
     white-space: nowrap;
-    color: var(--color-primary);
+    color: var(--color-accent);
     font-weight: 600;
 }
 
@@ -2199,7 +2179,7 @@ strong, b {
     padding: 0;
     opacity: 0.6;
     transition: opacity 0.2s;
-    color: var(--color-primary);
+    color: var(--color-accent);
 }
 
 .info-btn:hover {
@@ -2207,7 +2187,7 @@ strong, b {
 }
 
 .remove-btn {
-    background: var(--color-error);
+    background: #ff4444;
     color: white;
     border: none;
     border-radius: 50%;
@@ -2224,7 +2204,7 @@ strong, b {
 }
 
 .remove-btn:hover {
-    background: #b71c1c;
+    background: #cc0000;
 }
 
 .listbox-buttons {
@@ -2235,7 +2215,7 @@ strong, b {
 }
 
 .listbox-buttons button {
-    background: var(--color-primary);
+    background: var(--color-accent);
     color: white;
     border: none;
     border-radius: var(--border-radius-sm);
@@ -2247,7 +2227,7 @@ strong, b {
 }
 
 .listbox-buttons button:hover {
-    background: var(--color-primary-light);
+    background: var(--color-accent-light);
 }
 
 .competencia-tooltip {
