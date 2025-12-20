@@ -24,7 +24,7 @@ $stmt->execute([$proyecto['id']]);
 $areas = $stmt->fetchAll();
 
 // Cargar competencias MEN asociadas
-$stmt = $pdo->prepare("SELECT c.* FROM competencias c JOIN clase_competencias cc ON c.id = cc.competencia_id WHERE cc.clase_id = ? ORDER BY c.id");
+$stmt = $pdo->prepare("SELECT c.id, c.codigo, c.subcategoria, c.nombre, c.explicacion FROM competencias c JOIN clase_competencias cc ON c.id = cc.competencia_id WHERE cc.clase_id = ? ORDER BY c.subcategoria, c.id");
 $stmt->execute([$proyecto['id']]);
 $competencias = $stmt->fetchAll();
 
@@ -291,16 +291,29 @@ include 'includes/header.php';
 
         <?php if (!empty($competencias)): ?>
         <section class="competencias-section">
-            <h2>📚 Competencias MEN Desarrolladas</h2>
-            <p class="competencias-intro">Esta clase está alineada con las competencias del Ministerio de Educación Nacional de Colombia:</p>
-            <ul class="competencias-list">
-                <?php foreach ($competencias as $comp): ?>
-                    <li class="competencia-item">
-                        <strong class="competencia-codigo"><?= h($comp['codigo']) ?>:</strong>
-                        <span class="competencia-nombre"><?= h($comp['nombre']) ?></span>
-                    </li>
+            <h2>📚 Competencias Desarrolladas</h2>
+            <p class="competencias-intro">Esta clase desarrolla las siguientes competencias educativas:</p>
+            <div class="competencias-accordion">
+                <?php foreach ($competencias as $idx => $comp): ?>
+                    <div class="competencia-item">
+                        <button class="competencia-header" onclick="toggleCompetencia(<?= $idx ?>)" type="button">
+                            <span class="competencia-title">
+                                <strong class="competencia-codigo"><?= h($comp['codigo']) ?></strong>
+                                <span class="competencia-nombre"><?= h($comp['nombre']) ?></span>
+                            </span>
+                            <span class="toggle-icon" id="icon-<?= $idx ?>">▼</span>
+                        </button>
+                        <div class="competencia-content" id="content-<?= $idx ?>" style="display: none;">
+                            <?php if (!empty($comp['subcategoria'])): ?>
+                                <p class="competencia-subcategoria"><strong>Categoría:</strong> <?= h($comp['subcategoria']) ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($comp['explicacion'])): ?>
+                                <p class="competencia-explicacion"><?= h($comp['explicacion']) ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
-            </ul>
+            </div>
         </section>
         <?php endif; ?>
 
@@ -375,6 +388,19 @@ include 'includes/header.php';
     </article>
 </div>
 <script>
+function toggleCompetencia(index) {
+    const content = document.getElementById('content-' + index);
+    const icon = document.getElementById('icon-' + index);
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        content.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+
 console.log('🔍 [Clase] Slug:', '<?= h($slug) ?>');
 console.log('✅ [Clase] Cargada:', <?= json_encode(['id'=>$proyecto['id'],'nombre'=>$proyecto['nombre']]) ?>);
 console.log('📚 [Clase] Áreas:', <?= count($areas) ?>);

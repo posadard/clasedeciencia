@@ -2988,30 +2988,89 @@ strong, b {
     font-size: 0.95rem;
 }
 
-.competencias-list {
-    list-style: none;
-    padding: 0;
-    display: grid;
-    gap: var(--spacing-md);
+.competencias-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
 }
 
 .competencia-item {
     background: white;
-    padding: var(--spacing-lg);
     border-radius: var(--border-radius-sm);
-    border-left: 4px solid var(--color-primary);
+    overflow: hidden;
     box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border-light);
+}
+
+.competencia-header {
+    width: 100%;
+    padding: var(--spacing-lg);
+    background: white;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    transition: background 0.2s;
+    font-family: var(--font-body);
+}
+
+.competencia-header:hover {
+    background: var(--color-bg-light);
+}
+
+.competencia-title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    flex: 1;
 }
 
 .competencia-codigo {
     color: var(--color-primary);
     font-weight: 600;
-    margin-right: var(--spacing-sm);
+    font-size: 0.9rem;
 }
 
 .competencia-nombre {
     color: var(--color-text);
-    line-height: 1.6;
+    line-height: 1.5;
+    font-size: 1rem;
+}
+
+.toggle-icon {
+    color: var(--color-primary);
+    font-size: 0.8rem;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+
+.competencia-content {
+    padding: 0 var(--spacing-lg) var(--spacing-lg);
+    background: var(--color-bg-light);
+    border-top: 1px solid var(--color-border-light);
+}
+
+.competencia-subcategoria {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm);
+    background: white;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    color: var(--color-text);
+}
+
+.competencia-subcategoria strong {
+    color: var(--color-primary);
+}
+
+.competencia-explicacion {
+    color: var(--color-text-light);
+    line-height: 1.7;
+    font-size: 0.95rem;
+    margin: 0;
 }
 
 .tags-section {
