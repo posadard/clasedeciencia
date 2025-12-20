@@ -39,8 +39,20 @@ function cdc_get_recent_proyectos($pdo, $limit = 6) {
 }
 
 function cdc_get_areas($pdo) {
-    // Obtener áreas con explicacion
-    $stmt = $pdo->query("SELECT id, nombre, slug, explicacion FROM areas ORDER BY nombre");
+    // Obtener áreas con contador de proyectos activos
+    $stmt = $pdo->query("
+        SELECT 
+            a.id, 
+            a.nombre, 
+            a.slug, 
+            a.explicacion,
+            COUNT(DISTINCT c.id) AS total_proyectos
+        FROM areas a
+        LEFT JOIN clase_areas ca ON ca.area_id = a.id
+        LEFT JOIN clases c ON c.id = ca.clase_id AND c.activo = 1
+        GROUP BY a.id, a.nombre, a.slug, a.explicacion
+        ORDER BY total_proyectos DESC, a.nombre
+    ");
     $rows = $stmt->fetchAll();
     // Crear resumen corto (primeras 2 oraciones o 150 caracteres)
     foreach ($rows as &$row) {

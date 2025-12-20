@@ -642,6 +642,132 @@ strong, b {
 .section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
 
+/* Área cards simplificadas con contador */
+.areas-section {
+    margin-bottom: 3rem;
+}
+
+.areas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.area-card-simple {
+    display: block;
+    background: white;
+    border: 2px solid rgba(31, 60, 136, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.area-card-simple::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.area-card-simple:hover::before {
+    transform: scaleX(1);
+}
+
+.area-card-simple:hover {
+    transform: translateY(-4px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 24px rgba(31, 60, 136, 0.15);
+}
+
+.area-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.area-nombre {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1.3;
+    flex: 1;
+}
+
+.area-contador {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    background: linear-gradient(135deg, var(--color-primary), #2a4a9d);
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 800;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(31, 60, 136, 0.2);
+}
+
+.area-descripcion {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.area-card-simple:hover .area-nombre {
+    color: var(--color-primary);
+}
+
+.area-card-simple:hover .area-contador {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(31, 60, 136, 0.3);
+}
+
+@media (max-width: 768px) {
+    .areas-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.875rem;
+    }
+    
+    .area-card-simple {
+        padding: 1rem;
+    }
+    
+    .area-nombre {
+        font-size: 1rem;
+    }
+    
+    .area-contador {
+        min-width: 2.25rem;
+        height: 2.25rem;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .areas-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 480px) {
     .section-card { padding: 0.85rem; border-radius: 8px; }
 }

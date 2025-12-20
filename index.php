@@ -75,13 +75,18 @@ include 'includes/header.php';
 
     
     <!-- Acceso Rápido por Área -->
-    <section class="sections-overview">
+    <section class="areas-section">
         <h2>Explorar por Área</h2>
-        <div class="sections-grid">
+        <div class="areas-grid">
             <?php foreach ($areas as $a): ?>
-            <a href="/<?= h($a['slug']) ?>" class="section-card area-card">
-                <h3><?= h($a['nombre']) ?></h3>
-                <p class="area-description"><?= h($a['descripcion']) ?></p>
+            <a href="/<?= h($a['slug']) ?>" class="area-card-simple">
+                <div class="area-card-header">
+                    <h3 class="area-nombre"><?= h($a['nombre']) ?></h3>
+                    <span class="area-contador"><?= h($a['total_proyectos']) ?></span>
+                </div>
+                <?php if (!empty($a['descripcion'])): ?>
+                <p class="area-descripcion"><?= h($a['descripcion']) ?></p>
+                <?php endif; ?>
             </a>
             <?php endforeach; ?>
         </div>
@@ -109,6 +114,11 @@ include 'includes/header.php';
 <script>
 console.log('✅ [home] Áreas disponibles:', <?= isset($areas) ? count($areas) : 0 ?>);
 console.log('✅ [home] Ciclos activos:', <?= isset($ciclos) ? count($ciclos) : 0 ?>);
+<?php if (isset($areas) && !empty($areas)): ?>
+console.log('📊 [home] Proyectos por área:', <?= json_encode(array_map(function($a) { 
+    return ['nombre' => $a['nombre'], 'total' => (int)$a['total_proyectos']]; 
+}, $areas)) ?>);
+<?php endif; ?>
 </script>
 
 <?php include 'includes/footer.php'; ?>
