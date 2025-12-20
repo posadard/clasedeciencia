@@ -28,7 +28,7 @@ include 'includes/header.php';
         <p class="hero-subtitle">Proyectos científicos para grados 6°-11°</p>
         <p>Explora guías paso a paso, materiales del kit y explicaciones científicas alineadas con competencias MEN.</p>
         <div class="hero-actions">
-            <a href="/catalogo.php" class="btn btn-primary">Explorar Catálogo</a>
+            <a href="/catalogo.php" class="btn btn-primary">Explorar Clases</a>
         </div>
     </section>
         <!-- Acceso Rápido por Ciclo -->
@@ -117,7 +117,7 @@ include 'includes/header.php';
             <?php endforeach; ?>
         </div>
         <div class="text-center">
-            <a href="/catalogo.php" class="btn btn-secondary">Ver Catálogo</a>
+            <a href="/catalogo.php" class="btn btn-secondary">Ver Clases</a>
         </div>
     </section>
     <?php endif; ?>
@@ -126,9 +126,9 @@ include 'includes/header.php';
     <section class="quick-links">
         <div class="quick-links-grid">
             <div class="quick-link-card">
-                <h3>Catálogo</h3>
-                <p>Explora proyectos por ciclo, grado y área.</p>
-                <a href="/catalogo.php">Ir al catálogo &rarr;</a>
+                <h3>Clases</h3>
+                <p>Explora clases por ciclo, grado y área.</p>
+                <a href="/catalogo.php">Ir a las clases &rarr;</a>
             </div>
             <div class="quick-link-card">
                 <h3>Contacto</h3>
