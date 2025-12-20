@@ -18,26 +18,74 @@ if (!$proyecto) {
     exit;
 }
 
+// Cargar áreas asociadas
+$stmt = $pdo->prepare("SELECT a.* FROM areas a JOIN clase_areas ca ON a.id = ca.area_id WHERE ca.clase_id = ? ORDER BY a.nombre");
+$stmt->execute([$proyecto['id']]);
+$areas = $stmt->fetchAll();
+
+// Cargar competencias MEN asociadas
+$stmt = $pdo->prepare("SELECT c.* FROM competencias c JOIN clase_competencias cc ON c.id = cc.competencia_id WHERE cc.clase_id = ? ORDER BY c.id");
+$stmt->execute([$proyecto['id']]);
+$competencias = $stmt->fetchAll();
+
+// Cargar tags
+$stmt = $pdo->prepare("SELECT tag FROM clase_tags WHERE clase_id = ? ORDER BY tag");
+$stmt->execute([$proyecto['id']]);
+$tags = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
 // Cargar guía (última versión)
 $stmt = $pdo->prepare("SELECT * FROM guias WHERE clase_id = ? ORDER BY id DESC LIMIT 1");
 $stmt->execute([$proyecto['id']]);
 $guia = $stmt->fetch();
 
-// Kit y componentes
-$stmt = $pdo->prepare("SELECT id FROM kits WHERE clase_id = ? LIMIT 1");
+// Kits asociados (nueva relación N:M)
+$stmt = $pdo->prepare("
+    SELECT k.*, ck.es_principal, ck.sort_order 
+    FROM kits k 
+    JOIN clase_kits ck ON k.id = ck.kit_id 
+    WHERE ck.clase_id = ? 
+    ORDER BY ck.es_principal DESC, ck.sort_order ASC
+");
 $stmt->execute([$proyecto['id']]);
-$kit = $stmt->fetch(PDO::FETCH_ASSOC);
-$materiales = [];
-if ($kit && isset($kit['id'])) {
-    $stmt = $pdo->prepare("SELECT kc.*, i.nombre_comun, i.sku, i.unidad FROM kit_componentes kc JOIN kit_items i ON kc.item_id = i.id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, i.nombre_comun ASC");
+$kits = $stmt->fetchAll();
+
+// Componentes de todos los kits
+$materiales_por_kit = [];
+foreach ($kits as $kit) {
+    $stmt = $pdo->prepare("
+        SELECT kc.*, i.nombre_comun, i.sku, i.unidad 
+        FROM kit_componentes kc 
+        JOIN kit_items i ON kc.item_id = i.id 
+        WHERE kc.kit_id = ? 
+        ORDER BY kc.sort_order ASC, i.nombre_comun ASC
+    ");
     $stmt->execute([(int)$kit['id']]);
-    $materiales = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $materiales_por_kit[$kit['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Multimedia
 $stmt = $pdo->prepare("SELECT * FROM recursos_multimedia WHERE clase_id = ? ORDER BY sort_order");
 $stmt->execute([$proyecto['id']]);
 $recursos = $stmt->fetchAll();
+
+// Clases relacionadas (por área o competencia)
+$clases_relacionadas = [];
+if (!empty($areas)) {
+    $area_ids = array_column($areas, 'id');
+    $placeholders = implode(',', array_fill(0, count($area_ids), '?'));
+    $stmt = $pdo->prepare("
+        SELECT DISTINCT c.* 
+        FROM clases c
+        JOIN clase_areas ca ON c.id = ca.clase_id
+        WHERE ca.area_id IN ($placeholders) 
+        AND c.id != ? 
+        AND c.activo = 1
+        ORDER BY c.destacado DESC, RAND()
+        LIMIT 3
+    ");
+    $stmt->execute([...$area_ids, $proyecto['id']]);
+    $clases_relacionadas = $stmt->fetchAll();
+}
 
 $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Ciencia');
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
@@ -74,25 +122,99 @@ include 'includes/header.php';
         <header class="article-header">
             <h1><?= h($proyecto['nombre']) ?></h1>
             <div class="article-meta">
+                <?php if (!empty($proyecto['destacado'])): ?>
+                    <span class="badge badge-destacado" title="Recomendado">⭐ Destacado</span>
+                <?php endif; ?>
                 <span class="section-badge">Ciclo <?= h($proyecto['ciclo']) ?></span>
+                <?php 
+                // Mostrar grados
+                if (!empty($proyecto['grados'])) {
+                    $grados = json_decode($proyecto['grados'], true);
+                    if (is_array($grados) && count($grados) > 0) {
+                        foreach ($grados as $grado) {
+                            echo '<span class="grade-badge">' . (int)$grado . '°</span>';
+                        }
+                    }
+                }
+                ?>
                 <span class="difficulty-badge"><?= h(ucfirst($proyecto['dificultad'])) ?></span>
-                <span class="read-time">Duración: <?= (int)$proyecto['duracion_minutos'] ?> min</span>
+                <span class="read-time">⏱️ <?= (int)$proyecto['duracion_minutos'] ?> min</span>
             </div>
+            <?php if (!empty($areas)): ?>
+            <div class="article-areas">
+                <strong>📚 Áreas:</strong>
+                <?php foreach ($areas as $idx => $area): ?>
+                    <a href="/catalogo.php?area=<?= h($area['slug']) ?>" class="area-tag"><?= h($area['nombre']) ?></a><?= $idx < count($areas) - 1 ? ', ' : '' ?>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at'])): ?>
+            <div class="article-byline">
+                <?php if (!empty($proyecto['autor'])): ?>
+                    <span class="author">✍️ <?= h($proyecto['autor']) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($proyecto['published_at'])): ?>
+                    <span class="date">📅 Publicado: <?= date('d/m/Y', strtotime($proyecto['published_at'])) ?></span>
+                <?php endif; ?>
+                <?php if (!empty($proyecto['updated_at']) && $proyecto['updated_at'] !== $proyecto['published_at']): ?>
+                    <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($proyecto['updated_at'])) ?></span>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
             <?php if (!empty($proyecto['imagen_portada'])): ?>
-                <img src="<?= h($proyecto['imagen_portada']) ?>" alt="Portada de la clase" class="article-cover"/>
+                <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="article-cover"/>
             <?php endif; ?>
             <?php if (!empty($proyecto['video_portada'])): ?>
                 <div class="video-wrapper">
-                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de la clase" allowfullscreen></iframe>
+                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
                 </div>
-            <?php endif; ?>
-            <?php if (!empty($proyecto['resumen'])): ?>
-                <p class="excerpt"><?= h($proyecto['resumen']) ?></p>
             <?php endif; ?>
         </header>
 
+        <?php if (!empty($proyecto['resumen']) || !empty($proyecto['objetivo_aprendizaje'])): ?>
+        <section class="learning-overview">
+            <?php if (!empty($proyecto['resumen'])): ?>
+                <div class="resumen">
+                    <p class="lead"><?= h($proyecto['resumen']) ?></p>
+                </div>
+            <?php endif; ?>
+            <?php if (!empty($proyecto['objetivo_aprendizaje'])): ?>
+                <div class="objetivo-destacado">
+                    <h2 class="objetivo-title">🎯 ¿Qué aprenderás?</h2>
+                    <p class="objetivo-text"><?= h($proyecto['objetivo_aprendizaje']) ?></p>
+                </div>
+            <?php endif; ?>
+        </section>
+        <?php endif; ?>
+
+        <?php 
+        // Información de seguridad estructurada
+        if (!empty($proyecto['seguridad'])) {
+            $seguridad = json_decode($proyecto['seguridad'], true);
+            if (is_array($seguridad) && (!empty($seguridad['edad_min']) || !empty($seguridad['notas']))): 
+        ?>
+        <section class="safety-info">
+            <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+            <div class="safety-content">
+                <?php if (!empty($seguridad['edad_min']) && !empty($seguridad['edad_max'])): ?>
+                    <p class="edad-recomendada"><strong>👥 Edad recomendada:</strong> <?= (int)$seguridad['edad_min'] ?> a <?= (int)$seguridad['edad_max'] ?> años</p>
+                <?php endif; ?>
+                <?php if (!empty($seguridad['notas'])): ?>
+                    <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
+                <?php endif; ?>
+            </div>
+        </section>
+        <?php 
+            endif;
+        }
+        ?>
+
         <section class="article-content">
-            <?php if ($guia): ?>
+            <?php if (!empty($proyecto['contenido_html'])): ?>
+                <!-- Contenido principal con formato rico -->
+                <?= $proyecto['contenido_html'] ?>
+            <?php elseif ($guia): ?>
+                <!-- Guía básica como fallback -->
                 <?php if (!empty($guia['introduccion'])): ?>
                     <h2>Introducción</h2>
                     <p><?= h($guia['introduccion']) ?></p>
@@ -121,26 +243,61 @@ include 'includes/header.php';
                     <p><?= h($guia['explicacion_cientifica']) ?></p>
                 <?php endif; ?>
             <?php else: ?>
-                <p>No hay guía disponible para esta clase.</p>
+                <p class="no-content">El contenido detallado de esta clase se encuentra en desarrollo. Por favor contacta a tu docente para más información.</p>
             <?php endif; ?>
         </section>
 
-        <?php if (!empty($materiales)): ?>
-        <section class="related-materials">
-            <h2>Componentes del Kit</h2>
-            <ul class="materials-list">
-                <?php foreach ($materiales as $m): ?>
-                    <li>
-                        <?= h($m['nombre_comun']) ?>
-                        <?php if (!empty($m['cantidad'])): ?>
-                            <span class="badge"><?= h($m['cantidad']) ?></span>
+        <?php if (!empty($kits)): ?>
+        <section class="kits-section">
+            <h2>📦 Kits de Materiales</h2>
+            <?php foreach ($kits as $kit): ?>
+                <div class="kit-card">
+                    <div class="kit-header">
+                        <h3>
+                            <?= h($kit['nombre']) ?>
+                            <?php if (!empty($kit['es_principal'])): ?>
+                                <span class="badge badge-primary">Kit Principal</span>
+                            <?php else: ?>
+                                <span class="badge badge-secondary">Kit Opcional</span>
+                            <?php endif; ?>
+                        </h3>
+                        <?php if (!empty($kit['codigo'])): ?>
+                            <p class="kit-codigo">Código: <strong><?= h($kit['codigo']) ?></strong></p>
                         <?php endif; ?>
-                        <?php if (isset($m['es_incluido_kit']) && (int)$m['es_incluido_kit'] === 1): ?>
-                            <span class="badge">Incluido</span>
-                        <?php endif; ?>
-                        <?php if (!empty($m['notas'])): ?>
-                            <small><?= h($m['notas']) ?></small>
-                        <?php endif; ?>
+                    </div>
+                    <?php if (!empty($materiales_por_kit[$kit['id']])): ?>
+                        <h4>Componentes incluidos:</h4>
+                        <ul class="materials-list">
+                            <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
+                                <li>
+                                    <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+                                    <?php if (!empty($m['cantidad'])): ?>
+                                        <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+                                    <?php endif; ?>
+                                    <?php if (isset($m['es_incluido_kit']) && (int)$m['es_incluido_kit'] === 1): ?>
+                                        <span class="badge badge-success">✓ Incluido</span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($m['notas'])): ?>
+                                        <small class="material-notes"><?= h($m['notas']) ?></small>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </section>
+        <?php endif; ?>
+
+        <?php if (!empty($competencias)): ?>
+        <section class="competencias-section">
+            <h2>📚 Competencias MEN Desarrolladas</h2>
+            <p class="competencias-intro">Esta clase está alineada con las competencias del Ministerio de Educación Nacional de Colombia:</p>
+            <ul class="competencias-list">
+                <?php foreach ($competencias as $comp): ?>
+                    <li class="competencia-item">
+                        <strong class="competencia-codigo"><?= h($comp['codigo']) ?>:</strong>
+                        <span class="competencia-nombre"><?= h($comp['nombre']) ?></span>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -149,18 +306,68 @@ include 'includes/header.php';
 
         <?php if (!empty($recursos)): ?>
         <section class="multimedia">
-            <h2>Recursos Multimedia</h2>
+            <h2>🎞️ Recursos Multimedia Adicionales</h2>
             <div class="gallery">
                 <?php foreach ($recursos as $r): ?>
                     <?php if ($r['tipo'] === 'imagen'): ?>
-                        <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" />
+                        <div class="media-item">
+                            <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" />
+                            <?php if (!empty($r['titulo'])): ?>
+                                <p class="media-caption"><?= h($r['titulo']) ?></p>
+                            <?php endif; ?>
+                        </div>
                     <?php elseif ($r['tipo'] === 'video'): ?>
-                        <div class="video-wrapper">
-                            <iframe src="<?= h($r['url']) ?>" title="<?= h($r['titulo'] ?? 'Video') ?>" allowfullscreen></iframe>
+                        <div class="media-item">
+                            <div class="video-wrapper">
+                                <iframe src="<?= h($r['url']) ?>" title="<?= h($r['titulo'] ?? 'Video') ?>" allowfullscreen></iframe>
+                            </div>
+                            <?php if (!empty($r['titulo'])): ?>
+                                <p class="media-caption"><?= h($r['titulo']) ?></p>
+                            <?php endif; ?>
                         </div>
                     <?php elseif ($r['tipo'] === 'pdf'): ?>
-                        <a class="btn btn-secondary" href="<?= h($r['url']) ?>" target="_blank">Descargar PDF</a>
+                        <div class="media-item">
+                            <a class="btn btn-secondary" href="<?= h($r['url']) ?>" target="_blank">
+                                📄 <?= h($r['titulo'] ?? 'Descargar PDF') ?>
+                            </a>
+                        </div>
                     <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if (!empty($tags)): ?>
+        <section class="tags-section">
+            <h3>🏷️ Tags</h3>
+            <div class="tags-container">
+                <?php foreach ($tags as $tag): ?>
+                    <a href="/catalogo.php?busqueda=<?= urlencode($tag) ?>" class="tag-pill"><?= h($tag) ?></a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+
+        <?php if (!empty($clases_relacionadas)): ?>
+        <section class="related-classes">
+            <h2>🔗 Clases Relacionadas</h2>
+            <div class="related-grid">
+                <?php foreach ($clases_relacionadas as $rel): ?>
+                    <a href="/proyecto.php?slug=<?= h($rel['slug']) ?>" class="related-card">
+                        <?php if (!empty($rel['imagen_portada'])): ?>
+                            <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" />
+                        <?php endif; ?>
+                        <div class="related-info">
+                            <h4><?= h($rel['nombre']) ?></h4>
+                            <div class="related-meta">
+                                <span class="badge">Ciclo <?= h($rel['ciclo']) ?></span>
+                                <span class="badge"><?= h(ucfirst($rel['dificultad'])) ?></span>
+                            </div>
+                            <?php if (!empty($rel['resumen'])): ?>
+                                <p class="related-excerpt"><?= h(mb_substr($rel['resumen'], 0, 100)) ?>...</p>
+                            <?php endif; ?>
+                        </div>
+                    </a>
                 <?php endforeach; ?>
             </div>
         </section>
@@ -169,8 +376,12 @@ include 'includes/header.php';
 </div>
 <script>
 console.log('🔍 [Clase] Slug:', '<?= h($slug) ?>');
-console.log('✅ [Clase] Cargada clase:', <?= json_encode(['id'=>$proyecto['id'],'nombre'=>$proyecto['nombre']]) ?>);
-console.log('📦 [Clase] Componentes del kit:', <?= count($materiales) ?>);
+console.log('✅ [Clase] Cargada:', <?= json_encode(['id'=>$proyecto['id'],'nombre'=>$proyecto['nombre']]) ?>);
+console.log('📚 [Clase] Áreas:', <?= count($areas) ?>);
+console.log('🎓 [Clase] Competencias:', <?= count($competencias) ?>);
+console.log('📦 [Clase] Kits:', <?= count($kits) ?>);
 console.log('🎞️ [Clase] Recursos:', <?= count($recursos) ?>);
+console.log('🏷️ [Clase] Tags:', <?= count($tags) ?>);
+console.log('🔗 [Clase] Relacionadas:', <?= count($clases_relacionadas) ?>);
 </script>
 <?php include 'includes/footer.php'; ?>
