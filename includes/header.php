@@ -7,6 +7,13 @@
 <meta name="description" content="<?= h($page_description ?? '') ?>">
 <link rel="canonical" href="<?= h($canonical_url ?? SITE_URL) ?>">
 <link rel="stylesheet" href="/assets/css/main.css">
+<!-- TGA visual alignment styles -->
+<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/article-content.css">
+<link rel="stylesheet" href="/assets/css/print.css" media="print">
+<script>
+  console.log('✅ [Styles] TGA styles linked: style.css, article-content.css, print.css');
+</script>
 </head>
 <body>
 <header class="site-header">

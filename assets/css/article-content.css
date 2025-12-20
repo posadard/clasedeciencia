@@ -1,0 +1,443 @@
+/* 
+ * The Green Almanac - Article Content Styles
+ * Estilos predefinidos para el contenido HTML de los artículos
+ */
+
+/* Base Typography for Article Content */
+.article-body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.125rem;
+    line-height: 1.75;
+    color: #1f2937;
+    max-width: 65ch;
+    margin: 0 auto;
+}
+
+/* Headings */
+.article-body h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 2.5rem 0 1rem 0;
+    color: #111827;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5rem;
+}
+
+.article-body h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 2rem 0 0.75rem 0;
+    color: #111827;
+}
+
+.article-body h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 1.5rem 0 0.5rem 0;
+    color: #374151;
+}
+
+/* Paragraphs */
+.article-body p {
+    margin-bottom: 1.5rem;
+}
+
+.article-body p:first-child {
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1.6;
+    color: #374151;
+}
+
+/* Links */
+.article-body a {
+    color: #000;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.article-body a:hover {
+    color: #4b5563;
+}
+
+/* Strong and Emphasis */
+.article-body strong,
+.article-body b {
+    font-weight: 700;
+    color: #111827;
+}
+
+.article-body em,
+.article-body i {
+    font-style: italic;
+}
+
+/* Lists */
+.article-body ul,
+.article-body ol {
+    margin: 1.5rem 0 1.5rem 2rem;
+    padding: 0;
+}
+
+.article-body ul {
+    list-style-type: disc;
+}
+
+.article-body ol {
+    list-style-type: decimal;
+}
+
+.article-body li {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.article-body li::marker {
+    color: #000;
+    font-weight: 600;
+}
+
+.article-body ul ul,
+.article-body ol ul,
+.article-body ul ol,
+.article-body ol ol {
+    margin: 0.5rem 0 0.5rem 1.5rem;
+}
+
+/* Blockquotes */
+.article-body blockquote {
+    margin: 2rem 0;
+    padding: 1rem 1.5rem;
+    border-left: 4px solid #000;
+    background: #f9fafb;
+    font-style: italic;
+    color: #4b5563;
+}
+
+.article-body blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* Code */
+.article-body code {
+    padding: 0.2rem 0.4rem;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    color: #111827;
+}
+
+.article-body pre {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #1f2937;
+    color: #f9fafb;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.article-body pre code {
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: inherit;
+}
+
+/* Tables */
+.article-body table {
+    width: 100%;
+    margin: 2rem 0;
+    border-collapse: collapse;
+    border: 2px solid #000;
+}
+
+.article-body th {
+    background: #000;
+    color: white;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border: 1px solid #000;
+}
+
+.article-body td {
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+}
+
+.article-body tr:nth-child(even) {
+    background: #f9fafb;
+}
+
+/* Horizontal Rule */
+.article-body hr {
+    margin: 2.5rem 0;
+    border: none;
+    border-top: 2px solid #000;
+}
+
+/* Images (cuando agregues soporte para imágenes) */
+.article-body img {
+    max-width: 100%;
+    height: auto;
+    margin: 2rem 0;
+    border: 1px solid #d1d5db;
+}
+
+.article-body figure {
+    margin: 2rem 0;
+}
+
+.article-body figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #6b7280;
+    text-align: center;
+}
+
+/* Special Classes for Formatting */
+
+/* Warning/Safety Boxes */
+.article-body .warning,
+.article-body .safety-note {
+    margin: 2rem 0;
+    padding: 1rem 1.5rem;
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    border-left-width: 6px;
+}
+
+.article-body .warning strong:first-child,
+.article-body .safety-note strong:first-child {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: 0.5rem;
+    color: #92400e;
+}
+
+/* Success/Tip Boxes */
+.article-body .tip,
+.article-body .success {
+    margin: 2rem 0;
+    padding: 1rem 1.5rem;
+    background: #d1fae5;
+    border: 2px solid #10b981;
+    border-left-width: 6px;
+}
+
+.article-body .tip strong:first-child,
+.article-body .success strong:first-child {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: 0.5rem;
+    color: #065f46;
+}
+
+/* Info Boxes */
+.article-body .info,
+.article-body .note {
+    margin: 2rem 0;
+    padding: 1rem 1.5rem;
+    background: #dbeafe;
+    border: 2px solid #3b82f6;
+    border-left-width: 6px;
+}
+
+.article-body .info strong:first-child,
+.article-body .note strong:first-child {
+    display: block;
+    font-size: 1.1em;
+    margin-bottom: 0.5rem;
+    color: #1e40af;
+}
+
+/* Step-by-Step Instructions */
+.article-body .steps {
+    counter-reset: step-counter;
+    margin: 2rem 0;
+}
+
+.article-body .step {
+    counter-increment: step-counter;
+    margin: 1.5rem 0;
+    padding: 1rem 1rem 1rem 4rem;
+    position: relative;
+    background: #f9fafb;
+    border-left: 3px solid #000;
+}
+
+.article-body .step::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    width: 2rem;
+    height: 2rem;
+    background: #000;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.article-body .step h3,
+.article-body .step h4 {
+    margin-top: 0;
+}
+
+/* Ingredients/Materials List */
+.article-body .ingredients,
+.article-body .materials {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border: 2px solid #000;
+}
+
+.article-body .ingredients h3,
+.article-body .materials h3 {
+    margin-top: 0;
+    font-size: 1.25rem;
+}
+
+.article-body .ingredients ul,
+.article-body .materials ul {
+    margin: 1rem 0 0 1.5rem;
+}
+
+/* Chemical Formula Styling */
+.article-body .formula {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: 600;
+    background: #f3f4f6;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .article-body {
+        font-size: 1rem;
+    }
+    
+    .article-body h2 {
+        font-size: 1.5rem;
+    }
+    
+    .article-body h3 {
+        font-size: 1.25rem;
+    }
+    
+    .article-body p:first-child {
+        font-size: 1.125rem;
+    }
+    
+    .article-body ul,
+    .article-body ol {
+        margin-left: 1.25rem;
+    }
+}
+
+/* === Print Instructions & PDF Button === */
+.print-instructions {
+    margin-top: 3rem;
+    padding: 1.5rem;
+    background: var(--color-bg-light);
+    border: 2px solid var(--color-border);
+    border-radius: var(--border-radius);
+    text-align: center;
+}
+
+.print-instructions p {
+    margin-bottom: 1rem;
+    color: var(--color-text-light);
+}
+
+.btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    color: white;
+    background: var(--color-primary);
+    border: 2px solid var(--color-primary);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-pdf:hover {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-pdf:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-pdf svg {
+    flex-shrink: 0;
+}
+
+/* Print Styles for Article Content */
+@media print {
+    .article-body {
+        font-size: 12pt;
+        color: #000;
+    }
+    
+    .article-body h2 {
+        page-break-after: avoid;
+        font-size: 18pt;
+    }
+    
+    .article-body h3 {
+        page-break-after: avoid;
+        font-size: 14pt;
+    }
+    
+    .article-body a {
+        color: #000;
+        text-decoration: none;
+    }
+    
+    .article-body a[href^="http"]::after {
+        content: " (" attr(href) ")";
+        font-size: 10pt;
+        color: #666;
+    }
+    
+    .article-body .warning,
+    .article-body .safety-note {
+        border: 2px solid #000;
+        background: #fff;
+        page-break-inside: avoid;
+    }
+    
+    .article-body blockquote {
+        page-break-inside: avoid;
+    }
+    
+    .article-body table {
+        page-break-inside: avoid;
+    }
+}
