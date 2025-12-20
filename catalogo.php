@@ -3,6 +3,40 @@
 require_once 'config.php';
 require_once 'includes/functions.php';
 
+// ==================================================================
+// DETECCIÓN DINÁMICA DE SLUGS: ciclo o área
+// ==================================================================
+if (isset($_GET['slug_dinamico']) && !empty($_GET['slug_dinamico'])) {
+    $slug_dinamico = trim($_GET['slug_dinamico']);
+    
+    // Intentar encontrar ciclo por slug
+    $stmt = $pdo->prepare("SELECT numero FROM ciclos WHERE slug = ? AND activo = 1 LIMIT 1");
+    $stmt->execute([$slug_dinamico]);
+    $ciclo_encontrado = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($ciclo_encontrado) {
+        // Es un ciclo - establecer parámetro ciclo
+        $_GET['ciclo'] = $ciclo_encontrado['numero'];
+        unset($_GET['slug_dinamico']);
+    } else {
+        // Intentar encontrar área por slug
+        $stmt = $pdo->prepare("SELECT slug FROM areas WHERE slug = ? LIMIT 1");
+        $stmt->execute([$slug_dinamico]);
+        $area_encontrada = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($area_encontrada) {
+            // Es un área - establecer parámetro area
+            $_GET['area'] = $area_encontrada['slug'];
+            unset($_GET['slug_dinamico']);
+        } else {
+            // No es ciclo ni área - redirigir a proyecto.php
+            header('Location: /proyecto.php?slug=' . urlencode($slug_dinamico));
+            exit;
+        }
+    }
+}
+// ==================================================================
+
 // Nota: usamos funciones locales mientras adaptamos includes/db-functions.php a CdC
 function cdc_get_areas($pdo) {
     $stmt = $pdo->query("SELECT id, nombre, slug FROM areas ORDER BY nombre");
