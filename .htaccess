@@ -10,6 +10,9 @@ RewriteEngine On
 RewriteCond %{QUERY_STRING} ^slug=([a-z0-9-]+)$
 RewriteRule ^proyecto\.php$ /%1? [R=301,L]
 
+# URL amigable para catálogo: /clases -> /catalogo.php
+RewriteRule ^clases$ /catalogo.php [L,QSA]
+
 # Reescribir /{slug} a /proyecto.php?slug={slug}
 # Excluir archivos y directorios existentes
 RewriteCond %{REQUEST_FILENAME} !-f
