@@ -454,10 +454,27 @@ Encontré el problema en [archivo:línea]:
 1. `marco/ANALISIS_Y_PLAN_CLASEDECIENCIA.md` - Especificaciones completas
 2. `base_paginas/thegreenalmanac.com/` - Código de referencia
 3. `marco/clasedeciencia_requerimientos_v2.txt` - Requerimientos
+4. `marco/BASE_DE_DATOS_u626603208_clasedeciencia.md` - Referencia detallada de tablas, campos y relaciones
 
 ### Estructura de Base de Datos
 - Consultar sección 3 de `ANALISIS_Y_PLAN_CLASEDECIENCIA.md`
 - Tablas principales: `proyectos`, `guias`, `materiales`, `contratos`
+ - Módulos IA y CTeI: ver `marco/BASE_DE_DATOS_u626603208_clasedeciencia.md`
+
+### Mapeo de Adaptación (thegreenalmanac → clasedeciencia)
+- `articles` → `proyectos`
+- `sections` → campos `ciclo` y `grados` en `proyectos`
+- `tags` → `areas` y `competencias` (dos taxonomías)
+- `article_materials` → `proyecto_materiales`
+- `materials` / `material_categories` → `materiales` / `categorias_materiales`
+- Multimedia → `recursos_multimedia`
+- Estadísticas → `analytics_visitas`, `analytics_interacciones`
+
+### Pautas para Queries Comunes
+- Catálogo: JOIN `proyectos` + `proyecto_areas` + filtros por `ciclo`, `dificultad`, `duracion_minutos`
+- Detalle: cargar `proyectos` por `slug`, guía activa desde `guias`, multimedia desde `recursos_multimedia`
+- Materiales del proyecto: usar `proyecto_materiales` (cantidad, notas, `es_incluido_kit`)
+- IA: obtener contexto con `sp_obtener_contexto_proyecto` o vista `v_proyecto_contexto_ia`
 
 ### Competencias MEN
 - Ver Anexo C de `ANALISIS_Y_PLAN_CLASEDECIENCIA.md`

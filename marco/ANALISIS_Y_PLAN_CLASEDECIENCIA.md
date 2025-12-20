@@ -1431,6 +1431,11 @@ echo '</urlset>';
 
 **(Ver secciones anteriores del documento para tablas completas)**
 
+### ANEXO D: Referencias de Adaptación
+
+- Guía de base de datos detallada: ver [marco/BASE_DE_DATOS_u626603208_clasedeciencia.md](marco/BASE_DE_DATOS_u626603208_clasedeciencia.md)
+- Guía de replicación y adaptación (TGA → CdC): ver [marco/REPLICACION_Y_ADAPTACION_thegreenalmanac_a_clasedeciencia.md](marco/REPLICACION_Y_ADAPTACION_thegreenalmanac_a_clasedeciencia.md)
+
 ### ANEXO B: Mockups de Interfaz
 
 **(A desarrollar con herramienta de diseño - Figma, Sketch, etc.)**
