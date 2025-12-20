@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               ? preg_replace('/\s+\S*$/', '', substr($desc_source, 0, 160))
               : $desc_source;
           }
-          if ($canonical_url === '') { $canonical_url = '/proyecto.php?slug=' . $slug; }
+          if ($canonical_url === '') { $canonical_url = '/' . $slug; }
           echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ', "auto canon:", ' . json_encode($canonical_url) . ');</script>';
           // Transacción para clase + relaciones
           $pdo->beginTransaction();
@@ -484,7 +484,7 @@ include '../header.php';
     }
     const autoDesc = shortenAtWord(descSrc, 160);
     const slugVal = (slugInput && slugInput.value.trim()) ? slugInput.value.trim() : '';
-    const autoCanon = '/proyecto.php?slug=' + slugVal;
+    const autoCanon = '/' + slugVal;
     // Render preview
     if (seoPrevTitle) seoPrevTitle.textContent = autoTitle;
     if (seoPrevDesc) seoPrevDesc.textContent = autoDesc;
