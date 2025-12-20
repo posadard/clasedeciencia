@@ -118,73 +118,103 @@ include 'includes/header.php';
     <div class="breadcrumb">
         <a href="/">Inicio</a> / <a href="/clases">Clases</a> / <strong><?= h($proyecto['nombre']) ?></strong>
     </div>
-    <article>
-        <header class="article-header">
-            <h1><?= h($proyecto['nombre']) ?></h1>
-            <div class="article-meta">
-                <?php if (!empty($proyecto['destacado'])): ?>
-                    <span class="badge badge-destacado" title="Recomendado">⭐ Destacado</span>
-                <?php endif; ?>
-                <span class="section-badge">Ciclo <?= h($proyecto['ciclo']) ?></span>
-                <?php 
-                // Mostrar grados
-                if (!empty($proyecto['grados'])) {
-                    $grados = json_decode($proyecto['grados'], true);
-                    if (is_array($grados) && count($grados) > 0) {
-                        foreach ($grados as $grado) {
-                            echo '<span class="grade-badge">' . (int)$grado . '°</span>';
-                        }
-                    }
-                }
-                ?>
-                <span class="difficulty-badge"><?= h(ucfirst($proyecto['dificultad'])) ?></span>
-                <span class="read-time">⏱️ <?= (int)$proyecto['duracion_minutos'] ?> min</span>
-            </div>
-            <?php if (!empty($areas)): ?>
-            <div class="article-areas">
-                <strong>📚 Áreas:</strong>
-                <?php foreach ($areas as $idx => $area): ?>
-                    <a href="/catalogo.php?area=<?= h($area['slug']) ?>" class="area-tag"><?= h($area['nombre']) ?></a><?= $idx < count($areas) - 1 ? ', ' : '' ?>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-            <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at'])): ?>
-            <div class="article-byline">
-                <?php if (!empty($proyecto['autor'])): ?>
-                    <span class="author">✍️ <?= h($proyecto['autor']) ?></span>
-                <?php endif; ?>
-                <?php if (!empty($proyecto['published_at'])): ?>
-                    <span class="date">📅 Publicado: <?= date('d/m/Y', strtotime($proyecto['published_at'])) ?></span>
-                <?php endif; ?>
-                <?php if (!empty($proyecto['updated_at']) && $proyecto['updated_at'] !== $proyecto['published_at']): ?>
-                    <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($proyecto['updated_at'])) ?></span>
+    
+    <!-- Card de Resumen Técnico -->
+    <div class="clase-summary-card">
+        <div class="summary-content">
+            <div class="summary-left">
+                <?php if (!empty($proyecto['imagen_portada'])): ?>
+                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" />
+                <?php else: ?>
+                    <div class="summary-placeholder">
+                        <span class="placeholder-icon">🔬</span>
+                    </div>
                 <?php endif; ?>
             </div>
-            <?php endif; ?>
-            <?php if (!empty($proyecto['imagen_portada'])): ?>
-                <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="article-cover"/>
-            <?php endif; ?>
-            <?php if (!empty($proyecto['video_portada'])): ?>
-                <div class="video-wrapper">
-                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
+            <div class="summary-right">
+                <div class="summary-header">
+                    <h1 class="summary-title"><?= h($proyecto['nombre']) ?></h1>
+                    <?php if (!empty($proyecto['destacado'])): ?>
+                        <span class="badge badge-destacado" title="Recomendado">⭐ Destacado</span>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
-        </header>
+                
+                <div class="summary-specs">
+                    <div class="spec-item">
+                        <span class="spec-label">📚 Ciclo</span>
+                        <span class="spec-value">Ciclo <?= h($proyecto['ciclo']) ?></span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">🎓 Grados</span>
+                        <span class="spec-value">
+                            <?php 
+                            if (!empty($proyecto['grados'])) {
+                                $grados = json_decode($proyecto['grados'], true);
+                                if (is_array($grados) && count($grados) > 0) {
+                                    echo implode(', ', array_map(fn($g) => $g . '°', $grados));
+                                }
+                            }
+                            ?>
+                        </span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">📊 Dificultad</span>
+                        <span class="spec-value difficulty-<?= h($proyecto['dificultad']) ?>"><?= h(ucfirst($proyecto['dificultad'])) ?></span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">⏱️ Duración</span>
+                        <span class="spec-value"><?= (int)$proyecto['duracion_minutos'] ?> minutos</span>
+                    </div>
+                    <?php if (!empty($areas)): ?>
+                    <div class="spec-item spec-item-full">
+                        <span class="spec-label">🔬 Áreas</span>
+                        <span class="spec-value">
+                            <?php foreach ($areas as $idx => $area): ?>
+                                <a href="/catalogo.php?area=<?= h($area['slug']) ?>" class="area-link"><?= h($area['nombre']) ?></a><?= $idx < count($areas) - 1 ? ', ' : '' ?>
+                            <?php endforeach; ?>
+                        </span>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                
+                <?php if (!empty($proyecto['objetivo_aprendizaje'])): ?>
+                <div class="summary-objetivo">
+                    <h3 class="objetivo-label">🎯 Objetivo de Aprendizaje</h3>
+                    <p class="objetivo-content"><?= h($proyecto['objetivo_aprendizaje']) ?></p>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 
-        <?php if (!empty($proyecto['resumen']) || !empty($proyecto['objetivo_aprendizaje'])): ?>
-        <section class="learning-overview">
-            <?php if (!empty($proyecto['resumen'])): ?>
-                <div class="resumen">
-                    <p class="lead"><?= h($proyecto['resumen']) ?></p>
-                </div>
+    <article>
+        <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at'])): ?>
+        <div class="article-byline">
+            <?php if (!empty($proyecto['autor'])): ?>
+                <span class="author">✍️ <?= h($proyecto['autor']) ?></span>
             <?php endif; ?>
-            <?php if (!empty($proyecto['objetivo_aprendizaje'])): ?>
-                <div class="objetivo-destacado">
-                    <h2 class="objetivo-title">🎯 ¿Qué aprenderás?</h2>
-                    <p class="objetivo-text"><?= h($proyecto['objetivo_aprendizaje']) ?></p>
-                </div>
+            <?php if (!empty($proyecto['published_at'])): ?>
+                <span class="date">📅 Publicado: <?= date('d/m/Y', strtotime($proyecto['published_at'])) ?></span>
             <?php endif; ?>
-        </section>
+            <?php if (!empty($proyecto['updated_at']) && $proyecto['updated_at'] !== $proyecto['published_at']): ?>
+                <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($proyecto['updated_at'])) ?></span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($proyecto['video_portada'])): ?>
+        <div class="video-portada-section">
+            <h2>🎥 Video Introductorio</h2>
+            <div class="video-wrapper">
+                <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($proyecto['resumen'])): ?>
+        <div class="resumen-section">
+            <p class="lead"><?= h($proyecto['resumen']) ?></p>
+        </div>
         <?php endif; ?>
 
         <?php 
