@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 20, 2025 at 04:48 AM
+-- Generation Time: Dec 20, 2025 at 03:24 PM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -205,7 +205,6 @@ CREATE TABLE `clases` (
   `published_at` datetime DEFAULT NULL,
   `autor` varchar(120) DEFAULT NULL,
   `contenido_html` mediumtext DEFAULT NULL,
-  `seccion_id` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -214,22 +213,22 @@ CREATE TABLE `clases` (
 -- Dumping data for table `clases`
 --
 
-INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `duracion_minutos`, `resumen`, `objetivo_aprendizaje`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `canonical_url`, `activo`, `destacado`, `orden_popularidad`, `status`, `published_at`, `autor`, `contenido_html`, `seccion_id`, `created_at`, `updated_at`) VALUES
-(1, 'Microscopio sencillo', 'microscopio-sencillo', 1, '[6, 7]', 'facil', 60, 'Construye un microscopio artesanal para observar detalles invisibles.', 'Reconocer el uso de lentes para aumentar imágenes y describir observaciones científicas.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manipular lentes y objetos pequeños con cuidado\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(2, 'Pulmón mecánico', 'pulmon-mecanico', 1, '[6, 7]', 'facil', 60, 'Modelo funcional de los pulmones usando presión de aire y movimiento.', 'Explicar la relación entre presión y volumen en un sistema respiratorio sencillo.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Supervisar uso de globos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(6, 'Radio de cristal', 'radio-de-cristal', 2, '[8, 9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo y bobina.', 'Explicar la propagación de ondas y la conversión de energía en comunicación.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Manipular alambres y componentes con cuidado\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(10, 'Generador manual (dinamo)', 'generador-manual-dinamo', 2, '[8, 9]', 'media', 90, 'Genera electricidad manualmente mediante inducción electromagnética.', 'Explicar generación eléctrica relacionando movimiento y energía.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Cuidado con conexiones eléctricas\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(11, 'Carro solar', 'carro-solar', 3, '[10, 11]', 'dificil', 120, 'Construye y evalúa un vehículo impulsado por energía solar.', 'Analizar eficiencia energética y sostenibilidad en sistemas tecnológicos.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Panel frágil, manipulación cuidadosa\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(12, 'Turbina eólica de mesa', 'turbina-eolica-de-mesa', 3, '[10, 11]', 'dificil', 120, 'Diseña una turbina de mesa para convertir energía del viento.', 'Evaluar fuentes alternativas y analizar impacto tecnológico.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Hélice en movimiento, mantener distancia\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(13, 'Electroimán', 'electroiman', 3, '[10, 11]', 'dificil', 90, 'Construye un electroimán y analiza variables de fuerza y campo.', 'Analizar relación corriente-campo y formular explicaciones causales.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Calentamiento por corriente, usar brevemente\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(14, 'Tratamiento de agua', 'tratamiento-de-agua', 3, '[10, 11]', 'dificil', 120, 'Implementa un filtro de agua con capas y evalúa calidad.', 'Explicar procesos físico-químicos y relacionar ciencia con el entorno.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Uso responsable de reactivos y desecho\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(15, 'Análisis químico del entorno', 'analisis-quimico-del-entorno', 3, '[10, 11]', 'dificil', 120, 'Realiza pruebas químicas seguras a sustancias cotidianas.', 'Explicar transformaciones químicas con principios de seguridad y ética.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ No ingerir sustancias, guantes recomendados\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
+INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `duracion_minutos`, `resumen`, `objetivo_aprendizaje`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `canonical_url`, `activo`, `destacado`, `orden_popularidad`, `status`, `published_at`, `autor`, `contenido_html`, `created_at`, `updated_at`) VALUES
+(1, 'Microscopio sencillo', 'microscopio-sencillo', 1, '[6, 7]', 'facil', 60, 'Construye un microscopio artesanal para observar detalles invisibles.', 'Reconocer el uso de lentes para aumentar imágenes y describir observaciones científicas.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manipular lentes y objetos pequeños con cuidado\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(2, 'Pulmón mecánico', 'pulmon-mecanico', 1, '[6, 7]', 'facil', 60, 'Modelo funcional de los pulmones usando presión de aire y movimiento.', 'Explicar la relación entre presión y volumen en un sistema respiratorio sencillo.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Supervisar uso de globos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 'Radio de cristal', 'radio-de-cristal', 2, '[8, 9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo y bobina.', 'Explicar la propagación de ondas y la conversión de energía en comunicación.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Manipular alambres y componentes con cuidado\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 'Generador manual (dinamo)', 'generador-manual-dinamo', 2, '[8, 9]', 'media', 90, 'Genera electricidad manualmente mediante inducción electromagnética.', 'Explicar generación eléctrica relacionando movimiento y energía.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Cuidado con conexiones eléctricas\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 'Carro solar', 'carro-solar', 3, '[10, 11]', 'dificil', 120, 'Construye y evalúa un vehículo impulsado por energía solar.', 'Analizar eficiencia energética y sostenibilidad en sistemas tecnológicos.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Panel frágil, manipulación cuidadosa\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 'Turbina eólica de mesa', 'turbina-eolica-de-mesa', 3, '[10, 11]', 'dificil', 120, 'Diseña una turbina de mesa para convertir energía del viento.', 'Evaluar fuentes alternativas y analizar impacto tecnológico.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Hélice en movimiento, mantener distancia\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 'Electroimán', 'electroiman', 3, '[10, 11]', 'dificil', 90, 'Construye un electroimán y analiza variables de fuerza y campo.', 'Analizar relación corriente-campo y formular explicaciones causales.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Calentamiento por corriente, usar brevemente\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 'Tratamiento de agua', 'tratamiento-de-agua', 3, '[10, 11]', 'dificil', 120, 'Implementa un filtro de agua con capas y evalúa calidad.', 'Explicar procesos físico-químicos y relacionar ciencia con el entorno.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Uso responsable de reactivos y desecho\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 'Análisis químico del entorno', 'analisis-quimico-del-entorno', 3, '[10, 11]', 'dificil', 120, 'Realiza pruebas químicas seguras a sustancias cotidianas.', 'Explicar transformaciones químicas con principios de seguridad y ética.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ No ingerir sustancias, guantes recomendados\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -769,19 +768,6 @@ INSERT INTO `recursos_multimedia` (`id`, `clase_id`, `tipo`, `url`, `titulo`, `d
 -- --------------------------------------------------------
 
 --
--- Table structure for table `secciones`
---
-
-CREATE TABLE `secciones` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(120) NOT NULL,
-  `slug` varchar(120) NOT NULL,
-  `descripcion` varchar(255) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
 -- Stand-in structure for view `v_clases_populares_ia`
 -- (See below for the actual view)
 --
@@ -894,8 +880,7 @@ ALTER TABLE `clases`
   ADD UNIQUE KEY `uq_clases_slug` (`slug`),
   ADD KEY `idx_clases_activo_ciclo` (`activo`,`ciclo`),
   ADD KEY `idx_clases_status_published` (`status`,`published_at`),
-  ADD KEY `idx_clases_popularidad` (`orden_popularidad`),
-  ADD KEY `idx_clases_seccion` (`seccion_id`);
+  ADD KEY `idx_clases_popularidad` (`orden_popularidad`);
 
 --
 -- Indexes for table `clase_areas`
@@ -1045,13 +1030,6 @@ ALTER TABLE `recursos_multimedia`
   ADD KEY `idx_rm_order` (`clase_id`,`sort_order`);
 
 --
--- Indexes for table `secciones`
---
-ALTER TABLE `secciones`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_secciones_slug` (`slug`);
-
---
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -1163,12 +1141,6 @@ ALTER TABLE `prompts_clase`
 ALTER TABLE `recursos_multimedia`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
---
--- AUTO_INCREMENT for table `secciones`
---
-ALTER TABLE `secciones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
 -- --------------------------------------------------------
 
 --
@@ -1217,12 +1189,6 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL S
 --
 -- Constraints for dumped tables
 --
-
---
--- Constraints for table `clases`
---
-ALTER TABLE `clases`
-  ADD CONSTRAINT `fk_clases_seccion` FOREIGN KEY (`seccion_id`) REFERENCES `secciones` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `clase_areas`

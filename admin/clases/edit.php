@@ -34,13 +34,12 @@ $clase = [
   'status' => 'draft',
   'published_at' => null,
   'autor' => '',
-  'contenido_html' => '',
-  'seccion_id' => null
+  'contenido_html' => ''
 ];
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, seccion_id FROM clases WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html FROM clases WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $clase = $row; } else { $is_edit = false; $id = null; }
@@ -112,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($status === 'published' && !$published_at) { $published_at = date('Y-m-d H:i:s'); }
     $autor = isset($_POST['autor']) ? trim($_POST['autor']) : '';
     $contenido_html = isset($_POST['contenido_html']) ? $_POST['contenido_html'] : '';
-    $seccion_id = isset($_POST['seccion_id']) && ctype_digit($_POST['seccion_id']) ? (int)$_POST['seccion_id'] : null;
     $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
     $comp_sel = isset($_POST['competencias']) && is_array($_POST['competencias']) ? array_map('intval', $_POST['competencias']) : [];
     $tags_input = isset($_POST['tags']) ? trim($_POST['tags']) : '';
@@ -153,15 +151,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           // Transacción para clase + relaciones
           $pdo->beginTransaction();
           if ($is_edit) {
-            $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, seccion_id=?, updated_at=NOW() WHERE id=?');
-            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id, $id]);
+            $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, updated_at=NOW() WHERE id=?');
+            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $id]);
             // Limpiar relaciones
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_competencias WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_tags WHERE clase_id = ?')->execute([$id]);
           } else {
-            $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, seccion_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
-            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $seccion_id]);
+            $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html]);
             $id = (int)$pdo->lastInsertId();
             $is_edit = true;
           }
