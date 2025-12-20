@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 20, 2025 at 03:24 PM
+-- Generation Time: Dec 20, 2025 at 05:25 PM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -137,19 +137,25 @@ CREATE TABLE `analytics_visitas` (
 CREATE TABLE `areas` (
   `id` int(11) NOT NULL,
   `nombre` varchar(80) NOT NULL,
-  `slug` varchar(80) NOT NULL
+  `slug` varchar(80) NOT NULL,
+  `explicacion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `areas`
 --
 
-INSERT INTO `areas` (`id`, `nombre`, `slug`) VALUES
-(1, 'Física', 'fisica'),
-(2, 'Química', 'quimica'),
-(3, 'Biología', 'biologia'),
-(4, 'Tecnología', 'tecnologia'),
-(5, 'Ambiental', 'ambiental');
+INSERT INTO `areas` (`id`, `nombre`, `slug`, `explicacion`) VALUES
+(1, 'Física', 'fisica', 'Estudia las propiedades de la materia, la energía y sus interacciones. Incluye mecánica, electricidad, magnetismo, óptica, termodinámica y ondas. Fundamental para proyectos de electricidad, magnetismo, fuerzas y movimiento.'),
+(2, 'Química', 'quimica', 'Analiza la composición, estructura y propiedades de las sustancias, así como sus transformaciones. Abarca reacciones químicas, enlaces, ácidos-bases, y procesos de cambio de estado. Esencial para experimentos con materiales, cristales, baterías y reacciones.'),
+(3, 'Biología', 'biologia', 'Investiga los seres vivos, su estructura, funciones, crecimiento, evolución y relaciones con el medio. Incluye botánica, zoología, microbiología y genética. Clave para proyectos de plantas, células, ADN y ecosistemas.'),
+(4, 'Tecnología e Informática', 'tecnologia', 'Área que estudia el diseño, desarrollo y aplicación de herramientas, sistemas y procesos tecnológicos para resolver problemas. Incluye electrónica, programación, robótica, diseño de circuitos y automatización. Central para proyectos con Arduino, sensores y sistemas interactivos.'),
+(5, 'Ciencias Ambientales', 'ambiental', 'Estudia las interacciones entre los sistemas físicos, químicos y biológicos del ambiente, y su relación con los sistemas sociales y culturales. Aborda sostenibilidad, conservación, cambio climático y desarrollo sostenible.'),
+(6, 'Matemáticas', 'matematicas', 'Disciplina que estudia las propiedades de los números, las formas geométricas, las operaciones y las relaciones abstractas. Incluye álgebra, geometría, estadística y cálculo. Fundamental para análisis de datos, mediciones y modelos matemáticos en proyectos científicos.'),
+(7, 'Ingeniería y Diseño', 'ingenieria', 'Aplica principios científicos y matemáticos para diseñar, construir y optimizar estructuras, máquinas y sistemas. Incluye mecánica, electrónica, diseño de prototipos y fabricación. Relevante para proyectos de construcción, máquinas simples y dispositivos.'),
+(8, 'Ciencias Sociales', 'sociales', 'Estudia las sociedades humanas, sus estructuras, procesos históricos y relaciones culturales. Incluye historia, geografía, economía y democracia. Importante para contextualizar el impacto social de proyectos científicos y CTeI.'),
+(9, 'Educación Artística', 'artistica', 'Desarrolla capacidades expresivas y creativas a través del arte visual, musical y escénico. Relevante para diseño de prototipos, presentaciones creativas y comunicación visual de proyectos científicos.'),
+(10, 'Lenguaje y Comunicación', 'lenguaje', 'Desarrolla competencias en lectura, escritura, expresión oral y comprensión de textos. Incluye comunicación científica, redacción de informes, presentaciones y documentación de proyectos. Esencial para comunicar resultados científicos.');
 
 -- --------------------------------------------------------
 
@@ -175,6 +181,41 @@ INSERT INTO `categorias_items` (`id`, `nombre`, `slug`) VALUES
 (5, 'Tecnología', 'tecnologia'),
 (6, 'Herramientas', 'herramientas'),
 (7, 'Seguridad', 'seguridad');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ciclos`
+--
+
+CREATE TABLE `ciclos` (
+  `id` int(11) NOT NULL,
+  `numero` int(11) NOT NULL COMMENT 'Número de ciclo (0-5)',
+  `nombre` varchar(100) NOT NULL COMMENT 'Nombre del ciclo (ej: Exploración)',
+  `slug` varchar(100) NOT NULL COMMENT 'URL-friendly identifier',
+  `edad_min` int(11) NOT NULL COMMENT 'Edad mínima en años',
+  `edad_max` int(11) NOT NULL COMMENT 'Edad máxima en años',
+  `grados` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'Array JSON de grados (ej: [6,7])',
+  `grados_texto` varchar(100) DEFAULT NULL COMMENT 'Representación textual de grados (ej: 6° a 7°)',
+  `proposito` text NOT NULL COMMENT 'Propósito educativo del ciclo',
+  `explicacion` text DEFAULT NULL COMMENT 'Explicación detallada del ciclo',
+  `nivel_educativo` varchar(100) DEFAULT NULL COMMENT 'Equivalencia en sistema colombiano',
+  `isced_level` varchar(20) DEFAULT NULL COMMENT 'Código UNESCO ISCED',
+  `activo` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Si el ciclo está activo para uso',
+  `orden` int(11) NOT NULL DEFAULT 0 COMMENT 'Orden de visualización'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Ciclos de aprendizaje';
+
+--
+-- Dumping data for table `ciclos`
+--
+
+INSERT INTO `ciclos` (`id`, `numero`, `nombre`, `slug`, `edad_min`, `edad_max`, `grados`, `grados_texto`, `proposito`, `explicacion`, `nivel_educativo`, `isced_level`, `activo`, `orden`) VALUES
+(1, 0, 'Desarrollo Inicial', 'desarrollo-inicial', 0, 5, '[\"Jardín\", \"Transición\"]', 'Jardín y Transición', 'Estimulación temprana y socialización.', 'Ciclo enfocado en el desarrollo de habilidades motrices, lenguaje básico y socialización inicial. Los niños exploran el mundo a través del juego, desarrollan autonomía básica y establecen sus primeras relaciones sociales fuera del entorno familiar. Este ciclo sienta las bases para el aprendizaje formal.', 'Educación Inicial y Preescolar', 'ISCED 0', 0, 0),
+(2, 1, 'Cimentación', 'cimentacion', 6, 8, '[1, 2, 3]', '1° a 3°', 'Alfabetización inicial y pensamiento numérico básico.', 'Desarrollo de competencias fundamentales en lectura, escritura y operaciones matemáticas básicas. Los estudiantes aprenden a seguir instrucciones, trabajar en grupo y desarrollan curiosidad por el mundo que les rodea. Introducción a conceptos científicos mediante observación directa.', 'Educación Básica Primaria', 'ISCED 1', 1, 1),
+(3, 2, 'Consolidación', 'consolidacion', 9, 11, '[4, 5]', '4° a 5°', 'Desarrollo de autonomía y competencias de investigación.', 'Fortalecimiento de habilidades académicas y desarrollo de pensamiento crítico inicial. Los estudiantes aprenden a formular preguntas, buscar información y presentar sus hallazgos. Introducción al método científico mediante experimentos guiados y proyectos sencillos.', 'Educación Básica Primaria', 'ISCED 1', 1, 2),
+(4, 3, 'Exploración', 'exploracion', 12, 13, '[6, 7]', '6° a 7°', 'Descubrimiento de intereses vocacionales y cambios físicos/sociales.', 'Transición a secundaria con énfasis en exploración de áreas de interés. Los estudiantes desarrollan habilidades de investigación más estructuradas, aprenden a observar fenómenos científicos y describir sus características. Desarrollo socioemocional durante cambios de la adolescencia temprana.', 'Educación Básica Secundaria', 'ISCED 2', 1, 3),
+(5, 4, 'Experimentación y Profundización', 'experimentacion', 14, 15, '[8, 9]', '8° a 9°', 'Aplicación del conocimiento y resolución de problemas complejos.', 'Desarrollo de competencias científicas avanzadas con énfasis en experimentación controlada, análisis de variables y establecimiento de relaciones causales. Los estudiantes aplican el método científico de manera independiente, comparan resultados y explican fenómenos naturales con fundamento teórico.', 'Educación Básica Secundaria', 'ISCED 2', 1, 4),
+(6, 5, 'Análisis y Proyección', 'analisis-proyeccion', 16, 17, '[10, 11]', '10° a 11°', 'Especialización académica o técnica y preparación para la vida adulta.', 'Culminación del proceso educativo básico con énfasis en análisis crítico, argumentación científica y conexión con problemas reales. Los estudiantes desarrollan proyectos de investigación complejos, evalúan impactos tecnológicos y sociales, y se preparan para educación superior o inserción laboral. Énfasis en sostenibilidad y responsabilidad social.', 'Educación Media (Bachillerato)', 'ISCED 3', 1, 5);
 
 -- --------------------------------------------------------
 
@@ -219,7 +260,7 @@ INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `
 (3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(6, 'Radio de cristal', 'radio-de-cristal', 2, '[8, 9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo y bobina.', 'Explicar la propagación de ondas y la conversión de energía en comunicación.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Manipular alambres y componentes con cuidado\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 'Radio de cristal', 'radio-de-cristal', 2, '[8,9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo, bobina y antena. Capta ondas electromagnéticas del aire y conviértelas en audio audible sin necesidad de electricidad externa.', 'Explicar la propagación de ondas electromagnéticas y la conversión de energía en sistemas de comunicación. Relacionar conceptos de electromagnetismo, resonancia y semiconductores con aplicaciones tecnológicas del entorno.', '/assets/images/clases/radio-cristal-portada.jpg', 'https://www.youtube.com/embed/example-radio-cristal', '{\"edad_min\":13,\"edad_max\":15,\"notas\":\"\\u26a0\\ufe0f Manipular alambres y componentes electr\\u00f3nicos con cuidado. Supervisi\\u00f3n adulta recomendada al enrollar bobinas y soldar (si aplica). No acercar imanes potentes a dispositivos electr\\u00f3nicos.\"}', 'Radio de Cristal - Construye un Receptor sin Batería | Clase de Ciencia', 'Aprende a construir un radio de cristal funcional sin necesidad de batería. Experimenta con ondas electromagnéticas, diodos y bobinas en este proyecto de física para estudiantes de 8° y 9° grado.', '/proyecto.php?slug=radio-de-cristal', 1, 1, 5, 'published', '2025-12-20 10:00:00', 'Equipo Pedagógico Clase de Ciencia', '<h2>🔬 Introducci&oacute;n</h2>\r\n\r\n<p>&iquest;Sab&iacute;as que es posible escuchar emisoras de radio sin usar <strong>ninguna bater&iacute;a ni fuente de electricidad</strong>? Los radios de cristal, inventados a principios del siglo XX, capturan la energ&iacute;a de las ondas electromagn&eacute;ticas que viajan por el aire y la convierten directamente en sonido audible.</p>\r\n\r\n<p>En esta clase construir&aacute;s tu propio receptor de radio de cristal y explorar&aacute;s conceptos fundamentales de <strong>electromagnetismo</strong>, <strong>resonancia</strong> y <strong>semiconductores</strong>. Este proyecto te permitir&aacute; comprender c&oacute;mo funcionan las comunicaciones inal&aacute;mbricas que usamos todos los d&iacute;as.</p>\r\n\r\n<h2>📚 &iquest;Qu&eacute; aprender&aacute;s?</h2>\r\n\r\n<ul>\r\n	<li>C&oacute;mo las ondas electromagn&eacute;ticas transportan informaci&oacute;n a trav&eacute;s del espacio</li>\r\n	<li>El principio de <strong>resonancia LC</strong> para sintonizar frecuencias espec&iacute;ficas</li>\r\n	<li>El funcionamiento de un <strong>diodo como detector</strong> (rectificador de se&ntilde;al)</li>\r\n	<li>La conversi&oacute;n de energ&iacute;a electromagn&eacute;tica en energ&iacute;a sonora</li>\r\n	<li>Conceptos de impedancia y acoplamiento de antenas</li>\r\n</ul>\r\n\r\n<h2>🛠️ Materiales del Kit</h2>\r\n\r\n<ul>\r\n	<li>Diodo de germanio 1N34A o similar (detector de RF)</li>\r\n	<li>Alambre de cobre esmaltado calibre 26-28 (10 metros)</li>\r\n	<li>Tubo de PVC o cart&oacute;n (5 cm di&aacute;metro, 10 cm largo) para bobina</li>\r\n	<li>Condensador variable 100-365 pF o fijo 100 pF</li>\r\n	<li>Aud&iacute;fono o auricular de alta impedancia (&gt;1000&Omega;)</li>\r\n	<li>Cable de conexi&oacute;n</li>\r\n	<li>Clip cocodrilo (2 unidades)</li>\r\n</ul>\r\n\r\n<h2>🧪 Materiales Adicionales (conseguir en casa)</h2>\r\n\r\n<ul>\r\n	<li>Alambre largo (10-20 metros) para antena</li>\r\n	<li>Conexi&oacute;n a tierra (tuber&iacute;a met&aacute;lica, varilla enterrada, o tierra del tomacorriente)</li>\r\n	<li>Cinta aislante o pegamento</li>\r\n	<li>Base de madera o pl&aacute;stico para montar circuito (opcional)</li>\r\n</ul>\r\n\r\n<h2>🔧 Procedimiento Paso a Paso</h2>\r\n\r\n<h3>Paso 1: Construir la Bobina (Inductor)</h3>\r\n\r\n<p><strong>Tiempo: 20 minutos</strong></p>\r\n\r\n<ol>\r\n	<li>Enrolla el alambre de cobre esmaltado alrededor del tubo de PVC o cart&oacute;n.</li>\r\n	<li>Realiza aproximadamente <strong>60-80 vueltas</strong> apretadas, sin dejar espacios entre las espiras.</li>\r\n	<li>Deja unos 15 cm de alambre libre en cada extremo para las conexiones.</li>\r\n	<li>Fija la bobina con cinta aislante para que no se desenrolle.</li>\r\n	<li>Retira con cuidado el esmalte de los extremos del alambre usando lija fina o una navaja (con supervisi&oacute;n).</li>\r\n</ol>\r\n\r\n<p><strong>💡 Consejo:</strong> Mientras m&aacute;s vueltas tenga la bobina, mejor captar&aacute; se&ntilde;ales de baja frecuencia. Para AM (530-1700 kHz), 60-80 vueltas son ideales.</p>\r\n\r\n<h3>Paso 2: Ensamblar el Circuito</h3>\r\n\r\n<p><strong>Tiempo: 15 minutos</strong></p>\r\n\r\n<p><strong>Diagrama del circuito:</strong></p>\r\n\r\n<pre>\r\n  Antena ─────┬───── [Bobina] ─────┬───── Diodo ───┬───── Aud&iacute;fono (+)\r\n              │                      │               │\r\n              └───── [Condensador]──┘               │\r\n                                                     │\r\n  Tierra ─────────────────────────────────────────┘───── Aud&iacute;fono (-)\r\n  </pre>\r\n\r\n<ol>\r\n	<li>Conecta un extremo de la bobina al cable de antena.</li>\r\n	<li>Conecta el condensador variable entre la antena y el otro extremo de la bobina (circuito LC en paralelo).</li>\r\n	<li>Conecta el <strong>&aacute;nodo</strong> (+) del diodo al extremo libre de la bobina.</li>\r\n	<li>Conecta el <strong>c&aacute;todo</strong> (-) del diodo al terminal positivo del aud&iacute;fono.</li>\r\n	<li>Conecta el terminal negativo del aud&iacute;fono a la conexi&oacute;n a tierra.</li>\r\n	<li>Verifica que todas las conexiones est&eacute;n firmes y sin cortocircuitos.</li>\r\n</ol>\r\n\r\n<h3>Paso 3: Instalar la Antena y Tierra</h3>\r\n\r\n<p><strong>Tiempo: 20 minutos</strong></p>\r\n\r\n<ul>\r\n	<li><strong>Antena:</strong> Extiende un alambre largo (10-20 metros) en posici&oacute;n horizontal o vertical, lo m&aacute;s alto posible (&aacute;rbol, techo, ventana). No debe tocar objetos met&aacute;licos.</li>\r\n	<li><strong>Tierra:</strong> Conecta el cable de tierra a una tuber&iacute;a met&aacute;lica enterrada, una varilla de cobre en el suelo, o al pin de tierra de un tomacorriente (con supervisi&oacute;n adulta).</li>\r\n</ul>\r\n\r\n<p><strong>⚠️ Importante:</strong> Una buena conexi&oacute;n a tierra es esencial para el funcionamiento del radio. La antena act&uacute;a como captadora de energ&iacute;a, y la tierra completa el circuito.</p>\r\n\r\n<h3>Paso 4: Sintonizar Emisoras</h3>\r\n\r\n<p><strong>Tiempo: 15 minutos</strong></p>\r\n\r\n<ol>\r\n	<li>Coloca el aud&iacute;fono en tu o&iacute;do (usa alta impedancia para mejor sensibilidad).</li>\r\n	<li>Gira lentamente el condensador variable mientras escuchas.</li>\r\n	<li>Deber&iacute;as empezar a escuchar estaciones de radio AM. El sonido ser&aacute; d&eacute;bil pero audible.</li>\r\n	<li>Ajusta la posici&oacute;n de la antena si no captas se&ntilde;ales. Las estaciones m&aacute;s potentes se escuchan mejor.</li>\r\n	<li>Experimenta con la hora del d&iacute;a: por la noche, las ondas AM viajan m&aacute;s lejos debido a la reflexi&oacute;n ionosf&eacute;rica.</li>\r\n</ol>\r\n\r\n<h2>🎓 Explicaci&oacute;n Cient&iacute;fica</h2>\r\n\r\n<h3>1. Ondas Electromagn&eacute;ticas y Propagaci&oacute;n</h3>\r\n\r\n<p>Las emisoras de radio transmiten informaci&oacute;n mediante <strong>ondas electromagn&eacute;ticas</strong> que viajan a la velocidad de la luz (300,000 km/s). Estas ondas tienen dos componentes perpendiculares entre s&iacute;: un campo el&eacute;ctrico y un campo magn&eacute;tico oscilantes.</p>\r\n\r\n<p>La banda AM (Amplitud Modulada) opera en frecuencias de <strong>530 a 1700 kHz</strong>. Cuando estas ondas pasan por la antena, inducen una peque&ntilde;a corriente el&eacute;ctrica alterna que contiene la se&ntilde;al de audio.</p>\r\n\r\n<h3>2. Resonancia LC (Circuito Tanque)</h3>\r\n\r\n<p>El circuito formado por la <strong>bobina (L)</strong> y el <strong>condensador (C)</strong> crea un filtro resonante que solo permite pasar una frecuencia espec&iacute;fica:</p>\r\n\r\n<p><strong>f = 1 / (2&pi;&radic;(LC))</strong></p>\r\n\r\n<p>Al variar la capacitancia del condensador, cambias la frecuencia de resonancia y &quot;sintonizas&quot; diferentes emisoras. Este principio es fundamental en todas las radios modernas.</p>\r\n\r\n<h3>3. Detecci&oacute;n con Diodo (Rectificaci&oacute;n)</h3>\r\n\r\n<p>El <strong>diodo de germanio</strong> act&uacute;a como <strong>rectificador</strong>: solo permite el paso de corriente en una direcci&oacute;n, eliminando la mitad negativa de la se&ntilde;al de radiofrecuencia. Esto &quot;extrae&quot; la se&ntilde;al de audio modulada que estaba &quot;montada&quot; sobre la onda portadora de alta frecuencia.</p>\r\n\r\n<p>Se usa germanio (no silicio) porque tiene una <strong>tensi&oacute;n umbral m&aacute;s baja</strong> (~0.3V vs ~0.7V), permitiendo detectar se&ntilde;ales muy d&eacute;biles sin amplificaci&oacute;n.</p>\r\n\r\n<h3>4. Conversi&oacute;n a Sonido</h3>\r\n\r\n<p>La se&ntilde;al de audio recuperada pasa al aud&iacute;fono de alta impedancia, que convierte las variaciones de corriente en movimiento mec&aacute;nico de una membrana, generando <strong>ondas sonoras</strong> audibles.</p>\r\n\r\n<h2>🌍 Conexi&oacute;n con la Realidad</h2>\r\n\r\n<ul>\r\n	<li><strong>Historia:</strong> Los radios de cristal fueron vitales en la comunicaci&oacute;n durante la Primera Guerra Mundial y permitieron la popularizaci&oacute;n de la radiodifusi&oacute;n en los a&ntilde;os 1920.</li>\r\n	<li><strong>Tecnolog&iacute;a moderna:</strong> Los mismos principios se usan hoy en radios AM/FM, WiFi, Bluetooth, telefon&iacute;a celular y GPS.</li>\r\n	<li><strong>Energ&iacute;a:</strong> Este proyecto demuestra la <strong>transmisi&oacute;n inal&aacute;mbrica de energ&iacute;a</strong>: la antena capta microvatios de las ondas de radio, suficientes para mover el aud&iacute;fono.</li>\r\n	<li><strong>Aplicaci&oacute;n rural:</strong> En zonas sin electricidad, los radios de cristal siguen siendo &uacute;tiles para recibir informaci&oacute;n de emergencia.</li>\r\n</ul>\r\n\r\n<h2>🔬 Experimentos Adicionales</h2>\r\n\r\n<ol>\r\n	<li><strong>Variar el n&uacute;mero de espiras:</strong> Construye bobinas con 40, 60 y 80 vueltas. &iquest;C&oacute;mo afecta al rango de frecuencias captadas?</li>\r\n	<li><strong>Probar diferentes antenas:</strong> Compara una antena de 5 m vs 15 m. &iquest;Cu&aacute;l capta se&ntilde;ales m&aacute;s d&eacute;biles?</li>\r\n	<li><strong>Hora del d&iacute;a:</strong> Registra cu&aacute;ntas estaciones captas al mediod&iacute;a vs medianoche. &iquest;Por qu&eacute; hay diferencia? (Investigar propagaci&oacute;n ionosf&eacute;rica)</li>\r\n	<li><strong>Orientaci&oacute;n de la bobina:</strong> Gira la bobina 90&deg; mientras escuchas. &iquest;Cambia el volumen? (Direccionalidad de la antena)</li>\r\n</ol>\r\n\r\n<h2>❓ Preguntas para Reflexionar</h2>\r\n\r\n<ul>\r\n	<li>&iquest;Por qu&eacute; no funciona este radio con emisoras FM (88-108 MHz)?</li>\r\n	<li>&iquest;Qu&eacute; pasar&iacute;a si usaras un diodo de silicio en lugar de germanio?</li>\r\n	<li>&iquest;C&oacute;mo podr&iacute;as amplificar la se&ntilde;al para escucharla en un altavoz?</li>\r\n	<li>&iquest;Por qu&eacute; las ondas AM viajan m&aacute;s lejos de noche que de d&iacute;a?</li>\r\n	<li>Si la velocidad de la luz es 300,000 km/s y captas una emisora de 900 kHz, &iquest;cu&aacute;l es la longitud de onda? (&lambda; = c/f)</li>\r\n</ul>\r\n\r\n<h2>📖 Para Profundizar</h2>\r\n\r\n<ul>\r\n	<li><strong>Video recomendado:</strong> &quot;How Does a Crystal Radio Work?&quot; - Khan Academy</li>\r\n	<li><strong>Lectura:</strong> Historia de la radio y el papel de Guglielmo Marconi</li>\r\n	<li><strong>Concepto avanzado:</strong> Transformada de Fourier y an&aacute;lisis de se&ntilde;ales en el dominio de frecuencia</li>\r\n	<li><strong>Proyecto relacionado:</strong> Construir un transmisor AM simple (requiere licencia en muchos pa&iacute;ses)</li>\r\n</ul>\r\n\r\n<h2>📋 Competencias MEN Desarrolladas</h2>\r\n\r\n<ul>\r\n	<li><strong>Indagaci&oacute;n:</strong> Formulo preguntas sobre fen&oacute;menos electromagn&eacute;ticos, dise&ntilde;o experimentos controlados variando par&aacute;metros del circuito, y registro observaciones sistem&aacute;ticas.</li>\r\n	<li><strong>Explicaci&oacute;n:</strong> Modelo la propagaci&oacute;n de ondas electromagn&eacute;ticas, explico el funcionamiento de componentes electr&oacute;nicos (diodo, bobina, condensador), y relaciono conceptos con aplicaciones tecnol&oacute;gicas.</li>\r\n	<li><strong>Uso del conocimiento:</strong> Aplico principios de electromagnetismo para construir un dispositivo funcional, interpreto diagramas de circuitos, y propongo mejoras basadas en evidencia experimental.</li>\r\n</ul>\r\n\r\n<h2>⚠️ Normas de Seguridad Adicionales</h2>\r\n\r\n<ul>\r\n	<li>No conectar la antena a l&iacute;neas el&eacute;ctricas ni durante tormentas el&eacute;ctricas</li>\r\n	<li>Usar aud&iacute;fonos, nunca parlantes amplificados (riesgo de retroalimentaci&oacute;n)</li>\r\n	<li>Al retirar esmalte del alambre, trabajar en &aacute;rea ventilada y con supervisi&oacute;n</li>\r\n	<li>Verificar que la conexi&oacute;n a tierra no toque partes vivas de instalaciones el&eacute;ctricas</li>\r\n	<li>No usar antenas met&aacute;licas cerca de cables de alta tensi&oacute;n</li>\r\n</ul>\r\n', '2025-12-20 04:46:28', '2025-12-20 15:36:48'),
 (7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
@@ -278,30 +319,6 @@ CREATE TABLE `clase_competencias` (
   `competencia_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Dumping data for table `clase_competencias`
---
-
-INSERT INTO `clase_competencias` (`clase_id`, `competencia_id`) VALUES
-(1, 1),
-(2, 1),
-(3, 1),
-(4, 1),
-(5, 1),
-(6, 2),
-(7, 2),
-(8, 2),
-(9, 2),
-(10, 2),
-(11, 3),
-(12, 3),
-(13, 2),
-(13, 3),
-(14, 2),
-(14, 3),
-(15, 2),
-(15, 3);
-
 -- --------------------------------------------------------
 
 --
@@ -322,17 +339,66 @@ CREATE TABLE `clase_tags` (
 CREATE TABLE `competencias` (
   `id` int(11) NOT NULL,
   `codigo` varchar(80) NOT NULL,
-  `nombre` varchar(160) NOT NULL
+  `subcategoria` varchar(100) DEFAULT NULL,
+  `nombre` varchar(160) NOT NULL,
+  `explicacion` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `competencias`
 --
 
-INSERT INTO `competencias` (`id`, `codigo`, `nombre`) VALUES
-(1, 'indagacion', 'Formulo preguntas, observo, registro datos'),
-(2, 'explicacion', 'Establezco relaciones causales, modelo fenómenos'),
-(3, 'uso_conocimiento', 'Aplico conceptos a situaciones reales');
+INSERT INTO `competencias` (`id`, `codigo`, `subcategoria`, `nombre`, `explicacion`) VALUES
+(1, 'CB-CN-IND-01', 'Competencias Básicas - Ciencias Naturales: Indagación', 'Formulo preguntas sobre fenómenos naturales y diseño experimentos', 'Capacidad para identificar problemas científicos, plantear preguntas investigables y diseñar procedimientos experimentales controlados.'),
+(2, 'CB-CN-IND-02', 'Competencias Básicas - Ciencias Naturales: Indagación', 'Observo, registro y analizo datos de manera sistemática', 'Habilidad para realizar observaciones detalladas, registrar información organizada y analizar patrones en los datos obtenidos.'),
+(3, 'CB-CN-EXP-01', 'Competencias Básicas - Ciencias Naturales: Explicación de fenómenos', 'Establezco relaciones causales entre fenómenos científicos', 'Capacidad para identificar relaciones causa-efecto en procesos naturales usando principios científicos.'),
+(4, 'CB-CN-EXP-02', 'Competencias Básicas - Ciencias Naturales: Explicación de fenómenos', 'Modelo fenómenos naturales con representaciones', 'Habilidad para crear modelos conceptuales, diagramas y esquemas que expliquen sistemas naturales.'),
+(5, 'CB-CN-USO-01', 'Competencias Básicas - Ciencias Naturales: Uso comprensivo del conocimiento', 'Aplico conceptos científicos a situaciones cotidianas', 'Capacidad para transferir conocimiento científico a contextos de la vida diaria.'),
+(6, 'CB-CN-USO-02', 'Competencias Básicas - Ciencias Naturales: Uso comprensivo del conocimiento', 'Evalúo impactos de la ciencia en sociedad y ambiente', 'Competencia para analizar consecuencias sociales, éticas y ambientales del conocimiento científico.'),
+(7, 'CB-MAT-NUM-01', 'Competencias Básicas - Matemáticas: Pensamiento numérico', 'Realizo cálculos, estimaciones y mediciones precisas', 'Capacidad para efectuar operaciones matemáticas y realizar mediciones con instrumentos apropiados.'),
+(8, 'CB-MAT-ESP-01', 'Competencias Básicas - Matemáticas: Pensamiento espacial', 'Interpreto representaciones geométricas y espaciales', 'Habilidad para visualizar formas, ubicaciones y relaciones espaciales en dos y tres dimensiones.'),
+(9, 'CB-MAT-MET-01', 'Competencias Básicas - Matemáticas: Pensamiento métrico', 'Uso unidades de medida y estimo magnitudes', 'Competencia para seleccionar unidades apropiadas y convertir entre sistemas de medida.'),
+(10, 'CB-MAT-ALE-01', 'Competencias Básicas - Matemáticas: Pensamiento aleatorio', 'Analizo datos, interpreto gráficas y probabilidades', 'Capacidad para organizar, representar e interpretar datos mediante gráficas estadísticas.'),
+(11, 'CB-MAT-VAR-01', 'Competencias Básicas - Matemáticas: Pensamiento variacional', 'Identifico patrones, regularidades y relaciones', 'Habilidad para reconocer secuencias, patrones de cambio y relaciones funcionales.'),
+(12, 'CB-LEN-PRO-01', 'Competencias Básicas - Lenguaje: Producción textual', 'Produzco textos científicos con estructura lógica', 'Competencia para redactar informes de laboratorio y reportes con lenguaje técnico apropiado.'),
+(13, 'CB-LEN-COM-01', 'Competencias Básicas - Lenguaje: Comprensión e interpretación', 'Interpreto textos científicos y técnicos', 'Capacidad para leer comprensivamente artículos científicos extrayendo ideas principales.'),
+(14, 'CB-LEN-MED-01', 'Competencias Básicas - Lenguaje: Medios de comunicación', 'Evalúo críticamente información científica en medios', 'Habilidad para analizar noticias científicas identificando fuentes confiables y sesgos.'),
+(15, 'CB-LEN-ETI-01', 'Competencias Básicas - Lenguaje: Ética de la comunicación', 'Cito fuentes y respeto autoría intelectual', 'Competencia para reconocer y referenciar apropiadamente el trabajo de otros científicos.'),
+(16, 'CC-PAZ-01', 'Competencias Ciudadanas - Convivencia y Paz', 'Trabajo colaborativamente y manejo conflictos', 'Capacidad para resolver desacuerdos constructivamente y mantener respeto mutuo en equipos.'),
+(17, 'CC-PAZ-02', 'Competencias Ciudadanas - Convivencia y Paz', 'Respeto la integridad y rechazo la violencia', 'Competencia para seguir protocolos de seguridad y cuidar la integridad propia y de otros.'),
+(18, 'CC-PAR-01', 'Competencias Ciudadanas - Participación y Responsabilidad Democrática', 'Participo en toma de decisiones colectivas', 'Habilidad para escuchar opiniones diversas y llegar a consensos justos en grupos.'),
+(19, 'CC-PAR-02', 'Competencias Ciudadanas - Participación y Responsabilidad Democrática', 'Ejerzo el poder de forma responsable', 'Capacidad para liderar equipos distribuyendo tareas equitativamente y ejerciendo autoridad ética.'),
+(20, 'CC-PLU-01', 'Competencias Ciudadanas - Pluralidad, Identidad y Valoración de Diferencias', 'Reconozco y valoro la diversidad de ideas', 'Competencia para apreciar diferentes perspectivas y métodos en el trabajo científico.'),
+(21, 'CC-PLU-02', 'Competencias Ciudadanas - Pluralidad, Identidad y Valoración de Diferencias', 'Rechazo la discriminación y promuevo equidad', 'Habilidad para identificar y oponerme a tratos injustos basados en diferencias individuales.'),
+(22, 'CLG-PER-01', 'Competencias Laborales - Personales', 'Demuestro orientación ética y responsabilidad', 'Competencia para actuar con honestidad científica y asumir responsabilidad por resultados.'),
+(23, 'CLG-PER-02', 'Competencias Laborales - Personales', 'Gestiono inteligencia emocional', 'Habilidad para mantener la calma ante fracasos y adaptarme a resultados inesperados.'),
+(24, 'CLG-PER-03', 'Competencias Laborales - Personales', 'Me adapto al cambio y muestro resiliencia', 'Capacidad para ajustar estrategias cuando las condiciones experimentales varían.'),
+(25, 'CLG-INT-01', 'Competencias Laborales - Interpersonales', 'Me comunico efectivamente', 'Competencia para expresar ideas claramente y mantener comunicación asertiva en equipos.'),
+(26, 'CLG-INT-02', 'Competencias Laborales - Interpersonales', 'Trabajo en equipo coordinadamente', 'Habilidad para colaborar respetando roles y coordinando tareas grupales.'),
+(27, 'CLG-INT-03', 'Competencias Laborales - Interpersonales', 'Ejerzo liderazgo y manejo conflictos', 'Capacidad para guiar equipos, mediar en desacuerdos y motivar compañeros.'),
+(28, 'CLG-ORG-01', 'Competencias Laborales - Organizacionales', 'Gestiono información eficientemente', 'Competencia para organizar datos, documentar procesos y mantener registros ordenados.'),
+(29, 'CLG-ORG-02', 'Competencias Laborales - Organizacionales', 'Gestiono recursos y tiempo', 'Habilidad para planificar tiempos, usar materiales sin desperdicio y cumplir plazos.'),
+(30, 'CLG-ORG-03', 'Competencias Laborales - Organizacionales', 'Me oriento al servicio y calidad', 'Capacidad para ejecutar tareas con excelencia y enfoque en resultados útiles.'),
+(31, 'CLG-TEC-01', 'Competencias Laborales - Tecnológicas', 'Manejo herramientas e instrumentos', 'Competencia para seleccionar, operar y mantener equipos de laboratorio apropiadamente.'),
+(32, 'CLG-TEC-02', 'Competencias Laborales - Tecnológicas', 'Identifico fallas y propongo soluciones', 'Habilidad para detectar problemas en procedimientos e implementar mejoras.'),
+(33, 'CLG-TEC-03', 'Competencias Laborales - Tecnológicas', 'Innovo y optimizo procesos', 'Capacidad para proponer modificaciones creativas que mejoren resultados experimentales.'),
+(34, 'CLG-EMP-01', 'Competencias Laborales - Empresariales y Emprendimiento', 'Identifico oportunidades de innovación', 'Competencia para reconocer problemas que pueden resolverse mediante soluciones científicas.'),
+(35, 'CLG-EMP-02', 'Competencias Laborales - Empresariales y Emprendimiento', 'Muestro creatividad y asumo riesgos', 'Habilidad para diseñar propuestas viables y ejecutarlas asumiendo riesgos calculados.'),
+(36, 'NCP-SOC-01', 'Nuevas Competencias 2025 - Socioemocionales', 'Gestiono mis emociones y autoestima', 'Capacidad para identificar estados emocionales y cómo afectan el aprendizaje científico.'),
+(37, 'NCP-SOC-02', 'Nuevas Competencias 2025 - Socioemocionales', 'Desarrollo resiliencia y persisto ante dificultades', 'Habilidad para mantener motivación y recuperarme de contratiempos experimentales.'),
+(38, 'NCP-SOC-03', 'Nuevas Competencias 2025 - Socioemocionales', 'Practico empatía y apoyo solidario', 'Competencia para comprender dificultades de compañeros y ofrecer ayuda constructiva.'),
+(39, 'NCP-SOC-04', 'Nuevas Competencias 2025 - Socioemocionales', 'Cuido mi salud mental integral', 'Capacidad para reconocer cuando necesito apoyo y mantener hábitos saludables de estudio.'),
+(40, 'NCP-DIG-01', 'Nuevas Competencias 2025 - Digitales y Ciudadanía Digital', 'Uso IA y tecnología de forma ética', 'Competencia para utilizar herramientas digitales citando fuentes y evitando plagio.'),
+(41, 'NCP-DIG-02', 'Nuevas Competencias 2025 - Digitales y Ciudadanía Digital', 'Prevengo ciberacoso y protejo datos', 'Habilidad para proteger información personal y reportar comportamientos abusivos en línea.'),
+(42, 'NCP-DIG-03', 'Nuevas Competencias 2025 - Digitales y Ciudadanía Digital', 'Practico alfabetización mediática', 'Capacidad para verificar veracidad de información científica e identificar noticias falsas.'),
+(43, 'NCP-SOS-01', 'Nuevas Competencias 2025 - Desarrollo Sostenible', 'Implemento proyectos ambientales PRAE', 'Competencia para diseñar y ejecutar proyectos ambientales escolares con impacto real.'),
+(44, 'NCP-SOS-02', 'Nuevas Competencias 2025 - Desarrollo Sostenible', 'Demuestro conciencia climática', 'Habilidad para comprender causas del cambio climático y proponer acciones de mitigación.'),
+(45, 'NCP-SOS-03', 'Nuevas Competencias 2025 - Desarrollo Sostenible', 'Gestiono recursos responsablemente', 'Capacidad para minimizar desperdicio de materiales, agua y energía en experimentos.'),
+(46, 'NCP-FIN-01', 'Nuevas Competencias 2025 - Educación Financiera y Vial', 'Gestiono recursos económicos en proyectos', 'Competencia para presupuestar materiales y optimizar costos en actividades científicas.'),
+(47, 'NCP-VIA-01', 'Nuevas Competencias 2025 - Educación Financiera y Vial', 'Aplico seguridad en movilidad escolar', 'Habilidad para trasladar materiales y equipos de forma segura siguiendo normas viales.'),
+(48, 'TRANS-MET-01', 'Transversales - Método Científico', 'Aplico el ciclo completo de investigación', 'Competencia para seguir todas las etapas: observación, pregunta, hipótesis, experimentación, análisis y conclusión.'),
+(49, 'TRANS-SEG-01', 'Transversales - Seguridad y Bioseguridad', 'Aplico normas de bioseguridad', 'Habilidad para usar EPP, manipular sustancias químicas de forma segura y responder ante emergencias.'),
+(50, 'TRANS-DOC-01', 'Transversales - Documentación Científica', 'Registro procesos con rigor científico', 'Capacidad para llevar bitácora de laboratorio y documentar observaciones precisas y honestas.');
 
 -- --------------------------------------------------------
 
@@ -873,6 +939,16 @@ ALTER TABLE `categorias_items`
   ADD UNIQUE KEY `uq_categorias_items_slug` (`slug`);
 
 --
+-- Indexes for table `ciclos`
+--
+ALTER TABLE `ciclos`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_ciclos_numero` (`numero`),
+  ADD UNIQUE KEY `uq_ciclos_slug` (`slug`),
+  ADD KEY `idx_ciclos_activo` (`activo`),
+  ADD KEY `idx_ciclos_orden` (`orden`);
+
+--
 -- Indexes for table `clases`
 --
 ALTER TABLE `clases`
@@ -1043,13 +1119,19 @@ ALTER TABLE `analytics_visitas`
 -- AUTO_INCREMENT for table `areas`
 --
 ALTER TABLE `areas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `categorias_items`
 --
 ALTER TABLE `categorias_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `ciclos`
+--
+ALTER TABLE `ciclos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `clases`
@@ -1061,7 +1143,7 @@ ALTER TABLE `clases`
 -- AUTO_INCREMENT for table `competencias`
 --
 ALTER TABLE `competencias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `configuracion_ia`

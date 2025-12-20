@@ -27,7 +27,6 @@ $clase = [
   'seguridad' => null,
   'seo_title' => '',
   'seo_description' => '',
-  'canonical_url' => '',
   'activo' => 1,
   'destacado' => 0,
   'orden_popularidad' => 0,
@@ -39,7 +38,7 @@ $clase = [
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html FROM clases WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html FROM clases WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $clase = $row; } else { $is_edit = false; $id = null; }
@@ -106,7 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $seguridad_json = ($seg_edad_min || $seg_edad_max || $seg_notas !== '') ? json_encode(['edad_min'=>$seg_edad_min,'edad_max'=>$seg_edad_max,'notas'=>$seg_notas]) : null;
     $seo_title = isset($_POST['seo_title']) ? trim($_POST['seo_title']) : '';
     $seo_description = isset($_POST['seo_description']) ? trim($_POST['seo_description']) : '';
-    $canonical_url = isset($_POST['canonical_url']) ? trim($_POST['canonical_url']) : '';
     $activo = isset($_POST['activo']) ? 1 : 0;
     $destacado = isset($_POST['destacado']) ? 1 : 0;
     $orden_popularidad = isset($_POST['orden_popularidad']) ? (int)$_POST['orden_popularidad'] : 0;
@@ -158,15 +156,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           // Transacción para clase + relaciones
           $pdo->beginTransaction();
           if ($is_edit) {
-            $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, canonical_url=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, updated_at=NOW() WHERE id=?');
-            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $id]);
+            $stmt = $pdo->prepare('UPDATE clases SET nombre=?, slug=?, ciclo=?, grados=?, dificultad=?, duracion_minutos=?, resumen=?, objetivo_aprendizaje=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, activo=?, destacado=?, orden_popularidad=?, status=?, published_at=?, autor=?, contenido_html=?, updated_at=NOW() WHERE id=?');
+            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html, $id]);
             // Limpiar relaciones
             $pdo->prepare('DELETE FROM clase_areas WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_competencias WHERE clase_id = ?')->execute([$id]);
             $pdo->prepare('DELETE FROM clase_tags WHERE clase_id = ?')->execute([$id]);
           } else {
-            $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, canonical_url, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
-            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $canonical_url, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html]);
+            $stmt = $pdo->prepare('INSERT INTO clases (nombre, slug, ciclo, grados, dificultad, duracion_minutos, resumen, objetivo_aprendizaje, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, destacado, orden_popularidad, status, published_at, autor, contenido_html, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+            $stmt->execute([$nombre, $slug, $ciclo, $grados_json, $dificultad ?: null, $duracion_minutos, $resumen, $objetivo, $imagen_portada ?: null, $video_portada ?: null, $seguridad_json, $seo_title, $seo_description, $activo, $destacado, $orden_popularidad, $status, $published_at, $autor ?: null, $contenido_html]);
             $id = (int)$pdo->lastInsertId();
             $is_edit = true;
           }
@@ -380,17 +378,12 @@ include '../header.php';
       <input type="text" id="seo_description" name="seo_description" maxlength="255" value="<?= htmlspecialchars($clase['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
     </div>
   </div>
-  <div class="form-group">
-    <label for="canonical_url">Canonical URL</label>
-    <input type="text" id="canonical_url" name="canonical_url" value="<?= htmlspecialchars($clase['canonical_url'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
-  </div>
   <!-- SEO Auto Preview + Override Toggle -->
   <div class="form-section">
     <label><input type="checkbox" id="seo_override_toggle"> Editar SEO manualmente</label>
     <div class="seo-preview">
       <p><strong>Preview Title:</strong> <span id="seo_preview_title"></span></p>
       <p><strong>Preview Description:</strong> <span id="seo_preview_desc"></span></p>
-      <p><strong>Preview Canonical:</strong> <span id="seo_preview_canon"></span></p>
       <small class="help-text">Si no defines SEO manualmente, se usarán estos valores.</small>
     </div>
   </div>
@@ -449,10 +442,8 @@ include '../header.php';
   const resumenInput = document.getElementById('resumen');
   const seoTitleInput = document.getElementById('seo_title');
   const seoDescInput = document.getElementById('seo_description');
-  const canonInput = document.getElementById('canonical_url');
   const seoPrevTitle = document.getElementById('seo_preview_title');
   const seoPrevDesc = document.getElementById('seo_preview_desc');
-  const seoPrevCanon = document.getElementById('seo_preview_canon');
   const seoToggle = document.getElementById('seo_override_toggle');
   const seoManual = document.getElementById('seo-manual');
 
@@ -483,17 +474,13 @@ include '../header.php';
       } catch(e) { descSrc = ''; }
     }
     const autoDesc = shortenAtWord(descSrc, 160);
-    const slugVal = (slugInput && slugInput.value.trim()) ? slugInput.value.trim() : '';
-    const autoCanon = '/' + slugVal;
     // Render preview
     if (seoPrevTitle) seoPrevTitle.textContent = autoTitle;
     if (seoPrevDesc) seoPrevDesc.textContent = autoDesc;
-    if (seoPrevCanon) seoPrevCanon.textContent = autoCanon;
     // If manual not enabled and inputs are empty, mirror preview into inputs (for visibility but still overrideable)
     if (!seoToggle?.checked) {
       if (seoTitleInput && !seoTitleInput.value) seoTitleInput.value = autoTitle;
       if (seoDescInput && !seoDescInput.value) seoDescInput.value = autoDesc;
-      if (canonInput && !canonInput.value) canonInput.value = autoCanon;
       console.log('🔍 [SEO] autogenerados (preview)');
     }
   }
