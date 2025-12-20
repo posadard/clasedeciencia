@@ -11,6 +11,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="/assets/css/style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+    <link rel="alternate icon" href="/assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/assets/icons/favicon.svg">
+    <meta name="theme-color" content="#1f3c88">
         <script>
             // Emit early auth diagnostics if present
             (function(){
