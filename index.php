@@ -35,12 +35,42 @@ include 'includes/header.php';
         <!-- Acceso Rápido por Ciclo -->
         <section class="sections-overview">
             <h2>Explorar por Ciclo</h2>
-            <div class="sections-grid">
+            <div class="ciclos-grid">
                 <?php foreach ($ciclos as $c): ?>
-                <a href="/<?= h($c['slug']) ?>" class="section-card">
-                    <h3>Ciclo <?= h($c['numero']) ?>: <?= h($c['nombre']) ?> (<?= h($c['grados_texto']) ?>)</h3>
-                    <p><?= h($c['proposito_corto']) ?></p>
-                </a>
+                <article class="ciclo-card" data-ciclo="<?= h($c['numero']) ?>">
+                    <!-- Icono central con número de ciclo -->
+                    <div class="ciclo-icon ciclo-<?= h($c['numero']) ?>">
+                        <span class="ciclo-numero"><?= h($c['numero']) ?></span>
+                    </div>
+                    
+                    <!-- Información jerárquica -->
+                    <div class="ciclo-header">
+                        <h3 class="ciclo-nombre"><?= h($c['nombre']) ?></h3>
+                        <p class="ciclo-grados"><?= h($c['grados_texto']) ?></p>
+                        <span class="ciclo-edad"><?= h($c['edad_min']) ?>-<?= h($c['edad_max']) ?> años</span>
+                    </div>
+                    
+                    <!-- Propósito (descripción breve) -->
+                    <p class="ciclo-proposito"><?= h($c['proposito']) ?></p>
+                    
+                    <!-- Metadata en badges -->
+                    <div class="ciclo-meta">
+                        <span class="badge badge-nivel"><?= h($c['nivel_educativo']) ?></span>
+                        <?php if (!empty($c['isced_level'])): ?>
+                        <span class="badge badge-isced"><?= h($c['isced_level']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Call to action -->
+                    <div class="ciclo-footer">
+                        <a href="/<?= h($c['slug']) ?>" class="btn btn-primary">
+                            Explorar proyectos
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left: 0.25rem;">
+                                <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
                 <?php endforeach; ?>
             </div>
         </section>
