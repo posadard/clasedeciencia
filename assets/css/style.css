@@ -308,15 +308,14 @@ strong, b {
     }
     
     .search-input {
-        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        padding: 0.75rem 1rem; /* Sin padding-left extra ya que no hay ícono */
         font-size: 0.875rem;
         border-radius: 25px;
+        text-align: center; /* Centrar placeholder */
     }
     
     .search-icon {
-        left: 14px;
-        width: 16px;
-        height: 16px;
+        display: none; /* Ocultar lupa en mobile */
     }
     
     .search-input::placeholder {
