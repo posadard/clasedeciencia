@@ -59,6 +59,7 @@ try {
         'kits' => $tableExists($pdo, 'kits') ? $getCount($pdo, "SELECT COUNT(*) FROM kits") : 0,
         'contratos' => $tableExists($pdo, 'contratos') ? $getCount($pdo, "SELECT COUNT(*) FROM contratos") : 0,
         'entregas' => $tableExists($pdo, 'entregas') ? $getCount($pdo, "SELECT COUNT(*) FROM entregas") : 0,
+        'lotes' => $tableExists($pdo, 'lotes') ? $getCount($pdo, "SELECT COUNT(*) FROM lotes") : 0,
     ];
 } catch (PDOException $e) {
     error_log('Admin stats error: ' . $e->getMessage());
@@ -136,7 +137,8 @@ include 'header.php';
                 kit_items: <?= (int)$stats['kit_items'] ?>,
                 kits: <?= (int)$stats['kits'] ?>,
                 contratos: <?= (int)$stats['contratos'] ?>,
-                entregas: <?= (int)$stats['entregas'] ?>
+                entregas: <?= (int)$stats['entregas'] ?>,
+                lotes: <?= (int)$stats['lotes'] ?>
             });
             console.log('🔍 [Admin] IA (7d):', {
                 consultas: <?= (int)$ia_stats['consultas'] ?>,
@@ -188,8 +190,9 @@ include 'header.php';
 <div class="card">
     <h3>Acciones rápidas</h3>
     <div class="actions">
-        <a href="/admin/proyectos/edit.php" class="btn">+ Nueva Clase</a>
-        <a href="/admin/materiales/edit.php" class="btn btn-secondary">+ Nuevo Componente</a>
+        <a href="/admin/clases/edit.php" class="btn">+ Nueva Clase</a>
+        <a href="/admin/componentes/edit.php" class="btn btn-secondary">+ Nuevo Componente</a>
+        <a href="/admin/kits/edit.php" class="btn btn-secondary">+ Nuevo Kit</a>
     </div>
 </div>
 
@@ -219,7 +222,7 @@ include 'header.php';
                 <td><?= htmlspecialchars(date('Y-m-d', strtotime($p['updated_at'])), ENT_QUOTES, 'UTF-8') ?></td>
                 <td class="actions">
                     <a href="/proyecto.php?slug=<?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn action-btn btn-secondary">Ver</a>
-                    <a href="/admin/proyectos/edit.php?id=<?= (int)$p['id'] ?>" class="btn action-btn">Editar</a>
+                    <a href="/admin/clases/edit.php?id=<?= (int)$p['id'] ?>" class="btn action-btn">Editar</a>
                 </td>
             </tr>
             <?php endforeach; ?>
