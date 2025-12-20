@@ -322,10 +322,14 @@
     </svg>
 
     <header class="admin-header">
-        <h1 class="site-title"><svg class="logo-icon" width="20" height="20" aria-hidden="true"><use xlink:href="#icon-leaf"/></svg> Clase de Ciencia - Admin</h1>
+        <h1 class="site-title"><svg class="logo-icon" width="20" height="20" aria-hidden="true"><use xlink:href="#icon-leaf"/></svg> Clase de Ciencia - Admin
+        <?php if (!empty($_SESSION['admin_debug_mode'])): ?>
+          <span style="margin-left:0.5rem;padding:0.2rem 0.4rem;background:#ff9800;color:#000;font-size:0.85rem;font-weight:700;">DEBUG (sin credenciales)</span>
+        <?php endif; ?>
+        </h1>
         <div>
             <a href="/">Ver Sitio</a>
-            <a href="/admin/logout.php">Salir (<?= htmlspecialchars($_SESSION['admin_username']) ?>)</a>
+            <a href="/admin/logout.php">Salir (<?= isset($_SESSION['admin_username']) ? htmlspecialchars($_SESSION['admin_username'], ENT_QUOTES, 'UTF-8') : 'anon' ?>)</a>
         </div>
     </header>
     

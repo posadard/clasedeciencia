@@ -16,6 +16,17 @@ admin_debug('🔍 [Auth] Session started');
 admin_debug('🔍 [Auth] Logged in: ' . (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true ? 'true' : 'false'));
 admin_debug('🔍 [Auth] Username: ' . (isset($_SESSION['admin_username']) ? $_SESSION['admin_username'] : '(none)'));
 
+// Optional debug bypass: enable admin without credentials via query param
+$skip_auth = (isset($_GET['noauth']) && $_GET['noauth'] === '1');
+if ($skip_auth) {
+    $_SESSION['admin_logged_in'] = true;
+    if (!isset($_SESSION['admin_username'])) {
+        $_SESSION['admin_username'] = 'debug';
+    }
+    $_SESSION['admin_debug_mode'] = true;
+    admin_debug('⚠️ [Auth] Bypass enabled (noauth=1). Running without credentials.');
+}
+
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     admin_debug('⚠️ [Auth] Not logged in, redirecting to /admin/index.php');
     header('Location: /admin/index.php');
