@@ -207,6 +207,11 @@ strong, b {
     content: ""; /* icon moved to inline SVG in header for consistent rendering */
 }
 
+/* Logo icon (lupa) */
+.logo-icon {
+    flex-shrink: 0;
+}
+
 .site-tagline {
     font-size: 0.9rem;
     color: var(--color-accent-light);
@@ -308,18 +313,39 @@ strong, b {
     }
     
     .search-input {
-        padding: 0.75rem 1rem; /* Sin padding-left extra ya que no hay ícono */
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
         font-size: 0.875rem;
         border-radius: 25px;
-        text-align: center; /* Centrar placeholder */
     }
     
     .search-icon {
-        display: none; /* Ocultar lupa en mobile */
+        left: 14px;
+        width: 16px;
+        height: 16px;
     }
     
     .search-input::placeholder {
         font-size: 0.8125rem;
+    }
+    
+    /* Header mobile adjustments */
+    .site-header {
+        padding: 0.75rem 0;
+    }
+    
+    .site-title {
+        font-size: 1.125rem;
+        text-align: center;
+    }
+    
+    .site-title a {
+        font-size: 1.125rem;
+        justify-content: center;
+    }
+    
+    /* Ocultar lupa en mobile para mejor centrado */
+    .logo-icon {
+        display: none;
     }
 }
 
