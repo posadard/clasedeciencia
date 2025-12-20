@@ -240,6 +240,30 @@ $competencias = cdc_get_competencias($pdo);
 $proyectos = cdc_get_proyectos($pdo, $filters, POSTS_PER_PAGE, $offset);
 $total = cdc_count_proyectos($pdo, $filters);
 
+// Construir descripción de filtros activos
+$filtros_activos = [];
+if (!empty($filters['ciclo'])) {
+    $ciclo_info = array_filter(cdc_get_ciclos($pdo, true), fn($c) => $c['numero'] == $filters['ciclo']);
+    if ($ciclo_info) {
+        $ciclo_info = reset($ciclo_info);
+        $filtros_activos[] = $ciclo_info['nombre'];
+    }
+}
+if (!empty($filters['area'])) {
+    $area_info = array_filter($areas, fn($a) => $a['slug'] == $filters['area'] || $a['id'] == $filters['area']);
+    if ($area_info) {
+        $area_info = reset($area_info);
+        $filtros_activos[] = $area_info['nombre'];
+    }
+}
+if (!empty($filters['dificultad'])) {
+    $filtros_activos[] = ucfirst($filters['dificultad']);
+}
+if (!empty($filters['busqueda'])) {
+    $filtros_activos[] = 'Búsqueda: "' . $filters['busqueda'] . '"';
+}
+$filtros_texto = !empty($filtros_activos) ? ' de ' . implode(' - ', $filtros_activos) : '';
+
 // Schema.org ItemList
 $schema = [
     '@context' => 'https://schema.org',
@@ -323,7 +347,7 @@ include 'includes/header.php';
                 <?php endif; ?>
                 
                 <p class="results-count">
-                    Mostrando <?= count($proyectos) ?> de <?= $total ?> clases
+                    Mostrando <?= count($proyectos) ?> de <?= $total ?> clases<?= $filtros_texto ?>
                     <?php if ($total > POSTS_PER_PAGE): ?>
                         (Página <?= $current_page ?> de <?= ceil($total / POSTS_PER_PAGE) ?>)
                     <?php endif; ?>
