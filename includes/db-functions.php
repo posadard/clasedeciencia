@@ -39,8 +39,21 @@ function cdc_get_recent_proyectos($pdo, $limit = 6) {
 }
 
 function cdc_get_areas($pdo) {
-    $stmt = $pdo->query("SELECT id, nombre, slug, color, descripcion FROM areas ORDER BY nombre");
-    return $stmt->fetchAll();
+    // Nuevo esquema: areas solo tiene id, nombre, slug
+    $stmt = $pdo->query("SELECT id, nombre, slug FROM areas ORDER BY nombre");
+    $rows = $stmt->fetchAll();
+    // Añadimos una descripción genérica para UI si no existe en BD
+    foreach ($rows as &$row) {
+        $slug = $row['slug'] ?? '';
+        $desc = '';
+        if ($slug === 'fisica') $desc = 'Fenómenos mecánicos, eléctricos y magnéticos';
+        elseif ($slug === 'quimica') $desc = 'Sustancias, mezclas y reacciones seguras';
+        elseif ($slug === 'biologia') $desc = 'Seres vivos, células y procesos biológicos';
+        elseif ($slug === 'tecnologia') $desc = 'Construcción, energía y aplicaciones prácticas';
+        elseif ($slug === 'ambiental') $desc = 'Cuidado del entorno y sostenibilidad';
+        $row['descripcion'] = $desc;
+    }
+    return $rows;
 }
 
 /**

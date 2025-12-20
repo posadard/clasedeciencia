@@ -5,12 +5,12 @@ require_once 'includes/functions.php';
 
 // Nota: usamos funciones locales mientras adaptamos includes/db-functions.php a CdC
 function cdc_get_areas($pdo) {
-    $stmt = $pdo->query("SELECT id, nombre, slug, color FROM areas ORDER BY nombre");
+    $stmt = $pdo->query("SELECT id, nombre, slug FROM areas ORDER BY nombre");
     return $stmt->fetchAll();
 }
 
 function cdc_get_competencias($pdo) {
-    $stmt = $pdo->query("SELECT id, nombre, tipo FROM competencias ORDER BY id");
+    $stmt = $pdo->query("SELECT id, codigo, nombre FROM competencias ORDER BY id");
     return $stmt->fetchAll();
 }
 

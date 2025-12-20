@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 20, 2025 at 01:15 AM
+-- Generation Time: Dec 20, 2025 at 04:48 AM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -25,132 +25,93 @@ DELIMITER $$
 --
 -- Procedures
 --
-CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_buscar_respuesta_cache` (IN `p_proyecto_id` INT, IN `p_pregunta` VARCHAR(500))   BEGIN
-    DECLARE v_pregunta_norm VARCHAR(500);
-    
-    -- Normalizar pregunta (lowercase, sin acentos)
-    SET v_pregunta_norm = LOWER(TRIM(p_pregunta));
-    
-    -- Buscar respuesta exacta
-    SELECT 
-        id,
-        respuesta,
-        veces_usada
-    FROM ia_respuestas_cache
-    WHERE proyecto_id = p_proyecto_id 
-        AND pregunta_normalizada = v_pregunta_norm
-        AND activa = 1
-    LIMIT 1;
-    
-    -- Si no hay exacta, actualizar contador
-    IF FOUND_ROWS() > 0 THEN
-        UPDATE ia_respuestas_cache 
-        SET veces_usada = veces_usada + 1,
-            ultima_vez_usada = NOW()
-        WHERE proyecto_id = p_proyecto_id 
-            AND pregunta_normalizada = v_pregunta_norm;
-    END IF;
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_buscar_respuesta_cache_clase` (IN `p_clase_id` INT, IN `p_pregunta` VARCHAR(500))   BEGIN
+  DECLARE v_pregunta_norm VARCHAR(500);
+  SET v_pregunta_norm = LOWER(TRIM(p_pregunta));
+  SELECT id, respuesta, veces_usada
+  FROM ia_respuestas_cache
+  WHERE clase_id = p_clase_id
+    AND pregunta_normalizada = v_pregunta_norm
+    AND activa = 1
+  LIMIT 1;
+  -- Aumentar contador si se encontró
+  -- Nota: MariaDB FOUND_ROWS requiere SQL_CALC_FOUND_ROWS; usamos una actualización defensiva
+  UPDATE ia_respuestas_cache
+  SET veces_usada = veces_usada + 1,
+      ultima_vez_usada = NOW()
+  WHERE clase_id = p_clase_id
+    AND pregunta_normalizada = v_pregunta_norm
+    AND activa = 1
+  LIMIT 1;
 END$$
 
 CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_limpiar_sesiones_antiguas` ()   BEGIN
-    -- Marcar sesiones inactivas > 1 hora como timeout
-    UPDATE ia_sesiones
-    SET estado = 'timeout'
-    WHERE estado = 'activa' 
-        AND fecha_ultima_interaccion < DATE_SUB(NOW(), INTERVAL 1 HOUR);
-    
-    -- Opcional: Eliminar logs muy antiguos (> 90 días)
-    -- DELETE FROM ia_logs WHERE fecha_hora < DATE_SUB(NOW(), INTERVAL 90 DAY);
+  UPDATE ia_sesiones
+  SET estado = 'timeout'
+  WHERE estado = 'activa'
+    AND fecha_ultima_interaccion < DATE_SUB(NOW(), INTERVAL 1 HOUR);
 END$$
 
-CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_obtener_contexto_proyecto` (IN `p_proyecto_id` INT)   BEGIN
-    SELECT * FROM v_proyecto_contexto_ia WHERE proyecto_id = p_proyecto_id;
-    
-    SELECT * FROM v_proyecto_materiales_detalle WHERE proyecto_id = p_proyecto_id;
-    
-    SELECT url, tipo, titulo 
-    FROM recursos_multimedia 
-    WHERE proyecto_id = p_proyecto_id 
-    ORDER BY orden;
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_obtener_contexto_clase` (IN `p_clase_id` INT)   BEGIN
+  SELECT * FROM v_clase_contexto_ia WHERE clase_id = p_clase_id;
+  SELECT * FROM v_clase_kits_detalle WHERE clase_id = p_clase_id;
+  SELECT url, tipo, titulo
+  FROM recursos_multimedia
+  WHERE clase_id = p_clase_id
+  ORDER BY sort_order;
 END$$
 
-CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_registrar_interaccion_ia` (IN `p_sesion_id` INT, IN `p_proyecto_id` INT, IN `p_pregunta` TEXT, IN `p_respuesta` TEXT, IN `p_tokens` INT, IN `p_tiempo_ms` INT, IN `p_modelo` VARCHAR(100), IN `p_costo` DECIMAL(10,6), IN `p_guardrail_activado` BOOLEAN)   BEGIN
-    -- Insertar mensajes
-    INSERT INTO ia_mensajes (sesion_id, rol, contenido, tokens, metadata)
-    VALUES 
-        (p_sesion_id, 'user', p_pregunta, 0, JSON_OBJECT('timestamp', NOW())),
-        (p_sesion_id, 'assistant', p_respuesta, p_tokens, JSON_OBJECT('modelo', p_modelo));
-    
-    -- Actualizar sesión
-    UPDATE ia_sesiones 
-    SET total_mensajes = total_mensajes + 2,
-        tokens_usados = tokens_usados + p_tokens,
-        fecha_ultima_interaccion = NOW()
-    WHERE id = p_sesion_id;
-    
-    -- Log
-    INSERT INTO ia_logs (sesion_id, proyecto_id, tipo_evento, tokens_usados, tiempo_respuesta_ms, modelo_usado, costo_estimado)
-    VALUES (p_sesion_id, p_proyecto_id, 'respuesta', p_tokens, p_tiempo_ms, p_modelo, p_costo);
-    
-    -- Si hubo guardrail
-    IF p_guardrail_activado THEN
-        INSERT INTO ia_logs (sesion_id, proyecto_id, tipo_evento, descripcion)
-        VALUES (p_sesion_id, p_proyecto_id, 'guardrail_activado', 'Contenido de seguridad detectado');
-    END IF;
-    
-    -- Actualizar stats por proyecto
-    INSERT INTO ia_stats_proyecto (proyecto_id, total_consultas, total_sesiones, tokens_totales, ultima_consulta)
-    VALUES (p_proyecto_id, 1, 1, p_tokens, NOW())
-    ON DUPLICATE KEY UPDATE
-        total_consultas = total_consultas + 1,
-        tokens_totales = tokens_totales + p_tokens,
-        ultima_consulta = NOW();
+CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` PROCEDURE `sp_registrar_interaccion_ia_clase` (IN `p_sesion_id` INT, IN `p_clase_id` INT, IN `p_pregunta` TEXT, IN `p_respuesta` TEXT, IN `p_tokens` INT, IN `p_tiempo_ms` INT, IN `p_modelo` VARCHAR(100), IN `p_costo` DECIMAL(10,6), IN `p_guardrail_activado` BOOLEAN)   BEGIN
+  INSERT INTO ia_mensajes (sesion_id, rol, contenido, tokens, metadata)
+  VALUES (p_sesion_id, 'user', p_pregunta, 0, JSON_OBJECT('timestamp', NOW()));
+  INSERT INTO ia_mensajes (sesion_id, rol, contenido, tokens, metadata)
+  VALUES (p_sesion_id, 'assistant', p_respuesta, p_tokens, JSON_OBJECT('modelo', p_modelo));
+
+  UPDATE ia_sesiones
+  SET total_mensajes = total_mensajes + 2,
+      tokens_usados = tokens_usados + p_tokens,
+      fecha_ultima_interaccion = NOW()
+  WHERE id = p_sesion_id;
+
+  INSERT INTO ia_logs (sesion_id, clase_id, tipo_evento, tokens_usados, tiempo_respuesta_ms, modelo_usado, costo_estimado)
+  VALUES (p_sesion_id, p_clase_id, 'respuesta', p_tokens, p_tiempo_ms, p_modelo, p_costo);
+
+  IF p_guardrail_activado THEN
+    INSERT INTO ia_guardrails_log (sesion_id, clase_id, pregunta_usuario, palabra_detectada, tipo_alerta)
+    VALUES (p_sesion_id, p_clase_id, p_pregunta, 'detectada', 'peligro');
+  END IF;
+
+  INSERT INTO ia_stats_clase (clase_id, total_consultas, total_sesiones, tokens_totales, ultima_consulta)
+  VALUES (p_clase_id, 1, 1, p_tokens, NOW())
+  ON DUPLICATE KEY UPDATE
+    total_consultas = total_consultas + 1,
+    tokens_totales = tokens_totales + p_tokens,
+    ultima_consulta = NOW();
 END$$
 
 --
 -- Functions
 --
 CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` FUNCTION `fn_es_pregunta_peligrosa` (`pregunta` TEXT) RETURNS TINYINT(1) DETERMINISTIC BEGIN
-    DECLARE palabras_json JSON;
-    DECLARE palabra VARCHAR(255);
-    DECLARE i INT DEFAULT 0;
-    DECLARE total INT;
-    
-    -- Obtener lista de palabras peligro
-    SELECT valor INTO palabras_json 
-    FROM configuracion_ia 
-    WHERE clave = 'palabras_peligro';
-    
-    SET total = JSON_LENGTH(palabras_json);
-    
-    -- Verificar cada palabra
-    WHILE i < total DO
-        SET palabra = JSON_UNQUOTE(JSON_EXTRACT(palabras_json, CONCAT('$[', i, ']')));
-        IF LOWER(pregunta) LIKE CONCAT('%', LOWER(palabra), '%') THEN
-            RETURN TRUE;
-        END IF;
-        SET i = i + 1;
-    END WHILE;
-    
-    RETURN FALSE;
+  DECLARE palabras_json JSON;
+  DECLARE palabra VARCHAR(255);
+  DECLARE i INT DEFAULT 0;
+  DECLARE total INT;
+
+  SELECT valor INTO palabras_json FROM configuracion_ia WHERE clave = 'palabras_peligro';
+  SET total = JSON_LENGTH(palabras_json);
+
+  WHILE i < total DO
+    SET palabra = JSON_UNQUOTE(JSON_EXTRACT(palabras_json, CONCAT('$[', i, ']')));
+    IF LOWER(pregunta) LIKE CONCAT('%', LOWER(palabra), '%') THEN
+      RETURN TRUE;
+    END IF;
+    SET i = i + 1;
+  END WHILE;
+  RETURN FALSE;
 END$$
 
 DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `analytics_interacciones`
---
-
-CREATE TABLE `analytics_interacciones` (
-  `id` bigint(20) NOT NULL,
-  `proyecto_id` int(11) DEFAULT NULL,
-  `tipo_interaccion` enum('descarga_pdf','consulta_ia','click_material','compartir') DEFAULT NULL,
-  `detalles` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`detalles`)),
-  `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `sesion_hash` varchar(64) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -160,16 +121,11 @@ CREATE TABLE `analytics_interacciones` (
 
 CREATE TABLE `analytics_visitas` (
   `id` bigint(20) NOT NULL,
-  `proyecto_id` int(11) DEFAULT NULL,
-  `tipo_pagina` enum('home','catalogo','proyecto','material','busqueda') DEFAULT NULL,
-  `url_visitada` varchar(500) DEFAULT NULL,
-  `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `pais` varchar(100) DEFAULT NULL,
-  `departamento` varchar(100) DEFAULT NULL,
-  `ciudad` varchar(100) DEFAULT NULL,
-  `dispositivo` enum('mobile','tablet','desktop') DEFAULT NULL,
-  `navegador` varchar(100) DEFAULT NULL,
-  `sesion_hash` varchar(64) DEFAULT NULL
+  `clase_id` int(11) DEFAULT NULL,
+  `tipo_pagina` varchar(64) NOT NULL,
+  `departamento` varchar(120) DEFAULT NULL,
+  `dispositivo` varchar(64) DEFAULT NULL,
+  `visited_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -180,49 +136,183 @@ CREATE TABLE `analytics_visitas` (
 
 CREATE TABLE `areas` (
   `id` int(11) NOT NULL,
-  `nombre` varchar(100) NOT NULL,
-  `slug` varchar(100) NOT NULL,
-  `color` varchar(7) DEFAULT NULL COMMENT 'Código hex para badges',
-  `descripcion` text DEFAULT NULL
+  `nombre` varchar(80) NOT NULL,
+  `slug` varchar(80) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `areas`
 --
 
-INSERT INTO `areas` (`id`, `nombre`, `slug`, `color`, `descripcion`) VALUES
-(1, 'Física', 'fisica', '#2c5aa0', 'Proyectos relacionados con fuerzas, energía, electricidad y movimiento'),
-(2, 'Química', 'quimica', '#e74c3c', 'Proyectos relacionados con reacciones químicas, mezclas y transformaciones'),
-(3, 'Biología', 'biologia', '#27ae60', 'Proyectos relacionados con seres vivos, células y ecosistemas'),
-(4, 'Tecnología', 'tecnologia', '#f39c12', 'Proyectos de ingeniería, electrónica y construcción'),
-(5, 'Ambiental', 'ambiental', '#16a085', 'Proyectos relacionados con medio ambiente y sostenibilidad');
+INSERT INTO `areas` (`id`, `nombre`, `slug`) VALUES
+(1, 'Física', 'fisica'),
+(2, 'Química', 'quimica'),
+(3, 'Biología', 'biologia'),
+(4, 'Tecnología', 'tecnologia'),
+(5, 'Ambiental', 'ambiental');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `categorias_materiales`
+-- Table structure for table `categorias_items`
 --
 
-CREATE TABLE `categorias_materiales` (
+CREATE TABLE `categorias_items` (
   `id` int(11) NOT NULL,
-  `nombre` varchar(100) NOT NULL,
-  `slug` varchar(100) NOT NULL,
-  `icono` varchar(50) DEFAULT NULL COMMENT 'emoji o clase CSS',
-  `descripcion` text DEFAULT NULL
+  `nombre` varchar(120) NOT NULL,
+  `slug` varchar(120) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `categorias_materiales`
+-- Dumping data for table `categorias_items`
 --
 
-INSERT INTO `categorias_materiales` (`id`, `nombre`, `slug`, `icono`, `descripcion`) VALUES
-(1, 'Electrónica', 'electronica', '⚡', 'Componentes electrónicos, cables, pilas'),
-(2, 'Química', 'quimica', '🧪', 'Sustancias químicas seguras, indicadores, reactivos'),
-(3, 'Mecánica', 'mecanica', '⚙️', 'Piezas mecánicas, engranajes, poleas'),
-(4, 'Óptica', 'optica', '🔍', 'Lentes, espejos, prismas'),
-(5, 'Materiales de Construcción', 'construccion', '🔨', 'Madera, cartón, pegamentos'),
-(6, 'Herramientas', 'herramientas', '🛠️', 'Destornilladores, pinzas, tijeras'),
-(7, 'Biológicos', 'biologicos', '🌱', 'Semillas, muestras, cultivos');
+INSERT INTO `categorias_items` (`id`, `nombre`, `slug`) VALUES
+(1, 'Eléctricos', 'electricos'),
+(2, 'Magnéticos', 'magneticos'),
+(3, 'Biología', 'biologia'),
+(4, 'Química', 'quimica'),
+(5, 'Tecnología', 'tecnologia'),
+(6, 'Herramientas', 'herramientas'),
+(7, 'Seguridad', 'seguridad');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clases`
+--
+
+CREATE TABLE `clases` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(180) NOT NULL,
+  `slug` varchar(180) NOT NULL,
+  `ciclo` tinyint(1) NOT NULL,
+  `grados` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`grados`)),
+  `dificultad` varchar(32) DEFAULT NULL,
+  `duracion_minutos` int(11) DEFAULT NULL,
+  `resumen` text DEFAULT NULL,
+  `objetivo_aprendizaje` text DEFAULT NULL,
+  `imagen_portada` varchar(255) DEFAULT NULL,
+  `video_portada` varchar(255) DEFAULT NULL,
+  `seguridad` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`seguridad`)),
+  `seo_title` varchar(160) DEFAULT NULL,
+  `seo_description` varchar(255) DEFAULT NULL,
+  `canonical_url` varchar(255) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `destacado` tinyint(1) NOT NULL DEFAULT 0,
+  `orden_popularidad` int(11) NOT NULL DEFAULT 0,
+  `status` enum('draft','published') NOT NULL DEFAULT 'draft',
+  `published_at` datetime DEFAULT NULL,
+  `autor` varchar(120) DEFAULT NULL,
+  `contenido_html` mediumtext DEFAULT NULL,
+  `seccion_id` int(11) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clases`
+--
+
+INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `duracion_minutos`, `resumen`, `objetivo_aprendizaje`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `canonical_url`, `activo`, `destacado`, `orden_popularidad`, `status`, `published_at`, `autor`, `contenido_html`, `seccion_id`, `created_at`, `updated_at`) VALUES
+(1, 'Microscopio sencillo', 'microscopio-sencillo', 1, '[6, 7]', 'facil', 60, 'Construye un microscopio artesanal para observar detalles invisibles.', 'Reconocer el uso de lentes para aumentar imágenes y describir observaciones científicas.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manipular lentes y objetos pequeños con cuidado\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(2, 'Pulmón mecánico', 'pulmon-mecanico', 1, '[6, 7]', 'facil', 60, 'Modelo funcional de los pulmones usando presión de aire y movimiento.', 'Explicar la relación entre presión y volumen en un sistema respiratorio sencillo.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Supervisar uso de globos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 'Radio de cristal', 'radio-de-cristal', 2, '[8, 9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo y bobina.', 'Explicar la propagación de ondas y la conversión de energía en comunicación.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Manipular alambres y componentes con cuidado\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 'Generador manual (dinamo)', 'generador-manual-dinamo', 2, '[8, 9]', 'media', 90, 'Genera electricidad manualmente mediante inducción electromagnética.', 'Explicar generación eléctrica relacionando movimiento y energía.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Cuidado con conexiones eléctricas\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 'Carro solar', 'carro-solar', 3, '[10, 11]', 'dificil', 120, 'Construye y evalúa un vehículo impulsado por energía solar.', 'Analizar eficiencia energética y sostenibilidad en sistemas tecnológicos.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Panel frágil, manipulación cuidadosa\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 'Turbina eólica de mesa', 'turbina-eolica-de-mesa', 3, '[10, 11]', 'dificil', 120, 'Diseña una turbina de mesa para convertir energía del viento.', 'Evaluar fuentes alternativas y analizar impacto tecnológico.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Hélice en movimiento, mantener distancia\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 'Electroimán', 'electroiman', 3, '[10, 11]', 'dificil', 90, 'Construye un electroimán y analiza variables de fuerza y campo.', 'Analizar relación corriente-campo y formular explicaciones causales.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Calentamiento por corriente, usar brevemente\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 'Tratamiento de agua', 'tratamiento-de-agua', 3, '[10, 11]', 'dificil', 120, 'Implementa un filtro de agua con capas y evalúa calidad.', 'Explicar procesos físico-químicos y relacionar ciencia con el entorno.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Uso responsable de reactivos y desecho\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 'Análisis químico del entorno', 'analisis-quimico-del-entorno', 3, '[10, 11]', 'dificil', 120, 'Realiza pruebas químicas seguras a sustancias cotidianas.', 'Explicar transformaciones químicas con principios de seguridad y ética.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ No ingerir sustancias, guantes recomendados\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clase_areas`
+--
+
+CREATE TABLE `clase_areas` (
+  `clase_id` int(11) NOT NULL,
+  `area_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clase_areas`
+--
+
+INSERT INTO `clase_areas` (`clase_id`, `area_id`) VALUES
+(1, 3),
+(2, 3),
+(3, 1),
+(4, 2),
+(5, 2),
+(6, 1),
+(6, 4),
+(7, 1),
+(8, 3),
+(9, 1),
+(9, 4),
+(10, 1),
+(11, 1),
+(11, 4),
+(12, 1),
+(12, 4),
+(13, 1),
+(14, 2),
+(14, 5),
+(15, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clase_competencias`
+--
+
+CREATE TABLE `clase_competencias` (
+  `clase_id` int(11) NOT NULL,
+  `competencia_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clase_competencias`
+--
+
+INSERT INTO `clase_competencias` (`clase_id`, `competencia_id`) VALUES
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 1),
+(5, 1),
+(6, 2),
+(7, 2),
+(8, 2),
+(9, 2),
+(10, 2),
+(11, 3),
+(12, 3),
+(13, 2),
+(13, 3),
+(14, 2),
+(14, 3),
+(15, 2),
+(15, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clase_tags`
+--
+
+CREATE TABLE `clase_tags` (
+  `clase_id` int(11) NOT NULL,
+  `tag` varchar(64) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -232,29 +322,18 @@ INSERT INTO `categorias_materiales` (`id`, `nombre`, `slug`, `icono`, `descripci
 
 CREATE TABLE `competencias` (
   `id` int(11) NOT NULL,
-  `nombre` varchar(255) NOT NULL,
-  `descripcion` text DEFAULT NULL,
-  `tipo` enum('indagacion','explicacion','uso_conocimiento') NOT NULL
+  `codigo` varchar(80) NOT NULL,
+  `nombre` varchar(160) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `competencias`
 --
 
-INSERT INTO `competencias` (`id`, `nombre`, `descripcion`, `tipo`) VALUES
-(1, 'Observo fenómenos específicos', 'Capacidad de identificar y describir fenómenos naturales y científicos', 'indagacion'),
-(2, 'Formulo preguntas', 'Planteo preguntas sobre fenómenos observados', 'indagacion'),
-(3, 'Formulo hipótesis', 'Propongo explicaciones previas basadas en conocimientos', 'indagacion'),
-(4, 'Realizo mediciones', 'Registro datos cuantitativos de forma precisa', 'indagacion'),
-(5, 'Registro observaciones', 'Documento de forma sistemática lo observado', 'indagacion'),
-(6, 'Analizo resultados', 'Interpreto datos y busco patrones', 'indagacion'),
-(7, 'Establezco relaciones causales', 'Identifico causa y efecto en fenómenos', 'explicacion'),
-(8, 'Modelo fenómenos', 'Represento procesos científicos mediante modelos', 'explicacion'),
-(9, 'Uso conceptos científicos', 'Aplico terminología y conceptos apropiados', 'explicacion'),
-(10, 'Argumento con evidencia', 'Sustento conclusiones con datos obtenidos', 'explicacion'),
-(11, 'Aplico conocimientos a situaciones', 'Uso lo aprendido en contextos reales', 'uso_conocimiento'),
-(12, 'Propongo soluciones', 'Planteo alternativas basadas en conocimiento científico', 'uso_conocimiento'),
-(13, 'Tomo decisiones informadas', 'Evalúo opciones considerando evidencia científica', 'uso_conocimiento');
+INSERT INTO `competencias` (`id`, `codigo`, `nombre`) VALUES
+(1, 'indagacion', 'Formulo preguntas, observo, registro datos'),
+(2, 'explicacion', 'Establezco relaciones causales, modelo fenómenos'),
+(3, 'uso_conocimiento', 'Aplico conceptos a situaciones reales');
 
 -- --------------------------------------------------------
 
@@ -276,17 +355,7 @@ CREATE TABLE `configuracion_ia` (
 --
 
 INSERT INTO `configuracion_ia` (`id`, `clave`, `valor`, `tipo`, `descripcion`, `updated_at`) VALUES
-(1, 'groq_api_key', '', 'secreto', 'API Key de Groq (dejar vacío hasta configurar en admin)', '2025-12-20 01:08:37'),
-(2, 'groq_model', 'llama-3.3-70b-versatile', 'texto', 'Modelo de Groq a utilizar', '2025-12-20 01:08:37'),
-(3, 'groq_temperature', '0.7', 'numero', 'Temperatura del modelo (0-1)', '2025-12-20 01:08:37'),
-(4, 'groq_max_tokens', '2000', 'numero', 'Máximo de tokens por respuesta', '2025-12-20 01:08:37'),
-(5, 'ia_activa', '1', 'booleano', 'Activar/desactivar asistente IA globalmente', '2025-12-20 01:08:37'),
-(6, 'guardrails_activos', '1', 'booleano', 'Activar validación de seguridad en respuestas', '2025-12-20 01:08:37'),
-(7, 'palabras_peligro', '[\"fuego sin supervisión\",\"explosión\",\"ácido fuerte\",\"químico peligroso\",\"alta temperatura sin control\"]', 'json', 'Lista de palabras/frases que activan alerta de seguridad', '2025-12-20 01:08:37'),
-(8, 'mensaje_guardrail', '⚠️ Esta pregunta requiere supervisión de tu profesor. Por seguridad, consulta antes de intentar modificaciones al experimento.', 'texto', 'Mensaje cuando se detecta contenido peligroso', '2025-12-20 01:08:37'),
-(9, 'contexto_sistema', 'Eres un asistente educativo para proyectos científicos de estudiantes colombianos de grados 6° a 11°. Tu rol es explicar conceptos, resolver dudas sobre procedimientos y fomentar el pensamiento crítico. NUNCA sugieras modificaciones peligrosas a los experimentos.', 'texto', 'Prompt del sistema para la IA', '2025-12-20 01:08:37'),
-(10, 'max_conversaciones_dia', '50', 'numero', 'Límite de conversaciones por día (para controlar costos)', '2025-12-20 01:08:37'),
-(11, 'log_ia_activo', '1', 'booleano', 'Guardar logs de todas las consultas a IA', '2025-12-20 01:08:37');
+(1, 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -296,35 +365,11 @@ INSERT INTO `configuracion_ia` (`id`, `clave`, `valor`, `tipo`, `descripcion`, `
 
 CREATE TABLE `contratos` (
   `id` int(11) NOT NULL,
-  `numero_contrato` varchar(100) NOT NULL,
+  `numero` varchar(64) NOT NULL,
   `entidad_contratante` varchar(255) NOT NULL,
-  `departamento` varchar(100) NOT NULL,
-  `municipios_alcance` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`municipios_alcance`)),
-  `fecha_inicio` date NOT NULL,
-  `fecha_fin` date NOT NULL,
-  `valor_contrato` decimal(15,2) DEFAULT NULL,
-  `objeto_contrato` text DEFAULT NULL,
-  `supervisor` varchar(255) DEFAULT NULL,
-  `ie_beneficiarias` int(11) DEFAULT NULL,
-  `estudiantes_estimados` int(11) DEFAULT NULL,
-  `docentes_estimados` int(11) DEFAULT NULL,
-  `ciclos_incluidos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`ciclos_incluidos`)),
-  `grados_incluidos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`grados_incluidos`)),
-  `estado` enum('borrador','activo','ejecucion','finalizado') DEFAULT 'borrador',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `contrato_proyectos`
---
-
-CREATE TABLE `contrato_proyectos` (
-  `contrato_id` int(11) NOT NULL,
-  `proyecto_id` int(11) NOT NULL,
-  `cantidad_kits` int(11) NOT NULL
+  `departamento` varchar(120) NOT NULL,
+  `valor` decimal(16,2) NOT NULL,
+  `fecha` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -337,30 +382,8 @@ CREATE TABLE `entregas` (
   `id` int(11) NOT NULL,
   `contrato_id` int(11) NOT NULL,
   `institucion_educativa` varchar(255) NOT NULL,
-  `codigo_dane` varchar(50) DEFAULT NULL,
-  `municipio` varchar(100) NOT NULL,
-  `direccion` text DEFAULT NULL,
-  `fecha_entrega` datetime NOT NULL,
-  `responsable_entrega` varchar(255) DEFAULT NULL,
-  `responsable_recepcion` varchar(255) DEFAULT NULL,
-  `cargo_recepcion` varchar(255) DEFAULT NULL,
-  `observaciones` text DEFAULT NULL,
-  `evidencia_fotografica` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`evidencia_fotografica`)),
-  `firma_digital` varchar(255) DEFAULT NULL,
-  `acta_generada` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `entrega_lotes`
---
-
-CREATE TABLE `entrega_lotes` (
-  `entrega_id` int(11) NOT NULL,
-  `lote_id` int(11) NOT NULL,
-  `cantidad_entregada` int(11) NOT NULL
+  `fecha` date NOT NULL,
+  `acta_pdf` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -371,23 +394,33 @@ CREATE TABLE `entrega_lotes` (
 
 CREATE TABLE `guias` (
   `id` int(11) NOT NULL,
-  `proyecto_id` int(11) NOT NULL,
-  `version` varchar(20) DEFAULT '1.0',
-  `introduccion` text DEFAULT NULL,
-  `materiales_kit` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array de materiales incluidos' CHECK (json_valid(`materiales_kit`)),
-  `materiales_adicionales` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array de materiales externos' CHECK (json_valid(`materiales_adicionales`)),
-  `seccion_seguridad` text DEFAULT NULL,
-  `pasos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array de pasos con texto, imagenes, videos' CHECK (json_valid(`pasos`)),
+  `clase_id` int(11) NOT NULL,
+  `pasos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`pasos`)),
   `explicacion_cientifica` text DEFAULT NULL,
-  `conceptos_clave` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array de conceptos' CHECK (json_valid(`conceptos_clave`)),
-  `conexiones_realidad` text DEFAULT NULL,
-  `para_profundizar` text DEFAULT NULL,
-  `competencias_men` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`competencias_men`)),
-  `dba_relacionados` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`dba_relacionados`)),
-  `estandares_men` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`estandares_men`)),
-  `activa` tinyint(1) DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `guias`
+--
+
+INSERT INTO `guias` (`id`, `clase_id`, `pasos`, `explicacion_cientifica`, `created_at`, `updated_at`) VALUES
+(1, 1, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(2, 2, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 3, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 4, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 5, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 6, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(7, 7, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 8, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 9, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 10, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 11, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 12, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 13, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 14, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 15, '[{\"titulo\": \"Preparación\", \"detalle\": \"Revisa materiales y normas de seguridad.\"}, {\"titulo\": \"Construcción\", \"detalle\": \"Sigue la guía para armar el sistema.\"}, {\"titulo\": \"Observación\", \"detalle\": \"Registra resultados y comportamientos.\"}, {\"titulo\": \"Análisis\", \"detalle\": \"Responde preguntas guiadas y explica el fenómeno.\"}]', 'Relación directa con los conceptos clave del portafolio.', '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -398,7 +431,7 @@ CREATE TABLE `guias` (
 CREATE TABLE `ia_guardrails_log` (
   `id` int(11) NOT NULL,
   `sesion_id` int(11) NOT NULL,
-  `proyecto_id` int(11) DEFAULT NULL,
+  `clase_id` int(11) DEFAULT NULL,
   `pregunta_usuario` text NOT NULL,
   `palabra_detectada` varchar(255) NOT NULL,
   `tipo_alerta` enum('peligro','advertencia','info') DEFAULT 'peligro',
@@ -415,7 +448,7 @@ CREATE TABLE `ia_guardrails_log` (
 CREATE TABLE `ia_logs` (
   `id` bigint(20) NOT NULL,
   `sesion_id` int(11) DEFAULT NULL,
-  `proyecto_id` int(11) DEFAULT NULL,
+  `clase_id` int(11) DEFAULT NULL,
   `tipo_evento` enum('consulta','respuesta','error','guardrail_activado','timeout') NOT NULL,
   `descripcion` text DEFAULT NULL,
   `tokens_usados` int(11) DEFAULT 0,
@@ -439,7 +472,7 @@ CREATE TABLE `ia_mensajes` (
   `contenido` text NOT NULL,
   `tokens` int(11) DEFAULT 0,
   `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Info adicional: temperatura, modelo usado, etc.' CHECK (json_valid(`metadata`))
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -450,7 +483,7 @@ CREATE TABLE `ia_mensajes` (
 
 CREATE TABLE `ia_respuestas_cache` (
   `id` int(11) NOT NULL,
-  `proyecto_id` int(11) NOT NULL,
+  `clase_id` int(11) NOT NULL,
   `pregunta_normalizada` varchar(500) NOT NULL COMMENT 'Pregunta sin acentos, lowercase',
   `pregunta_original` text NOT NULL,
   `respuesta` text NOT NULL,
@@ -464,12 +497,11 @@ CREATE TABLE `ia_respuestas_cache` (
 -- Triggers `ia_respuestas_cache`
 --
 DELIMITER $$
-CREATE TRIGGER `trg_actualizar_cache_stats` AFTER UPDATE ON `ia_respuestas_cache` FOR EACH ROW BEGIN
-    IF NEW.veces_usada > OLD.veces_usada THEN
-        -- Registrar que se usó caché (reduce costos)
-        INSERT INTO ia_logs (proyecto_id, tipo_evento, descripcion, tokens_usados, costo_estimado)
-        VALUES (NEW.proyecto_id, 'consulta', 'Respuesta desde caché', 0, 0.00);
-    END IF;
+CREATE TRIGGER `trg_actualizar_cache_stats_clase` AFTER UPDATE ON `ia_respuestas_cache` FOR EACH ROW BEGIN
+  IF NEW.veces_usada > OLD.veces_usada THEN
+    INSERT INTO ia_logs (clase_id, tipo_evento, descripcion, tokens_usados, costo_estimado)
+    VALUES (NEW.clase_id, 'consulta', 'Respuesta desde caché', 0, 0.00);
+  END IF;
 END
 $$
 DELIMITER ;
@@ -483,7 +515,7 @@ DELIMITER ;
 CREATE TABLE `ia_sesiones` (
   `id` int(11) NOT NULL,
   `sesion_hash` varchar(64) NOT NULL COMMENT 'Hash anónimo del usuario',
-  `proyecto_id` int(11) DEFAULT NULL,
+  `clase_id` int(11) DEFAULT NULL,
   `fecha_inicio` timestamp NOT NULL DEFAULT current_timestamp(),
   `fecha_ultima_interaccion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `total_mensajes` int(11) DEFAULT 0,
@@ -494,11 +526,11 @@ CREATE TABLE `ia_sesiones` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `ia_stats_proyecto`
+-- Table structure for table `ia_stats_clase`
 --
 
-CREATE TABLE `ia_stats_proyecto` (
-  `proyecto_id` int(11) NOT NULL,
+CREATE TABLE `ia_stats_clase` (
+  `clase_id` int(11) NOT NULL,
   `total_consultas` int(11) DEFAULT 0,
   `total_sesiones` int(11) DEFAULT 0,
   `tokens_totales` int(11) DEFAULT 0,
@@ -512,215 +544,189 @@ CREATE TABLE `ia_stats_proyecto` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `justificacion_ctei`
+-- Table structure for table `kits`
 --
 
-CREATE TABLE `justificacion_ctei` (
-  `contrato_id` int(11) NOT NULL,
-  `justificacion_ctei` text DEFAULT NULL,
-  `actividades_decreto_591` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`actividades_decreto_591`)),
-  `alineacion_ley_1286` text DEFAULT NULL,
-  `competencias_men_globales` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`competencias_men_globales`)),
-  `metodologia_pedagogica` text DEFAULT NULL,
-  `componente_innovacion` text DEFAULT NULL,
-  `indicadores_propuestos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`indicadores_propuestos`)),
-  `metas_propuestas` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metas_propuestas`))
+CREATE TABLE `kits` (
+  `id` int(11) NOT NULL,
+  `clase_id` int(11) NOT NULL,
+  `nombre` varchar(120) NOT NULL,
+  `codigo` varchar(64) DEFAULT NULL,
+  `version` varchar(32) DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `kits`
+--
+
+INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `codigo`, `version`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Kit: Microscopio sencillo', 'KIT-MICROSCOPIO_SENCILLO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(2, 2, 'Kit: Pulmón mecánico', 'KIT-PULMON_MECANICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 3, 'Kit: Circuito eléctrico básico', 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 4, 'Kit: Separación de mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 5, 'Kit: Test de pH', 'KIT-TEST_DE_PH', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 6, 'Kit: Radio de cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(7, 7, 'Kit: Motor eléctrico simple', 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 8, 'Kit: Osmosis con vegetales', 'KIT-OSMOSIS_CON_VEGETALES', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 9, 'Kit: Carro trampa de ratón', 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 10, 'Kit: Generador manual (dinamo)', 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 11, 'Kit: Carro solar', 'KIT-CARRO_SOLAR', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 12, 'Kit: Turbina eólica de mesa', 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 13, 'Kit: Electroimán', 'KIT-ELECTROIMAN', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 14, 'Kit: Tratamiento de agua', 'KIT-TRATAMIENTO_DE_AGUA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 15, 'Kit: Análisis químico del entorno', 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lotes_kits`
+-- Table structure for table `kit_componentes`
 --
 
-CREATE TABLE `lotes_kits` (
-  `id` int(11) NOT NULL,
-  `codigo_lote` varchar(100) NOT NULL,
-  `proyecto_id` int(11) NOT NULL,
-  `contrato_id` int(11) NOT NULL,
-  `cantidad` int(11) NOT NULL,
-  `fecha_produccion` date DEFAULT NULL,
-  `estado` enum('producido','bodega','despachado','entregado') DEFAULT 'producido',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+CREATE TABLE `kit_componentes` (
+  `kit_id` int(11) NOT NULL,
+  `item_id` int(11) NOT NULL,
+  `cantidad` decimal(10,2) NOT NULL DEFAULT 1.00,
+  `es_incluido_kit` tinyint(1) NOT NULL DEFAULT 1,
+  `notas` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `kit_componentes`
+--
+
+INSERT INTO `kit_componentes` (`kit_id`, `item_id`, `cantidad`, `es_incluido_kit`, `notas`, `sort_order`) VALUES
+(1, 1, 2.00, 1, 'Lentes para aumento', 1),
+(1, 2, 1.00, 1, 'Estructura', 2),
+(2, 4, 2.00, 1, 'Pulmones', 1),
+(2, 5, 1.00, 1, 'Caja torácica', 2),
+(3, 7, 2.00, 1, 'Energía', 1),
+(3, 8, 1.00, 1, 'Soporte', 2),
+(3, 9, 1.50, 1, 'Conexiones', 3),
+(3, 10, 1.00, 1, 'Control', 4),
+(3, 11, 1.00, 1, 'Salida', 5),
+(4, 12, 2.00, 1, 'Filtración', 1),
+(4, 13, 1.00, 1, 'Embudo', 2),
+(4, 14, 1.00, 1, 'Recipiente', 3),
+(5, 15, 10.00, 1, 'Medición', 1),
+(6, 16, 1.00, 1, 'Detector', 1),
+(6, 17, 1.00, 1, 'Audio', 2),
+(6, 18, 5.00, 1, 'Bobina', 3),
+(7, 18, 2.00, 1, 'Bobina', 3),
+(7, 19, 2.00, 1, 'Campo magnético', 1),
+(7, 20, 1.00, 1, 'Núcleo', 2),
+(8, 31, 50.00, 1, 'Solución salina', 1),
+(8, 32, 2.00, 1, 'Muestras vegetales', 2),
+(9, 21, 1.00, 1, 'Fuente de energía potencial', 1),
+(9, 22, 4.00, 1, 'Movimiento', 2),
+(9, 23, 2.00, 1, 'Transmisión', 3),
+(10, 24, 1.00, 1, 'Generación', 1),
+(10, 25, 1.00, 1, 'Manivela', 2),
+(11, 24, 1.00, 1, 'Tracción', 2),
+(11, 26, 1.00, 1, 'Fuente solar', 1),
+(12, 24, 1.00, 1, 'Generación', 2),
+(12, 27, 1.00, 1, 'Captura de viento', 1),
+(13, 18, 2.00, 1, 'Bobina', 1),
+(13, 20, 1.00, 1, 'Núcleo', 2),
+(14, 28, 50.00, 1, 'Purificación', 1),
+(14, 29, 200.00, 1, 'Filtración', 2),
+(14, 30, 200.00, 1, 'Capa inferior', 3),
+(15, 15, 10.00, 1, 'Indicador seguro', 1);
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `materiales`
+-- Table structure for table `kit_items`
 --
 
-CREATE TABLE `materiales` (
+CREATE TABLE `kit_items` (
   `id` int(11) NOT NULL,
-  `nombre_comun` varchar(255) NOT NULL,
-  `nombre_tecnico` varchar(255) DEFAULT NULL,
-  `descripcion` text DEFAULT NULL,
-  `slug` varchar(255) NOT NULL,
+  `nombre_comun` varchar(160) NOT NULL,
   `categoria_id` int(11) DEFAULT NULL,
-  `imagen` varchar(255) DEFAULT NULL,
   `advertencias_seguridad` text DEFAULT NULL,
-  `manejo_recomendado` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `unidad` varchar(32) DEFAULT NULL,
+  `sku` varchar(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `kit_items`
+--
+
+INSERT INTO `kit_items` (`id`, `nombre_comun`, `categoria_id`, `advertencias_seguridad`, `unidad`, `sku`) VALUES
+(1, 'Lente plástico 10x', 3, '⚠️ Frágil, manipular con cuidado', 'pcs', 'BIO-LEN-10X'),
+(2, 'Cartón rígido', 5, NULL, 'pcs', 'TEC-CAR-RIG'),
+(3, 'Banda elástica', 5, NULL, 'pcs', 'TEC-BAN-ELA'),
+(4, 'Globo de látex', 3, '⚠️ Riesgo de asfixia, no apto <8 años', 'pcs', 'BIO-GLO-LAT'),
+(5, 'Botella plástica 500ml', 5, NULL, 'pcs', 'TEC-BOT-500'),
+(6, 'Bomba de aire manual', 6, NULL, 'pcs', 'HER-BOM-AIR'),
+(7, 'Pila AA', 1, '⚠️ No cortocircuitar', 'pcs', 'ELE-PIL-AA'),
+(8, 'Porta baterías AA', 1, NULL, 'pcs', 'ELE-POR-AA'),
+(9, 'Cable conductor', 1, NULL, 'm', 'ELE-CAB-CON'),
+(10, 'Interruptor mini', 1, NULL, 'pcs', 'ELE-INT-MIN'),
+(11, 'Bombillo LED 3V', 1, NULL, 'pcs', 'ELE-LED-3V'),
+(12, 'Papel filtro', 4, '⚠️ Material frágil', 'pcs', 'QUI-PAP-FIL'),
+(13, 'Embudo plástico', 4, NULL, 'pcs', 'QUI-EMB-PLA'),
+(14, 'Vaso precipitado plástico', 4, NULL, 'pcs', 'QUI-VAS-PLA'),
+(15, 'Tiras de pH', 4, NULL, 'pcs', 'QUI-TIR-PH'),
+(16, 'Diode germanio', 1, NULL, 'pcs', 'ELE-DIO-GER'),
+(17, 'Auricular cristal', 1, NULL, 'pcs', 'ELE-AUR-CRI'),
+(18, 'Alambre esmaltado 28AWG', 1, NULL, 'm', 'ELE-ALM-28'),
+(19, 'Imán neodimio', 2, '⚠️ Mantener lejos de dispositivos', 'pcs', 'MAG-IMA-NEO'),
+(20, 'Clavo de hierro', 2, NULL, 'pcs', 'MAG-CLA-HIE'),
+(21, 'Trampa de ratón', 5, '⚠️ Riesgo de pellizco', 'pcs', 'TEC-TRA-RAT'),
+(22, 'Rueda plástica 50mm', 5, NULL, 'pcs', 'TEC-RUE-50'),
+(23, 'Eje metálico', 5, NULL, 'pcs', 'TEC-EJE-MET'),
+(24, 'Motor DC 3-6V', 1, NULL, 'pcs', 'ELE-MOT-DC'),
+(25, 'Manivela plástica', 5, NULL, 'pcs', 'TEC-MAN-PLA'),
+(26, 'Panel solar 5V', 5, NULL, 'pcs', 'TEC-PAN-5V'),
+(27, 'Hélice plástica', 5, NULL, 'pcs', 'TEC-HEL-PLA'),
+(28, 'Carbón activado', NULL, NULL, 'g', 'AMB-CAR-ACT'),
+(29, 'Arena fina', NULL, NULL, 'g', 'AMB-ARE-FIN'),
+(30, 'Grava', NULL, NULL, 'g', 'AMB-GRA-STD'),
+(31, 'Sal de mesa', 4, NULL, 'g', 'QUI-SAL-MES'),
+(32, 'Rodaja de papa', 3, NULL, 'pcs', 'BIO-ROD-PAP');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `prompts_proyecto`
+-- Table structure for table `prompts_clase`
 --
 
-CREATE TABLE `prompts_proyecto` (
+CREATE TABLE `prompts_clase` (
   `id` int(11) NOT NULL,
-  `proyecto_id` int(11) NOT NULL,
-  `prompt_contexto` text NOT NULL COMMENT 'Contexto específico del proyecto para la IA',
+  `clase_id` int(11) NOT NULL,
+  `prompt_contexto` text NOT NULL COMMENT 'Contexto específico de la clase para la IA',
   `conocimientos_previos` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Conceptos que el estudiante debe saber' CHECK (json_valid(`conocimientos_previos`)),
-  `enfoque_pedagogico` text DEFAULT NULL COMMENT 'Cómo debe guiar la IA en este proyecto',
-  `preguntas_frecuentes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'FAQs del proyecto para respuestas rápidas' CHECK (json_valid(`preguntas_frecuentes`)),
+  `enfoque_pedagogico` text DEFAULT NULL COMMENT 'Cómo debe guiar la IA en esta clase',
+  `preguntas_frecuentes` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'FAQs de la clase para respuestas rápidas' CHECK (json_valid(`preguntas_frecuentes`)),
   `activo` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- --------------------------------------------------------
-
 --
--- Table structure for table `proyectos`
+-- Dumping data for table `prompts_clase`
 --
 
-CREATE TABLE `proyectos` (
-  `id` int(11) NOT NULL,
-  `nombre` varchar(255) NOT NULL,
-  `slug` varchar(255) NOT NULL,
-  `ciclo` enum('1','2','3') NOT NULL COMMENT '1:6-7°, 2:8-9°, 3:10-11°',
-  `grados` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'Array de grados [6,7]' CHECK (json_valid(`grados`)),
-  `areas` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'Array de IDs de areas' CHECK (json_valid(`areas`)),
-  `duracion_minutos` int(11) DEFAULT 60,
-  `dificultad` enum('facil','medio','dificil') DEFAULT 'medio',
-  `resumen` text DEFAULT NULL,
-  `objetivo_aprendizaje` text DEFAULT NULL,
-  `imagen_portada` varchar(255) DEFAULT NULL,
-  `video_portada` varchar(255) DEFAULT NULL,
-  `seguridad` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '{edad_min, requiere_supervision, advertencias[]}' CHECK (json_valid(`seguridad`)),
-  `seo_title` varchar(255) DEFAULT NULL,
-  `seo_description` text DEFAULT NULL,
-  `canonical_url` varchar(255) DEFAULT NULL,
-  `activo` tinyint(1) DEFAULT 1,
-  `destacado` tinyint(1) DEFAULT 0,
-  `orden_popularidad` int(11) DEFAULT 0,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `proyectos`
---
-
-INSERT INTO `proyectos` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `areas`, `duracion_minutos`, `dificultad`, `resumen`, `objetivo_aprendizaje`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `canonical_url`, `activo`, `destacado`, `orden_popularidad`, `created_at`, `updated_at`) VALUES
-(1, 'Circuito Eléctrico Básico', 'circuito-electrico-basico', '1', '[6, 7]', '[1]', 60, 'facil', 'Construye tu primer circuito eléctrico con interruptor, bombillo y batería. Aprende cómo fluye la electricidad.', 'Comprender los conceptos básicos de corriente eléctrica y circuitos cerrados mediante la construcción de un circuito funcional.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"requiere_supervision\": true, \"advertencias\": [\"No conectar a corriente del hogar\", \"Verificar polaridad de la batería\", \"No hacer cortocircuito\"]}', 'Circuito Eléctrico Básico - Proyecto de Física Grado 6° y 7°', 'Aprende a construir circuitos eléctricos simples. Proyecto ideal para estudiantes de 6° y 7° grado. Incluye materiales y guía paso a paso.', NULL, 1, 1, 100, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(2, 'Separación de Mezclas', 'separacion-de-mezclas', '1', '[6, 7]', '[2]', 45, 'facil', 'Aprende diferentes métodos para separar mezclas: filtración, decantación y evaporación usando materiales cotidianos.', 'Identificar y aplicar métodos físicos de separación de mezclas según las propiedades de sus componentes.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"requiere_supervision\": true, \"advertencias\": [\"Cuidado con agua caliente en evaporación\", \"No probar las sustancias\", \"Usar gafas de protección\"]}', 'Separación de Mezclas - Experimento de Química Grado 6° y 7°', 'Descubre cómo separar mezclas con métodos simples. Proyecto de química para estudiantes de 6° y 7°. Guía completa incluida.', NULL, 1, 1, 95, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(3, 'Test de pH', 'test-de-ph', '1', '[6, 7]', '[2]', 50, 'facil', 'Crea tu propio indicador de pH con repollo morado y clasifica sustancias cotidianas como ácidas o básicas.', 'Comprender el concepto de pH y la clasificación de sustancias según su acidez o alcalinidad.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"requiere_supervision\": true, \"advertencias\": [\"No mezclar sustancias desconocidas\", \"Evitar contacto con ojos\", \"Lavar manos después del experimento\"]}', 'Test de pH con Repollo Morado - Química Grado 6° y 7°', 'Aprende sobre ácidos y bases creando tu indicador de pH. Experimento seguro para estudiantes de 6° y 7°.', NULL, 1, 0, 85, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(4, 'Radio de Cristal', 'radio-de-cristal', '2', '[8, 9]', '[1, 4]', 120, 'medio', 'Construye un receptor de radio AM que funciona sin baterías, aprovechando únicamente la energía de las ondas electromagnéticas.', 'Comprender el funcionamiento de las ondas electromagnéticas y su aplicación en las comunicaciones mediante la construcción de un receptor de radio.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"requiere_supervision\": true, \"advertencias\": [\"Manipular con cuidado el diodo detector\", \"Verificar que la antena no toque cables eléctricos\", \"Componentes delicados - evitar caídas\"]}', 'Radio de Cristal - Proyecto de Física Grado 8° y 9°', 'Construye tu propio radio sin baterías. Aprende sobre ondas electromagnéticas. Proyecto para estudiantes de 8° y 9° grado.', NULL, 1, 1, 90, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(5, 'Motor Eléctrico Simple', 'motor-electrico-simple', '2', '[8, 9]', '[1, 4]', 90, 'medio', 'Construye un motor eléctrico funcional usando un imán, alambre de cobre y una batería. Observa la conversión de energía eléctrica en movimiento.', 'Explicar la relación entre electricidad y magnetismo, y comprender cómo un motor convierte energía eléctrica en energía mecánica.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"requiere_supervision\": true, \"advertencias\": [\"Cuidado con el alambre al enrollar - puede cortarse\", \"No usar baterías de más de 9V\", \"El motor puede calentarse al funcionar mucho tiempo\"]}', 'Motor Eléctrico Simple - Física y Tecnología Grado 8° y 9°', 'Construye un motor eléctrico real. Aprende electromagnetismo de forma práctica. Para estudiantes de 8° y 9°.', NULL, 1, 1, 88, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(6, 'Osmosis con Vegetales', 'osmosis-con-vegetales', '2', '[8, 9]', '[3]', 60, 'facil', 'Observa el proceso de ósmosis usando papa o zanahoria en diferentes concentraciones de sal. Aprende sobre transporte celular.', 'Comprender el proceso de ósmosis y su importancia en las células mediante experimentación con tejidos vegetales.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"requiere_supervision\": false, \"advertencias\": [\"Usar cuchillo con precaución\", \"No consumir los vegetales del experimento\"]}', 'Ósmosis con Vegetales - Biología Grado 8° y 9°', 'Descubre cómo funciona la ósmosis celular. Experimento visual con papas. Para estudiantes de biología de 8° y 9°.', NULL, 1, 0, 80, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(7, 'Electroimán', 'electroiman', '3', '[10, 11]', '[1]', 75, 'medio', 'Construye un electroimán y analiza cómo variables como número de vueltas y corriente afectan su fuerza magnética.', 'Analizar cuantitativamente la relación entre corriente eléctrica, número de espiras y fuerza del campo magnético generado.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"requiere_supervision\": true, \"advertencias\": [\"No usar más de 12V\", \"El núcleo puede calentarse\", \"No acercar a dispositivos electrónicos\"]}', 'Electroimán - Experimento de Física Grado 10° y 11°', 'Analiza variables electromagnéticas construyendo un electroimán. Proyecto avanzado para estudiantes de 10° y 11°.', NULL, 1, 1, 85, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(8, 'Tratamiento de Agua', 'tratamiento-de-agua', '3', '[10, 11]', '[2, 5]', 90, 'medio', 'Construye un sistema de filtración y purificación de agua. Analiza la efectividad de diferentes métodos: filtración, adsorción y cloración.', 'Evaluar la efectividad de diferentes procesos de tratamiento de agua y comprender su aplicación en contextos reales.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"requiere_supervision\": true, \"advertencias\": [\"No beber el agua tratada\", \"Usar cloro con precaución\", \"Manipular carbón activado con guantes\"]}', 'Tratamiento de Agua - Química Ambiental Grado 10° y 11°', 'Construye un sistema de purificación de agua. Aprende métodos de tratamiento. Para estudiantes de 10° y 11°.', NULL, 1, 1, 82, '2025-12-20 00:59:33', '2025-12-20 00:59:33'),
-(9, 'Turbina Eólica de Mesa', 'turbina-eolica', '3', '[10, 11]', '[1, 4, 5]', 120, 'dificil', 'Diseña y construye una turbina eólica funcional. Mide su eficiencia y analiza factores que afectan la generación eléctrica.', 'Analizar la conversión de energía cinética del viento en energía eléctrica, evaluando eficiencia y variables de diseño.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"requiere_supervision\": true, \"advertencias\": [\"Aspas en movimiento - mantener distancia\", \"Verificar conexiones eléctricas\", \"Usar ventilador con precaución\"]}', 'Turbina Eólica - Energía Renovable Grado 10° y 11°', 'Construye una turbina eólica funcional. Analiza eficiencia energética. Proyecto avanzado para 10° y 11°.', NULL, 1, 0, 75, '2025-12-20 00:59:33', '2025-12-20 00:59:33');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `proyecto_areas`
---
-
-CREATE TABLE `proyecto_areas` (
-  `proyecto_id` int(11) NOT NULL,
-  `area_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `proyecto_areas`
---
-
-INSERT INTO `proyecto_areas` (`proyecto_id`, `area_id`) VALUES
-(1, 1),
-(4, 1),
-(5, 1),
-(7, 1),
-(9, 1),
-(2, 2),
-(3, 2),
-(8, 2),
-(6, 3),
-(4, 4),
-(5, 4),
-(9, 4),
-(8, 5),
-(9, 5);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `proyecto_competencias`
---
-
-CREATE TABLE `proyecto_competencias` (
-  `proyecto_id` int(11) NOT NULL,
-  `competencia_id` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Dumping data for table `proyecto_competencias`
---
-
-INSERT INTO `proyecto_competencias` (`proyecto_id`, `competencia_id`) VALUES
-(1, 1),
-(2, 1),
-(3, 1),
-(4, 1),
-(5, 1),
-(6, 1),
-(3, 4),
-(6, 4),
-(7, 4),
-(8, 4),
-(9, 4),
-(1, 5),
-(2, 5),
-(6, 6),
-(7, 6),
-(8, 6),
-(9, 6),
-(2, 7),
-(4, 7),
-(5, 7),
-(1, 8),
-(3, 8),
-(4, 8),
-(5, 8),
-(6, 8),
-(7, 8),
-(4, 9),
-(5, 9),
-(7, 10),
-(8, 10),
-(9, 10),
-(8, 11),
-(9, 11),
-(9, 12);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `proyecto_materiales`
---
-
-CREATE TABLE `proyecto_materiales` (
-  `proyecto_id` int(11) NOT NULL,
-  `material_id` int(11) NOT NULL,
-  `cantidad` varchar(50) DEFAULT NULL,
-  `es_incluido_kit` tinyint(1) DEFAULT 1,
-  `notas` text DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+INSERT INTO `prompts_clase` (`id`, `clase_id`, `prompt_contexto`, `conocimientos_previos`, `enfoque_pedagogico`, `preguntas_frecuentes`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Contexto IA para la clase: Microscopio sencillo. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(2, 2, 'Contexto IA para la clase: Pulmón mecánico. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 3, 'Contexto IA para la clase: Circuito eléctrico básico. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 4, 'Contexto IA para la clase: Separación de mezclas. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 5, 'Contexto IA para la clase: Test de pH. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 6, 'Contexto IA para la clase: Radio de cristal. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(7, 7, 'Contexto IA para la clase: Motor eléctrico simple. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 8, 'Contexto IA para la clase: Osmosis con vegetales. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 9, 'Contexto IA para la clase: Carro trampa de ratón. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 10, 'Contexto IA para la clase: Generador manual (dinamo). Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 11, 'Contexto IA para la clase: Carro solar. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 12, 'Contexto IA para la clase: Turbina eólica de mesa. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 13, 'Contexto IA para la clase: Electroimán. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 14, 'Contexto IA para la clase: Tratamiento de agua. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 15, 'Contexto IA para la clase: Análisis químico del entorno. Conceptos clave y seguridad según guía.', '[\"Normas básicas de laboratorio\", \"Mediciones y observación\", \"Seguridad eléctrica/química según aplique\"]', 'Guiar con preguntas abiertas, reforzar competencias MEN según ciclo.', '[\"¿Qué variable afecta más el resultado?\", \"¿Cómo mejora la eficiencia?\", \"¿Qué relación hay entre concepto y observación?\"]', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -730,13 +736,97 @@ CREATE TABLE `proyecto_materiales` (
 
 CREATE TABLE `recursos_multimedia` (
   `id` int(11) NOT NULL,
-  `proyecto_id` int(11) NOT NULL,
-  `tipo` enum('imagen','video','simulacion','pdf') NOT NULL,
-  `titulo` varchar(255) DEFAULT NULL,
-  `descripcion` text DEFAULT NULL,
-  `url` varchar(500) NOT NULL,
-  `orden` int(11) DEFAULT 0
+  `clase_id` int(11) NOT NULL,
+  `tipo` enum('imagen','video','pdf','link') NOT NULL,
+  `url` varchar(255) NOT NULL,
+  `titulo` varchar(180) DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `recursos_multimedia`
+--
+
+INSERT INTO `recursos_multimedia` (`id`, `clase_id`, `tipo`, `url`, `titulo`, `descripcion`, `sort_order`, `created_at`) VALUES
+(1, 15, 'link', 'https://clasedeciencia.com/clase/analisis-quimico-del-entorno', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(2, 11, 'link', 'https://clasedeciencia.com/clase/carro-solar', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(3, 9, 'link', 'https://clasedeciencia.com/clase/carro-trampa-de-raton', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(4, 3, 'link', 'https://clasedeciencia.com/clase/circuito-electrico-basico', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(5, 13, 'link', 'https://clasedeciencia.com/clase/electroiman', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(6, 10, 'link', 'https://clasedeciencia.com/clase/generador-manual-dinamo', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(7, 1, 'link', 'https://clasedeciencia.com/clase/microscopio-sencillo', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(8, 7, 'link', 'https://clasedeciencia.com/clase/motor-electrico-simple', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(9, 8, 'link', 'https://clasedeciencia.com/clase/osmosis-con-vegetales', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(10, 2, 'link', 'https://clasedeciencia.com/clase/pulmon-mecanico', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(11, 6, 'link', 'https://clasedeciencia.com/clase/radio-de-cristal', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(12, 4, 'link', 'https://clasedeciencia.com/clase/separacion-de-mezclas', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(13, 5, 'link', 'https://clasedeciencia.com/clase/test-de-ph', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(14, 14, 'link', 'https://clasedeciencia.com/clase/tratamiento-de-agua', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
+(15, 12, 'link', 'https://clasedeciencia.com/clase/turbina-eolica-de-mesa', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `secciones`
+--
+
+CREATE TABLE `secciones` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(120) NOT NULL,
+  `slug` varchar(120) NOT NULL,
+  `descripcion` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_clases_populares_ia`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_clases_populares_ia` (
+`id` int(11)
+,`nombre` varchar(180)
+,`slug` varchar(180)
+,`orden_popularidad` int(11)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_clase_contexto_ia`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_clase_contexto_ia` (
+`clase_id` int(11)
+,`nombre` varchar(180)
+,`slug` varchar(180)
+,`ciclo` tinyint(1)
+,`dificultad` varchar(32)
+,`duracion_minutos` int(11)
+,`resumen` text
+,`objetivo_aprendizaje` text
+,`areas` longtext
+,`competencias` longtext
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_clase_kits_detalle`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_clase_kits_detalle` (
+`kit_id` int(11)
+,`clase_id` int(11)
+,`kit_nombre` varchar(120)
+,`item_id` int(11)
+,`item_nombre` varchar(160)
+,`cantidad` decimal(10,2)
+,`es_incluido_kit` tinyint(1)
+,`notas` varchar(255)
+);
 
 -- --------------------------------------------------------
 
@@ -759,85 +849,14 @@ CREATE TABLE `v_ia_dashboard` (
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `v_ia_preguntas_frecuentes`
+-- Stand-in structure for view `v_ia_preguntas_frecuentes_clase`
 -- (See below for the actual view)
 --
-CREATE TABLE `v_ia_preguntas_frecuentes` (
-`proyecto` varchar(255)
+CREATE TABLE `v_ia_preguntas_frecuentes_clase` (
+`clase` varchar(180)
 ,`pregunta` text
 ,`veces_preguntada` bigint(21)
 ,`ultima_vez` timestamp
-);
-
--- --------------------------------------------------------
-
---
--- Stand-in structure for view `v_proyectos_populares_ia`
--- (See below for the actual view)
---
-CREATE TABLE `v_proyectos_populares_ia` (
-`id` int(11)
-,`nombre` varchar(255)
-,`ciclo` enum('1','2','3')
-,`sesiones_ia` bigint(21)
-,`total_interacciones` decimal(32,0)
-,`promedio_mensajes` decimal(14,4)
-,`ultima_consulta` timestamp
-);
-
--- --------------------------------------------------------
-
---
--- Stand-in structure for view `v_proyecto_contexto_ia`
--- (See below for the actual view)
---
-CREATE TABLE `v_proyecto_contexto_ia` (
-`proyecto_id` int(11)
-,`nombre` varchar(255)
-,`slug` varchar(255)
-,`ciclo` enum('1','2','3')
-,`grados` longtext
-,`duracion_minutos` int(11)
-,`dificultad` enum('facil','medio','dificil')
-,`resumen` text
-,`objetivo_aprendizaje` text
-,`seguridad` longtext
-,`areas` longtext
-,`competencias` longtext
-,`introduccion` text
-,`materiales_kit` longtext
-,`materiales_adicionales` longtext
-,`seccion_seguridad` text
-,`pasos` longtext
-,`explicacion_cientifica` text
-,`conceptos_clave` longtext
-,`conexiones_realidad` text
-,`para_profundizar` text
-,`prompt_contexto` text
-,`conocimientos_previos` longtext
-,`enfoque_pedagogico` text
-,`preguntas_frecuentes` longtext
-);
-
--- --------------------------------------------------------
-
---
--- Stand-in structure for view `v_proyecto_materiales_detalle`
--- (See below for the actual view)
---
-CREATE TABLE `v_proyecto_materiales_detalle` (
-`proyecto_id` int(11)
-,`proyecto_nombre` varchar(255)
-,`material_id` int(11)
-,`nombre_comun` varchar(255)
-,`nombre_tecnico` varchar(255)
-,`descripcion` text
-,`cantidad` varchar(50)
-,`es_incluido_kit` tinyint(1)
-,`notas` text
-,`advertencias_seguridad` text
-,`manejo_recomendado` text
-,`categoria` varchar(100)
 );
 
 --
@@ -845,123 +864,131 @@ CREATE TABLE `v_proyecto_materiales_detalle` (
 --
 
 --
--- Indexes for table `analytics_interacciones`
---
-ALTER TABLE `analytics_interacciones`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_tipo` (`tipo_interaccion`);
-
---
 -- Indexes for table `analytics_visitas`
 --
 ALTER TABLE `analytics_visitas`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`),
-  ADD KEY `idx_departamento` (`departamento`),
-  ADD KEY `idx_analytics_geografia` (`departamento`,`ciudad`,`fecha_hora`);
+  ADD KEY `idx_analytics_clase` (`clase_id`),
+  ADD KEY `idx_analytics_tipo` (`tipo_pagina`);
 
 --
 -- Indexes for table `areas`
 --
 ALTER TABLE `areas`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `slug` (`slug`);
+  ADD UNIQUE KEY `uq_areas_slug` (`slug`),
+  ADD UNIQUE KEY `uq_areas_nombre` (`nombre`);
 
 --
--- Indexes for table `categorias_materiales`
+-- Indexes for table `categorias_items`
 --
-ALTER TABLE `categorias_materiales`
+ALTER TABLE `categorias_items`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `slug` (`slug`);
+  ADD UNIQUE KEY `uq_categorias_items_slug` (`slug`);
+
+--
+-- Indexes for table `clases`
+--
+ALTER TABLE `clases`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_clases_slug` (`slug`),
+  ADD KEY `idx_clases_activo_ciclo` (`activo`,`ciclo`),
+  ADD KEY `idx_clases_status_published` (`status`,`published_at`),
+  ADD KEY `idx_clases_popularidad` (`orden_popularidad`),
+  ADD KEY `idx_clases_seccion` (`seccion_id`);
+
+--
+-- Indexes for table `clase_areas`
+--
+ALTER TABLE `clase_areas`
+  ADD PRIMARY KEY (`clase_id`,`area_id`),
+  ADD KEY `idx_clase_areas_clase` (`clase_id`),
+  ADD KEY `idx_clase_areas_area` (`area_id`);
+
+--
+-- Indexes for table `clase_competencias`
+--
+ALTER TABLE `clase_competencias`
+  ADD PRIMARY KEY (`clase_id`,`competencia_id`),
+  ADD KEY `idx_clase_competencias_clase` (`clase_id`),
+  ADD KEY `idx_clase_competencias_comp` (`competencia_id`);
+
+--
+-- Indexes for table `clase_tags`
+--
+ALTER TABLE `clase_tags`
+  ADD PRIMARY KEY (`clase_id`,`tag`),
+  ADD KEY `idx_clase_tags_tag` (`tag`);
 
 --
 -- Indexes for table `competencias`
 --
 ALTER TABLE `competencias`
-  ADD PRIMARY KEY (`id`);
-ALTER TABLE `competencias` ADD FULLTEXT KEY `ft_competencias` (`nombre`,`descripcion`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_competencias_codigo` (`codigo`);
 
 --
 -- Indexes for table `configuracion_ia`
 --
 ALTER TABLE `configuracion_ia`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `clave` (`clave`);
+  ADD UNIQUE KEY `uq_config_ia_clave` (`clave`);
 
 --
 -- Indexes for table `contratos`
 --
 ALTER TABLE `contratos`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_contratos_activos` (`estado`,`fecha_inicio`,`fecha_fin`);
-
---
--- Indexes for table `contrato_proyectos`
---
-ALTER TABLE `contrato_proyectos`
-  ADD PRIMARY KEY (`contrato_id`,`proyecto_id`),
-  ADD KEY `fk_cp_proyecto` (`proyecto_id`);
+  ADD UNIQUE KEY `uq_contratos_numero` (`numero`);
 
 --
 -- Indexes for table `entregas`
 --
 ALTER TABLE `entregas`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `fk_entregas_contrato` (`contrato_id`);
-
---
--- Indexes for table `entrega_lotes`
---
-ALTER TABLE `entrega_lotes`
-  ADD PRIMARY KEY (`entrega_id`,`lote_id`),
-  ADD KEY `fk_el_lote` (`lote_id`);
+  ADD KEY `idx_entregas_contrato` (`contrato_id`);
 
 --
 -- Indexes for table `guias`
 --
 ALTER TABLE `guias`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_proyecto_activa` (`proyecto_id`,`activa`);
-ALTER TABLE `guias` ADD FULLTEXT KEY `ft_guias_contenido` (`introduccion`,`explicacion_cientifica`,`conexiones_realidad`,`para_profundizar`);
+  ADD KEY `idx_guias_clase` (`clase_id`);
 
 --
 -- Indexes for table `ia_guardrails_log`
 --
 ALTER TABLE `ia_guardrails_log`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_tipo` (`tipo_alerta`),
-  ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`),
-  ADD KEY `idx_guardrails_proyecto` (`proyecto_id`,`tipo_alerta`,`fecha_hora`);
+  ADD KEY `idx_ia_guardrails_tipo` (`tipo_alerta`),
+  ADD KEY `idx_ia_guardrails_clase` (`clase_id`),
+  ADD KEY `idx_ia_guardrails_fecha` (`fecha_hora`),
+  ADD KEY `idx_ia_guardrails_mix` (`clase_id`,`tipo_alerta`,`fecha_hora`);
 
 --
 -- Indexes for table `ia_logs`
 --
 ALTER TABLE `ia_logs`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_tipo_evento` (`tipo_evento`),
-  ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`),
-  ADD KEY `idx_logs_analytics` (`fecha_hora`,`tipo_evento`,`proyecto_id`);
+  ADD KEY `idx_ia_logs_tipo` (`tipo_evento`),
+  ADD KEY `idx_ia_logs_clase` (`clase_id`),
+  ADD KEY `idx_ia_logs_fecha` (`fecha_hora`),
+  ADD KEY `idx_ia_logs_analytics` (`fecha_hora`,`tipo_evento`,`clase_id`);
 
 --
 -- Indexes for table `ia_mensajes`
 --
 ALTER TABLE `ia_mensajes`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_sesion` (`sesion_id`),
-  ADD KEY `idx_fecha` (`fecha_hora`),
-  ADD KEY `idx_mensajes_conversacion` (`sesion_id`,`fecha_hora`);
+  ADD KEY `idx_ia_mensajes_sesion` (`sesion_id`),
+  ADD KEY `idx_ia_mensajes_fecha` (`fecha_hora`);
 
 --
 -- Indexes for table `ia_respuestas_cache`
 --
 ALTER TABLE `ia_respuestas_cache`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_proyecto_pregunta` (`proyecto_id`,`pregunta_normalizada`(255));
-ALTER TABLE `ia_respuestas_cache` ADD FULLTEXT KEY `ft_cache_preguntas` (`pregunta_normalizada`,`pregunta_original`);
+  ADD KEY `idx_ia_cache_clase_pregunta` (`clase_id`,`pregunta_normalizada`(255));
 
 --
 -- Indexes for table `ia_sesiones`
@@ -969,99 +996,64 @@ ALTER TABLE `ia_respuestas_cache` ADD FULLTEXT KEY `ft_cache_preguntas` (`pregun
 ALTER TABLE `ia_sesiones`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_sesion_hash` (`sesion_hash`),
-  ADD KEY `idx_proyecto` (`proyecto_id`),
-  ADD KEY `idx_fecha` (`fecha_inicio`),
+  ADD KEY `idx_ia_sesiones_clase` (`clase_id`),
   ADD KEY `idx_sesiones_activas` (`estado`,`fecha_ultima_interaccion`);
 
 --
--- Indexes for table `ia_stats_proyecto`
+-- Indexes for table `ia_stats_clase`
 --
-ALTER TABLE `ia_stats_proyecto`
-  ADD PRIMARY KEY (`proyecto_id`);
+ALTER TABLE `ia_stats_clase`
+  ADD PRIMARY KEY (`clase_id`);
 
 --
--- Indexes for table `justificacion_ctei`
+-- Indexes for table `kits`
 --
-ALTER TABLE `justificacion_ctei`
-  ADD PRIMARY KEY (`contrato_id`);
-
---
--- Indexes for table `lotes_kits`
---
-ALTER TABLE `lotes_kits`
+ALTER TABLE `kits`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `codigo_lote` (`codigo_lote`),
-  ADD KEY `fk_lotes_proyecto` (`proyecto_id`),
-  ADD KEY `fk_lotes_contrato` (`contrato_id`);
+  ADD UNIQUE KEY `uq_kits_codigo` (`codigo`),
+  ADD KEY `idx_kits_clase` (`clase_id`);
 
 --
--- Indexes for table `materiales`
+-- Indexes for table `kit_componentes`
 --
-ALTER TABLE `materiales`
+ALTER TABLE `kit_componentes`
+  ADD PRIMARY KEY (`kit_id`,`item_id`),
+  ADD KEY `idx_kit_componentes_order` (`kit_id`,`sort_order`),
+  ADD KEY `fk_kit_componentes_item` (`item_id`);
+
+--
+-- Indexes for table `kit_items`
+--
+ALTER TABLE `kit_items`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `slug` (`slug`),
-  ADD KEY `idx_categoria` (`categoria_id`);
-ALTER TABLE `materiales` ADD FULLTEXT KEY `ft_materiales` (`nombre_comun`,`nombre_tecnico`,`descripcion`);
+  ADD KEY `idx_kit_items_nombre` (`nombre_comun`),
+  ADD KEY `idx_kit_items_categoria` (`categoria_id`);
 
 --
--- Indexes for table `prompts_proyecto`
+-- Indexes for table `prompts_clase`
 --
-ALTER TABLE `prompts_proyecto`
+ALTER TABLE `prompts_clase`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `unique_proyecto` (`proyecto_id`);
-
---
--- Indexes for table `proyectos`
---
-ALTER TABLE `proyectos`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `slug` (`slug`),
-  ADD KEY `idx_ciclo` (`ciclo`),
-  ADD KEY `idx_activo` (`activo`),
-  ADD KEY `idx_destacado` (`destacado`),
-  ADD KEY `idx_busqueda_proyectos` (`ciclo`,`dificultad`,`activo`,`destacado`),
-  ADD KEY `idx_popularidad` (`activo`,`orden_popularidad` DESC);
-ALTER TABLE `proyectos` ADD FULLTEXT KEY `ft_proyectos_busqueda` (`nombre`,`resumen`,`objetivo_aprendizaje`);
-
---
--- Indexes for table `proyecto_areas`
---
-ALTER TABLE `proyecto_areas`
-  ADD PRIMARY KEY (`proyecto_id`,`area_id`),
-  ADD KEY `fk_pa_area` (`area_id`),
-  ADD KEY `idx_area_proyecto` (`area_id`,`proyecto_id`);
-
---
--- Indexes for table `proyecto_competencias`
---
-ALTER TABLE `proyecto_competencias`
-  ADD PRIMARY KEY (`proyecto_id`,`competencia_id`),
-  ADD KEY `fk_pc_competencia` (`competencia_id`),
-  ADD KEY `idx_competencia_proyecto` (`competencia_id`,`proyecto_id`);
-
---
--- Indexes for table `proyecto_materiales`
---
-ALTER TABLE `proyecto_materiales`
-  ADD PRIMARY KEY (`proyecto_id`,`material_id`),
-  ADD KEY `fk_pm_material` (`material_id`);
+  ADD UNIQUE KEY `uq_prompts_clase` (`clase_id`);
 
 --
 -- Indexes for table `recursos_multimedia`
 --
 ALTER TABLE `recursos_multimedia`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_proyecto` (`proyecto_id`);
+  ADD KEY `idx_rm_clase` (`clase_id`),
+  ADD KEY `idx_rm_order` (`clase_id`,`sort_order`);
+
+--
+-- Indexes for table `secciones`
+--
+ALTER TABLE `secciones`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_secciones_slug` (`slug`);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
-
---
--- AUTO_INCREMENT for table `analytics_interacciones`
---
-ALTER TABLE `analytics_interacciones`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `analytics_visitas`
@@ -1076,22 +1068,28 @@ ALTER TABLE `areas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `categorias_materiales`
+-- AUTO_INCREMENT for table `categorias_items`
 --
-ALTER TABLE `categorias_materiales`
+ALTER TABLE `categorias_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `clases`
+--
+ALTER TABLE `clases`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `competencias`
 --
 ALTER TABLE `competencias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `configuracion_ia`
 --
 ALTER TABLE `configuracion_ia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `contratos`
@@ -1109,7 +1107,7 @@ ALTER TABLE `entregas`
 -- AUTO_INCREMENT for table `guias`
 --
 ALTER TABLE `guias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `ia_guardrails_log`
@@ -1142,34 +1140,61 @@ ALTER TABLE `ia_sesiones`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `lotes_kits`
+-- AUTO_INCREMENT for table `kits`
 --
-ALTER TABLE `lotes_kits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `kits`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
--- AUTO_INCREMENT for table `materiales`
+-- AUTO_INCREMENT for table `kit_items`
 --
-ALTER TABLE `materiales`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `kit_items`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
--- AUTO_INCREMENT for table `prompts_proyecto`
+-- AUTO_INCREMENT for table `prompts_clase`
 --
-ALTER TABLE `prompts_proyecto`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `proyectos`
---
-ALTER TABLE `proyectos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+ALTER TABLE `prompts_clase`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `recursos_multimedia`
 --
 ALTER TABLE `recursos_multimedia`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `secciones`
+--
+ALTER TABLE `secciones`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_clases_populares_ia`
+--
+DROP TABLE IF EXISTS `v_clases_populares_ia`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_clases_populares_ia`  AS SELECT `c`.`id` AS `id`, `c`.`nombre` AS `nombre`, `c`.`slug` AS `slug`, `c`.`orden_popularidad` AS `orden_popularidad` FROM `clases` AS `c` WHERE `c`.`activo` = 1 ORDER BY `c`.`orden_popularidad` DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_clase_contexto_ia`
+--
+DROP TABLE IF EXISTS `v_clase_contexto_ia`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_clase_contexto_ia`  AS SELECT `c`.`id` AS `clase_id`, `c`.`nombre` AS `nombre`, `c`.`slug` AS `slug`, `c`.`ciclo` AS `ciclo`, `c`.`dificultad` AS `dificultad`, `c`.`duracion_minutos` AS `duracion_minutos`, `c`.`resumen` AS `resumen`, `c`.`objetivo_aprendizaje` AS `objetivo_aprendizaje`, (select json_arrayagg(`a`.`nombre`) from (`clase_areas` `ca` join `areas` `a` on(`a`.`id` = `ca`.`area_id`)) where `ca`.`clase_id` = `c`.`id`) AS `areas`, (select json_arrayagg(`comp`.`nombre`) from (`clase_competencias` `cc` join `competencias` `comp` on(`comp`.`id` = `cc`.`competencia_id`)) where `cc`.`clase_id` = `c`.`id`) AS `competencias` FROM `clases` AS `c` WHERE `c`.`activo` = 1 ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_clase_kits_detalle`
+--
+DROP TABLE IF EXISTS `v_clase_kits_detalle`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_clase_kits_detalle`  AS SELECT `k`.`id` AS `kit_id`, `k`.`clase_id` AS `clase_id`, `k`.`nombre` AS `kit_nombre`, `i`.`id` AS `item_id`, `i`.`nombre_comun` AS `item_nombre`, `kc`.`cantidad` AS `cantidad`, `kc`.`es_incluido_kit` AS `es_incluido_kit`, `kc`.`notas` AS `notas` FROM ((`kits` `k` join `kit_componentes` `kc` on(`kc`.`kit_id` = `k`.`id`)) join `kit_items` `i` on(`i`.`id` = `kc`.`item_id`)) ;
 
 -- --------------------------------------------------------
 
@@ -1183,138 +1208,84 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL S
 -- --------------------------------------------------------
 
 --
--- Structure for view `v_ia_preguntas_frecuentes`
+-- Structure for view `v_ia_preguntas_frecuentes_clase`
 --
-DROP TABLE IF EXISTS `v_ia_preguntas_frecuentes`;
+DROP TABLE IF EXISTS `v_ia_preguntas_frecuentes_clase`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_ia_preguntas_frecuentes`  AS SELECT `p`.`nombre` AS `proyecto`, `im`.`contenido` AS `pregunta`, count(0) AS `veces_preguntada`, max(`im`.`fecha_hora`) AS `ultima_vez` FROM ((`ia_mensajes` `im` join `ia_sesiones` `s` on(`im`.`sesion_id` = `s`.`id`)) left join `proyectos` `p` on(`s`.`proyecto_id` = `p`.`id`)) WHERE `im`.`rol` = 'user' GROUP BY `s`.`proyecto_id`, `im`.`contenido` HAVING count(0) >= 3 ORDER BY count(0) DESC ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `v_proyectos_populares_ia`
---
-DROP TABLE IF EXISTS `v_proyectos_populares_ia`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_proyectos_populares_ia`  AS SELECT `p`.`id` AS `id`, `p`.`nombre` AS `nombre`, `p`.`ciclo` AS `ciclo`, count(distinct `s`.`id`) AS `sesiones_ia`, sum(`s`.`total_mensajes`) AS `total_interacciones`, avg(`s`.`total_mensajes`) AS `promedio_mensajes`, max(`s`.`fecha_ultima_interaccion`) AS `ultima_consulta` FROM (`proyectos` `p` left join `ia_sesiones` `s` on(`p`.`id` = `s`.`proyecto_id`)) GROUP BY `p`.`id` ORDER BY count(distinct `s`.`id`) DESC ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `v_proyecto_contexto_ia`
---
-DROP TABLE IF EXISTS `v_proyecto_contexto_ia`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_proyecto_contexto_ia`  AS SELECT `p`.`id` AS `proyecto_id`, `p`.`nombre` AS `nombre`, `p`.`slug` AS `slug`, `p`.`ciclo` AS `ciclo`, `p`.`grados` AS `grados`, `p`.`duracion_minutos` AS `duracion_minutos`, `p`.`dificultad` AS `dificultad`, `p`.`resumen` AS `resumen`, `p`.`objetivo_aprendizaje` AS `objetivo_aprendizaje`, `p`.`seguridad` AS `seguridad`, group_concat(distinct `a`.`nombre` separator ', ') AS `areas`, (select group_concat(`c`.`nombre` separator '|') from (`proyecto_competencias` `pc` join `competencias` `c` on(`pc`.`competencia_id` = `c`.`id`)) where `pc`.`proyecto_id` = `p`.`id`) AS `competencias`, `g`.`introduccion` AS `introduccion`, `g`.`materiales_kit` AS `materiales_kit`, `g`.`materiales_adicionales` AS `materiales_adicionales`, `g`.`seccion_seguridad` AS `seccion_seguridad`, `g`.`pasos` AS `pasos`, `g`.`explicacion_cientifica` AS `explicacion_cientifica`, `g`.`conceptos_clave` AS `conceptos_clave`, `g`.`conexiones_realidad` AS `conexiones_realidad`, `g`.`para_profundizar` AS `para_profundizar`, `pr`.`prompt_contexto` AS `prompt_contexto`, `pr`.`conocimientos_previos` AS `conocimientos_previos`, `pr`.`enfoque_pedagogico` AS `enfoque_pedagogico`, `pr`.`preguntas_frecuentes` AS `preguntas_frecuentes` FROM ((((`proyectos` `p` left join `proyecto_areas` `pa` on(`p`.`id` = `pa`.`proyecto_id`)) left join `areas` `a` on(`pa`.`area_id` = `a`.`id`)) left join `guias` `g` on(`p`.`id` = `g`.`proyecto_id` and `g`.`activa` = 1)) left join `prompts_proyecto` `pr` on(`p`.`id` = `pr`.`proyecto_id` and `pr`.`activo` = 1)) WHERE `p`.`activo` = 1 GROUP BY `p`.`id` ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `v_proyecto_materiales_detalle`
---
-DROP TABLE IF EXISTS `v_proyecto_materiales_detalle`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_proyecto_materiales_detalle`  AS SELECT `p`.`id` AS `proyecto_id`, `p`.`nombre` AS `proyecto_nombre`, `m`.`id` AS `material_id`, `m`.`nombre_comun` AS `nombre_comun`, `m`.`nombre_tecnico` AS `nombre_tecnico`, `m`.`descripcion` AS `descripcion`, `pm`.`cantidad` AS `cantidad`, `pm`.`es_incluido_kit` AS `es_incluido_kit`, `pm`.`notas` AS `notas`, `m`.`advertencias_seguridad` AS `advertencias_seguridad`, `m`.`manejo_recomendado` AS `manejo_recomendado`, `c`.`nombre` AS `categoria` FROM (((`proyectos` `p` join `proyecto_materiales` `pm` on(`p`.`id` = `pm`.`proyecto_id`)) join `materiales` `m` on(`pm`.`material_id` = `m`.`id`)) left join `categorias_materiales` `c` on(`m`.`categoria_id` = `c`.`id`)) WHERE `p`.`activo` = 1 ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_ia_preguntas_frecuentes_clase`  AS SELECT `c`.`nombre` AS `clase`, `im`.`contenido` AS `pregunta`, count(0) AS `veces_preguntada`, max(`im`.`fecha_hora`) AS `ultima_vez` FROM ((`ia_mensajes` `im` join `ia_sesiones` `s` on(`im`.`sesion_id` = `s`.`id`)) left join `clases` `c` on(`s`.`clase_id` = `c`.`id`)) WHERE `im`.`rol` = 'user' GROUP BY `s`.`clase_id`, `im`.`contenido` HAVING count(0) >= 3 ORDER BY count(0) DESC ;
 
 --
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table `contrato_proyectos`
+-- Constraints for table `clases`
 --
-ALTER TABLE `contrato_proyectos`
-  ADD CONSTRAINT `fk_cp_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_cp_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`);
+ALTER TABLE `clases`
+  ADD CONSTRAINT `fk_clases_seccion` FOREIGN KEY (`seccion_id`) REFERENCES `secciones` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `clase_areas`
+--
+ALTER TABLE `clase_areas`
+  ADD CONSTRAINT `fk_clase_areas_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_clase_areas_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `clase_competencias`
+--
+ALTER TABLE `clase_competencias`
+  ADD CONSTRAINT `fk_clase_competencias_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_clase_competencias_comp` FOREIGN KEY (`competencia_id`) REFERENCES `competencias` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `clase_tags`
+--
+ALTER TABLE `clase_tags`
+  ADD CONSTRAINT `fk_clase_tags_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `entregas`
 --
 ALTER TABLE `entregas`
-  ADD CONSTRAINT `fk_entregas_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`);
-
---
--- Constraints for table `entrega_lotes`
---
-ALTER TABLE `entrega_lotes`
-  ADD CONSTRAINT `fk_el_entrega` FOREIGN KEY (`entrega_id`) REFERENCES `entregas` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_el_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes_kits` (`id`);
+  ADD CONSTRAINT `fk_entregas_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `guias`
 --
 ALTER TABLE `guias`
-  ADD CONSTRAINT `fk_guias_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_guias_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `ia_mensajes`
 --
 ALTER TABLE `ia_mensajes`
-  ADD CONSTRAINT `fk_mensajes_sesion` FOREIGN KEY (`sesion_id`) REFERENCES `ia_sesiones` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_ia_mensajes_sesion` FOREIGN KEY (`sesion_id`) REFERENCES `ia_sesiones` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `ia_respuestas_cache`
+-- Constraints for table `kits`
 --
-ALTER TABLE `ia_respuestas_cache`
-  ADD CONSTRAINT `fk_cache_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
+ALTER TABLE `kits`
+  ADD CONSTRAINT `fk_kits_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `ia_stats_proyecto`
+-- Constraints for table `kit_componentes`
 --
-ALTER TABLE `ia_stats_proyecto`
-  ADD CONSTRAINT `fk_iastats_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
+ALTER TABLE `kit_componentes`
+  ADD CONSTRAINT `fk_kit_componentes_item` FOREIGN KEY (`item_id`) REFERENCES `kit_items` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_kit_componentes_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Constraints for table `justificacion_ctei`
+-- Constraints for table `kit_items`
 --
-ALTER TABLE `justificacion_ctei`
-  ADD CONSTRAINT `fk_justificacion_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `lotes_kits`
---
-ALTER TABLE `lotes_kits`
-  ADD CONSTRAINT `fk_lotes_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`),
-  ADD CONSTRAINT `fk_lotes_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`);
-
---
--- Constraints for table `materiales`
---
-ALTER TABLE `materiales`
-  ADD CONSTRAINT `fk_materiales_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias_materiales` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `prompts_proyecto`
---
-ALTER TABLE `prompts_proyecto`
-  ADD CONSTRAINT `fk_prompts_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `proyecto_areas`
---
-ALTER TABLE `proyecto_areas`
-  ADD CONSTRAINT `fk_pa_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_pa_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `proyecto_competencias`
---
-ALTER TABLE `proyecto_competencias`
-  ADD CONSTRAINT `fk_pc_competencia` FOREIGN KEY (`competencia_id`) REFERENCES `competencias` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_pc_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `proyecto_materiales`
---
-ALTER TABLE `proyecto_materiales`
-  ADD CONSTRAINT `fk_pm_material` FOREIGN KEY (`material_id`) REFERENCES `materiales` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `fk_pm_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
+ALTER TABLE `kit_items`
+  ADD CONSTRAINT `fk_kit_items_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias_items` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `recursos_multimedia`
 --
 ALTER TABLE `recursos_multimedia`
-  ADD CONSTRAINT `fk_recursos_proyecto` FOREIGN KEY (`proyecto_id`) REFERENCES `proyectos` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_rm_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
