@@ -542,7 +542,8 @@ include '../header.php';
             if ($kit['id'] == $kit_id) {
               echo '<div class="kit-chip" data-kit-id="' . $kit['id'] . '">';
               echo '<span>' . htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') . '</span>';
-              echo '<button type="button" class="remove-kit" onclick="removeKit(this)">×</button>';
+              echo '<button type="button" class="edit-kit" onclick="editKit(' . $kit['id'] . ')" title="Editar kit">✏️</button>';
+              echo '<button type="button" class="remove-kit" onclick="removeKit(this)" title="Remover kit">×</button>';
               echo '</div>';
               break;
             }
@@ -645,6 +646,7 @@ include '../header.php';
       font-weight: 500;
       box-shadow: 0 1px 3px rgba(0,0,0,0.15);
     }
+    .kit-chip .edit-kit,
     .kit-chip .remove-kit {
       background: rgba(255,255,255,0.3);
       border: none;
@@ -656,13 +658,19 @@ include '../header.php';
       justify-content: center;
       cursor: pointer;
       color: white;
-      font-size: 14px;
+      font-size: 12px;
       line-height: 1;
       padding: 0;
       transition: background 0.2s;
     }
+    .kit-chip .edit-kit {
+      font-size: 11px;
+    }
+    .kit-chip .edit-kit:hover {
+      background: rgba(249, 168, 37, 0.9);
+    }
     .kit-chip .remove-kit:hover {
-      background: rgba(255,255,255,0.5);
+      background: rgba(244, 67, 54, 0.9);
     }
     #kit_search {
       width: 100%;
@@ -1340,7 +1348,8 @@ include '../header.php';
     chip.dataset.kitId = kitId;
     chip.innerHTML = `
       <span>${escapeHtml(kitName)}</span>
-      <button type="button" class="remove-kit" onclick="removeKit(this)">×</button>
+      <button type="button" class="edit-kit" onclick="editKit(${kitId})" title="Editar kit">✏️</button>
+      <button type="button" class="remove-kit" onclick="removeKit(this)" title="Remover kit">×</button>
     `;
     
     selectedKitsContainer.appendChild(chip);
@@ -1359,6 +1368,13 @@ include '../header.php';
     syncKitsHiddenInputs();
     
     console.log('❌ [Kits] Removido kit:', kitId);
+  };
+  
+  // Editar kit (llamado desde HTML onclick)
+  window.editKit = function(kitId) {
+    const url = '/admin/kits/edit.php?id=' + kitId;
+    window.open(url, '_blank');
+    console.log('✏️ [Kits] Abriendo editor para kit:', kitId);
   };
   
   // Sincronizar hidden inputs para envío
