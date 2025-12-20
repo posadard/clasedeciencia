@@ -291,7 +291,7 @@ include 'includes/header.php';
                     <label>Grado</label>
                     <select name="grado">
                         <option value="">Todos</option>
-                        <?php for($g=6;$g<=11;$g++): ?>
+                        <?php for($g=1;$g<=11;$g++): ?>
                         <option value="<?= $g ?>" <?= isset($filters['grado']) && (int)$filters['grado']===$g?'selected':'' ?>><?= $g ?>°</option>
                         <?php endfor; ?>
                     </select>
