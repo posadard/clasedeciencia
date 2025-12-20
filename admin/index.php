@@ -5,8 +5,14 @@
 
 session_start();
 
+// Debug: collect early login diagnostics
+$LOGIN_DEBUG = [];
+$LOGIN_DEBUG[] = '🔍 [Login] Session started';
+$LOGIN_DEBUG[] = '🔍 [Login] Already logged: ' . ((isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) ? 'true' : 'false');
+
 // Check if already logged in
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
+    $LOGIN_DEBUG[] = '✅ [Login] Redirect to dashboard (already logged)';
     header('Location: /admin/dashboard.php');
     exit;
 }
@@ -24,10 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username === $admin_username && $password === $admin_password) {
         $_SESSION['admin_logged_in'] = true;
         $_SESSION['admin_username'] = $username;
+        $LOGIN_DEBUG[] = '✅ [Login] Auth OK for ' . $username;
         header('Location: /admin/dashboard.php');
         exit;
     } else {
         $error = 'Invalid username or password';
+        $LOGIN_DEBUG[] = '❌ [Login] Invalid credentials';
     }
 }
 ?>
@@ -36,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - The Green Almanac</title>
+    <title>Admin Login - Clase de Ciencia</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -110,8 +118,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="login-container">
-        <h1>Admin Login</h1>
-        <p style="text-align: center; margin-bottom: 1.5rem; color: #666;">The Green Almanac</p>
+                <h1>Admin Login</h1>
+                <p style="text-align: center; margin-bottom: 1.5rem; color: #666;">Clase de Ciencia</p>
+                <script>
+                    try {
+                        var msgs = <?= json_encode($LOGIN_DEBUG, JSON_UNESCAPED_UNICODE) ?>;
+                        console.log('🔍 [Login] Diagnostics:');
+                        msgs.forEach(function(m){ console.log(m); });
+                    } catch (e) { console.log('❌ [Login] Diagnostics emit error:', e && e.message); }
+                </script>
         
         <?php if ($error): ?>
         <div class="error"><?= htmlspecialchars($error) ?></div>
