@@ -317,6 +317,56 @@ include '../header.php';
     <textarea id="seg_notas" name="seg_notas" rows="3"><?= htmlspecialchars($seg['notas'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
   </div>
+  <!-- Estado/Publicación -->
+  <div class="form-section">
+    <h2>Publicación</h2>
+  <div class="form-row">
+    <div class="form-group">
+      <label for="autor">Autor</label>
+      <input type="text" id="autor" name="autor" value="<?= htmlspecialchars($clase['autor'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+    </div>
+    <div class="form-group">
+      <label for="status">Estado</label>
+      <select id="status" name="status">
+        <option value="draft" <?= ($clase['status'] ?? 'draft')==='draft'?'selected':'' ?>>Borrador</option>
+        <option value="published" <?= ($clase['status'] ?? 'draft')==='published'?'selected':'' ?>>Publicado</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="published_at">Publicado en</label>
+      <input type="datetime-local" id="published_at" name="published_at" value="<?= ($clase['published_at'] ? date('Y-m-d\TH:i', strtotime($clase['published_at'])) : '') ?>" />
+    </div>
+  </div>
+  </div>
+  <!-- Contenido HTML -->
+  <div class="form-section">
+    <h2>Contenido</h2>
+  <div class="form-group">
+    <label for="contenido_html">Contenido (HTML)</label>
+    <textarea id="contenido_html" name="contenido_html" rows="12"><?= htmlspecialchars($clase['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>
+  </div>
+  </div>
+  <!-- Taxonomías -->
+  <div class="form-section">
+    <h2>Taxonomías</h2>
+    <h3>Áreas</h3>
+    <div class="checkbox-grid">
+      <?php foreach ($areas as $a): ?>
+        <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
+      <?php endforeach; ?>
+    </div>
+    <h3 style="margin-top:.5rem">Competencias MEN</h3>
+    <div class="checkbox-grid">
+      <?php foreach ($competencias as $c): ?>
+        <label class="checkbox-label"><input type="checkbox" name="competencias[]" value="<?= (int)$c['id'] ?>" <?= in_array($c['id'], $existing_comp_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>)</label>
+      <?php endforeach; ?>
+    </div>
+  <div class="form-group">
+    <label for="tags">Tags (separados por coma)</label>
+    <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
+  </div>
+  </div>
   <!-- SEO -->
   <div class="form-section">
     <h2>SEO</h2>
@@ -380,56 +430,6 @@ include '../header.php';
   </style>
   <div id="seo-manual">
     <!-- Los campos SEO arriba funcionan como override cuando este panel está activo -->
-  </div>
-  </div>
-  <!-- Estado/Publicación -->
-  <div class="form-section">
-    <h2>Publicación</h2>
-  <div class="form-row">
-    <div class="form-group">
-      <label for="autor">Autor</label>
-      <input type="text" id="autor" name="autor" value="<?= htmlspecialchars($clase['autor'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
-    </div>
-    <div class="form-group">
-      <label for="status">Estado</label>
-      <select id="status" name="status">
-        <option value="draft" <?= ($clase['status'] ?? 'draft')==='draft'?'selected':'' ?>>Borrador</option>
-        <option value="published" <?= ($clase['status'] ?? 'draft')==='published'?'selected':'' ?>>Publicado</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="published_at">Publicado en</label>
-      <input type="datetime-local" id="published_at" name="published_at" value="<?= ($clase['published_at'] ? date('Y-m-d\TH:i', strtotime($clase['published_at'])) : '') ?>" />
-    </div>
-  </div>
-  </div>
-  <!-- Contenido HTML -->
-  <div class="form-section">
-    <h2>Contenido</h2>
-  <div class="form-group">
-    <label for="contenido_html">Contenido (HTML)</label>
-    <textarea id="contenido_html" name="contenido_html" rows="12"><?= htmlspecialchars($clase['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
-    <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>
-  </div>
-  </div>
-  <!-- Taxonomías -->
-  <div class="form-section">
-    <h2>Taxonomías</h2>
-    <h3>Áreas</h3>
-    <div class="checkbox-grid">
-      <?php foreach ($areas as $a): ?>
-        <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
-      <?php endforeach; ?>
-    </div>
-    <h3 style="margin-top:.5rem">Competencias MEN</h3>
-    <div class="checkbox-grid">
-      <?php foreach ($competencias as $c): ?>
-        <label class="checkbox-label"><input type="checkbox" name="competencias[]" value="<?= (int)$c['id'] ?>" <?= in_array($c['id'], $existing_comp_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($c['codigo'], ENT_QUOTES, 'UTF-8') ?>)</label>
-      <?php endforeach; ?>
-    </div>
-  <div class="form-group">
-    <label for="tags">Tags (separados por coma)</label>
-    <input type="text" id="tags" name="tags" value="<?= htmlspecialchars(implode(', ', $existing_tags), ENT_QUOTES, 'UTF-8') ?>" />
   </div>
   </div>
   <div class="form-actions">
