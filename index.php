@@ -31,7 +31,7 @@ include 'includes/header.php';
     </section>
         <!-- Acceso Rápido por Ciclo -->
         <section class="sections-overview">
-            <h2>Explorar por Ciclo</h2>
+            <h2 class="section-title-centered">Escoge tu ciclo</h2>
             <div class="ciclos-grid">
                 <?php foreach ($ciclos as $c): ?>
                 <article class="ciclo-card" data-ciclo="<?= h($c['numero']) ?>">
@@ -78,7 +78,7 @@ include 'includes/header.php';
     
     <!-- Acceso Rápido por Área -->
     <section class="areas-section">
-        <h2>Explorar por Área</h2>
+        <h2 class="section-title-centered">Escoge tu área</h2>
         <div class="areas-grid">
             <?php foreach ($areas as $a): ?>
             <a href="/<?= h($a['slug']) ?>" class="area-card-simple">

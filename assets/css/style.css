@@ -647,6 +647,14 @@ strong, b {
     margin-bottom: 3rem;
 }
 
+.section-title-centered {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
 .areas-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
