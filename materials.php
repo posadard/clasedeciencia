@@ -79,8 +79,8 @@ $total_materials = count_materials($pdo, $filters);
 $total_pages = ceil($total_materials / $per_page);
 
 // Page title and description
-$page_title = 'Materials Library';
-$page_description = 'Browse our comprehensive collection of materials, equipment, and tools for homesteading and traditional crafts.';
+$page_title = 'Materiales';
+$page_description = 'Explora materiales del kit y recursos adicionales para tus proyectos científicos.';
 
 if ($current_category) {
     $page_title = $current_category['name'] . ' - Materials Library';
@@ -159,19 +159,19 @@ include 'includes/header.php';
 
 <div class="container materials-page">
     <div class="breadcrumb">
-        <a href="/">Home</a> / <strong>Materials</strong>
+        <a href="/">Inicio</a> / <strong>Materiales</strong>
     </div>
         <h1><?= htmlspecialchars($page_title) ?></h1>
 
         <div class="library-layout">
             <!-- Sidebar Filters (library-style) -->
             <aside class="filters-sidebar">
-                <h2>Filter Materials</h2>
+                <h2>Filtrar Materiales</h2>
                 <form method="get" action="/materials.php" class="filters-form">
                     <div class="filter-group">
-                        <label>Category / Type</label>
+                        <label>Categoría</label>
                         <select name="category">
-                            <option value="">All Categories & Types</option>
+                            <option value="">Todas las categorías</option>
                             <?php foreach ($categories as $cat_opt): ?>
                                 <?php $catVal = 'category:' . $cat_opt['slug']; ?>
                                 <option value="<?= htmlspecialchars($catVal) ?>" <?= ($category_slug === $cat_opt['slug'] && empty($subcategory_slug)) ? 'selected' : '' ?>>
@@ -192,17 +192,17 @@ include 'includes/header.php';
                     </div>
 
                     <div class="filter-group">
-                        <label>Search</label>
-                        <input type="text" name="search" value="<?= htmlspecialchars($search_query) ?>" placeholder="Search materials..." />
+                        <label>Buscar</label>
+                        <input type="text" name="search" value="<?= htmlspecialchars($search_query) ?>" placeholder="Buscar materiales..." />
                     </div>
 
                     <div class="filter-group filter-inline">
-                        <label for="filter-featured">Featured only</label>
+                        <label for="filter-featured">Solo destacados</label>
                         <input id="filter-featured" type="checkbox" name="featured" value="1" <?= $featured_only ? 'checked' : '' ?> />
                     </div>
 
                     <div class="filter-group filter-inline">
-                        <label for="filter-essential">Essential only</label>
+                        <label for="filter-essential">Solo esenciales</label>
                         <input id="filter-essential" type="checkbox" name="essential" value="1" <?= $essential_only ? 'checked' : '' ?> />
                     </div>
 
@@ -220,7 +220,7 @@ include 'includes/header.php';
 
         <!-- Results Header -->
         <div class="results-header">
-            <div class="results-count">Showing <strong><?= count($materials) ?></strong> of <strong><?= $total_materials ?></strong> materials</div>
+            <div class="results-count">Mostrando <strong><?= count($materials) ?></strong> de <strong><?= $total_materials ?></strong> materiales</div>
             <?php if ($category_slug || $subcategory_slug || $search_query || $featured_only || $essential_only): ?>
             <div class="active-filters compact">
                 <strong>Active Filters:</strong>
@@ -278,9 +278,9 @@ include 'includes/header.php';
         <!-- Materials Grid -->
         <?php if (empty($materials)): ?>
         <div class="empty-state">
-            <h2>No materials found</h2>
-            <p>Try adjusting your filters or search query.</p>
-            <a href="/materials.php" class="btn btn-primary">View All Materials</a>
+            <h2>No se encontraron materiales</h2>
+            <p>Intenta ajustar los filtros o la búsqueda.</p>
+            <a href="/materials.php" class="btn btn-primary">Ver todos los materiales</a>
         </div>
         <?php else: ?>
         <div class="materials-grid">
