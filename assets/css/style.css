@@ -566,7 +566,18 @@ strong, b {
     font-weight: 700;
     box-shadow: 0 2px 4px rgba(249, 168, 37, 0.3);
     text-transform: none;
+    font-size: 1rem;
+    padding: 0.2rem 0.5rem;
+    line-height: 1;
+}
+
+.grade-badge {
+    background: var(--color-secondary);
+    color: white;
+    padding: 0.25rem 0.6rem;
+    border-radius: 100px;
     font-size: 0.8rem;
+    font-weight: 600;
 }
 
 /* Footer con botón */

@@ -350,9 +350,20 @@ include 'includes/header.php';
                         <div class="card-content">
                             <div class="card-meta">
                                 <?php if (!empty($p['destacado'])): ?>
-                                <span class="badge badge-destacado">⭐ Recomendado</span>
+                                <span class="badge badge-destacado" title="Recomendado">⭐</span>
                                 <?php endif; ?>
                                 <span class="section-badge">Ciclo <?= h($p['ciclo']) ?></span>
+                                <?php 
+                                // Mostrar grados como badges individuales
+                                if (!empty($p['grados'])) {
+                                    $grados = json_decode($p['grados'], true);
+                                    if (is_array($grados) && count($grados) > 0) {
+                                        foreach ($grados as $grado) {
+                                            echo '<span class="grade-badge">' . (int)$grado . '°</span>';
+                                        }
+                                    }
+                                }
+                                ?>
                                 <span class="difficulty-badge"><?= h(ucfirst($p['dificultad'])) ?></span>
                             </div>
                             <h3><?= h($p['nombre']) ?></h3>
