@@ -105,9 +105,9 @@ include 'includes/header.php';
         <h2>Explorar por Área</h2>
         <div class="sections-grid">
             <?php foreach ($areas as $a): ?>
-            <a href="/catalogo.php?area=<?= h($a['slug']) ?>" class="section-card">
+            <a href="/catalogo.php?area=<?= h($a['slug']) ?>" class="section-card area-card">
                 <h3><?= h($a['nombre']) ?></h3>
-                <p><?= h($a['descripcion']) ?></p>
+                <p class="area-description"><?= h($a['descripcion']) ?></p>
             </a>
             <?php endforeach; ?>
         </div>

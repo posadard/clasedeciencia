@@ -39,19 +39,28 @@ function cdc_get_recent_proyectos($pdo, $limit = 6) {
 }
 
 function cdc_get_areas($pdo) {
-    // Nuevo esquema: areas solo tiene id, nombre, slug
-    $stmt = $pdo->query("SELECT id, nombre, slug FROM areas ORDER BY nombre");
+    // Obtener áreas con explicacion
+    $stmt = $pdo->query("SELECT id, nombre, slug, explicacion FROM areas ORDER BY nombre");
     $rows = $stmt->fetchAll();
-    // Añadimos una descripción genérica para UI si no existe en BD
+    // Crear resumen corto (primeras 2 oraciones o 150 caracteres)
     foreach ($rows as &$row) {
-        $slug = $row['slug'] ?? '';
-        $desc = '';
-        if ($slug === 'fisica') $desc = 'Fenómenos mecánicos, eléctricos y magnéticos';
-        elseif ($slug === 'quimica') $desc = 'Sustancias, mezclas y reacciones seguras';
-        elseif ($slug === 'biologia') $desc = 'Seres vivos, células y procesos biológicos';
-        elseif ($slug === 'tecnologia') $desc = 'Construcción, energía y aplicaciones prácticas';
-        elseif ($slug === 'ambiental') $desc = 'Cuidado del entorno y sostenibilidad';
-        $row['descripcion'] = $desc;
+        $explicacion = $row['explicacion'] ?? '';
+        if (!empty($explicacion)) {
+            // Extraer primeras 2 oraciones
+            $sentences = preg_split('/(?<=[.!?])\s+/', $explicacion, 3);
+            $resumen = isset($sentences[0]) && isset($sentences[1]) 
+                ? $sentences[0] . ' ' . $sentences[1] 
+                : $sentences[0] ?? '';
+            
+            // Limitar a 150 caracteres si es muy largo
+            if (strlen($resumen) > 150) {
+                $resumen = mb_substr($resumen, 0, 147) . '...';
+            }
+            $row['descripcion'] = $resumen;
+        } else {
+            // Fallback para áreas sin explicacion
+            $row['descripcion'] = 'Explorar proyectos de ' . strtolower($row['nombre']);
+        }
     }
     return $rows;
 }
