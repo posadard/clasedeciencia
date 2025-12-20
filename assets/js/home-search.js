@@ -446,7 +446,9 @@ class ClaseDeCienciaSearch {
     clearTimeout(this.debounceTimer);
     
     if (query.length < 2) {
-      this.showDefaultResults();
+      if (this.searchResults) {
+        this.hideSearchResults();
+      }
       return;
     }
     
@@ -460,6 +462,7 @@ class ClaseDeCienciaSearch {
     if (!this.proyectosData || this.proyectosData.length === 0) {
       console.log('⚠️ [ClaseDeCienciaSearch] No hay datos para buscar');
       this.displayNoResults('Cargando datos...');
+      this.showSearchResults();
       return;
     }
     
@@ -468,7 +471,7 @@ class ClaseDeCienciaSearch {
       return proyecto.search_text && proyecto.search_text.includes(queryLower);
     });
     
-    console.log('✅ [ClaseDeCienciaSearch] Encontrados:', results.length, 'resultados');
+    console.log('✅ [ClaseDeCienciaSearch] Encontrados:', results.length, 'resultados para:', query);
     
     const destacadas = results.filter(p => p.featured).slice(0, 3);
     const todas = results.slice(0, 8);
@@ -492,7 +495,16 @@ class ClaseDeCienciaSearch {
     const allContainer = document.getElementById('all-results');
     const destacadasContainer = document.getElementById('destacadas-results');
     
-    if (!allContainer || !destacadasContainer) return;
+    console.log('📊 [ClaseDeCienciaSearch] displayResults - containers:', {
+      allContainer: !!allContainer,
+      destacadasContainer: !!destacadasContainer,
+      resultCount: allResults.length
+    });
+    
+    if (!allContainer || !destacadasContainer) {
+      console.log('❌ [ClaseDeCienciaSearch] Containers no encontrados');
+      return;
+    }
     
     // Update results count
     const countElement = this.searchResults.querySelector('.results-count');
@@ -505,6 +517,7 @@ class ClaseDeCienciaSearch {
     // Display all results
     if (allResults.length > 0) {
       allContainer.innerHTML = allResults.map(proyecto => this.createResultItem(proyecto)).join('');
+      console.log('✅ [ClaseDeCienciaSearch] Resultados renderizados:', allResults.length);
     } else {
       this.displayNoResults('No se encontraron clases para tu búsqueda');
     }
@@ -566,13 +579,20 @@ class ClaseDeCienciaSearch {
   }
   
   showSearchResults() {
-    if (!this.searchResults) return;
-    
-    if (!this.searchInput.value.trim()) {
-      this.showDefaultResults();
+    if (!this.searchResults) {
+      console.log('⚠️ [ClaseDeCienciaSearch] showSearchResults - no hay dropdown');
+      return;
     }
     
+    console.log('👁️ [ClaseDeCienciaSearch] Mostrando dropdown');
     this.searchResults.classList.add('show');
+    
+    // Verificar que se aplicó la clase
+    setTimeout(() => {
+      const isVisible = this.searchResults.classList.contains('show');
+      const display = window.getComputedStyle(this.searchResults).display;
+      console.log('👁️ [ClaseDeCienciaSearch] Estado dropdown:', { isVisible, display });
+    }, 50);
   }
   
   hideSearchResults() {

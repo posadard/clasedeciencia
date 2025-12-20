@@ -322,6 +322,7 @@ strong, b {
 .search-box {
     max-width: 720px;
     margin: 0 auto;
+    position: relative;
 }
 
 .search-form {
