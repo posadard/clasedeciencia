@@ -471,9 +471,26 @@ class ClaseDeCienciaSearch {
       return;
     }
     
-    const queryLower = query.toLowerCase().trim();
+    // Normalizar query (quitar acentos)
+    const normalizeQuery = (text) => {
+      return text
+        .toLowerCase()
+        .trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Quitar diacríticos
+        .replace(/[áàäâ]/g, 'a')
+        .replace(/[éèëê]/g, 'e')
+        .replace(/[íìïî]/g, 'i')
+        .replace(/[óòöô]/g, 'o')
+        .replace(/[úùüû]/g, 'u')
+        .replace(/ñ/g, 'n');
+    };
+    
+    const queryNormalized = normalizeQuery(query);
+    console.log('🔍 [ClaseDeCienciaSearch] Query normalizada:', queryNormalized);
+    
     const results = this.proyectosData.filter(proyecto => {
-      return proyecto.search_text && proyecto.search_text.includes(queryLower);
+      return proyecto.search_text && proyecto.search_text.includes(queryNormalized);
     });
     
     console.log('✅ [ClaseDeCienciaSearch] Encontrados:', results.length, 'resultados para:', query);

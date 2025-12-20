@@ -77,6 +77,46 @@ try {
         ];
         $dificultad = $dificultad_map[$clase['dificultad']] ?? ucfirst($clase['dificultad']);
         
+        // Agregar keywords adicionales para búsqueda
+        $keywords = [];
+        
+        // Keywords de grados (con y sin símbolo)
+        if (!empty($grados_array)) {
+            foreach ($grados_array as $g) {
+                $keywords[] = 'grado ' . $g;
+                $keywords[] = $g . ' grado';
+                $keywords[] = 'grado' . $g;
+            }
+        }
+        
+        // Keywords de ciclo
+        $keywords[] = 'ciclo ' . $clase['ciclo'];
+        $keywords[] = 'ciclo' . $clase['ciclo'];
+        
+        // Función para normalizar (quitar acentos)
+        $normalize = function($text) {
+            $text = strtolower($text);
+            $text = str_replace(
+                ['á', 'é', 'í', 'ó', 'ú', 'ñ', 'ü'],
+                ['a', 'e', 'i', 'o', 'u', 'n', 'u'],
+                $text
+            );
+            return $text;
+        };
+        
+        // Construir texto de búsqueda normalizado
+        $search_parts = [
+            $clase['nombre'] ?? '',
+            $clase['resumen'] ?? '',
+            $clase['areas'] ?? '',
+            $ciclo_nombre,
+            $grados_texto,
+            $dificultad,
+            implode(' ', $keywords)
+        ];
+        
+        $search_text_normalized = $normalize(implode(' ', $search_parts));
+        
         // Construir objeto para búsqueda
         $proyectos[] = [
             'id' => (int)$clase['id'],
@@ -92,15 +132,8 @@ try {
             'grados' => $grados_texto,
             'image' => $clase['imagen_portada'] ?? '/assets/images/placeholder-proyecto.jpg',
             'featured' => (bool)$clase['destacado'],
-            // Campos para búsqueda (lowercase para comparación)
-            'search_text' => strtolower(implode(' ', [
-                $clase['nombre'] ?? '',
-                $clase['resumen'] ?? '',
-                $clase['areas'] ?? '',
-                $ciclo_nombre,
-                $grados_texto,
-                $dificultad
-            ]))
+            // Campos para búsqueda (normalizado sin acentos)
+            'search_text' => $search_text_normalized
         ];
     }
     
