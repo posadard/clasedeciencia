@@ -13,6 +13,26 @@ RewriteRule ^proyecto\.php$ /%1? [R=301,L]
 # URL amigable para catálogo: /clases -> /catalogo.php
 RewriteRule ^clases$ /catalogo.php [L,QSA]
 
+# URLs amigables para ciclos: /{slug-ciclo} -> /catalogo.php?ciclo={numero}
+RewriteRule ^desarrollo-inicial$ /catalogo.php?ciclo=0 [L,QSA]
+RewriteRule ^exploracion$ /catalogo.php?ciclo=1 [L,QSA]
+RewriteRule ^descubrimiento$ /catalogo.php?ciclo=2 [L,QSA]
+RewriteRule ^experimentacion$ /catalogo.php?ciclo=3 [L,QSA]
+RewriteRule ^investigacion$ /catalogo.php?ciclo=4 [L,QSA]
+RewriteRule ^analisis$ /catalogo.php?ciclo=5 [L,QSA]
+
+# URLs amigables para áreas: /{slug-area} -> /catalogo.php?area={slug}
+RewriteRule ^fisica$ /catalogo.php?area=fisica [L,QSA]
+RewriteRule ^quimica$ /catalogo.php?area=quimica [L,QSA]
+RewriteRule ^biologia$ /catalogo.php?area=biologia [L,QSA]
+RewriteRule ^ciencias-ambientales$ /catalogo.php?area=ciencias-ambientales [L,QSA]
+RewriteRule ^matematicas$ /catalogo.php?area=matematicas [L,QSA]
+RewriteRule ^tecnologia-informatica$ /catalogo.php?area=tecnologia-informatica [L,QSA]
+RewriteRule ^ingenieria-diseno$ /catalogo.php?area=ingenieria-diseno [L,QSA]
+RewriteRule ^ciencias-sociales$ /catalogo.php?area=ciencias-sociales [L,QSA]
+RewriteRule ^educacion-artistica$ /catalogo.php?area=educacion-artistica [L,QSA]
+RewriteRule ^lenguaje-comunicacion$ /catalogo.php?area=lenguaje-comunicacion [L,QSA]
+
 # Reescribir /{slug} a /proyecto.php?slug={slug}
 # Excluir archivos y directorios existentes
 RewriteCond %{REQUEST_FILENAME} !-f

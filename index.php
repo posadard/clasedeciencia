@@ -37,7 +37,7 @@ include 'includes/header.php';
             <h2>Explorar por Ciclo</h2>
             <div class="sections-grid">
                 <?php foreach ($ciclos as $c): ?>
-                <a href="/clases?ciclo=<?= h($c['numero']) ?>" class="section-card">
+                <a href="/<?= h($c['slug']) ?>" class="section-card">
                     <h3>Ciclo <?= h($c['numero']) ?>: <?= h($c['nombre']) ?> (<?= h($c['grados_texto']) ?>)</h3>
                     <p><?= h($c['proposito_corto']) ?></p>
                 </a>
@@ -100,7 +100,7 @@ include 'includes/header.php';
         <h2>Explorar por Área</h2>
         <div class="sections-grid">
             <?php foreach ($areas as $a): ?>
-            <a href="/clases?area=<?= h($a['slug']) ?>" class="section-card area-card">
+            <a href="/<?= h($a['slug']) ?>" class="section-card area-card">
                 <h3><?= h($a['nombre']) ?></h3>
                 <p class="area-description"><?= h($a['descripcion']) ?></p>
             </a>
