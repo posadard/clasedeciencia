@@ -98,4 +98,51 @@ include '../header.php';
   </table>
 <?php endif; ?>
 
+<!-- Inline styles para alinear el cuadro de búsqueda al admin base de materiales -->
+<style>
+.filters-bar {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+.filters-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.filter-group label {
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+.filter-group select,
+.filter-group input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-width: 200px;
+}
+.search-group {
+  flex-direction: row;
+  align-items: center;
+  flex: 1;
+}
+.search-group input { flex: 1; }
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.875rem; }
+.text-muted { color: #666; }
+.badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: bold; background: #e7e7e7; color: #333; }
+.actions { white-space: nowrap; }
+.actions .btn { margin-right: 0.5rem; }
+.btn-edit { background: #007bff; color: #fff; }
+.btn-edit:hover { background: #0056b3; }
+.empty-state { text-align: center; padding: 3rem; color: #666; }
+</style>
+
 <?php include '../footer.php'; ?>
