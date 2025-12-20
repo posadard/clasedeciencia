@@ -20,6 +20,11 @@
     <meta name="twitter:title" content="<?= isset($page_title) ? h($page_title) : SITE_NAME ?>">
     <meta name="twitter:description" content="<?= isset($page_description) ? h($page_description) : h(SITE_DESCRIPTION) ?>">
     
+    <!-- Google Fonts - Tipografía moderna científica -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="stylesheet" href="/assets/css/article-content.css">
     <link rel="stylesheet" href="/assets/css/print.css" media="print">
