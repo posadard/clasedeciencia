@@ -162,3 +162,6 @@ include '../header.php';
 
 <?php include '../footer.php'; ?>
 
+</script>
+
+<?php include '../footer.php'; ?>
