@@ -1,0 +1,116 @@
+PROYECTO DE CIENCIA, TECNOLOGÍA E INNOVACIÓN
+CLASE DE CIENCIA
+Programa de Fortalecimiento de Capacidades Científicas
+en Educación Básica y Media
+con Plataforma Tecnológica e Inteligencia Artificial
+????????????????????????????????????????
+Propuesta Técnica para Contratación Directa
+Artículo 2, numeral 4, literal e) - Ley 1150 de 2007
+Plataforma: clasedeciencia.com
+Proponente:
+CLASE DE CIENCIA S.A.S.
+Diciembre 2025
+
+
+RESUMEN EJECUTIVO
+Nombre del ProyectoClase de Ciencia: Programa de Fortalecimiento de Capacidades Científicas con Plataforma Tecnológica e IAPlataforma Digitalclasedeciencia.com - Sistema de gestión de aprendizaje científico con IATipología CTeIFormación científica y tecnológica + Desarrollo de servicios tecnológicos con innovación (IA)Fundamento LegalLey 1150/2007 Art. 2 Num. 4 Lit. e), Decreto 591/1991 Art. 2, Ley 1286/2009 Art. 18Modalidad ContractualContratación Directa - Actividades de Ciencia, Tecnología e InnovaciónPoblación ObjetivoEstudiantes de grados 6° a 11° de instituciones educativas oficialesPortafolio de Proyectos15 proyectos científicos propuestos (definición final en negociación del contrato)Componente InnovadorAsistente de Inteligencia Artificial para desarrollo de competencias científicasAlineación MENEstándares Básicos de Competencias en Ciencias Naturales, DBA, Lineamientos CurricularesObjeto del Proyecto
+Fortalecer las capacidades científicas de los estudiantes de educación básica secundaria y media del Departamento de [NOMBRE], mediante la implementación de un programa de formación experimental en ciencias naturales que integra: (i) proyectos científicos prácticos, (ii) la plataforma tecnológica clasedeciencia.com con guías interactivas y sistemas de desarrollo de competencias, y (iii) asistencia pedagógica mediante inteligencia artificial, todo alineado con los Estándares Básicos de Competencias del MEN.
+1. FUNDAMENTO JURÍDICO PARA CONTRATACIÓN DIRECTA
+1.1 Causal de Contratación Directa
+El presente proyecto se enmarca en la causal de contratación directa establecida en el literal e) del numeral 4 del artículo 2 de la Ley 1150 de 2007: "Los contratos para el desarrollo de actividades científicas y tecnológicas".
+1.2 Actividades de CTeI Aplicables
+Conforme al artículo 2 del Decreto Ley 591 de 1991, el proyecto desarrolla las siguientes actividades reconocidas como de CTeI:
+1. "Formación y capacitación científica y tecnológica" (numeral 4): El programa capacita estudiantes en metodología científica, uso de equipos de laboratorio y desarrollo de competencias de indagación, mediante la plataforma clasedeciencia.com.
+2. "Difusión científica y tecnológica" (numeral 5): La plataforma difunde conocimiento científico mediante contenidos interactivos, guías digitales y recursos multimedia especializados.
+3. "Servicios científicos y tecnológicos" (numeral 6): El sistema incorpora inteligencia artificial para la evaluación de competencias, retroalimentación personalizada y acompañamiento pedagógico automatizado.
+4. "Proyectos de innovación que incorporen tecnología" (numeral 7): La plataforma representa una innovación tecnológica aplicada a la educación científica, integrando IA para el desarrollo de competencias.
+1.3 Componente de Innovación Tecnológica
+El proyecto incorpora inteligencia artificial como elemento diferenciador, lo cual refuerza su naturaleza de CTeI conforme al artículo 18 de la Ley 1286 de 2009, que incluye como actividad de CTeI: "Desarrollar proyectos de innovación que incorporen tecnología, creación, generación, apropiación y adaptación de la misma". La plataforma clasedeciencia.com aplica tecnología de punta al sector educativo.
+
+
+2. PLATAFORMA TECNOLÓGICA: CLASEDECIENCIA.COM
+El eje central del programa es la plataforma clasedeciencia.com, un sistema de gestión de aprendizaje científico (LMS) especializado que integra tecnología de inteligencia artificial para potenciar el desarrollo de competencias en ciencias naturales.
+2.1 Arquitectura de la Plataforma
+MóduloFuncionalidadGuías InteractivasSecuencias didácticas digitales para cada proyecto científico. Incluyen instrucciones paso a paso, videos demostrativos, simulaciones y actividades de verificación de comprensión.Sistema de CompetenciasMotor de evaluación continua que mide el desarrollo de competencias científicas: indagación, explicación de fenómenos, uso del conocimiento científico. Genera reportes individuales y grupales.Asistente IAInteligencia artificial que brinda retroalimentación personalizada a los estudiantes, responde dudas sobre los experimentos, sugiere rutas de aprendizaje y apoya al docente con análisis de desempeño grupal.Panel DocenteDashboard para docentes con seguimiento de avance por estudiante, alertas de bajo desempeño, recursos complementarios y herramientas de planificación de clase.Reportes InstitucionalesSistema de reportes para la Secretaría de Educación y la Gobernación: indicadores de cobertura, uso de plataforma, avance en competencias, impacto del programa.2.2 Funcionalidades del Asistente de Inteligencia Artificial
+El asistente de IA integrado en clasedeciencia.com ofrece:
+1. Tutoría personalizada: Responde preguntas de los estudiantes sobre los conceptos científicos y procedimientos experimentales en tiempo real.
+2. Retroalimentación adaptativa: Analiza las respuestas del estudiante y genera retroalimentación específica para fortalecer áreas de mejora.
+3. Rutas de aprendizaje: Sugiere actividades complementarias según el nivel de dominio demostrado por cada estudiante.
+4. Análisis predictivo: Identifica estudiantes en riesgo de bajo desempeño para intervención temprana del docente.
+5. Generación de reportes: Produce informes automatizados de avance individual y grupal para docentes y directivos.
+2.3 Modelo de Acceso
+La plataforma opera bajo modelo de licenciamiento institucional por el período del contrato. Cada institución educativa beneficiaria recibe:
+? Acceso ilimitado a clasedeciencia.com durante la vigencia del proyecto
+? Cuentas individuales para estudiantes y docentes
+? Acceso al asistente de IA sin restricciones de uso
+? Soporte técnico en línea
+? Actualizaciones de contenido durante la vigencia
+
+
+3. DESCRIPCIÓN TÉCNICA DEL PROGRAMA
+3.1 Componentes Integrados del Servicio
+El proyecto NO es una compra de bienes ni de licencias de software. Es un servicio educativo especializado de CTeI que integra tres componentes inseparables:
+ComponenteDescripción1. Plataforma Tecnológica
+clasedeciencia.comSistema de gestión de aprendizaje científico con guías interactivas, sistema de evaluación de competencias, asistente de inteligencia artificial, panel docente y reportes institucionales.2. Proyectos Científicos
+Kits experimentalesMateriales físicos para experimentación práctica, vinculados a las guías de la plataforma. Cada proyecto tiene su correspondiente módulo digital en clasedeciencia.com.3. Acompañamiento
+Humano + IACapacitación docente presencial/virtual, soporte técnico, asistencia pedagógica mediante IA, y acompañamiento durante la implementación.Nota importante: Los tres componentes funcionan de manera integrada. Los kits experimentales están diseñados para usarse con las guías de la plataforma, y el asistente de IA complementa la experiencia práctica con retroalimentación inmediata.
+
+
+4. PORTAFOLIO DE PROYECTOS CIENTÍFICOS
+? NOTA IMPORTANTE: El siguiente portafolio constituye la propuesta base de proyectos científicos. La selección final de proyectos, cantidades y distribución por grado se definirá en la etapa de negociación del contrato, de acuerdo con las necesidades específicas del Departamento, la caracterización de las instituciones educativas beneficiarias y los recursos disponibles.4.1 CICLO 1: Exploración Científica (Grados 6° y 7°)
+Enfoque pedagógico: Explorar, observar, reconocer fenómenos. Los estudiantes descubren la ciencia, manipulan por primera vez, observan resultados visibles y describen lo que ocurre.
+#ProyectoÁreaConceptos ClaveCompetencias MEN1Microscopio sencilloBiología / FísicaObservación de células, fibras, insectos. Uso de lentes y aumento.Observa fenómenos no visibles a simple vista. Describe características de seres vivos.2Pulmón mecánicoBiologíaModelo respiratorio. Relación presión aire–movimiento.Reconoce funciones vitales. Explica modelos científicos simples.3Circuito eléctrico básicoFísicaCorriente eléctrica. Interruptor. Encendido y apagado.Reconoce componentes eléctricos. Observa transformación de energía.4Separación de mezclasQuímicaFiltración. Decantación. Propiedades de sustancias.Clasifica mezclas. Aplica métodos físicos de separación.5Test de pHQuímicaÁcidos y bases. Indicadores seguros. Clasificación.Reconoce propiedades químicas. Aplica normas de seguridad.4.2 CICLO 2: Experimentación Científica (Grados 8° y 9°)
+Enfoque pedagógico: Explicar, comparar, experimentar. Los estudiantes analizan variables, relacionan causa–efecto y explican con lenguaje científico.
+#ProyectoÁreaConceptos ClaveCompetencias MEN1Radio de cristalFísicaOndas electromagnéticas. Comunicación sin batería.Explica propagación de ondas. Relaciona ciencia y tecnología.2Motor eléctrico simpleFísicaElectricidad y magnetismo. Conversión de energía.Explica relación corriente–movimiento. Analiza transformaciones.3Osmosis con vegetalesBiologíaTransporte celular. Cambios observables en células.Explica procesos celulares. Usa evidencia experimental.4Carro trampa de ratónFísica / TecnologíaEnergía potencial y cinética. Fricción.Analiza fuerzas y movimiento. Evalúa variables físicas.5Generador manual (dinamo)FísicaInducción electromagnética. Producción de electricidad.Explica generación eléctrica. Relaciona movimiento y energía.
+
+4.3 CICLO 3: Análisis Científico (Grados 10° y 11°)
+Enfoque pedagógico: Analizar, modelar, argumentar. Los estudiantes comparan sistemas, evalúan eficiencia y argumentan con evidencia.
+#ProyectoÁreaConceptos ClaveCompetencias MEN1Carro solarFísica / TecnologíaEnergía solar. Conversión energética. Eficiencia.Analiza sistemas energéticos. Evalúa sostenibilidad.2Turbina eólica de mesaFísica / TecnologíaEnergía cinética del viento. Generación eléctrica.Evalúa fuentes alternativas. Analiza impacto tecnológico.3ElectroimánFísicaCampos magnéticos. Variables eléctricas. Fuerza.Analiza relación corriente–campo. Formula explicaciones causales.4Tratamiento de aguaQuímica / AmbientalFiltración. Adsorción. Calidad del agua.Explica procesos químicos y físicos. Relaciona ciencia y entorno.5Análisis químico del entornoQuímicaReacciones químicas. Sustancias cotidianas.Explica transformaciones químicas. Aplica principios de seguridad y ética.4.4 Resumen del Portafolio
+CicloGradosProyectosÁreasEnfoqueCiclo 1: Exploración6° y 7°5Bio, Fís, QuímObservar, describirCiclo 2: Experimentación8° y 9°5Bio, Fís, TecExplicar, compararCiclo 3: Análisis10° y 11°5Fís, Quím, AmbAnalizar, argumentarTOTAL6° a 11°15MultidisciplinarProgresivo
+
+5. METODOLOGÍA DE EJECUCIÓN
+5.1 Fases del Proyecto
+1. FASE 1 - Planeación y Configuración (Mes 1): Caracterización de IE, definición final de proyectos por grado, creación de cuentas en clasedeciencia.com, configuración de grupos, cronograma de implementación.
+2. FASE 2 - Producción y Distribución (Meses 1-3): Fabricación de kits experimentales según proyectos definidos, activación de licencias en plataforma, entrega de materiales en IE.
+3. FASE 3 - Capacitación Docente (Meses 2-4): Talleres de uso de plataforma clasedeciencia.com, metodología de los proyectos científicos, gestión del asistente IA, interpretación de reportes.
+4. FASE 4 - Implementación en Aula (Meses 4-10): Desarrollo de proyectos científicos integrados con plataforma, uso activo del asistente IA, registro de avance en sistema.
+5. FASE 5 - Monitoreo Continuo (Meses 4-11): Seguimiento mediante dashboard de plataforma, reportes automatizados de IA, soporte técnico-pedagógico.
+6. FASE 6 - Evaluación Final (Mes 12): Consolidación de indicadores de la plataforma, informe de impacto, análisis de desarrollo de competencias.
+5.2 Flujo de Trabajo Integrado
+El estudiante experimenta un ciclo de aprendizaje integrado:
+• Preparación: Accede a clasedeciencia.com, revisa la guía interactiva del proyecto, ve videos demostrativos.
+• Experimentación: Construye el proyecto con el kit físico, siguiendo instrucciones de la plataforma.
+• Interacción con IA: Consulta dudas al asistente, recibe retroalimentación sobre su comprensión.
+• Evaluación: Completa actividades de verificación en plataforma, el sistema registra su avance en competencias.
+• Profundización: La IA sugiere recursos adicionales según su desempeño.
+6. INDICADORES Y MEDICIÓN DE IMPACTO
+6.1 Indicadores de Producto
+IndicadorMetaVerificaciónKits experimentales distribuidos[X] unidadesActas de entregaIE con acceso activo a clasedeciencia.com[X] IEReporte plataformaEstudiantes registrados en plataforma[X] estudiantesDashboard sistemaDocentes capacitados en uso de plataforma[X] docentesCertificadosInteracciones con asistente IA> [X] consultasLog de sistema6.2 Indicadores de Resultado (Medidos por la Plataforma)
+1. Desarrollo de competencias científicas: Medido por el sistema de evaluación de clasedeciencia.com (meta: 60% de estudiantes suben al menos un nivel en competencias de indagación).
+2. Tasa de uso activo: Porcentaje de estudiantes con más de 3 sesiones mensuales en plataforma (meta: 70%).
+3. Completitud de proyectos: Porcentaje de estudiantes que completan al menos 2 proyectos con evaluación satisfactoria (meta: 75%).
+4. Satisfacción con asistente IA: Medido por encuesta integrada en plataforma (meta: 80% satisfechos).
+
+
+7. ESTRUCTURA DE COSTOS (REFERENCIAL)
+Nota: Los valores finales dependerán de la selección de proyectos, cantidades y cobertura acordada en la negociación del contrato.
+Concepto% del ValorEntregableLicenciamiento plataforma clasedeciencia.com (incluye IA)25%Acceso activoProducción de kits experimentales (15 proyectos)40%ActasDesarrollo de contenidos digitales y guías8%En plataformaLogística de distribución7%ActasCapacitación docente8%CertificadosSoporte técnico y pedagógico7%InformesAdministración e impuestos5%-TOTAL100%-8. CONCLUSIONES
+8.1 Viabilidad Jurídica para Contratación Directa
+El proyecto Clase de Ciencia cumple plenamente con los requisitos para contratación directa por actividades de CTeI al combinar cuatro actividades reconocidas en el Decreto 591/1991: (i) formación científica y tecnológica, (ii) difusión de conocimiento mediante plataforma digital, (iii) servicios tecnológicos, y (iv) innovación con inteligencia artificial aplicada a educación.
+8.2 Diferenciadores del Proyecto
+• Integración tecnológica: No es venta de kits ni licencia de software; es un servicio educativo que integra plataforma + materiales + IA.
+• Portafolio flexible: 15 proyectos propuestos con definición final en negociación según necesidades departamentales.
+• Componente de innovación: El asistente de IA representa desarrollo tecnológico aplicado a educación, actividad de CTeI.
+• Medición automatizada: La plataforma genera indicadores en tiempo real, facilitando el seguimiento y la rendición de cuentas.
+• Cobertura multidisciplinar: Proyectos en Biología, Física, Química, Tecnología y Ambiente.
+8.3 Recomendación
+Se recomienda a la Gobernación considerar la contratación del programa Clase de Ciencia como una estrategia integral de fortalecimiento de competencias científicas que aprovecha la causal de contratación directa de CTeI para garantizar la idoneidad técnica del ejecutor y la implementación ágil de una solución tecnológica innovadora en las instituciones educativas del Departamento.
+????????????????????????????????????????
+CLASE DE CIENCIA S.A.S.
+clasedeciencia.com
+Formación científica que transforma
+[NIT] | [Dirección] | [Teléfono] | [Email]
+Proyecto Clase de Ciencia | Propuesta CTeI
+
+Clase de Ciencia S.A.S. | Página 1 de 2
+

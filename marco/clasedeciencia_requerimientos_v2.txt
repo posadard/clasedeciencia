@@ -1,0 +1,170 @@
+DOCUMENTO DE REQUERIMIENTOS TÉCNICOS
+clasedeciencia.com
+Plataforma de Contenido Científico Interactivo
+con Asistente de Inteligencia Artificial
+???????????????????????????
+Guía para Desarrollo con Agente de IA
+Versión 2.0 | Diciembre 2025
+
+
+1. FILOSOFÍA DEL SISTEMA
+1.1 Concepto Central
+?? PRINCIPIO FUNDAMENTAL:
+El kit físico es la llave. Quien posea un kit puede entrar a la plataforma y aprender. No se requiere registro, login ni recolección de datos personales. La plataforma es pública y abierta.Modelo de funcionamiento:
+La misma guía sirve para estudiante y docente, pero con diferentes enfoques de lectura:
+Estudiante aprendeDocente aprendePor qué funciona el fenómenoCómo armar el proyecto físicamenteConceptos científicosLista de materiales y verificaciónCompetencias MENPasos de montaje y tips prácticosConexiones con el mundo realPuntos de atención y seguridadEl docente NO es reemplazado: La plataforma facilita el contenido, el docente hace el acompañamiento real en el aula, supervisa la ejecución y evalúa según su criterio.
+1.2 Arquitectura de Dos Capas
+FRONTEND PÚBLICOBACKEND ADMINISTRATIVOAcceso libre, sin loginSolo para Clase de Ciencia S.A.S.Catálogo de proyectosCRUD de guías y proyectosGuías interactivasGestión de contratos CTeIVideos, simulaciones, recursosInformación para adjudicaciónAsistente IATrazabilidad de kitsInformación de seguridadAnalytics de uso (anónimo)Generación de reportes1.3 Qué NO hace la plataforma
+• NO gestiona estudiantes ni grupos
+• NO evalúa ni califica
+• NO hace seguimiento individual
+• NO recolecta datos personales
+• NO requiere login para usuarios finales
+• NO reemplaza la labor del docente
+
+
+2. FRONTEND PÚBLICO
+Accesible para cualquier persona con un kit. Sin registro, sin login.
+2.1 Catálogo de Proyectos
+Propósito: Mostrar todos los proyectos disponibles, organizados por ciclo/grado, área y nivel de complejidad.
+Vista del Catálogo
+• Filtros: Por ciclo (1, 2, 3), por área (Física, Química, Biología), por nivel
+• Tarjetas de proyecto con: imagen, nombre, área, grado, duración estimada
+• Búsqueda por texto
+• Ordenamiento por popularidad, recientes, alfabético
+Ficha de Proyecto (vista pública)
+CampoDescripciónNombreTítulo del proyectoImagen/Video portadaVisual atractivo del proyecto terminadoCiclo y gradosA qué nivel aplica (6°-7°, 8°-9°, 10°-11°)Área(s)Física, Química, Biología, Tecnología, AmbientalDuración estimadaTiempo aproximado de ejecuciónResumenDescripción breve de qué se hace y qué se aprendeCompetenciasQué competencias MEN desarrolla (visible para contexto)Advertencias seguridadEdad recomendada, supervisión requerida, precauciones2.2 Guía Interactiva
+Propósito: Contenido paso a paso para ejecutar el proyecto. Misma guía para estudiante y docente.
+Estructura de la Guía
+1. Introducción: Qué vamos a hacer, por qué es interesante, qué vamos a aprender.
+2. Materiales: Lista completa de lo que incluye el kit + lo que se necesita adicional (agua, tijeras, etc.).
+3. Seguridad: Advertencias destacadas, checklist de preparación, supervisión requerida.
+4. Pasos de ejecución: Secuencia numerada con texto, imágenes/diagramas, videos cortos opcionales.
+5. Explicación científica: Por qué funciona, conceptos involucrados, fenómenos observados.
+6. Conexiones: Relación con la vida cotidiana, aplicaciones reales, curiosidades.
+7. Para profundizar: Variaciones del experimento, preguntas de reflexión, recursos adicionales.
+Elementos Multimedia
+• Videos embebidos (YouTube/Vimeo o hosting propio)
+• Imágenes y diagramas paso a paso
+• Simulaciones interactivas (cuando aplique)
+• Animaciones explicativas de fenómenos
+Requerimientos Técnicos
+• Diseño responsive (móvil primero - los colegios usan mucho celular)
+• Carga rápida (optimizar para conexiones lentas)
+• Imágenes comprimidas y lazy loading
+• Modo offline parcial: poder descargar guía en PDF
+2.3 Asistente de IA
+Propósito: Resolver dudas sobre el proyecto en tiempo real, tanto conceptuales como operativas.
+Capacidades del Asistente
+• Responder preguntas sobre el proyecto actual
+• Explicar conceptos científicos de forma simple
+• Dar tips para resolver problemas de montaje
+• Sugerir variaciones o extensiones
+• Aclarar dudas de seguridad
+Contexto del Asistente
+El asistente debe tener contexto de:
+• El proyecto específico que está viendo el usuario
+• Los materiales del kit
+• Los conceptos científicos relacionados
+• Las advertencias de seguridad
+?? GUARDRAILS DE SEGURIDAD:
+NUNCA sugerir modificaciones peligrosas al experimento. NUNCA dar instrucciones eléctricas/químicas fuera del alcance del kit. SIEMPRE recordar supervisión adulta cuando aplique. Ante dudas de seguridad complejas: "Consulta con tu profesor antes de continuar."2.4 Sección de Seguridad
+Información permanente accesible desde cualquier página:
+• Clasificación por edad de cada proyecto
+• Advertencias generales de seguridad
+• Qué hacer en caso de accidente
+• Contacto de emergencia
+
+
+3. BACKEND ADMINISTRATIVO
+Acceso exclusivo para Clase de Ciencia S.A.S. Requiere autenticación.
+3.1 Gestión de Contenido
+CRUD de Proyectos
+CampoTipoDescripciónidUUIDIdentificador úniconombreStringNombre del proyectoslugStringURL amigablecicloEnum1, 2 o 3gradosArray[6,7], [8,9] o [10,11]areasArrayFísica, Química, Biología, Tecnología, Ambientalduracion_minutosIntegerTiempo estimadoimagen_portadaURLImagen principalvideo_portadaURLVideo opcionalresumenTextDescripción cortaobjetivo_aprendizajeTextQué aprenderá el estudiantecompetencias_menArrayCompetencias del MEN que desarrollaconceptos_cientificosArrayConceptos clavedba_relacionadosArrayDerechos Básicos de Aprendizajemateriales_kitJSONLista de materiales incluidos en el kitmateriales_adicionalesJSONMateriales que debe conseguir el usuarioseguridadJSON{edad_min, edad_max, requiere_supervision, advertencias[]}activoBooleanSi está publicadocreated_atDateTimeFecha creaciónupdated_atDateTimeÚltima modificaciónCRUD de Guías
+CampoTipoDescripciónidUUIDIdentificador únicoproyecto_idFKReferencia al proyectoversionStringVersión de la guíaintroduccionRichTextSección introductoriamaterialesRichTextLista de materiales formateadaseguridadRichTextSección de seguridadpasosJSONArray de pasos con texto, imágenes, videosexplicacion_cientificaRichTextPor qué funcionaconexionesRichTextRelación con vida realprofundizacionRichTextPara ir más allárecursosJSONURLs de videos, simulaciones, docsactivaBooleanSi es la versión actualcreated_atDateTimeFecha creaciónGestión de Recursos
+• Subir imágenes con compresión automática
+• Subir videos o enlazar externos (YouTube, Vimeo)
+• Gestionar simulaciones interactivas
+• Generar PDF descargable de la guía
+
+
+3.2 Gestión Contractual (para adjudicación CTeI)
+?? PROPÓSITO:
+Esta sección permite registrar toda la información necesaria para justificar la contratación directa CTeI, generar documentos para estudios previos, y evidenciar el alcance del programa ante gobernaciones.Registro de Contratos
+CampoTipoDescripciónidUUIDIdentificador úniconumero_contratoStringNúmero oficial del contratoentidad_contratanteStringGobernación/SecretaríadepartamentoStringDepartamentomunicipios_alcanceArrayMunicipios cubiertosfecha_inicioDateInicio del contratofecha_finDateFin del contratovalor_contratoDecimalValor en COPobjeto_contratoTextDescripción del objetosupervisorStringNombre del supervisorestadoEnumBorrador, Activo, En ejecución, Finalizadocreated_atDateTimeFecha creaciónAlcance del Programa por Contrato
+CampoTipoDescripcióncontrato_idFKReferencia al contratoproyectos_incluidosArray<FK>Qué proyectos incluye este contratocantidad_kits_por_proyectoJSON{proyecto_id: cantidad}ie_beneficiariasIntegerNúmero de IE a beneficiarestudiantes_estimadosIntegerPoblación estudiantil estimadadocentes_estimadosIntegerDocentes estimadosciclos_incluidosArrayQué ciclos cubre [1,2,3]grados_incluidosArrayQué grados cubre [6,7,8,9,10,11]Información CTeI por Contrato
+Campos para justificar la naturaleza CTeI del contrato:
+CampoDescripciónjustificacion_cteiTexto explicando por qué es contratación CTeIactividades_decreto_591Numerales aplicables del Decreto 591/1991alineacion_ley_1286Cómo se alinea con Ley 1286/2009competencias_men_globalesCompetencias MEN que desarrolla el programametodologia_pedagogicaDescripción de la metodología (aprendizaje por indagación)componente_innovacionDescripción del componente de IA como innovaciónindicadores_propuestosIndicadores de producto y resultadometas_propuestasMetas cuantificablesGeneración de Documentos
+El sistema debe poder generar/exportar:
+• Ficha técnica del programa (PDF)
+• Portafolio de proyectos seleccionados (PDF)
+• Matriz de competencias MEN por proyecto (Excel)
+• Justificación técnica CTeI (Word)
+• Cronograma de ejecución (Excel)
+• Matriz de indicadores y metas (Excel)
+
+
+3.3 Trazabilidad de Kits
+Propósito: Controlar qué kits se entregaron, a quién y cuándo. Evidencia para interventoría.
+Registro de Lotes
+CampoTipoDescripciónidUUIDIdentificador únicocodigo_loteStringCódigo del lote de producciónproyecto_idFKQué proyecto escantidadIntegerCantidad de kits en el lotefecha_produccionDateCuándo se produjocontrato_idFKA qué contrato está asignadoestadoEnumProducido, En bodega, Despachado, EntregadoRegistro de Entregas
+CampoTipoDescripciónidUUIDIdentificador únicocontrato_idFKContratolotes_entregadosArray<FK>Qué lotes se entreganinstitucion_educativaStringNombre de la IEcodigo_daneStringCódigo DANE de la IEmunicipioStringMunicipiodireccionStringDirección de entregafecha_entregaDateTimeFecha y hora de entregaresponsable_entregaStringQuién entregó (CDC)responsable_recepcionStringQuién recibió (IE)cargo_recepcionStringCargo del receptorcantidad_por_proyectoJSON{proyecto_id: cantidad}observacionesTextNotas adicionalesevidencia_fotograficaArray<URL>Fotos de la entregafirma_digitalURLImagen de firma o firma digitalacta_generadaURLPDF del acta generadaGeneración de Actas
+El sistema debe generar automáticamente actas de entrega en PDF con:
+• Datos del contrato
+• Datos de la IE (nombre, DANE, municipio)
+• Detalle de kits entregados por proyecto
+• Fecha y hora
+• Nombres y firmas de responsables
+• Espacio para observaciones
+• Número consecutivo de acta
+3.4 Analytics de Uso (Anónimo)
+Propósito: Medir la efectividad de la plataforma sin recolectar datos personales.
+Métricas a Capturar
+MétricaDescripciónUsoVisitas por proyectoCuántas veces se ve cada proyectoPopularidadTiempo en páginaCuánto tiempo permanecen en cada guíaEngagementGeolocalización (aproximada)País, departamento, ciudad (por IP)Cobertura geográficaDispositivoMóvil, tablet, desktopOptimizaciónNavegadorChrome, Safari, Firefox, etc.CompatibilidadFlujo de navegaciónDe dónde vienen, a dónde vanUXDescargas de PDFCuántas guías se descarganUso offlineInteracciones con IANúmero de consultas al asistenteUtilidad de la IAHorarios de usoEn qué horas hay más tráficoDisponibilidadTasa de reboteQuién entra y se va rápidoCalidad contenidoDashboard de Analytics
+• Vista general: visitas totales, usuarios únicos, tiempo promedio
+• Por proyecto: ranking de más vistos, tiempo promedio por guía
+• Por geografía: mapa de calor por departamento/municipio
+• Por tiempo: gráficos de uso diario, semanal, mensual
+• Por contrato: filtrar analytics por departamento contratado
+Reportes para Interventoría
+Generar reportes que demuestren uso de la plataforma:
+• Sesiones totales en el período del contrato
+• Distribución geográfica de accesos
+• Proyectos más consultados
+• Tiempo promedio de uso
+• Tendencias de uso en el tiempo
+
+
+4. MODELO DE DATOS SIMPLIFICADO
+4.1 Entidades del Frontend
+EntidadCampos ClaveProyectoid, nombre, slug, ciclo, grados[], areas[], duracion, imagen, resumen, competencias[], seguridad{}, activoGuiaid, proyecto_id, version, introduccion, materiales, seguridad, pasos[], explicacion, conexiones, recursos[], activaRecursoMultimediaid, tipo (imagen/video/simulacion), url, proyecto_id, descripcion4.2 Entidades del Backend Contractual
+EntidadCampos ClaveContratoid, numero, entidad, departamento, fecha_inicio, fecha_fin, valor, objeto, estadoAlcanceContratoid, contrato_id, proyectos[], cantidades{}, ie_estimadas, estudiantes_estimadosInfoCTeIid, contrato_id, justificacion, actividades_591, competencias_men, metodologia, indicadores[]LoteKitid, codigo, proyecto_id, cantidad, fecha_produccion, contrato_id, estadoEntregaKitid, contrato_id, lotes[], ie_nombre, dane, municipio, fecha, responsables, evidencia[], acta_url4.3 Entidades de Analytics
+EntidadCampos ClaveVisitaPaginaid, proyecto_id, timestamp, duracion_segundos, geo{pais, depto, ciudad}, dispositivo, navegadorInteraccionIAid, proyecto_id, timestamp, pregunta_hash, duracion_respuestaDescargaPDFid, proyecto_id, timestamp, geo{}SesionUsuarioid, session_hash, timestamp_inicio, timestamp_fin, paginas_vistas, geo{}
+
+5. STACK TECNOLÓGICO
+CapaTecnologíaJustificaciónFrontendNext.js + TypeScript + TailwindSSR, responsive, rápidoBackendNext.js API RoutesMismo stack, simpleBase DatosPostgreSQL + PrismaRelacional, type-safeAuth (solo admin)NextAuth.jsSolo para backend adminIAOpenAI API / Claude APILLM de calidadStorageCloudflare R2 / AWS S3Imágenes y PDFsAnalyticsPlausible / Umami (self-hosted)Privacy-friendly, sin cookiesHostingVercel / RailwayDeploy fácilPDF GenerationReact-PDF / PuppeteerGenerar actas y reportes6. MVP RECOMENDADO
+?? ENFOQUE MVP:
+Lanzar con lo mínimo que demuestre valor: contenido accesible + evidencia contractual.6.1 Fase 1: Core (4-6 semanas)
+FuncionalidadPrioridadFrontend: Catálogo de proyectos públicoCRÍTICAFrontend: Guías interactivas completasCRÍTICAFrontend: Responsive mobile-firstCRÍTICABackend: CRUD de proyectos y guíasCRÍTICABackend: Autenticación adminCRÍTICA6.2 Fase 2: Contractual (3-4 semanas)
+FuncionalidadPrioridadBackend: Registro de contratosALTABackend: Información CTeI por contratoALTABackend: Registro de entregas de kitsALTABackend: Generación de actas PDFALTABackend: Exportar documentos (ficha técnica, portafolio)ALTA6.3 Fase 3: Valor Agregado (4-6 semanas)
+FuncionalidadPrioridadFrontend: Asistente IA integradoALTAFrontend: Descarga de guías en PDFMEDIABackend: Dashboard de analyticsMEDIABackend: Reportes para interventoríaMEDIAFrontend: Simulaciones interactivas (seleccionadas)BAJA
+
+7. RESUMEN EJECUTIVO
+clasedeciencia.com es una plataforma de contenido científico interactivo que NO gestiona usuarios, NO evalúa, y NO reemplaza al docente. El kit físico es la llave de acceso. La plataforma provee el QUÉ enseñar, el docente decide el CÓMO y CUÁNDO.Frontend Público:
+• Catálogo de proyectos abierto
+• Guías interactivas (misma para estudiante y docente)
+• Asistente IA para resolver dudas
+• Sin login, sin registro, sin datos personales
+Backend Admin:
+• Gestión de contenido (proyectos, guías, recursos)
+• Gestión contractual (contratos, alcance, info CTeI)
+• Trazabilidad de kits (lotes, entregas, actas)
+• Analytics anónimo (para demostrar uso)
+• Generación de documentos para adjudicación e interventoría
+???????????????????????????
+clasedeciencia.com
+Versión 2.0 | Diciembre 2025
+clasedeciencia.com | Requerimientos v2.0
+
+Clase de Ciencia S.A.S. | Página 1
+

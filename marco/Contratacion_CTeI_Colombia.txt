@@ -1,0 +1,115 @@
+Sistema de Contratación Pública Colombiano
+Contratación Directa para Proyectos de Ciencia, Tecnología e Innovación
+Guía Práctica a Nivel Departamental
+Diciembre 2025
+1. Marco Legal Fundamental
+La contratación directa para proyectos de Ciencia, Tecnología e Innovación (CTeI) en Colombia cuenta con un régimen especial que permite mayor flexibilidad y discrecionalidad técnica. El fundamento legal principal está en el literal e) del numeral 4 del artículo 2 de la Ley 1150 de 2007, que establece como causal de contratación directa "Los contratos para el desarrollo de actividades científicas y tecnológicas".
+1.1 Normativa Aplicable
+1. Decreto Ley 393 de 1991: Establece formas de asociación para ejecutar actividades científicas y tecnológicas, incluyendo la creación de personas jurídicas y convenios especiales de cooperación.
+2. Decreto Ley 591 de 1991: Define las actividades científicas y tecnológicas y establece los tipos de contratos aplicables: contratos de financiamiento, contratos de administración de proyectos y convenios especiales de cooperación.
+3. Ley 1286 de 2009 (Artículos 18 y 33): Fortalece el Sistema Nacional de Ciencia, Tecnología e Innovación y confirma que los contratos de CTeI se celebrarán directamente bajo normas especiales.
+4. Decreto 1082 de 2015 (Artículo 2.2.1.2.1.4.7): Reglamenta la contratación directa para el desarrollo de actividades científicas y tecnológicas.
+5. Circular Externa Única de Colombia Compra Eficiente (Numeral 15): Precisa el régimen aplicable para la contratación de actividades de CTeI.
+6. Ley 2056 de 2020: Regula el Sistema General de Regalías y la Asignación para CTeI.
+7. Decreto 1821 de 2020: Reglamenta los proyectos de inversión de CTeI financiados con recursos del Sistema General de Regalías.
+8. Decreto 979 de 2024: Establece los lineamientos para la organización y funcionamiento de los Consejos Departamentales de Ciencia, Tecnología e Innovación (CODECTI).
+
+
+2. Tipos de Contratos y Convenios de CTeI
+2.1 Convenio Especial de Cooperación
+Es el instrumento más utilizado para ejecutar proyectos de I+D. Se rige por el derecho privado (Decreto Ley 393 de 1991) y permite la asociación entre entidades públicas, universidades, centros de investigación y sector privado. No requiere requisitos adicionales a los de la contratación entre particulares, pero exige publicación en el Diario Oficial y registro presupuestal.
+2.2 Contrato de Financiamiento
+Permite a una entidad estatal financiar total o parcialmente proyectos de investigación y desarrollo ejecutados por terceros. Se sujeta al régimen de contratación estatal con la modalidad de contratación directa.
+2.3 Contrato de Administración de Proyectos
+La entidad contratante mantiene la iniciativa y titularidad del proyecto, mientras el contratista presta el servicio de administración. La entidad tiene amplio margen de intervención en sus directrices, respetando la autonomía técnica y científica del administrador.
+3. Actividades Elegibles para Contratación Directa
+Las siguientes actividades pueden contratarse directamente bajo la causal de CTeI:
+1. Proyectos de investigación científica, desarrollo tecnológico e innovación
+2. Desarrollo de nuevos productos y procesos
+3. Crear, fomentar y financiar empresas que incorporen innovaciones científicas o tecnológicas
+4. Organizar y apoyar centros científicos, tecnológicos y de innovación, parques tecnológicos e incubadoras
+5. Formación y capacitación de recurso humano para el avance de la ciencia y tecnología
+6. Crear fondos de desarrollo científico, tecnológico y de innovación a nivel regional
+7. Servicios científicos y tecnológicos: homologación, normalización, metrología, certificación y control de calidad
+8. Transferencia tecnológica: asesoría, negociación, apropiación y adaptación de tecnologías
+9. Difusión de información científica y tecnológica
+10. Renovación y mantenimiento de equipos científicos
+
+
+4. Sistema General de Regalías para CTeI
+4.1 Fondo de Ciencia, Tecnología e Innovación (FCTeI)
+El Sistema General de Regalías destina recursos específicos para CTeI a través del Fondo de Ciencia, Tecnología e Innovación. Su objetivo es incrementar la capacidad científica, tecnológica, de innovación y de competitividad de las regiones mediante proyectos que contribuyan a la producción, uso y apropiación del conocimiento.
+4.2 OCAD de Ciencia, Tecnología e Innovación
+El Órgano Colegiado de Administración y Decisión (OCAD) de CTeI está conformado por tres vértices: el Gobierno Nacional (MinCiencias como secretaría técnica), los gobiernos departamentales (6 gobernadores) y las universidades e instituciones de educación superior (6 rectores). Las decisiones se adoptan con mínimo dos votos favorables.
+4.3 CODECTI - Consejos Departamentales
+Los Consejos Departamentales de Ciencia, Tecnología e Innovación (CODECTI) son la instancia máxima de gobernanza y articulación de la política de CTeI en el ámbito departamental. Sus funciones principales incluyen:
+• Proponer la articulación de políticas, planes y proyectos de CTeI departamentales con iniciativas nacionales y regionales
+• Dar conceptos técnicos sobre planes, proyectos y presupuestos de inversión de CTeI
+• Recomendar la postulación para supervisión o interventoría de proyectos de CTeI del SGR
+• Proponer mecanismos para atraer recursos de CTeI
+5. Requisitos para Contratación Directa en CTeI
+5.1 Acto Administrativo de Justificación
+Según el Artículo 2.2.1.2.1.4.1 del Decreto 1082 de 2015, la entidad estatal debe expedir un acto administrativo que contenga:
+1. Señalamiento de la causal: Identificación clara del literal e) del numeral 4 del artículo 2 de la Ley 1150 de 2007
+2. Justificación técnica especializada: Demostrar que el objeto del contrato corresponde a actividades de CTeI definidas en la normativa
+3. Determinación del objeto: Descripción clara del proyecto de investigación, desarrollo o innovación
+4. Presupuesto: Estimación del valor del contrato con su debida justificación
+5. Indicación del contratista: Justificación de la idoneidad y experiencia del contratista seleccionado
+5.2 Estudios Previos
+Aunque es contratación directa, se deben elaborar estudios previos que incluyan: descripción de la necesidad, análisis del sector, justificación de la modalidad, análisis de riesgo, y garantías requeridas.
+5.3 Publicación en SECOP
+Todos los contratos de CTeI deben publicarse en el Sistema Electrónico para la Contratación Pública (SECOP II), incluyendo los estudios previos, el acto de justificación y el contrato celebrado.
+
+
+6. Entidades Ejecutoras y Actores del Sistema
+6.1 Entidades que Pueden Ejecutar Proyectos
+Solo pueden presentar y ejecutar proyectos las entidades que hagan parte del Sistema Nacional de Ciencia, Tecnología e Innovación (SNCTI):
+• Universidades públicas y privadas
+• Centros de Desarrollo Tecnológico (CDT)
+• Centros de Investigación
+• Parques Tecnológicos
+• Incubadoras de empresas de base tecnológica
+• Institutos de investigación
+• Empresas reconocidas por MinCiencias
+6.2 Entidades Contratantes a Nivel Departamental
+Las principales entidades que contratan proyectos de CTeI a nivel departamental son:
+• Gobernaciones: A través de sus Secretarías de Planeación, Desarrollo Económico o CTeI
+• Universidades públicas regionales: Como ejecutoras de proyectos financiados por el SGR
+• Institutos descentralizados: Entidades departamentales con funciones de CTeI
+7. Oportunidades para Proveedores de Materiales Científicos
+7.1 Tipos de Adquisiciones en Proyectos de CTeI
+Importante: No todos los bienes y servicios dentro de un proyecto de CTeI se adquieren por contratación directa. La adquisición de bienes como equipos de laboratorio, reactivos, materiales científicos e insumos puede seguir diferentes modalidades:
+Tipo de Bien/ServicioModalidad de ContrataciónObservacionesEquipos científicos especializados vinculados directamente al proyectoContratación directa CTeIDebe justificarse técnicamente como parte integral del proyectoBienes de características técnicas uniformes (reactivos genéricos, insumos estándar)Selección abreviada - Subasta inversa o Acuerdo MarcoAplica Decreto 1082 de 2015Insumos de oficina, arrendamientos, bienes no científicosSegún cuantía: Mínima cuantía, Selección abreviada o LicitaciónNo se considera actividad de CTeIBienes exclusivos o de único proveedorContratación directa por exclusividadRequiere certificación de exclusividad del fabricante7.2 Estrategias de Participación
+1. Registro en SECOP II: Es indispensable estar registrado como proveedor en la plataforma SECOP II para participar en cualquier proceso de contratación pública.
+2. Monitoreo de convocatorias: Vigilar las convocatorias del Plan Bienal de MinCiencias y las publicaciones de gobernaciones en SECOP.
+3. Alianzas con ejecutores: Establecer relaciones comerciales con universidades, centros de investigación y CDT que ejecutan proyectos de CTeI.
+4. Participación en CODECTI: Involucrarse en los espacios de planeación departamental de CTeI para conocer proyectos en formulación.
+5. Certificaciones de calidad: Contar con certificaciones ISO y otras que demuestren idoneidad para proveer materiales científicos.
+
+
+8. Ventajas de la Contratación Directa en CTeI
+• Menor competencia: Al no requerir proceso licitatorio, se reduce el número de oferentes y se valora más la idoneidad técnica.
+• Mayor discrecionalidad técnica: La entidad puede seleccionar al contratista basándose en criterios técnicos especializados.
+• Proceso más ágil: Los tiempos de contratación son significativamente menores que en otras modalidades.
+• Flexibilidad contractual: Los convenios especiales de cooperación se rigen por derecho privado, permitiendo mayor adaptabilidad.
+• Justificación técnica: La selección se basa en la especialización y capacidad técnica, no solo en precio.
+9. Consideraciones Importantes
+9.1 Supervisión e Interventoría
+No todos los proyectos de CTeI requieren interventoría. La entidad ejecutora define desde la etapa de planeación si el proyecto, por su complejidad técnica, requiere conocimiento especializado. La interventoría también puede contratarse directamente cuando el seguimiento técnico es para un convenio de cooperación especial.
+9.2 Propiedad Intelectual
+Los convenios deben establecer claramente el tratamiento de la propiedad intelectual, secretos comerciales e industriales, y el uso y explotación económica de los resultados de investigación.
+9.3 Régimen de Garantías
+Aunque es contratación directa, aplican las garantías establecidas en el Decreto 1082 de 2015: cumplimiento, calidad del servicio, y estabilidad de la obra cuando corresponda.
+10. Recursos y Enlaces Útiles
+• SECOP II: www.colombiacompra.gov.co/secop-ii
+• MinCiencias - Convocatorias: www.minciencias.gov.co/convocatorias
+• Colombia Compra Eficiente - CTeI: www.colombiacompra.gov.co/temas-preguntas-frecuentes/ctei
+• SGR - Asignación CTeI: www.minciencias.gov.co/sgr/ocad_fctei
+• Circular Externa Única CCE: www.colombiacompra.gov.co/content/circular-unica-externa
+---
+Documento compilado con base en la normativa vigente a diciembre de 2025
+Fuentes: Colombia Compra Eficiente, MinCiencias, Consejo de Estado, DNP
+Contratación Pública CTeI - Colombia
+
+Página 1 de 2
+

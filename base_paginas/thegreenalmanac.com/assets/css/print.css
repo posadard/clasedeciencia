@@ -1,0 +1,152 @@
+/*
+ * Print Styles - Optimized for clean black and white printing
+ */
+
+@media print {
+    /* Reset colors to black and white */
+    * {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    /* Hide non-essential elements */
+    .site-header,
+    .main-nav,
+    .site-footer,
+    .filters-sidebar,
+    .hero-actions,
+    .btn,
+    .no-print,
+    .pagination,
+    nav,
+    .card-meta,
+    .article-ctas,
+    .filter-actions {
+        display: none !important;
+    }
+    
+    /* Show print-only elements */
+    .print-only {
+        display: block !important;
+    }
+    
+    /* Page setup */
+    @page {
+        margin: 2cm;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+    
+    /* Typography for print */
+    h1 {
+        font-size: 24pt;
+        page-break-after: avoid;
+    }
+    
+    h2 {
+        font-size: 18pt;
+        page-break-after: avoid;
+        margin-top: 16pt;
+    }
+    
+    h3 {
+        font-size: 14pt;
+        page-break-after: avoid;
+    }
+    
+    /* Avoid breaks */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid;
+    }
+    
+    p, ul, ol {
+        orphans: 3;
+        widows: 3;
+    }
+    
+    /* Links */
+    a {
+        text-decoration: none;
+        color: black;
+        border-bottom: 1px solid black;
+    }
+    
+    a[href^="http"]:after {
+        content: " (" attr(href) ")";
+        font-size: 90%;
+    }
+    
+    /* Article layout */
+    .article-detail {
+        max-width: 100%;
+    }
+    
+    .article-header {
+        border-bottom: 2px solid black;
+        padding-bottom: 12pt;
+        margin-bottom: 16pt;
+    }
+    
+    .article-body {
+        margin-bottom: 24pt;
+    }
+    
+    /* Lists */
+    ul, ol {
+        margin-left: 20pt;
+    }
+    
+    /* Tables */
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+    
+    th, td {
+        border: 1px solid black;
+        padding: 6pt;
+        text-align: left;
+    }
+    
+    /* Chemical formulas and safety notes */
+    .formula {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+    }
+    
+    .safety-note {
+        border: 2px solid black;
+        padding: 12pt;
+        margin: 12pt 0;
+        font-weight: bold;
+    }
+    
+    /* Dictionary entries */
+    .dictionary-item,
+    .chemical-detail {
+        page-break-inside: avoid;
+        margin-bottom: 24pt;
+    }
+    
+    /* Print header */
+    .article-header:before {
+        content: "The Green Almanac - Practical Chemistry for Homesteaders";
+        display: block;
+        font-size: 10pt;
+        margin-bottom: 8pt;
+        padding-bottom: 8pt;
+        border-bottom: 1px solid black;
+    }
+    
+    /* Print footer on each page */
+    @page {
+        @bottom-right {
+            content: counter(page);
+        }
+    }
+}
