@@ -73,7 +73,7 @@
                             <line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
                             <circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"/>
                             <ellipse cx="8" cy="8" rx="2" ry="3" fill="currentColor" opacity="0.15" transform="rotate(-35 8 8)"/>
-                        </svg><?= SITE_NAME ?>
+                        </svg><span class="logo-text"><?= SITE_NAME ?></span>
                     </a>
                 </h1>
                 <nav class="main-nav" aria-label="Main Navigation">
