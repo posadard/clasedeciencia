@@ -26,8 +26,8 @@ include 'includes/header.php';
     <!-- Hero Section -->
     <section class="hero">
         <h2>Bienvenido a <?= SITE_NAME ?></h2>
-        <p class="hero-subtitle">Proyectos científicos para grados 6°-11°</p>
-        <p>Explora guías paso a paso, materiales del kit y explicaciones científicas alineadas con competencias MEN.</p>
+        <p class="hero-subtitle">Plataforma de formación científica para grados 1° a 11°</p>
+        <p>Fortalece competencias científicas mediante guías interactivas, proyectos experimentales y asistencia con inteligencia artificial, todo alineado con los Estándares de Competencias del MEN.</p>
         <div class="hero-actions">
             <a href="/catalogo.php" class="btn btn-primary">Explorar Clases</a>
         </div>
