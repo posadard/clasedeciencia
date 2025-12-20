@@ -54,7 +54,7 @@ include 'includes/header.php';
     <!-- Proyectos Destacados -->
     <?php if (!empty($featured_projects)): ?>
     <section class="featured-articles">
-        <h2>Proyectos Destacados</h2>
+        <h2>Clases recomendadas</h2>
         <div class="articles-grid featured">
             <?php foreach ($featured_projects as $p): ?>
             <article class="article-card featured" data-href="/proyecto.php?slug=<?= h($p['slug']) ?>">
