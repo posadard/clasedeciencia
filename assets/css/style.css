@@ -811,6 +811,10 @@ strong, b {
     background: #fff;
 }
 
+/* View toggle (desktop) */
+.view-toggle { display: flex; gap: 6px; align-items: center; }
+.view-toggle .btn[disabled] { opacity: 0.6; cursor: default; }
+
 /* Search sections (buscar.php) */
 .search-section { margin: 1.25rem 0; }
 .search-section-header h2 { color: var(--color-primary-dark); }
@@ -885,7 +889,20 @@ strong, b {
     }
     .filters-sidebar .filter-actions .btn-primary svg { width: 20px; height: 20px; margin: 0; }
     .filters-sidebar .filter-actions { gap: 0.5rem; }
+
+    /* Mobile: force rows view and show full text on clases page */
+    .clases-page .articles-grid { grid-template-columns: 1fr !important; }
+    .clases-page .text-trunc { display: none !important; }
+    .clases-page .text-full { display: inline !important; }
+    .clases-page .view-toggle { display: none; }
 }
+
+/* View modes (desktop) for clases page */
+.clases-page.view-cards .text-full { display: none; }
+.clases-page.view-cards .text-trunc { display: inline; }
+.clases-page.view-rows .text-full { display: inline; }
+.clases-page.view-rows .text-trunc { display: none; }
+.clases-page.view-rows .articles-grid { grid-template-columns: 1fr; }
 
 /* === Compact tweaks for library/results === */
 .library-page .library-layout {

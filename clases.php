@@ -281,6 +281,9 @@ $canonical_url = SITE_URL . ($q ? ('/clases/buscar/' . rawurlencode($q)) : '/cla
 $areas = cdc_get_areas($pdo);
 $competencias = cdc_get_competencias($pdo);
 
+// Vista: cards | rows (desktop); en mobile se fuerza rows via CSS
+$view = isset($_GET['view']) && in_array($_GET['view'], ['cards','rows'], true) ? $_GET['view'] : 'cards';
+
 // =====================================
 // Modo resultados de búsqueda inteligente
 // =====================================
@@ -370,7 +373,7 @@ if ($q !== '' && empty($filters)) {
 
 include 'includes/header.php';
 ?>
-<div class="container library-page">
+<div class="container library-page clases-page view-<?= h($view) ?>">
     <div class="breadcrumb">
         <a href="/">Inicio</a> / <strong>Clases</strong>
     </div>
@@ -454,6 +457,25 @@ include 'includes/header.php';
                         <option value="grado" <?= (isset($_GET['sort']) && $_GET['sort'] === 'grado') ? 'selected' : '' ?>>🎓 Por Grado (1° a 11°)</option>
                     </select>
                 </div>
+                <div class="view-toggle" aria-label="Cambiar vista">
+                    <button type="button" class="btn btn-secondary vt-cards" title="Vista tarjetas" onclick="updateView('cards')" <?= $view==='cards'?'disabled':'' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Tarjetas
+                    </button>
+                    <button type="button" class="btn btn-secondary vt-rows" title="Vista filas" onclick="updateView('rows')" <?= $view==='rows'?'disabled':'' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        Filas
+                    </button>
+                </div>
             </div>
 
             <?php if (empty($proyectos)): ?>
@@ -484,10 +506,16 @@ include 'includes/header.php';
                             </div>
                             <h3><?= h($p['nombre']) ?></h3>
                             <?php if (!empty($p['objetivo_aprendizaje'])): ?>
-                            <p class="objective"><?= h(cdc_word_limit($p['objetivo_aprendizaje'], 10)) ?></p>
+                            <p class="objective">
+                                <span class="text-trunc"><?= h(cdc_word_limit($p['objetivo_aprendizaje'], 10)) ?></span>
+                                <span class="text-full"><?= h($p['objetivo_aprendizaje']) ?></span>
+                            </p>
                             <?php endif; ?>
                             <?php if (!empty($p['resumen'])): ?>
-                            <p class="excerpt"><small><?= h(cdc_word_limit($p['resumen'], 10)) ?></small></p>
+                            <p class="excerpt"><small>
+                                <span class="text-trunc"><?= h(cdc_word_limit($p['resumen'], 10)) ?></span>
+                                <span class="text-full"><?= h($p['resumen']) ?></span>
+                            </small></p>
                             <?php endif; ?>
                             <div class="card-footer">
                                 <?php
@@ -524,6 +552,12 @@ console.log('✅ [clases] Clases cargadas:', <?= count($proyectos) ?>);
 function updateSort(sortValue) {
     const url = new URL(window.location.href);
     url.searchParams.set('sort', sortValue);
+    window.location.href = url.toString();
+}
+
+function updateView(view) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
     window.location.href = url.toString();
 }
 
