@@ -699,7 +699,10 @@ include '../header.php';
           </div>
           <?php endforeach; ?>
         </div>
-        <input type="text" id="attr_search" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <div class="autocomplete-anchor">
+          <input type="text" id="attr_search" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+          <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown"></div>
+        </div>
         <datalist id="attrs_list">
           <?php foreach ($attr_defs as $def): ?>
             <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
@@ -707,7 +710,6 @@ include '../header.php';
             </option>
           <?php endforeach; ?>
         </datalist>
-        <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown"></div>
       </div>
       <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
     </div>
