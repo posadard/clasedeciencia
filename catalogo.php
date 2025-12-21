@@ -125,11 +125,22 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
     // Búsqueda por texto
     if (!empty($filters['busqueda'])) {
         $busqueda = '%' . $filters['busqueda'] . '%';
-        $where[] = "(c.nombre LIKE ? OR c.resumen LIKE ? OR c.objetivo_aprendizaje LIKE ? OR a.nombre LIKE ?)";
+        // Normalizada sin acentos para coincidencias más amplias
+        $normalize = function($s){
+            $s = mb_strtolower($s, 'UTF-8');
+            $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ñ'=>'n','ü'=>'u']);
+            return $s;
+        };
+        $busqueda_norm = '%' . $normalize($filters['busqueda']) . '%';
+        $where[] = "(c.nombre LIKE ? OR c.resumen LIKE ? OR c.objetivo_aprendizaje LIKE ? OR a.nombre LIKE ?
+                     OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.nombre,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n')) LIKE ?
+                     OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombre,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n')) LIKE ?)";
         $params[] = $busqueda;
         $params[] = $busqueda;
         $params[] = $busqueda;
         $params[] = $busqueda;
+        $params[] = $busqueda_norm;
+        $params[] = $busqueda_norm;
     }
 
     // Determinar ordenamiento según sort
@@ -199,11 +210,21 @@ function cdc_count_proyectos($pdo, $filters = []) {
     // Búsqueda por texto
     if (!empty($filters['busqueda'])) {
         $busqueda = '%' . $filters['busqueda'] . '%';
-        $where[] = "(c.nombre LIKE ? OR c.resumen LIKE ? OR c.objetivo_aprendizaje LIKE ? OR a.nombre LIKE ?)";
+        $normalize = function($s){
+            $s = mb_strtolower($s, 'UTF-8');
+            $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ñ'=>'n','ü'=>'u']);
+            return $s;
+        };
+        $busqueda_norm = '%' . $normalize($filters['busqueda']) . '%';
+        $where[] = "(c.nombre LIKE ? OR c.resumen LIKE ? OR c.objetivo_aprendizaje LIKE ? OR a.nombre LIKE ?
+                     OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.nombre,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n')) LIKE ?
+                     OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombre,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n')) LIKE ?)";
         $params[] = $busqueda;
         $params[] = $busqueda;
         $params[] = $busqueda;
         $params[] = $busqueda;
+        $params[] = $busqueda_norm;
+        $params[] = $busqueda_norm;
     }
 
     $sql = "SELECT COUNT(DISTINCT c.id) AS total
@@ -226,6 +247,69 @@ if (isset($_GET['grado'])) $filters['grado'] = $_GET['grado'];
 if (isset($_GET['area'])) $filters['area'] = $_GET['area'];
 if (isset($_GET['competencia'])) $filters['competencia'] = $_GET['competencia'];
 if (isset($_GET['busqueda']) && trim($_GET['busqueda']) !== '') $filters['busqueda'] = trim($_GET['busqueda']);
+
+// Fallback: derivar filtros desde busqueda si faltan y hay una consulta
+if (!empty($filters['busqueda'])) {
+    $raw_q = $filters['busqueda'];
+    $normalize = function($text) {
+        $text = mb_strtolower($text, 'UTF-8');
+        $replacements = [
+            'á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ñ'=>'n','ü'=>'u'
+        ];
+        $text = strtr($text, $replacements);
+        $text = preg_replace('/[^a-z0-9°\s]+/u', ' ', $text);
+        $text = preg_replace('/\s+/u', ' ', $text);
+        return trim($text);
+    };
+    $qn = $normalize($raw_q);
+
+    // Solo si no vienen explícitos, intentar detectar
+    if (empty($filters['grado'])) {
+        $grado = null;
+        if (preg_match('/grado\s*(\d{1,2})/u', $qn, $m)) {
+            $grado = (int)$m[1];
+        } elseif (preg_match('/(\d{1,2})\s*°/u', $qn, $m)) {
+            $grado = (int)$m[1];
+        } else {
+            $map = [
+                'primero'=>1,'primer'=>1,'segundo'=>2,'tercero'=>3,'cuarto'=>4,'quinto'=>5,
+                'sexto'=>6,'septimo'=>7,'septimo'=>7,'octavo'=>8,'noveno'=>9,
+                'decimo'=>10,'decimo'=>10,'once'=>11,'undecimo'=>11
+            ];
+            foreach (explode(' ', $qn) as $t) { if (isset($map[$t])) { $grado = $map[$t]; break; } }
+        }
+        if ($grado && $grado >= 1 && $grado <= 11) { $filters['grado'] = $grado; }
+    }
+
+    if (empty($filters['ciclo'])) {
+        $ciclo = null;
+        if (preg_match('/ciclo\s*(\d)/u', $qn, $m)) { $ciclo = (int)$m[1]; }
+        if (!$ciclo) {
+            $tokens = explode(' ', $qn);
+            if (in_array('exploracion', $tokens, true)) $ciclo = 1;
+            elseif (in_array('experimentacion', $tokens, true)) $ciclo = 2;
+            elseif (in_array('analisis', $tokens, true)) $ciclo = 3;
+        }
+        if ($ciclo && in_array($ciclo, [1,2,3], true)) { $filters['ciclo'] = $ciclo; }
+    }
+
+    if (empty($filters['dificultad'])) {
+        $tokens = explode(' ', $qn);
+        if (in_array('facil', $tokens, true)) $filters['dificultad'] = 'facil';
+        elseif (in_array('medio', $tokens, true) || in_array('media', $tokens, true) || in_array('intermedio', $tokens, true)) $filters['dificultad'] = 'medio';
+        elseif (in_array('dificil', $tokens, true) || in_array('avanzado', $tokens, true)) $filters['dificultad'] = 'dificil';
+    }
+
+    if (empty($filters['area'])) {
+        $tokens = explode(' ', $qn);
+        $areaSlugs = array_map(function($a){ return $a['slug']; }, $areas ?? []);
+        $areaMap = ['fisica','quimica','biologia','ambiental','tecnologia'];
+        foreach ($tokens as $t) {
+            if (in_array($t, $areaMap, true)) { $filters['area'] = $t; break; }
+            if (in_array($t, $areaSlugs, true)) { $filters['area'] = $t; break; }
+        }
+    }
+}
 if (isset($_GET['dificultad'])) $filters['dificultad'] = $_GET['dificultad'];
 if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 

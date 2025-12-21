@@ -640,10 +640,81 @@ class ClaseDeCienciaSearch {
   
   handleEnterKey() {
     const query = this.searchInput.value.trim();
-    if (query) {
-      this.hideSearchResults();
-      window.location.href = `/catalogo.php?busqueda=${encodeURIComponent(query)}`;
+    if (!query) return;
+
+    // Parse intent: ciclo, área, grado, dificultad
+    const normalize = (text) => {
+      return (text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9°\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    const qn = normalize(query);
+    const tokens = qn.split(' ').filter(Boolean);
+    const params = new URLSearchParams();
+    params.set('busqueda', query);
+
+    // grado: patterns like "grado 6", "6°", "sexto"
+    const gradoWords = {
+      'primero': 1, 'primer': 1, 'segundo': 2, 'tercero': 3, 'cuarto': 4, 'quinto': 5,
+      'sexto': 6, 'septimo': 7, 'séptimo': 7, 'octavo': 8, 'noveno': 9,
+      'decimo': 10, 'décimo': 10, 'once': 11, 'undecimo': 11, 'undécimo': 11
+    };
+    let grado = null;
+    const gradoMatch = qn.match(/grado\s*(\d{1,2})/);
+    if (gradoMatch) {
+      grado = parseInt(gradoMatch[1], 10);
+    } else {
+      const degreeMatch = qn.match(/(\d{1,2})\s*°/);
+      if (degreeMatch) grado = parseInt(degreeMatch[1], 10);
     }
+    if (!grado) {
+      for (const t of tokens) {
+        if (gradoWords[t] && !isNaN(gradoWords[t])) { grado = gradoWords[t]; break; }
+      }
+    }
+    if (grado && grado >= 1 && grado <= 11) {
+      params.set('grado', String(grado));
+    }
+
+    // ciclo: "ciclo 1|2|3" or names
+    const cicloMatch = qn.match(/ciclo\s*(\d)/);
+    let ciclo = cicloMatch ? parseInt(cicloMatch[1], 10) : null;
+    if (!ciclo) {
+      if (tokens.includes('exploracion')) ciclo = 1;
+      else if (tokens.includes('experimentacion')) ciclo = 2;
+      else if (tokens.includes('analisis')) ciclo = 3;
+    }
+    if (ciclo && [1,2,3].includes(ciclo)) {
+      params.set('ciclo', String(ciclo));
+    }
+
+    // dificultad: facil | medio/media/intermedio | dificil/avanzado
+    let dificultad = null;
+    if (tokens.includes('facil')) dificultad = 'facil';
+    if (tokens.includes('medio') || tokens.includes('media') || tokens.includes('intermedio')) dificultad = 'medio';
+    if (tokens.includes('dificil') || tokens.includes('avanzado')) dificultad = 'dificil';
+    if (dificultad) params.set('dificultad', dificultad);
+
+    // área: match known slugs by token
+    const areaMap = {
+      'fisica': 'fisica', 'quimica': 'quimica', 'biologia': 'biologia',
+      'ambiental': 'ambiental', 'tecnologia': 'tecnologia'
+    };
+    let area = null;
+    for (const t of tokens) {
+      if (areaMap[t]) { area = areaMap[t]; break; }
+    }
+    if (area) params.set('area', area);
+
+    console.log('🔍 [ClaseDeCienciaSearch] Intent parse:', { query, grado, ciclo, dificultad, area });
+    console.log('✅ [ClaseDeCienciaSearch] Redirigiendo con params:', params.toString());
+
+    this.hideSearchResults();
+    window.location.href = `/catalogo.php?${params.toString()}`;
   }
 }
 
