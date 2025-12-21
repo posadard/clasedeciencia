@@ -57,6 +57,16 @@ function cdc_get_ciclos($pdo, $activo_only = true) {
     return $stmt->fetchAll();
 }
 
+// Limitar a N palabras y añadir "..."
+function cdc_word_limit($text, $max_words = 10) {
+    $t = trim(strip_tags((string)$text));
+    if ($t === '') return '';
+    $words = preg_split('/\s+/u', $t, -1, PREG_SPLIT_NO_EMPTY);
+    if (!$words || count($words) <= (int)$max_words) return $t;
+    $slice = array_slice($words, 0, (int)$max_words);
+    return implode(' ', $slice) . '...';
+}
+
 function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
     $params = [];
     $where = ["c.activo = 1"];
@@ -474,10 +484,10 @@ include 'includes/header.php';
                             </div>
                             <h3><?= h($p['nombre']) ?></h3>
                             <?php if (!empty($p['objetivo_aprendizaje'])): ?>
-                            <p class="objective"><?= h($p['objetivo_aprendizaje']) ?></p>
+                            <p class="objective"><?= h(cdc_word_limit($p['objetivo_aprendizaje'], 10)) ?></p>
                             <?php endif; ?>
                             <?php if (!empty($p['resumen'])): ?>
-                            <p class="excerpt"><small><?= h($p['resumen']) ?></small></p>
+                            <p class="excerpt"><small><?= h(cdc_word_limit($p['resumen'], 10)) ?></small></p>
                             <?php endif; ?>
                             <div class="card-footer">
                                 <?php
