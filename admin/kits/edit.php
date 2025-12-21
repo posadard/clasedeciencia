@@ -1554,6 +1554,26 @@ include '../header.php';
 </script>
 <?php endif; ?>
 <?php /* Grid-based ficha técnica removed in favor of chips UI */ ?>
+<!-- Editor: CKEditor 4 for Kit contenido_html (match Clases) -->
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
+<script>
+  (function initCKEKit(){
+    try {
+      if (window.CKEDITOR) {
+        CKEDITOR.replace('contenido_html', {
+          height: 500,
+          removePlugins: 'elementspath',
+          resize_enabled: true
+        });
+        console.log('✅ [KitsEdit] CKEditor 4 cargado');
+      } else {
+        console.log('⚠️ [KitsEdit] CKEditor no disponible, usando textarea simple');
+      }
+    } catch(e) {
+      console.log('❌ [KitsEdit] Error iniciando CKEditor:', e && e.message);
+    }
+  })();
+</script>
 <script>
   // Dual Listbox: Clases vinculadas al kit (siempre activo)
   (function initClasesTransfer(){
