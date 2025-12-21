@@ -261,6 +261,24 @@ include 'includes/header.php';
             $has_seguridad = is_array($seguridad) && (!empty($seguridad['edad_min']) || !empty($seguridad['notas']));
         }
         $has_video = !empty($proyecto['video_portada']);
+
+        // Recolectar advertencias de seguridad de materiales (kit_items)
+        $kit_warnings = [];
+        if (!empty($materiales_por_kit) && is_array($materiales_por_kit)) {
+            foreach ($materiales_por_kit as $kId => $items) {
+                if (empty($items) || !is_array($items)) continue;
+                foreach ($items as $m) {
+                    if (!empty($m['advertencias_seguridad'])) {
+                        $kit_warnings[] = [
+                            'nombre' => $m['nombre_comun'] ?? 'Material',
+                            'advertencia' => $m['advertencias_seguridad'],
+                            'slug' => $m['slug'] ?? ''
+                        ];
+                    }
+                }
+            }
+        }
+        $has_kit_warnings = count($kit_warnings) > 0;
         ?>
 
         <?php if ($has_seguridad && $has_video): ?>
@@ -283,6 +301,23 @@ include 'includes/header.php';
                 </div>
             </section>
         </div>
+        <?php if ($has_kit_warnings): ?>
+        <section class="safety-info safety-kits">
+            <h2 class="safety-title">🧪 Para practicar: A tener en cuenta</h2>
+            <ul class="safety-kit-list">
+                <?php foreach ($kit_warnings as $kw): ?>
+                    <li>
+                        <?php if (!empty($kw['slug'])): ?>
+                            <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
+                        <?php else: ?>
+                            <strong><?= h($kw['nombre']) ?></strong>
+                        <?php endif; ?>
+                        <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+        <?php endif; ?>
         <?php else: ?>
             <?php if ($has_seguridad): ?>
             <section class="safety-info">
@@ -305,6 +340,24 @@ include 'includes/header.php';
                     <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
                 </div>
             </div>
+            <?php endif; ?>
+
+            <?php if ($has_kit_warnings): ?>
+            <section class="safety-info safety-kits">
+                <h2 class="safety-title">🧪 Para practicar: A tener en cuenta</h2>
+                <ul class="safety-kit-list">
+                    <?php foreach ($kit_warnings as $kw): ?>
+                        <li>
+                            <?php if (!empty($kw['slug'])): ?>
+                                <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
+                            <?php else: ?>
+                                <strong><?= h($kw['nombre']) ?></strong>
+                            <?php endif; ?>
+                            <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </section>
             <?php endif; ?>
         <?php endif; ?>
 

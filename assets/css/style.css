@@ -3968,6 +3968,20 @@ strong, b {
     line-height: 1.7;
 }
 
+/* Safety kit warnings box */
+.safety-kits {
+    background: #fffdf5;
+}
+
+.safety-kit-list {
+    list-style: disc;
+    margin: var(--spacing-md) 0 var(--spacing-md) var(--spacing-lg);
+    color: var(--color-text);
+}
+
+.safety-kit-list li { margin-bottom: var(--spacing-sm); }
+.safety-kit-list a { color: var(--color-primary); text-decoration: underline; }
+
 /* Intro row: video + seguridad lado a lado */
 .intro-row {
     display: grid;
