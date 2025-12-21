@@ -1564,7 +1564,8 @@ include '../header.php';
           height: 500,
           removePlugins: 'elementspath',
           resize_enabled: true,
-          contentsCss: ['/assets/css/article-content.css']
+          contentsCss: ['/assets/css/style.css', '/assets/css/article-content.css'],
+          bodyClass: 'article-body'
         });
         console.log('✅ [KitsEdit] CKEditor 4 cargado');
       } else {

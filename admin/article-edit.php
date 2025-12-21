@@ -844,7 +844,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 height: 480,
                 removePlugins: 'elementspath',
                 resize_enabled: true,
-                contentsCss: ['/assets/css/article-content.css']
+                contentsCss: ['/assets/css/style.css', '/assets/css/article-content.css'],
+                bodyClass: 'article-body'
             });
             ckeditorLoaded = true;
 
