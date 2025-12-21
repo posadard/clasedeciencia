@@ -3407,6 +3407,10 @@ strong, b {
     justify-content: center;
 }
 
+.summary-placeholder.error {
+    background: linear-gradient(135deg, #f87171 0%, var(--color-error) 100%);
+}
+
 .placeholder-icon {
     font-size: 5rem;
     opacity: 0.3;

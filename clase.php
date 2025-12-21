@@ -175,7 +175,7 @@ include 'includes/header.php';
         <div class="summary-content">
             <div class="summary-left">
                 <?php if (!empty($proyecto['imagen_portada'])): ?>
-                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" />
+                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Clase] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; p.innerHTML='\u003Cspan class=\"placeholder-icon\"\u003E🔬\u003C/span\u003E'; this.replaceWith(p);" />
                 <?php else: ?>
                     <div class="summary-placeholder">
                         <span class="placeholder-icon">🔬</span>
