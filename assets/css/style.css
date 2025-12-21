@@ -872,6 +872,18 @@ strong, b {
     .filters-title { cursor: pointer; background: var(--color-bg-alt); border: 1px solid var(--color-border-light); border-radius: 8px; padding: 0.5rem 0.65rem; }
     .filters-sidebar.fs-collapsed .filters-form { display: none; }
     .filters-sidebar.fs-collapsed .filters-title .chev { transform: rotate(-90deg); }
+    /* Mobile: make primary apply button larger and full width */
+    .filters-sidebar .filter-actions .btn-primary {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .filters-sidebar .filter-actions .btn-primary svg { width: 18px; height: 18px; margin: 0; }
+    .filters-sidebar .filter-actions { gap: 0.5rem; }
 }
 
 /* === Compact tweaks for library/results === */

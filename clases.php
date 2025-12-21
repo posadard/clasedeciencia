@@ -411,7 +411,13 @@ include 'includes/header.php';
                     </div>
                 </div>
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        Aplicar Filtros
+                    </button>
                     <a href="/clases" class="btn btn-secondary">Limpiar</a>
                 </div>
             </form>
