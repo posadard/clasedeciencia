@@ -284,6 +284,9 @@ include 'includes/header.php';
                             <a href="/kit.php?slug=<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
                                 <?= h($kit['nombre']) ?>
                             </a>
+                            <a href="/kit.php?slug=<?= h($kit['slug'] ?? '') ?>" class="icon-link" title="Ver kit" aria-label="Ver kit <?= h($kit['nombre']) ?>" style="margin-left:8px;">
+                                🔎
+                            </a>
                             <?php if (!empty($kit['es_principal'])): ?>
                                 <span class="badge badge-primary">Kit Principal</span>
                             <?php else: ?>
@@ -298,6 +301,9 @@ include 'includes/header.php';
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
                                 <li>
                                     <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+                                    <?php if (!empty($m['sku'])): ?>
+                                        <a href="/componente.php?slug=<?= h($m['sku']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
+                                    <?php endif; ?>
                                     <?php if (!empty($m['advertencias_seguridad'])): ?>
                                         <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
                                     <?php endif; ?>

@@ -54,6 +54,9 @@ include 'includes/header.php';
       <?php foreach ($componentes as $m): ?>
         <li>
           <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+          <?php if (!empty($m['sku'])): ?>
+            <a href="/componente.php?slug=<?= h($m['sku']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
+          <?php endif; ?>
           <?php if (!empty($m['advertencias_seguridad'])): ?>
             <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
           <?php endif; ?>
