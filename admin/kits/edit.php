@@ -1563,7 +1563,8 @@ include '../header.php';
         CKEDITOR.replace('contenido_html', {
           height: 500,
           removePlugins: 'elementspath',
-          resize_enabled: true
+          resize_enabled: true,
+          contentsCss: ['/assets/css/article-content.css']
         });
         console.log('✅ [KitsEdit] CKEditor 4 cargado');
       } else {

@@ -843,7 +843,8 @@ document.addEventListener('DOMContentLoaded', function() {
             CKEDITOR.replace('body', {
                 height: 480,
                 removePlugins: 'elementspath',
-                resize_enabled: true
+                resize_enabled: true,
+                contentsCss: ['/assets/css/article-content.css']
             });
             ckeditorLoaded = true;
 

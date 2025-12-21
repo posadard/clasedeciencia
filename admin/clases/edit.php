@@ -1215,7 +1215,8 @@ include '../header.php';
           height: 500,
           // Mantener plugins requeridos; solo ocultar elementspath
           removePlugins: 'elementspath',
-          resize_enabled: true
+          resize_enabled: true,
+          contentsCss: ['/assets/css/article-content.css']
         });
         console.log('✅ [ClasesEdit] CKEditor 4 cargado');
         // Live SEO compute on editor changes
