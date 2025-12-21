@@ -97,7 +97,7 @@ if (!empty($areas)) {
 
 $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Ciencia');
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
-$canonical_url = SITE_URL . '/clase.php?slug=' . $proyecto['slug'];
+$canonical_url = SITE_URL . '/' . $proyecto['slug'];
 
 // Schema.org básico HowTo
 $schema = [
@@ -416,7 +416,7 @@ include 'includes/header.php';
             <h2>🔗 Clases Relacionadas</h2>
             <div class="related-grid">
                 <?php foreach ($clases_relacionadas as $rel): ?>
-                    <a href="/clase.php?slug=<?= h($rel['slug']) ?>" class="related-card">
+                    <a href="/<?= h($rel['slug']) ?>" class="related-card">
                         <?php if (!empty($rel['imagen_portada'])): ?>
                             <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" />
                         <?php endif; ?>

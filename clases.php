@@ -341,8 +341,8 @@ include 'includes/header.php';
             <?php else: ?>
             <div class="articles-grid">
                 <?php foreach ($proyectos as $p): ?>
-                <article class="article-card" data-href="/clase.php?slug=<?= h($p['slug']) ?>">
-                    <a class="card-link" href="/clase.php?slug=<?= h($p['slug']) ?>">
+                <article class="article-card" data-href="/<?= h($p['slug']) ?>">
+                    <a class="card-link" href="/<?= h($p['slug']) ?>">
                         <div class="card-content">
                             <div class="card-meta">
                                 <?php if (!empty($p['destacado'])): ?>

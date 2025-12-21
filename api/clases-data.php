@@ -171,7 +171,7 @@ try {
         $proyectos[] = [
             'id' => (int)$clase['id'],
             'title' => $clase['nombre'],
-            'url' => '/clase.php?slug=' . $clase['slug'],
+            'url' => '/' . $clase['slug'],
             'slug' => $clase['slug'],
             'subject' => $clase['areas'] ?? 'General',
             'difficulty' => $dificultad,

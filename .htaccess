@@ -16,6 +16,8 @@ RewriteRule ^article\.php$ /clases [R=301,L]
 # Redirect antiguo formato a nuevo (SEO 301)
 RewriteCond %{QUERY_STRING} ^slug=([a-z0-9-]+)$
 RewriteRule ^proyecto\.php$ /%1? [R=301,L]
+RewriteCond %{QUERY_STRING} ^slug=(clase-[a-z0-9-]+)$ [NC]
+RewriteRule ^clase\.php$ /%1? [R=301,L]
 
 # URL amigable para catálogo unificado: /clases -> /clases.php
 RewriteRule ^clases$ /clases.php [L,QSA]
@@ -30,6 +32,7 @@ RewriteRule ^componente$ /componente.php [L,QSA]
 # URLs amigables para detalle de kits y componentes con prefijo en el propio slug
 RewriteRule ^(kit-[a-z0-9-]+)/?$ /kit.php?slug=$1 [L,QSA]
 RewriteRule ^(componente-[a-z0-9-]+)/?$ /componente.php?slug=$1 [L,QSA]
+RewriteRule ^(clase-[a-z0-9-]+)/?$ /clase.php?slug=$1 [L,QSA]
 
 # Redirecciones 301 desde URLs con query a las rutas bonitas
 RewriteCond %{THE_REQUEST} \s/kit\.php\?slug=([^\s&]+) [NC]

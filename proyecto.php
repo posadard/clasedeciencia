@@ -10,7 +10,7 @@ if (!$slug) {
 }
 
 // Redirección permanente al nuevo endpoint
-header('Location: /clase.php?slug=' . urlencode($slug), true, 301);
+header('Location: /' . urlencode($slug), true, 301);
 exit;
 
 // Cargar clase

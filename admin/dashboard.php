@@ -221,7 +221,7 @@ include 'header.php';
                 </td>
                 <td><?= htmlspecialchars(date('Y-m-d', strtotime($p['updated_at'])), ENT_QUOTES, 'UTF-8') ?></td>
                 <td class="actions">
-                    <a href="/clase.php?slug=<?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn action-btn btn-secondary">Ver</a>
+                    <a href="/<?= htmlspecialchars($p['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn action-btn btn-secondary">Ver</a>
                     <a href="/admin/clases/edit.php?id=<?= (int)$p['id'] ?>" class="btn action-btn">Editar</a>
                 </td>
             </tr>

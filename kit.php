@@ -77,7 +77,7 @@ include 'includes/header.php';
     <h2>📚 Clases Relacionadas</h2>
     <div class="related-grid">
       <?php foreach ($clases as $c): ?>
-        <a href="/clase.php?slug=<?= h($c['slug']) ?>" class="related-card">
+        <a href="/<?= h($c['slug']) ?>" class="related-card">
           <?php if (!empty($c['imagen_portada'])): ?>
             <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" />
           <?php endif; ?>
