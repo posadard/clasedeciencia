@@ -11,133 +11,146 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 $material = null;
-  // Dual-list para atributos de Componentes (sin dropdown)
-  (function initAttrDualListCmp(){
-    const available = document.getElementById('available-attrs-cmp');
-    const selected = document.getElementById('selected-attrs-cmp-dl');
-    const search = document.getElementById('search-attrs-cmp');
-    const availCount = document.getElementById('attrs-available-count-cmp');
-    const selCount = document.getElementById('attrs-selected-count-cmp');
-    if (!available || !selected) { console.log('⚠️ [ComponentesEdit] Dual-list atributos no inicializada'); return; }
-
-    function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-    function updateCounts(){
-      const availVisible = Array.from(available.querySelectorAll('.competencia-item'))
-        .filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
-      const selTotal = selected.querySelectorAll('.competencia-item').length;
-      if (availCount) availCount.textContent = `(${availVisible})`;
-      if (selCount) selCount.textContent = `(${selTotal})`;
-    }
-    if (search) {
-      search.addEventListener('input', function(){
-        const q = normalize(this.value.trim());
-        available.querySelectorAll('.competencia-item').forEach(it => {
-          if (it.classList.contains('hidden')) return;
-          const label = normalize(it.getAttribute('data-label')||'');
-          const tipo = normalize(it.getAttribute('data-tipo')||'');
-          const show = !q || label.includes(q) || tipo.includes(q);
-          it.style.display = show ? 'flex' : 'none';
-        });
-        updateCounts();
-        console.log('🔍 [ComponentesEdit] Filtro atributos:', this.value);
-      });
-    }
-
-    window.selectAttrCmp = function(item){
-      try {
-        const defId = item.getAttribute('data-id');
-        const label = item.getAttribute('data-label');
-        const unitsJson = item.getAttribute('data-units') || '[]';
-        const unitDef = item.getAttribute('data-unidad_def') || '';
-        document.getElementById('add_def_id_cmp').value = String(defId);
-        document.getElementById('addAttrCmpInfo').textContent = label;
-        const sel = document.getElementById('add_unidad_cmp');
-        const selGroup = document.getElementById('add_unidad_cmp_group');
-        sel.innerHTML = '';
-        let units = [];
-        try { const u = JSON.parse(unitsJson); if (Array.isArray(u)) units = u; } catch(_e){}
-        const hasUnits = Array.isArray(units) && units.length > 0;
-        const hasDefault = !!unitDef;
-        if (hasUnits || hasDefault) {
-          const opt0 = document.createElement('option');
-          opt0.value = ''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-          if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
-          if (selGroup) selGroup.style.display = '';
-          console.log('🔍 [ComponentesEdit] Unidad visible (aplica)');
-        } else {
-          if (selGroup) selGroup.style.display = 'none';
-          console.log('🔍 [ComponentesEdit] Unidad oculta (no aplica)');
+if ($is_edit) {
+  try {
+    $stmt = $pdo->prepare("SELECT * FROM kit_items WHERE id = ?");
+    $stmt->execute([$id]);
+    $material = $stmt->fetch(PDO::FETCH_ASSOC);
+  } catch (PDOException $e) {
+    <label for="search-attrs-cmp">Atributos</label>
+    <div class="dual-listbox-container two-panels">
+      <div class="listbox-panel">
+        <div class="listbox-header">
+          <strong>Disponibles</strong>
+          <span id="attrs-available-count-cmp" class="counter">(0)</span>
+        </div>
+        <input type="text" id="search-attrs-cmp" class="listbox-search" placeholder="🔍 Buscar atributos...">
+        <div class="listbox-content" id="available-attrs-cmp">
+          <?php foreach ($attrs_defs as $def):
+            $aid = (int)$def['id'];
+            $values = $attrs_vals[$aid] ?? [];
+            $hasValues = !empty($values);
+            $label = $def['etiqueta'];
+            $tipo = $def['tipo_dato'];
+            $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
+            $unitDef = $def['unidad_defecto'] ?? '';
+          ?>
+          <div class="competencia-item <?= $hasValues ? 'hidden' : '' ?>"
+               data-id="<?= $aid ?>"
+               data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+               data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
+               data-units='<?= $unitsJson ?>'
+               data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
+               onclick="selectAttrCmp(this)">
+            <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="comp-codigo">Tipo <?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?><?= $unitDef ? ' · ' . htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') : '' ?></span>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <div class="listbox-panel">
+        <div class="listbox-header">
+          <strong>Seleccionados</strong>
+          <span id="attrs-selected-count-cmp" class="counter">(0)</span>
+        </div>
+        <div class="listbox-content" id="selected-attrs-cmp-dl">
+          <?php foreach ($attrs_defs as $def):
+            $aid = (int)$def['id'];
+            $values = $attrs_vals[$aid] ?? [];
+            if (empty($values)) continue;
+            $label = $def['etiqueta'];
+            $tipo = $def['tipo_dato'];
+            $unitDef = $def['unidad_defecto'] ?? '';
+            $display = [];
+            foreach ($values as $v) {
+              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+              else { $display[] = $v['valor_string']; }
+            }
+            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+          ?>
+          <div class="competencia-item selected"
+               data-id="<?= $aid ?>"
+               data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+               data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+               data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
+               data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+               data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
+               onclick="editAttrItemCmp(this)">
+            <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="comp-codigo"><strong><?= $text ?></strong><?= ($values[0]['unidad_codigo'] ?? '') ? ' ' . htmlspecialchars($values[0]['unidad_codigo'], ENT_QUOTES, 'UTF-8') : '' ?></span>
+            <form method="POST" style="display:inline; margin-left:auto;" onsubmit="return confirm('¿Eliminar este atributo del componente?')">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+              <input type="hidden" name="action" value="delete_attr" />
+              <input type="hidden" name="def_id" value="<?= $aid ?>" />
+              <button type="submit" class="remove-btn" title="Remover">×</button>
+            </form>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <small class="hint" style="margin-top: 10px; display: block;">Haz clic para editar. Usa × para quitar.</small>
+      </div>
+    </div>
+  } else if ($action === 'update_attr' && $is_edit) {
+    try {
+      $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+      $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
+      $unidad = isset($_POST['unidad']) ? trim((string)$_POST['unidad']) : '';
+      if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+      $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?')->execute(['componente', $id, $def_id]);
+      $defS = $pdo->prepare('SELECT * FROM atributos_definiciones WHERE id = ?');
+      $defS->execute([$def_id]);
+      $def = $defS->fetch(PDO::FETCH_ASSOC);
+      if (!$def) { throw new Exception('Atributo no existe'); }
+      $pdo->beginTransaction();
+      $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+      $card = $def['cardinalidad'];
+      $tipo = $def['tipo_dato'];
+      $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+      $orden = 1;
+      foreach ($vals as $v) {
+        $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+        switch ($tipo) {
+          case 'number':
+            $num = is_numeric(str_replace(',', '.', $v)) ? (float)str_replace(',', '.', $v) : null; if ($num === null) continue 2; $val_numero = $num; break;
+          case 'integer':
+            $int = is_numeric($v) ? (int)$v : null; if ($int === null) continue 2; $val_entero = $int; break;
+          case 'boolean':
+            $val_bool = ($v === '1' || strtolower($v) === 'true' || strtolower($v) === 'sí' || strtolower($v) === 'si') ? 1 : 0; break;
+          case 'date':
+            $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null; if ($val_fecha === null) continue 2; break;
+          case 'datetime':
+            $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $v) ? (str_replace('T', ' ', $v) . ':00') : null; if ($val_dt === null) continue 2; break;
+          case 'json':
+            $decoded = json_decode($v, true); if ($decoded === null && strtolower(trim($v)) !== 'null') continue 2; $val_json = json_encode($decoded); break;
+          case 'string':
+          default:
+            $val_string = mb_substr((string)$v, 0, 2000, 'UTF-8'); break;
         }
-        openModal('#modalAddAttrCmp');
-        setTimeout(() => { try { document.getElementById('add_valor_cmp')?.focus(); } catch(_e){} }, 50);
-      } catch(e){ console.log('❌ [ComponentesEdit] Error selectAttrCmp:', e && e.message); }
+        $ins->execute(['componente', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
+      }
+      $pdo->commit();
+      echo "<script>console.log('✅ [ComponentesEdit] update_attr guardado');</script>";
+    } catch (Exception $e) {
+      if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+      $errores[] = 'Error actualizando atributo: ' . $e->getMessage();
+      echo "<script>console.log('❌ [ComponentesEdit] update_attr error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
     }
-
-    window.editAttrCmpItem = function(item){
-      try {
-        const defId = item.getAttribute('data-id');
-        const label = item.getAttribute('data-label');
-        const tipo = item.getAttribute('data-tipo');
-        const unitsJson = item.getAttribute('data-units');
-        const unitDef = item.getAttribute('data-unidad_def') || '';
-        const vals = JSON.parse(item.getAttribute('data-values') || '[]');
-        document.getElementById('edit_def_id_cmp').value = defId;
-        document.getElementById('editAttrCmpInfo').textContent = label;
-        const inputEl = document.getElementById('edit_valor_cmp');
-        const unitSel = document.getElementById('edit_unidad_cmp');
-        const unitGroup = document.getElementById('edit_unidad_cmp_group');
-        inputEl.value = '';
-        unitSel.innerHTML = '';
-        if (Array.isArray(vals) && vals.length) {
-          const parts = vals.map(v => {
-            if (tipo === 'number') return v.valor_numero;
-            if (tipo === 'integer') return v.valor_entero;
-            if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
-            if (tipo === 'date') return v.valor_fecha;
-            if (tipo === 'datetime') return v.valor_datetime;
-            if (tipo === 'json') return v.valor_json;
-            return v.valor_string;
-          }).filter(Boolean);
-          inputEl.value = parts.join(', ');
-        }
-        let units = [];
-        try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
-        const hasUnits = Array.isArray(units) && units.length > 0;
-        const hasDefault = !!unitDef;
-        if (hasUnits || hasDefault) {
-          const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
-          if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
-          if (unitGroup) unitGroup.style.display = '';
-          console.log('🔍 [ComponentesEdit] Unidad visible (aplica)');
-        } else {
-          if (unitGroup) unitGroup.style.display = 'none';
-          console.log('🔍 [ComponentesEdit] Unidad oculta (no aplica)');
-        }
-        openModal('#modalEditAttrCmp');
-      } catch(e){ console.log('❌ [ComponentesEdit] Error editAttrCmpItem:', e && e.message); }
+  } else if ($action === 'delete_attr' && $is_edit) {
+    try {
+      $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+      if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+      $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
+      $stmt->execute(['componente', $id, $def_id]);
+      echo "<script>console.log('✅ [ComponentesEdit] delete_attr ejecutado');</script>";
+    } catch (PDOException $e) {
+      $errores[] = 'Error eliminando atributo: ' . $e->getMessage();
+      echo "<script>console.log('❌ [ComponentesEdit] delete_attr error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
     }
-
-    const btnCreate = document.getElementById('btn_create_attr_cmp');
-    if (btnCreate) {
-      btnCreate.addEventListener('click', () => {
-        try {
-          const q = (search && search.value ? search.value.trim() : '');
-          document.getElementById('create_etiqueta_cmp').value = q;
-          document.getElementById('create_clave_cmp').value = '';
-          document.getElementById('create_tipo_cmp').value = 'string';
-          document.getElementById('create_card_cmp').value = 'one';
-          document.getElementById('create_unidad_cmp').value = '';
-          document.getElementById('create_unidades_cmp').value = '';
-          openModal('#modalCreateAttrCmp');
-          setTimeout(() => { try { document.getElementById('create_etiqueta_cmp')?.focus(); } catch(_e){} }, 50);
-          console.log('🔍 [ComponentesEdit] Abrir crear atributo (botón)', q);
-        } catch(e) { console.log('❌ [ComponentesEdit] Error abrir crear atributo (botón):', e && e.message); }
-      });
-    }
-
-    updateCounts();
-    console.log('✅ [ComponentesEdit] Dual-list atributos inicializado');
-  })();
   } else if ($action === 'save_attrs' && $is_edit) {
     // Guardar ficha técnica del componente
     try {
@@ -589,51 +602,57 @@ if ($is_edit) {
      b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
   });
 
-  // Autocomplete + modal para atributos de componentes
-    (function initAttrUICmp(){
-    const dropdown = document.getElementById('attr_autocomplete_dropdown_cmp');
-    const input = document.getElementById('attr_search_cmp');
-    const selectedWrap = document.getElementById('selected-attrs-cmp');
-    if (!dropdown || !input || !selectedWrap) { console.log('⚠️ [ComponentesEdit] UI atributos no inicializada'); return; }
-
-    const defs = [
-      <?php foreach ($attrs_defs as $d): ?>
-      { id: <?= (int)$d['id'] ?>, label: '<?= htmlspecialchars($d['etiqueta'], ENT_QUOTES, 'UTF-8') ?>', tipo: '<?= htmlspecialchars($d['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>', card: '<?= htmlspecialchars($d['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>', units: <?= $d['unidades_permitidas_json'] ? $d['unidades_permitidas_json'] : '[]' ?>, unitDef: '<?= htmlspecialchars($d['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
-      <?php endforeach; ?>
-    ];
+  // Dual-list para atributos del Componente (sin dropdown auto)
+  (function initAttrDualListCmp(){
+    const available = document.getElementById('available-attrs-cmp');
+    const selected = document.getElementById('selected-attrs-cmp-dl');
+    const search = document.getElementById('search-attrs-cmp');
+    const availCount = document.getElementById('attrs-available-count-cmp');
+    const selCount = document.getElementById('attrs-selected-count-cmp');
+    if (!available || !selected) { console.log('⚠️ [ComponentesEdit] Dual-list atributos no inicializada'); return; }
 
     function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-    function render(list){
-      if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div><div class="autocomplete-item create-item" id="attr_create_item_cmp"><strong>➕ Crear nuevo atributo</strong></div>'; dropdown.style.display='block'; const ci=document.getElementById('attr_create_item_cmp'); if(ci){ ci.addEventListener('click', onCreateNewCmp); } return; }
-      dropdown.innerHTML = '';
-      list.slice(0, 20).forEach(def => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.innerHTML = `<strong>${def.label}</strong><span class="cmp-code">${def.tipo}${def.unitDef? ' · '+def.unitDef:''}</span>`;
-        div.addEventListener('click', () => onChoose(def));
-        dropdown.appendChild(div);
+    function updateCounts(){
+      const availVisible = Array.from(available.querySelectorAll('.competencia-item'))
+        .filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
+      const selTotal = selected.querySelectorAll('.competencia-item').length;
+      if (availCount) availCount.textContent = `(${availVisible})`;
+      if (selCount) selCount.textContent = `(${selTotal})`;
+    }
+    if (search) {
+      search.addEventListener('input', function(){
+        const q = normalize(this.value.trim());
+        available.querySelectorAll('.competencia-item').forEach(it => {
+          if (it.classList.contains('hidden')) return; // ya seleccionado
+          const label = normalize(it.getAttribute('data-label')||'');
+          const tipo = normalize(it.getAttribute('data-tipo')||'');
+          const show = !q || label.includes(q) || tipo.includes(q);
+          it.style.display = show ? 'flex' : 'none';
+        });
+        updateCounts();
+        console.log('🔍 [ComponentesEdit] Filtro atributos:', this.value);
       });
-      dropdown.style.display = 'block';
     }
-    function filter(q){
-      const nq = normalize(q);
-      const out = defs.filter(d => normalize(d.label).includes(nq));
-      console.log('🔍 [ComponentesEdit] Buscar atributo:', q, '→', out.length);
-      render(out);
-    }
-    function onChoose(def){
+
+    window.selectAttrCmp = function(item){
       try {
-        document.getElementById('add_def_id_cmp').value = String(def.id);
-        document.getElementById('addAttrCmpInfo').textContent = def.label;
+        const defId = item.getAttribute('data-id');
+        const label = item.getAttribute('data-label');
+        const unitsJson = item.getAttribute('data-units') || '[]';
+        const unitDef = item.getAttribute('data-unidad_def') || '';
+        document.getElementById('add_def_id_cmp').value = String(defId);
+        document.getElementById('addAttrCmpInfo').textContent = label;
         const sel = document.getElementById('add_unidad_cmp');
         const selGroup = document.getElementById('add_unidad_cmp_group');
         sel.innerHTML = '';
-        const hasUnits = Array.isArray(def.units) && def.units.length > 0;
-        const hasDefault = !!def.unitDef;
+        let units = [];
+        try { const u = JSON.parse(unitsJson); if (Array.isArray(u)) units = u; } catch(_e){}
+        const hasUnits = Array.isArray(units) && units.length > 0;
+        const hasDefault = !!unitDef;
         if (hasUnits || hasDefault) {
           const opt0 = document.createElement('option');
-          opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-          if (hasUnits) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+          opt0.value = ''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+          if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
           if (selGroup) selGroup.style.display = '';
           console.log('🔍 [ComponentesEdit] Unidad visible (aplica)');
         } else {
@@ -642,58 +661,17 @@ if ($is_edit) {
         }
         openModal('#modalAddAttrCmp');
         setTimeout(() => { try { document.getElementById('add_valor_cmp')?.focus(); } catch(_e){} }, 50);
-      } catch (e) {
-        console.log('❌ [ComponentesEdit] Error preparar modal atributo:', e && e.message);
-      }
-      dropdown.style.display = 'none';
+      } catch(e){ console.log('❌ [ComponentesEdit] Error selectAttrCmp:', e && e.message); }
     }
-    function onCreateNewCmp(){
+
+    window.editAttrItemCmp = function(item){
       try {
-        const val = (input.value || '').trim();
-        document.getElementById('create_etiqueta_cmp').value = val;
-        document.getElementById('create_clave_cmp').value = '';
-        document.getElementById('create_tipo_cmp').value = 'string';
-        document.getElementById('create_card_cmp').value = 'one';
-        document.getElementById('create_unidad_cmp').value = '';
-        document.getElementById('create_unidades_cmp').value = '';
-        openModal('#modalCreateAttrCmp');
-        setTimeout(() => { try { document.getElementById('create_etiqueta_cmp')?.focus(); } catch(_e){} }, 50);
-        console.log('🔍 [ComponentesEdit] Crear atributo desde búsqueda:', val);
-      } catch(e){ console.log('❌ [ComponentesEdit] Error preparar crear atributo:', e && e.message); }
-      dropdown.style.display='none';
-    }
-    input.addEventListener('focus', () => filter(input.value));
-    input.addEventListener('input', () => filter(input.value));
-    document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
-
-    // Botón para crear atributo directamente
-    const btnCreate = document.getElementById('btn_create_attr_cmp');
-    if (btnCreate) {
-      btnCreate.addEventListener('click', () => {
-        try {
-          const val = (input && input.value ? input.value.trim() : '');
-          document.getElementById('create_etiqueta_cmp').value = val;
-          document.getElementById('create_clave_cmp').value = '';
-          document.getElementById('create_tipo_cmp').value = 'string';
-          document.getElementById('create_card_cmp').value = 'one';
-          document.getElementById('create_unidad_cmp').value = '';
-          document.getElementById('create_unidades_cmp').value = '';
-          openModal('#modalCreateAttrCmp');
-          setTimeout(() => { try { document.getElementById('create_etiqueta_cmp')?.focus(); } catch(_e){} }, 50);
-          console.log('🔍 [ComponentesEdit] Abrir crear atributo (botón)', val);
-        } catch(e) { console.log('❌ [ComponentesEdit] Error abrir crear atributo (botón):', e && e.message); }
-      });
-    }
-
-    // Editar chip existente
-    document.querySelectorAll('.js-edit-attr-cmp').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const defId = btn.getAttribute('data-attr-id');
-        const label = btn.getAttribute('data-label');
-        const tipo = btn.getAttribute('data-tipo');
-        const unitsJson = btn.getAttribute('data-units');
-        const unitDef = btn.getAttribute('data-unidad_def') || '';
-        const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
+        const defId = item.getAttribute('data-id');
+        const label = item.getAttribute('data-label');
+        const tipo = item.getAttribute('data-tipo');
+        const unitsJson = item.getAttribute('data-units');
+        const unitDef = item.getAttribute('data-unidad_def') || '';
+        const vals = JSON.parse(item.getAttribute('data-values') || '[]');
         document.getElementById('edit_def_id_cmp').value = defId;
         document.getElementById('editAttrCmpInfo').textContent = label;
         const inputEl = document.getElementById('edit_valor_cmp');
@@ -727,8 +705,29 @@ if ($is_edit) {
           console.log('🔍 [ComponentesEdit] Unidad oculta (no aplica)');
         }
         openModal('#modalEditAttrCmp');
+      } catch(e){ console.log('❌ [ComponentesEdit] Error editAttrItemCmp:', e && e.message); }
+    }
+
+    const btnCreate = document.getElementById('btn_create_attr_cmp');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        try {
+          const q = (search && search.value ? search.value.trim() : '');
+          document.getElementById('create_etiqueta_cmp').value = q;
+          document.getElementById('create_clave_cmp').value = '';
+          document.getElementById('create_tipo_cmp').value = 'string';
+          document.getElementById('create_card_cmp').value = 'one';
+          document.getElementById('create_unidad_cmp').value = '';
+          document.getElementById('create_unidades_cmp').value = '';
+          openModal('#modalCreateAttrCmp');
+          setTimeout(() => { try { document.getElementById('create_etiqueta_cmp')?.focus(); } catch(_e){} }, 50);
+          console.log('🔍 [ComponentesEdit] Abrir crear atributo (botón)', q);
+        } catch(e) { console.log('❌ [ComponentesEdit] Error abrir crear atributo (botón):', e && e.message); }
       });
-    });
+    }
+
+    updateCounts();
+    console.log('✅ [ComponentesEdit] Dual-list atributos inicializado');
   })();
 
   // Logs de envío de formularios

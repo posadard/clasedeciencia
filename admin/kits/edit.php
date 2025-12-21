@@ -5,135 +5,148 @@ require_once '../auth.php';
 $is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
 $id = $is_edit ? (int)$_GET['id'] : null;
 
-  <script>
-    // Dual-list para atributos de Kit (sin dropdown)
-    (function initAttrDualList(){
-      const available = document.getElementById('available-attrs');
-      const selected = document.getElementById('selected-attrs-dl');
-      const search = document.getElementById('search-attrs');
-      const availCount = document.getElementById('attrs-available-count');
-      const selCount = document.getElementById('attrs-selected-count');
-      if (!available || !selected) { console.log('⚠️ [KitsEdit] Dual-list atributos no inicializada'); return; }
+$page_title = $is_edit ? 'Editar Kit' : 'Nuevo Kit';
 
-      function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-      function updateCounts(){
-        const availVisible = Array.from(available.querySelectorAll('.competencia-item'))
-          .filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
-        const selTotal = selected.querySelectorAll('.competencia-item').length;
-        if (availCount) availCount.textContent = `(${availVisible})`;
-        if (selCount) selCount.textContent = `(${selTotal})`;
-      }
-      if (search) {
-        search.addEventListener('input', function(){
-          const q = normalize(this.value.trim());
-          available.querySelectorAll('.competencia-item').forEach(it => {
-            if (it.classList.contains('hidden')) return;
-            const label = normalize(it.getAttribute('data-label')||'');
-            const tipo = normalize(it.getAttribute('data-tipo')||'');
-            const show = !q || label.includes(q) || tipo.includes(q);
-            it.style.display = show ? 'flex' : 'none';
-          });
-          updateCounts();
-          console.log('🔍 [KitsEdit] Filtro atributos:', this.value);
-        });
-      }
+if (!isset($_SESSION['csrf_token'])) {
+  try { $_SESSION['csrf_token'] = bin2hex(random_bytes(16)); } catch (Exception $e) { $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(16)); }
+}
 
-      window.selectAttrKit = function(item){
-        try {
-          const defId = item.getAttribute('data-id');
-          const label = item.getAttribute('data-label');
-          const unitsJson = item.getAttribute('data-units') || '[]';
-          const unitDef = item.getAttribute('data-unidad_def') || '';
-          document.getElementById('add_def_id').value = String(defId);
-          document.getElementById('addAttrInfo').textContent = label;
-          const sel = document.getElementById('add_unidad');
-          const selGroup = document.getElementById('add_unidad_group');
-          sel.innerHTML = '';
-          let units = [];
-          try { const u = JSON.parse(unitsJson); if (Array.isArray(u)) units = u; } catch(_e){}
-          const hasUnits = Array.isArray(units) && units.length > 0;
-          const hasDefault = !!unitDef;
-          if (hasUnits || hasDefault) {
-            const opt0 = document.createElement('option');
-            opt0.value = ''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
-            if (selGroup) selGroup.style.display = '';
-            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+$kit = [
+  'clase_id' => '',
+  'nombre' => '',
+  'slug' => '',
+  'codigo' => '',
+  'version' => '1',
+  'activo' => 1,
+];
+
+      <label for="search-attrs">Atributos</label>
+      <div class="dual-listbox-container two-panels">
+        <div class="listbox-panel">
+          <div class="listbox-header">
+            <strong>Disponibles</strong>
+            <span id="attrs-available-count" class="counter">(0)</span>
+          </div>
+          <input type="text" id="search-attrs" class="listbox-search" placeholder="🔍 Buscar atributos...">
+          <div class="listbox-content" id="available-attrs">
+            <?php foreach ($attr_defs as $def):
+              $aid = (int)$def['id'];
+              $values = $attr_vals[$aid] ?? [];
+              $hasValues = !empty($values);
+              $label = $def['etiqueta'];
+              $tipo = $def['tipo_dato'];
+              $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
+              $unitDef = $def['unidad_defecto'] ?? '';
+            ?>
+            <div class="competencia-item <?= $hasValues ? 'hidden' : '' ?>"
+                 data-id="<?= $aid ?>"
+                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+                 data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
+                 data-units='<?= $unitsJson ?>'
+                 data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
+                 onclick="selectAttr(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo">Tipo <?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?><?= $unitDef ? ' · ' . htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') : '' ?></span>
+            </div>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div class="listbox-panel">
+          <div class="listbox-header">
+            <strong>Seleccionados</strong>
+            <span id="attrs-selected-count" class="counter">(0)</span>
+          </div>
+          <div class="listbox-content" id="selected-attrs-dl">
+            <?php foreach ($attr_defs as $def):
+              $aid = (int)$def['id'];
+              $values = $attr_vals[$aid] ?? [];
+              if (empty($values)) continue;
+              $label = $def['etiqueta'];
+              $tipo = $def['tipo_dato'];
+              $unitDef = $def['unidad_defecto'] ?? '';
+              $display = [];
+              foreach ($values as $v) {
+                if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+                else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+                else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+                else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+                else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+                else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+                else { $display[] = $v['valor_string']; }
+              }
+              $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+            ?>
+            <div class="competencia-item selected"
+                 data-id="<?= $aid ?>"
+                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+                 data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+                 data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
+                 data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                 data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
+                 onclick="editAttrItem(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo"><strong><?= $text ?></strong><?= ($values[0]['unidad_codigo'] ?? '') ? ' ' . htmlspecialchars($values[0]['unidad_codigo'], ENT_QUOTES, 'UTF-8') : '' ?></span>
+              <form method="POST" style="display:inline; margin-left:auto;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+                <input type="hidden" name="action" value="delete_attr" />
+                <input type="hidden" name="def_id" value="<?= $aid ?>" />
+                <button type="submit" class="remove-btn" title="Remover">×</button>
+              </form>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <small class="hint" style="margin-top: 10px; display: block;">Haz clic para editar. Usa × para quitar.</small>
+        </div>
+      </div>
+          // Obtener valores del POST
+          $values = [];
+          $units = [];
+          if ($card === 'many') {
+            $raw = isset($_POST['attr_' . $attr_id]) ? $_POST['attr_' . $attr_id] : '';
+            if (is_array($raw)) {
+              $values = $raw;
+            } else {
+              $values = array_filter(array_map('trim', preg_split('/[\n,]+/', (string)$raw)));
+            }
+            $units = isset($_POST['unit_' . $attr_id]) ? (array)$_POST['unit_' . $attr_id] : [];
           } else {
-            if (selGroup) selGroup.style.display = 'none';
-            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+            $v = isset($_POST['attr_' . $attr_id]) ? trim((string)$_POST['attr_' . $attr_id]) : '';
+            if ($v !== '') { $values = [$v]; }
+            $u = isset($_POST['unit_' . $attr_id]) ? trim((string)$_POST['unit_' . $attr_id]) : '';
+            if ($u !== '') { $units = [$u]; }
           }
-          openModal('#modalAddAttr');
-          setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
-        } catch(e){ console.log('❌ [KitsEdit] Error selectAttrKit:', e && e.message); }
-      }
 
-      window.editAttrKitItem = function(item){
-        try {
-          const defId = item.getAttribute('data-id');
-          const label = item.getAttribute('data-label');
-          const tipo = item.getAttribute('data-tipo');
-          const unitsJson = item.getAttribute('data-units');
-          const unitDef = item.getAttribute('data-unidad_def') || '';
-          const vals = JSON.parse(item.getAttribute('data-values') || '[]');
-          document.getElementById('edit_def_id').value = defId;
-          document.getElementById('editAttrInfo').textContent = label;
-          const inputEl = document.getElementById('edit_valor');
-          const unitSel = document.getElementById('edit_unidad');
-          const unitGroup = document.getElementById('edit_unidad_group');
-          inputEl.value = '';
-          unitSel.innerHTML = '';
-          if (Array.isArray(vals) && vals.length) {
-            const parts = vals.map(v => {
-              if (tipo === 'number') return v.valor_numero;
-              if (tipo === 'integer') return v.valor_entero;
-              if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
-              if (tipo === 'date') return v.valor_fecha;
-              if (tipo === 'datetime') return v.valor_datetime;
-              if (tipo === 'json') return v.valor_json;
-              return v.valor_string;
-            }).filter(Boolean);
-            inputEl.value = parts.join(', ');
-          }
-          let units = [];
-          try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
-          const hasUnits = Array.isArray(units) && units.length > 0;
-          const hasDefault = !!unitDef;
-          if (hasUnits || hasDefault) {
-            const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
-            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
-            if (unitGroup) unitGroup.style.display = '';
-            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
-          } else {
-            if (unitGroup) unitGroup.style.display = 'none';
-            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
-          }
-          openModal('#modalEditAttr');
-        } catch(e){ console.log('❌ [KitsEdit] Error editAttrKitItem:', e && e.message); }
-      }
+          // Borrar existentes
+          $del = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
+          $del->execute(['kit', $id, $attr_id]);
 
-      const btnCreate = document.getElementById('btn_create_attr');
-      if (btnCreate) {
-        btnCreate.addEventListener('click', () => {
-          try {
-            const q = (search && search.value ? search.value.trim() : '');
-            document.getElementById('create_etiqueta').value = q;
-            document.getElementById('create_clave').value = '';
-            document.getElementById('create_tipo').value = 'string';
-            document.getElementById('create_card').value = 'one';
-            document.getElementById('create_unidad').value = '';
-            document.getElementById('create_unidades').value = '';
-            openModal('#modalCreateAttr');
-            setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
-            console.log('🔍 [KitsEdit] Abrir crear atributo (botón)', q);
-          } catch(e) { console.log('❌ [KitsEdit] Error abrir crear atributo (botón):', e && e.message); }
-        });
-      }
+          // Insertar nuevos
+          $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+          $orden = 1;
+          foreach ($values as $idx => $valRaw) {
+            if ($valRaw === '' || $valRaw === null) { continue; }
+            $unidad_codigo = null;
+            if (!empty($perm_units) || !empty($def['unidad_defecto'])) {
+              $unidad_sel = $card === 'many' ? ($units[$idx] ?? '') : ($units[0] ?? '');
+              if ($unidad_sel === '' && !empty($def['unidad_defecto'])) { $unidad_sel = $def['unidad_defecto']; }
+              if ($unidad_sel !== '') { $unidad_codigo = $unidad_sel; }
+            }
 
-      updateCounts();
-      console.log('✅ [KitsEdit] Dual-list atributos inicializado');
-    })();
-  </script>
+            $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+            try {
+              switch ($tipo) {
+                case 'number':
+                  $num = is_numeric(str_replace(',', '.', $valRaw)) ? (float)str_replace(',', '.', $valRaw) : null;
+                  if ($num === null) { continue 2; }
+                  $val_numero = $num;
+                  break;
+                case 'integer':
+                  $int = is_numeric($valRaw) ? (int)$valRaw : null;
+                  if ($int === null) { continue 2; }
+                  $val_entero = $int;
+                  break;
+                case 'boolean':
+                  $val_bool = ($valRaw === '1' || strtolower($valRaw) === 'true' || strtolower($valRaw) === 'sí' || strtolower($valRaw) === 'si') ? 1 : 0;
                   break;
                 case 'date':
                   $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $valRaw) ? $valRaw : null;
@@ -829,51 +842,57 @@ include '../header.php';
      </div>
 
   <script>
-    // Autocomplete + modal para atributos (similar a componentes)
-    (function initAttrUI(){
-      const dropdown = document.getElementById('attr_autocomplete_dropdown');
-      const input = document.getElementById('attr_search');
-      const selectedWrap = document.getElementById('selected-attrs');
-      if (!dropdown || !input || !selectedWrap) { console.log('⚠️ [KitsEdit] UI atributos no inicializada'); return; }
-
-      const defs = [
-        <?php foreach ($attr_defs as $d): ?>
-        { id: <?= (int)$d['id'] ?>, label: '<?= htmlspecialchars($d['etiqueta'], ENT_QUOTES, 'UTF-8') ?>', tipo: '<?= htmlspecialchars($d['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>', card: '<?= htmlspecialchars($d['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>', units: <?= $d['unidades_permitidas_json'] ? $d['unidades_permitidas_json'] : '[]' ?>, unitDef: '<?= htmlspecialchars($d['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
-        <?php endforeach; ?>
-      ];
+    // Dual-list para atributos del Kit (sin dropdown auto)
+    (function initAttrDualList(){
+      const available = document.getElementById('available-attrs');
+      const selected = document.getElementById('selected-attrs-dl');
+      const search = document.getElementById('search-attrs');
+      const availCount = document.getElementById('attrs-available-count');
+      const selCount = document.getElementById('attrs-selected-count');
+      if (!available || !selected) { console.log('⚠️ [KitsEdit] Dual-list atributos no inicializada'); return; }
 
       function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-      function render(list){
-        if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div><div class="autocomplete-item create-item" id="attr_create_item"><strong>➕ Crear nuevo atributo</strong></div>'; dropdown.style.display='block'; const ci=document.getElementById('attr_create_item'); if(ci){ ci.addEventListener('click', onCreateNew); } return; }
-        dropdown.innerHTML = '';
-        list.slice(0, 20).forEach(def => {
-          const div = document.createElement('div');
-          div.className = 'autocomplete-item';
-          div.innerHTML = `<strong>${def.label}</strong><span class="cmp-code">${def.tipo}${def.unitDef? ' · '+def.unitDef:''}</span>`;
-          div.addEventListener('click', () => onChoose(def));
-          dropdown.appendChild(div);
+      function updateCounts(){
+        const availVisible = Array.from(available.querySelectorAll('.competencia-item'))
+          .filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
+        const selTotal = selected.querySelectorAll('.competencia-item').length;
+        if (availCount) availCount.textContent = `(${availVisible})`;
+        if (selCount) selCount.textContent = `(${selTotal})`;
+      }
+      if (search) {
+        search.addEventListener('input', function(){
+          const q = normalize(this.value.trim());
+          available.querySelectorAll('.competencia-item').forEach(it => {
+            if (it.classList.contains('hidden')) return; // ya seleccionado
+            const label = normalize(it.getAttribute('data-label')||'');
+            const tipo = normalize(it.getAttribute('data-tipo')||'');
+            const show = !q || label.includes(q) || tipo.includes(q);
+            it.style.display = show ? 'flex' : 'none';
+          });
+          updateCounts();
+          console.log('🔍 [KitsEdit] Filtro atributos:', this.value);
         });
-        dropdown.style.display = 'block';
       }
-      function filter(q){
-        const nq = normalize(q);
-        const out = defs.filter(d => normalize(d.label).includes(nq));
-        console.log('🔍 [KitsEdit] Buscar atributo:', q, '→', out.length);
-        render(out);
-      }
-      function onChoose(def){
+
+      window.selectAttr = function(item){
         try {
-          document.getElementById('add_def_id').value = String(def.id);
-          document.getElementById('addAttrInfo').textContent = def.label;
+          const defId = item.getAttribute('data-id');
+          const label = item.getAttribute('data-label');
+          const unitsJson = item.getAttribute('data-units') || '[]';
+          const unitDef = item.getAttribute('data-unidad_def') || '';
+          document.getElementById('add_def_id').value = String(defId);
+          document.getElementById('addAttrInfo').textContent = label;
           const sel = document.getElementById('add_unidad');
           const selGroup = document.getElementById('add_unidad_group');
           sel.innerHTML = '';
-          const hasUnits = Array.isArray(def.units) && def.units.length > 0;
-          const hasDefault = !!def.unitDef;
+          let units = [];
+          try { const u = JSON.parse(unitsJson); if (Array.isArray(u)) units = u; } catch(_e){}
+          const hasUnits = Array.isArray(units) && units.length > 0;
+          const hasDefault = !!unitDef;
           if (hasUnits || hasDefault) {
             const opt0 = document.createElement('option');
-            opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-            if (hasUnits) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+            opt0.value = ''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
             if (selGroup) selGroup.style.display = '';
             console.log('🔍 [KitsEdit] Unidad visible (aplica)');
           } else {
@@ -882,58 +901,17 @@ include '../header.php';
           }
           openModal('#modalAddAttr');
           setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
-        } catch (e) {
-          console.log('❌ [KitsEdit] Error preparar modal atributo:', e && e.message);
-        }
-        dropdown.style.display = 'none';
+        } catch(e){ console.log('❌ [KitsEdit] Error selectAttr:', e && e.message); }
       }
-      function onCreateNew(){
+
+      window.editAttrItem = function(item){
         try {
-          const val = (input.value || '').trim();
-          document.getElementById('create_etiqueta').value = val;
-          document.getElementById('create_clave').value = '';
-          document.getElementById('create_tipo').value = 'string';
-          document.getElementById('create_card').value = 'one';
-          document.getElementById('create_unidad').value = '';
-          document.getElementById('create_unidades').value = '';
-          openModal('#modalCreateAttr');
-          setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
-          console.log('🔍 [KitsEdit] Crear atributo desde búsqueda:', val);
-        } catch(e){ console.log('❌ [KitsEdit] Error preparar crear atributo:', e && e.message); }
-        dropdown.style.display='none';
-      }
-      input.addEventListener('focus', () => filter(input.value));
-      input.addEventListener('input', () => filter(input.value));
-      document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
-
-      // Botón para crear atributo directamente
-      const btnCreate = document.getElementById('btn_create_attr');
-      if (btnCreate) {
-        btnCreate.addEventListener('click', () => {
-          try {
-            const val = (input && input.value ? input.value.trim() : '');
-            document.getElementById('create_etiqueta').value = val;
-            document.getElementById('create_clave').value = '';
-            document.getElementById('create_tipo').value = 'string';
-            document.getElementById('create_card').value = 'one';
-            document.getElementById('create_unidad').value = '';
-            document.getElementById('create_unidades').value = '';
-            openModal('#modalCreateAttr');
-            setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
-            console.log('🔍 [KitsEdit] Abrir crear atributo (botón)', val);
-          } catch(e) { console.log('❌ [KitsEdit] Error abrir crear atributo (botón):', e && e.message); }
-        });
-      }
-
-      // Editar chip
-      document.querySelectorAll('.js-edit-attr').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const defId = btn.getAttribute('data-attr-id');
-          const label = btn.getAttribute('data-label');
-          const tipo = btn.getAttribute('data-tipo');
-          const unitsJson = btn.getAttribute('data-units');
-          const unitDef = btn.getAttribute('data-unidad_def') || '';
-          const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
+          const defId = item.getAttribute('data-id');
+          const label = item.getAttribute('data-label');
+          const tipo = item.getAttribute('data-tipo');
+          const unitsJson = item.getAttribute('data-units');
+          const unitDef = item.getAttribute('data-unidad_def') || '';
+          const vals = JSON.parse(item.getAttribute('data-values') || '[]');
           document.getElementById('edit_def_id').value = defId;
           document.getElementById('editAttrInfo').textContent = label;
           const inputEl = document.getElementById('edit_valor');
@@ -967,8 +945,29 @@ include '../header.php';
             console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
           }
           openModal('#modalEditAttr');
+        } catch(e){ console.log('❌ [KitsEdit] Error editAttrItem:', e && e.message); }
+      }
+
+      const btnCreate = document.getElementById('btn_create_attr');
+      if (btnCreate) {
+        btnCreate.addEventListener('click', () => {
+          try {
+            const q = (search && search.value ? search.value.trim() : '');
+            document.getElementById('create_etiqueta').value = q;
+            document.getElementById('create_clave').value = '';
+            document.getElementById('create_tipo').value = 'string';
+            document.getElementById('create_card').value = 'one';
+            document.getElementById('create_unidad').value = '';
+            document.getElementById('create_unidades').value = '';
+            openModal('#modalCreateAttr');
+            setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
+            console.log('🔍 [KitsEdit] Abrir crear atributo (botón)', q);
+          } catch(e) { console.log('❌ [KitsEdit] Error abrir crear atributo (botón):', e && e.message); }
         });
-      });
+      }
+
+      updateCounts();
+      console.log('✅ [KitsEdit] Dual-list atributos inicializado');
     })();
   </script>
   <?php endif; ?>
