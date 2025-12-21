@@ -468,64 +468,14 @@ strong, b {
 }
 
 /* Gradientes específicos por ciclo - Gradación perfectamente distribuida Verde → Naranja */
-.ciclo-icon.ciclo-0 { 
-    background: linear-gradient(135deg, #9e9e9e, #757575);
-    animation: madurar-0 4s ease-in-out infinite;
-    animation-delay: 0.5s;
-}
-.ciclo-icon.ciclo-1 { 
-    background: linear-gradient(135deg, #2e7d32, #1b5e20);
-    animation: madurar-1 4s ease-in-out infinite;
-    animation-delay: 0s;
-}
-.ciclo-icon.ciclo-2 { 
-    background: linear-gradient(135deg, #798619, #5a6610);
-    animation: madurar-2 4s ease-in-out infinite;
-    animation-delay: 1.2s;
-}
-.ciclo-icon.ciclo-3 { 
-    background: linear-gradient(135deg, #c49000, #9a6e00);
-    animation: madurar-3 4s ease-in-out infinite;
-    animation-delay: 2.5s;
-}
-.ciclo-icon.ciclo-4 { 
-    background: linear-gradient(135deg, #dc8600, #c05f00);
-    animation: madurar-4 4s ease-in-out infinite;
-    animation-delay: 1.8s;
-}
-.ciclo-icon.ciclo-5 { 
-    background: linear-gradient(135deg, #f57c00, #e65100);
-    animation: madurar-5 4s ease-in-out infinite;
-    animation-delay: 0.7s;
-}
+.ciclo-icon.ciclo-0 { background: linear-gradient(135deg, #9e9e9e, #757575); } /* Gris oscuro (Desarrollo Inicial) */
+.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #2e7d32, #1b5e20); } /* Verde hoja oscuro (Cimentación) */
+.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #798619, #5a6610); } /* Verde oliva intermedio (Consolidación) */
+.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #c49000, #9a6e00); } /* Amarillo/Dorado central (Exploración) */
+.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #dc8600, #c05f00); } /* Naranja dorado intermedio (Experimentación) */
+.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #f57c00, #e65100); } /* Naranja oscuro (Análisis) */
 
-/* Animaciones de maduración - cada ciclo "respira" hacia tonos más brillantes */
-@keyframes madurar-0 {
-    0%, 100% { background: linear-gradient(135deg, #9e9e9e, #757575); }
-    50% { background: linear-gradient(135deg, #bdbdbd, #9e9e9e); }
-}
-@keyframes madurar-1 {
-    0%, 100% { background: linear-gradient(135deg, #2e7d32, #1b5e20); }
-    50% { background: linear-gradient(135deg, #43a047, #2e7d32); }
-}
-@keyframes madurar-2 {
-    0%, 100% { background: linear-gradient(135deg, #798619, #5a6610); }
-    50% { background: linear-gradient(135deg, #9ccc65, #7cb342); }
-}
-@keyframes madurar-3 {
-    0%, 100% { background: linear-gradient(135deg, #c49000, #9a6e00); }
-    50% { background: linear-gradient(135deg, #ffca28, #ffa000); }
-}
-@keyframes madurar-4 {
-    0%, 100% { background: linear-gradient(135deg, #dc8600, #c05f00); }
-    50% { background: linear-gradient(135deg, #ffa726, #fb8c00); }
-}
-@keyframes madurar-5 {
-    0%, 100% { background: linear-gradient(135deg, #f57c00, #e65100); }
-    50% { background: linear-gradient(135deg, #ff9800, #f57c00); }
-}
-
-/* Efecto shine en hover */
+/* Efecto shine aleatorio continuo */
 .ciclo-icon::after {
     content: '';
     position: absolute;
@@ -535,10 +485,30 @@ strong, b {
     height: 200%;
     background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
     transform: rotate(45deg);
+    animation: shineAuto 4s ease-in-out infinite;
 }
+
+/* Delays aleatorios para cada ciclo */
+.ciclo-icon.ciclo-0::after { animation-delay: 0s; }
+.ciclo-icon.ciclo-1::after { animation-delay: 0.8s; }
+.ciclo-icon.ciclo-2::after { animation-delay: 1.6s; }
+.ciclo-icon.ciclo-3::after { animation-delay: 2.4s; }
+.ciclo-icon.ciclo-4::after { animation-delay: 3.2s; }
+.ciclo-icon.ciclo-5::after { animation-delay: 1.2s; }
 
 .ciclo-card:hover .ciclo-icon::after {
     animation: shine 0.8s ease-out;
+}
+
+@keyframes shineAuto {
+    0%, 100% { 
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        opacity: 0;
+    }
+    50% { 
+        transform: translateX(0%) translateY(0%) rotate(45deg);
+        opacity: 1;
+    }
 }
 
 @keyframes shine {
