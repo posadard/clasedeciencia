@@ -467,13 +467,13 @@ strong, b {
     overflow: hidden;
 }
 
-/* Gradientes específicos por ciclo - Gradación Verde → Naranja (Tonos oscuros intensos) */
+/* Gradientes específicos por ciclo - Gradación Verde oscuro → Naranja */
 .ciclo-icon.ciclo-0 { background: linear-gradient(135deg, #9e9e9e, #757575); } /* Gris oscuro (Desarrollo Inicial) */
-.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #43a047, #2e7d32); } /* Verde oscuro (Cimentación) */
-.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #7cb342, #558b2f); } /* Verde lima oscuro (Consolidación) */
-.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #ffa000, #f57f17); } /* Amarillo/Dorado oscuro (Exploración) */
-.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #f57c00, #e65100); } /* Naranja oscuro (Experimentación) */
-.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #e64a19, #bf360c); } /* Naranja intenso (Análisis) */
+.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #2e7d32, #1b5e20); } /* Verde hoja oscuro (Cimentación) */
+.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #43a047, #2e7d32); } /* Verde medio (Consolidación) */
+.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #7cb342, #558b2f); } /* Verde lima (Exploración) */
+.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #ffa000, #f57f17); } /* Amarillo/Dorado (Experimentación) */
+.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #f57c00, #e65100); } /* Naranja oscuro (Análisis) */
 
 /* Efecto shine en hover */
 .ciclo-icon::after {
