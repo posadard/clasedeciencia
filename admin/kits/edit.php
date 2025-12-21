@@ -88,14 +88,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else if ($action === 'add_item' && $is_edit) {
       $item_id = isset($_POST['item_id']) && ctype_digit($_POST['item_id']) ? (int)$_POST['item_id'] : 0;
       $cantidad = isset($_POST['cantidad']) && is_numeric($_POST['cantidad']) ? (float)$_POST['cantidad'] : 0;
+      $notas = isset($_POST['notas']) ? trim($_POST['notas']) : '';
       $orden = isset($_POST['orden']) && ctype_digit($_POST['orden']) ? (int)$_POST['orden'] : 0;
       if ($item_id <= 0 || $cantidad <= 0) {
         $error_msg = 'Selecciona un componente y cantidad válida.';
       } else {
         try {
           // Ajuste al schema: usar sort_order en vez de orden
-          $stmt = $pdo->prepare('INSERT INTO kit_componentes (kit_id, item_id, cantidad, sort_order) VALUES (?,?,?,?)');
-          $stmt->execute([$id, $item_id, $cantidad, $orden]);
+          if ($notas !== '') { $notas = mb_substr($notas, 0, 255, 'UTF-8'); } else { $notas = null; }
+          $stmt = $pdo->prepare('INSERT INTO kit_componentes (kit_id, item_id, cantidad, es_incluido_kit, notas, sort_order) VALUES (?,?,?,?,?,?)');
+          $stmt->execute([$id, $item_id, $cantidad, 1, $notas, $orden]);
           $action_msg = 'Componente agregado.';
         } catch (PDOException $e) {
           $error_msg = 'Error al agregar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
@@ -123,8 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $componentes = [];
 if ($is_edit) {
   try {
-    // Ajuste al schema: no hay kc.id ni kc.orden; usar sort_order como orden
-    $stmt = $pdo->prepare('SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, ki.nombre_comun, ki.sku, ki.unidad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, ki.nombre_comun ASC');
+    // Ajuste al schema: no hay kc.id ni kc.orden; usar sort_order como orden, incluir notas
+    $stmt = $pdo->prepare('SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, kc.notas, ki.nombre_comun, ki.sku, ki.unidad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, ki.nombre_comun ASC');
     $stmt->execute([$id]);
     $componentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
   } catch (PDOException $e) {}
@@ -205,6 +207,7 @@ include '../header.php';
           <th>SKU</th>
           <th>Cantidad</th>
           <th>Unidad</th>
+          <th>Notas</th>
           <th>Orden</th>
           <th>Acciones</th>
         </tr>
@@ -217,6 +220,7 @@ include '../header.php';
           <td><code><?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?></code></td>
           <td><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></td>
           <td><?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
+          <td><?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
           <td><?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?></td>
           <td class="actions">
             <form method="POST" style="display:inline;">
@@ -247,6 +251,10 @@ include '../header.php';
     <div class="form-group">
       <label for="cantidad">Cantidad</label>
       <input type="number" step="0.01" id="cantidad" name="cantidad" value="1" required />
+    </div>
+    <div class="form-group">
+      <label for="notas">Notas (opcional)</label>
+      <input type="text" id="notas" name="notas" maxlength="255" placeholder="p.ej. Indicaciones de uso" />
     </div>
     <div class="form-group">
       <label for="orden">Orden</label>
