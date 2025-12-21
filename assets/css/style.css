@@ -2842,9 +2842,9 @@ strong, b {
 .form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eef2f5; }
 
 /* Kits/chips selector container */
-.kit-selector-container { position: relative; width: 100%; max-width: 600px; }
+.kit-selector-container { position: relative; width: 100%; }
 /* Attributes chips selector container */
-.component-selector-container { position: relative; width: 100%; max-width: 600px; }
+.component-selector-container { position: relative; width: 100%; }
 /* Search inputs used in chips have styles above (#kit_search, #component_search). */
 .kit-code { color: #6b7280; font-size: 0.82rem; }
 .autocomplete-no-results { padding: 12px; text-align: center; color: #6b7280; font-size: 0.9rem; }
@@ -2852,7 +2852,6 @@ strong, b {
 /* Attribute search input styling to match kit search */
 #attr_search_cls {
     width: 100%;
-    max-width: 600px;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
@@ -3092,7 +3091,6 @@ strong, b {
 #kit_search,
 #component_search {
     width: 100%;
-    max-width: 600px;
     padding: 8px 12px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
