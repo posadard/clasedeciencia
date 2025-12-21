@@ -65,18 +65,52 @@ function cdc_get_proyectos($pdo, $filters = [], $limit = 12, $offset = 0) {
         "LEFT JOIN areas a ON a.id = ca.area_id"
     ];
 
-    if (!empty($filters['ciclo'])) { $where[] = "c.ciclo = ?"; $params[] = $filters['ciclo']; }
-    if (!empty($filters['grado'])) { $where[] = "JSON_CONTAINS(c.grados, ? )"; $params[] = json_encode([(int)$filters['grado']]); }
-    if (!empty($filters['area'])) {
-        $joins[] = "LEFT JOIN clase_areas ca ON ca.clase_id = c.id";
-        if (is_numeric($filters['area'])) { $where[] = "ca.area_id = ?"; $params[] = (int)$filters['area']; }
-        else { $joins[] = "LEFT JOIN areas a ON a.id = ca.area_id"; $where[] = "a.slug = ?"; $params[] = $filters['area']; }
+    // Ciclo: soporta uno o varios
+    if (!empty($filters['ciclos']) && is_array($filters['ciclos'])) {
+        $ciclos = array_values(array_filter(array_map('intval', $filters['ciclos']), function($v){ return in_array($v, [1,2,3], true); }));
+        if (!empty($ciclos)) {
+            $placeholders = implode(',', array_fill(0, count($ciclos), '?'));
+            $where[] = "c.ciclo IN (" . $placeholders . ")";
+            $params = array_merge($params, $ciclos);
+        }
+    } elseif (!empty($filters['ciclo'])) {
+        $where[] = "c.ciclo = ?"; $params[] = (int)$filters['ciclo'];
     }
+
+    // Grado (único)
+    if (!empty($filters['grado'])) { $where[] = "JSON_CONTAINS(c.grados, ? )"; $params[] = json_encode([(int)$filters['grado']]); }
+
+    // Áreas: soporta uno o varios slugs (OR)
+    if (!empty($filters['areas']) && is_array($filters['areas'])) {
+        $areas = array_values(array_filter(array_map('strval', $filters['areas']), function($v){ return $v !== ''; }));
+        if (!empty($areas)) {
+            $placeholders = implode(',', array_fill(0, count($areas), '?'));
+            // joins ya incluyen ca y a
+            $where[] = "a.slug IN (" . $placeholders . ")";
+            $params = array_merge($params, $areas);
+        }
+    } elseif (!empty($filters['area'])) {
+        // compatibilidad con único parámetro
+        $where[] = "a.slug = ?"; $params[] = (string)$filters['area'];
+    }
+
+    // Competencia (única por ahora)
     if (!empty($filters['competencia'])) {
         $joins[] = "LEFT JOIN clase_competencias cc ON cc.clase_id = c.id";
         if (is_numeric($filters['competencia'])) { $where[] = "cc.competencia_id = ?"; $params[] = (int)$filters['competencia']; }
     }
-    if (!empty($filters['dificultad'])) { $where[] = "c.dificultad = ?"; $params[] = $filters['dificultad']; }
+
+    // Dificultad: soporta uno o varios slugs (OR)
+    if (!empty($filters['dificultades']) && is_array($filters['dificultades'])) {
+        $difs = array_values(array_filter(array_map('strval', $filters['dificultades']), function($v){ return in_array($v, ['facil','medio','dificil'], true); }));
+        if (!empty($difs)) {
+            $placeholders = implode(',', array_fill(0, count($difs), '?'));
+            $where[] = "c.dificultad IN (" . $placeholders . ")";
+            $params = array_merge($params, $difs);
+        }
+    } elseif (!empty($filters['dificultad'])) {
+        $where[] = "c.dificultad = ?"; $params[] = (string)$filters['dificultad'];
+    }
 
     // Búsqueda por texto (compatibilidad con busqueda)
     if (!empty($filters['busqueda'])) {
@@ -121,18 +155,48 @@ function cdc_count_proyectos($pdo, $filters = []) {
         "LEFT JOIN areas a ON a.id = ca.area_id"
     ];
 
-    if (!empty($filters['ciclo'])) { $where[] = "c.ciclo = ?"; $params[] = $filters['ciclo']; }
-    if (!empty($filters['grado'])) { $where[] = "JSON_CONTAINS(c.grados, ? )"; $params[] = json_encode([(int)$filters['grado']]); }
-    if (!empty($filters['area'])) {
-        $joins[] = "LEFT JOIN clase_areas ca ON ca.clase_id = c.id";
-        if (is_numeric($filters['area'])) { $where[] = "ca.area_id = ?"; $params[] = (int)$filters['area']; }
-        else { $joins[] = "LEFT JOIN areas a ON a.id = ca.area_id"; $where[] = "a.slug = ?"; $params[] = $filters['area']; }
+    // Ciclo multi
+    if (!empty($filters['ciclos']) && is_array($filters['ciclos'])) {
+        $ciclos = array_values(array_filter(array_map('intval', $filters['ciclos']), function($v){ return in_array($v, [1,2,3], true); }));
+        if (!empty($ciclos)) {
+            $placeholders = implode(',', array_fill(0, count($ciclos), '?'));
+            $where[] = "c.ciclo IN (" . $placeholders . ")";
+            $params = array_merge($params, $ciclos);
+        }
+    } elseif (!empty($filters['ciclo'])) {
+        $where[] = "c.ciclo = ?"; $params[] = (int)$filters['ciclo'];
     }
+
+    if (!empty($filters['grado'])) { $where[] = "JSON_CONTAINS(c.grados, ? )"; $params[] = json_encode([(int)$filters['grado']]); }
+
+    // Áreas multi (OR)
+    if (!empty($filters['areas']) && is_array($filters['areas'])) {
+        $areas = array_values(array_filter(array_map('strval', $filters['areas']), function($v){ return $v !== ''; }));
+        if (!empty($areas)) {
+            $placeholders = implode(',', array_fill(0, count($areas), '?'));
+            $where[] = "a.slug IN (" . $placeholders . ")";
+            $params = array_merge($params, $areas);
+        }
+    } elseif (!empty($filters['area'])) {
+        $where[] = "a.slug = ?"; $params[] = (string)$filters['area'];
+    }
+
     if (!empty($filters['competencia'])) {
         $joins[] = "LEFT JOIN clase_competencias cc ON cc.clase_id = c.id";
         if (is_numeric($filters['competencia'])) { $where[] = "cc.competencia_id = ?"; $params[] = (int)$filters['competencia']; }
     }
-    if (!empty($filters['dificultad'])) { $where[] = "c.dificultad = ?"; $params[] = $filters['dificultad']; }
+
+    // Dificultad multi
+    if (!empty($filters['dificultades']) && is_array($filters['dificultades'])) {
+        $difs = array_values(array_filter(array_map('strval', $filters['dificultades']), function($v){ return in_array($v, ['facil','medio','dificil'], true); }));
+        if (!empty($difs)) {
+            $placeholders = implode(',', array_fill(0, count($difs), '?'));
+            $where[] = "c.dificultad IN (" . $placeholders . ")";
+            $params = array_merge($params, $difs);
+        }
+    } elseif (!empty($filters['dificultad'])) {
+        $where[] = "c.dificultad = ?"; $params[] = (string)$filters['dificultad'];
+    }
 
     if (!empty($filters['busqueda'])) {
         $busqueda = '%' . $filters['busqueda'] . '%';
@@ -162,12 +226,42 @@ $q = trim($_GET['q'] ?? ''); // modo búsqueda inteligente
 $busqueda = trim($_GET['busqueda'] ?? '');
 if ($busqueda !== '') { $filters['busqueda'] = $busqueda; }
 
+// Helpers de parseo multi-valor (admite array o CSV)
+$parse_multi = function($key) {
+    if (!isset($_GET[$key])) return [];
+    $raw = $_GET[$key];
+    if (is_array($raw)) return array_values(array_filter(array_map('strval', $raw), fn($v)=>$v!==''));
+    $str = (string)$raw;
+    if ($str === '') return [];
+    return array_values(array_filter(array_map('trim', explode(',', $str)), fn($v)=>$v!==''));
+};
+
 $ciclos_validos = array_column(cdc_get_ciclos($pdo, true), 'numero');
-if (isset($_GET['ciclo']) && in_array((int)$_GET['ciclo'], $ciclos_validos, true)) $filters['ciclo'] = (int)$_GET['ciclo'];
-if (isset($_GET['grado'])) $filters['grado'] = $_GET['grado'];
-if (isset($_GET['area'])) $filters['area'] = $_GET['area'];
-if (isset($_GET['competencia'])) $filters['competencia'] = $_GET['competencia'];
-if (isset($_GET['dificultad'])) $filters['dificultad'] = $_GET['dificultad'];
+// ciclos multi (ciclo[] o ciclo=1,2)
+$ciclos_in = array_values(array_filter(array_map('intval', $parse_multi('ciclo')), function($v) use ($ciclos_validos){ return in_array($v, $ciclos_validos, true); }));
+if (!empty($ciclos_in)) { $filters['ciclos'] = $ciclos_in; }
+elseif (isset($_GET['ciclo']) && $_GET['ciclo'] !== '' && in_array((int)$_GET['ciclo'], $ciclos_validos, true)) { $filters['ciclo'] = (int)$_GET['ciclo']; }
+
+if (isset($_GET['grado']) && $_GET['grado'] !== '') $filters['grado'] = $_GET['grado'];
+
+// áreas multi (area[] o area=a,b)
+$areas_in = $parse_multi('area');
+if (!empty($areas_in)) { $filters['areas'] = $areas_in; }
+elseif (isset($_GET['area']) && $_GET['area'] !== '') { $filters['area'] = $_GET['area']; }
+
+if (isset($_GET['competencia']) && $_GET['competencia'] !== '') $filters['competencia'] = $_GET['competencia'];
+
+// dificultad multi (dificultad[] o dificultad=a,b)
+$difs_in = array_values(array_filter(array_map(function($v){
+    $v = strtolower((string)$v);
+    if ($v === 'media') $v = 'medio';
+    return in_array($v, ['facil','medio','dificil'], true) ? $v : '';
+}, $parse_multi('dificultad'))));
+if (!empty($difs_in)) { $filters['dificultades'] = $difs_in; }
+elseif (isset($_GET['dificultad']) && $_GET['dificultad'] !== '') { 
+    $dv = strtolower((string)$_GET['dificultad']); if ($dv==='media') $dv='medio'; $filters['dificultad'] = $dv; 
+}
+
 if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
 $page_title = 'Clases';
@@ -276,32 +370,44 @@ include 'includes/header.php';
         <aside class="filters-sidebar">
             <h2>Filtros</h2>
             <form method="get" action="/clases" class="filters-form">
+                <input type="hidden" name="sort" value="<?= h($filters['sort'] ?? ($_GET['sort'] ?? '')) ?>" />
                 <div class="filter-group">
-                    <label>Ciclo</label>
-                    <select name="ciclo">
-                        <option value="">Todos</option>
-                        <?php $ciclos_filtro = cdc_get_ciclos($pdo, true); foreach ($ciclos_filtro as $cf): ?>
-                        <option value="<?= h($cf['numero']) ?>" <?= isset($filters['ciclo']) && $filters['ciclo']==$cf['numero']?'selected':'' ?>><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</option>
+                    <label style="display:block; margin-bottom:6px;">Ciclo</label>
+                    <div class="checkbox-list">
+                        <?php $ciclos_filtro = cdc_get_ciclos($pdo, true); $selected_ciclos = $filters['ciclos'] ?? (isset($filters['ciclo'])?[(int)$filters['ciclo']]:[]); foreach ($ciclos_filtro as $cf): $checked = in_array((int)$cf['numero'], $selected_ciclos, true); ?>
+                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                            <input type="checkbox" name="ciclo[]" value="<?= h($cf['numero']) ?>" <?= $checked?'checked':'' ?> />
+                            <span><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</span>
+                        </label>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label>Área</label>
-                    <select name="area">
-                        <option value="">Todas</option>
-                        <?php foreach($areas as $a): ?>
-                        <option value="<?= h($a['slug']) ?>" <?= isset($filters['area']) && $filters['area']===$a['slug']?'selected':'' ?>><?= h($a['nombre']) ?></option>
+                    <label style="display:block; margin-bottom:6px;">Área</label>
+                    <div class="checkbox-list" style="max-height:200px; overflow:auto;">
+                        <?php $selected_areas = $filters['areas'] ?? (isset($filters['area'])?[(string)$filters['area']]:[]); foreach($areas as $a): $checked = in_array($a['slug'], $selected_areas, true); ?>
+                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                            <input type="checkbox" name="area[]" value="<?= h($a['slug']) ?>" <?= $checked?'checked':'' ?> />
+                            <span><?= h($a['nombre']) ?></span>
+                        </label>
                         <?php endforeach; ?>
-                    </select>
+                    </div>
                 </div>
                 <div class="filter-group">
-                    <label>Dificultad</label>
-                    <select name="dificultad">
-                        <option value="">Todas</option>
-                        <option value="facil" <?= isset($filters['dificultad']) && $filters['dificultad']==='facil'?'selected':'' ?>>Fácil</option>
-                        <option value="medio" <?= isset($filters['dificultad']) && $filters['dificultad']==='medio'?'selected':'' ?>>Medio</option>
-                        <option value="dificil" <?= isset($filters['dificultad']) && $filters['dificultad']==='dificil'?'selected':'' ?>>Difícil</option>
-                    </select>
+                    <label style="display:block; margin-bottom:6px;">Dificultad</label>
+                    <?php $selected_difs = $filters['dificultades'] ?? (isset($filters['dificultad'])?[(string)$filters['dificultad']]:[]); ?>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="checkbox" name="dificultad[]" value="facil" <?= in_array('facil', $selected_difs, true)?'checked':'' ?> />
+                        <span>Fácil</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="checkbox" name="dificultad[]" value="medio" <?= in_array('medio', $selected_difs, true)?'checked':'' ?> />
+                        <span>Medio</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="checkbox" name="dificultad[]" value="dificil" <?= in_array('dificil', $selected_difs, true)?'checked':'' ?> />
+                        <span>Difícil</span>
+                    </label>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
