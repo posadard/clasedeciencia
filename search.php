@@ -29,31 +29,105 @@ function cdc_get_ciclos_local($pdo, $activo_only = true) {
     return $stmt->fetchAll();
 }
 
-// Consulta de clases con búsqueda acento-insensible y áreas
+// Construir resultados como el dropdown del header (mismo algoritmo que api/clases-data.php)
 $proyectos = [];
 if ($q !== '') {
     try {
-        $like = '%' . $q . '%';
-        // Normalización en SQL para acentos (sin cambiar collation)
-        $q_norm = mb_strtolower($q, 'UTF-8');
-        $q_norm = strtr($q_norm, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ñ'=>'n','ü'=>'u']);
-        $like_norm = '%' . $q_norm . '%';
+        $stmt = $pdo->query("
+            SELECT 
+                c.id,
+                c.nombre,
+                c.slug,
+                c.ciclo,
+                c.grados,
+                c.dificultad,
+                c.duracion_minutos,
+                c.resumen,
+                c.objetivo_aprendizaje,
+                c.imagen_portada,
+                c.destacado,
+                GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas,
+                GROUP_CONCAT(DISTINCT comp.nombre ORDER BY comp.nombre SEPARATOR ' | ') AS competencias,
+                GROUP_CONCAT(DISTINCT ct.tag ORDER BY ct.tag SEPARATOR ', ') AS tags
+            FROM clases c
+            LEFT JOIN clase_areas ca ON ca.clase_id = c.id
+            LEFT JOIN areas a ON a.id = ca.area_id
+            LEFT JOIN clase_competencias cc ON cc.clase_id = c.id
+            LEFT JOIN competencias comp ON comp.id = cc.competencia_id
+            LEFT JOIN clase_tags ct ON ct.clase_id = c.id
+            WHERE c.activo = 1
+            GROUP BY c.id
+            ORDER BY c.destacado DESC, c.orden_popularidad DESC
+        ");
+        $clases = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-        $sql = "SELECT c.*, GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres
-                FROM clases c
-                LEFT JOIN clase_areas ca ON ca.clase_id = c.id
-                LEFT JOIN areas a ON a.id = ca.area_id
-                WHERE c.activo = 1 AND (
-                    c.nombre LIKE :like OR c.resumen LIKE :like OR c.objetivo_aprendizaje LIKE :like OR a.nombre LIKE :like
-                    OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(c.nombre,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n')) LIKE :like_norm
-                    OR LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(a.nombre,'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n')) LIKE :like_norm
-                )
-                GROUP BY c.id
-                ORDER BY c.destacado DESC, c.orden_popularidad DESC, c.updated_at DESC
-                LIMIT 30";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['like' => $like, 'like_norm' => $like_norm]);
-        $proyectos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Normalizador (quitar acentos)
+        $normalize = function($text) {
+            $text = strtolower((string)$text);
+            $text = str_replace(['á','é','í','ó','ú','ñ','ü'], ['a','e','i','o','u','n','u'], $text);
+            return $text;
+        };
+        $qn = $normalize($q);
+
+        foreach ($clases as $clase) {
+            $grados_array = json_decode($clase['grados'] ?? '[]', true) ?: [];
+            $grados_texto = !empty($grados_array) ? implode('°, ', $grados_array) . '°' : '';
+
+            $ciclos_nombres = [1 => 'Ciclo 1: Exploración', 2 => 'Ciclo 2: Experimentación', 3 => 'Ciclo 3: Análisis'];
+            $ciclo_nombre = $ciclos_nombres[(int)$clase['ciclo']] ?? ('Ciclo ' . (int)$clase['ciclo']);
+
+            $dificultad_map = ['facil' => 'Fácil', 'media' => 'Media', 'dificil' => 'Difícil', 'medio' => 'Medio'];
+            $dificultad_label = $dificultad_map[$normalize($clase['dificultad'])] ?? ucfirst($clase['dificultad']);
+
+            // Keywords adicionales
+            $keywords = [];
+            foreach ($grados_array as $g) { $keywords[] = 'grado ' . $g; $keywords[] = $g . ' grado'; $keywords[] = 'grado' . $g; }
+            $keywords[] = 'ciclo ' . $clase['ciclo'];
+            $keywords[] = 'ciclo' . $clase['ciclo'];
+
+            if (!empty($clase['competencias'])) {
+                $comps = explode(' | ', $clase['competencias']);
+                foreach ($comps as $comp) {
+                    if (stripos($comp, 'indagación') !== false || stripos($comp, 'pregunta') !== false) { $keywords = array_merge($keywords, ['indagacion','preguntas','investigacion']); }
+                    if (stripos($comp, 'explicación') !== false || stripos($comp, 'explico') !== false) { $keywords = array_merge($keywords, ['explicacion','explicar','razonamiento']); }
+                    if (stripos($comp, 'uso') !== false || stripos($comp, 'aplico') !== false) { $keywords = array_merge($keywords, ['aplicacion','practica','cotidiano']); }
+                    if (stripos($comp, 'observo') !== false || stripos($comp, 'registro') !== false) { $keywords = array_merge($keywords, ['observacion','datos','registro']); }
+                    if (stripos($comp, 'modelo') !== false) { $keywords = array_merge($keywords, ['modelado','representacion']); }
+                    if (stripos($comp, 'cálculo') !== false || stripos($comp, 'medición') !== false) { $keywords = array_merge($keywords, ['medicion','calculo','matematicas']); }
+                }
+            }
+
+            $search_parts = [
+                $clase['nombre'] ?? '',
+                $clase['resumen'] ?? '',
+                $clase['objetivo_aprendizaje'] ?? '',
+                $clase['areas'] ?? '',
+                $clase['tags'] ?? '',
+                $ciclo_nombre,
+                $grados_texto,
+                $dificultad_label,
+                implode(' ', array_unique($keywords))
+            ];
+            $search_text = $normalize(implode(' ', $search_parts));
+
+            // Filtro: igual al dropdown (substring en texto normalizado)
+            if ($qn === '' || strpos($search_text, $qn) !== false) {
+                $proyectos[] = [
+                    'id' => (int)$clase['id'],
+                    'nombre' => $clase['nombre'],
+                    'slug' => $clase['slug'],
+                    'ciclo' => (int)$clase['ciclo'],
+                    'grados' => $clase['grados'],
+                    'dificultad' => $normalize($clase['dificultad']),
+                    'duracion_minutos' => $clase['duracion_minutos'],
+                    'resumen' => $clase['resumen'] ?? '',
+                    'objetivo_aprendizaje' => $clase['objetivo_aprendizaje'] ?? '',
+                    'imagen_portada' => $clase['imagen_portada'] ?? '',
+                    'destacado' => (bool)$clase['destacado'],
+                    'areas_nombres' => $clase['areas'] ?? ''
+                ];
+            }
+        }
     } catch (PDOException $e) {
         error_log('Error en búsqueda de clases: ' . $e->getMessage());
         $proyectos = [];
