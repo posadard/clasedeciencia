@@ -912,17 +912,17 @@ strong, b {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: transparent;
+    background: var(--color-bg-alt);
     border: 1px solid var(--color-border-light);
     border-radius: 8px;
-    padding: 0.4rem 0.6rem;
+    padding: 0.5rem 0.65rem;
     color: var(--color-primary);
     font-weight: 700;
     cursor: pointer;
 }
 .collapsible-toggle .chev { opacity: 0.6; transition: transform 0.15s ease; }
 .collapsible-toggle[aria-expanded="false"] .chev { transform: rotate(-90deg); }
-.collapsible-content { margin-top: 0.5rem; }
+.collapsible-content { margin-top: 0.5rem; background: #fff; border: 1px solid var(--color-border-light); border-radius: 8px; padding: 0.5rem; }
 
 /* Tag Input (Área) */
 .tag-input.ti {
@@ -981,6 +981,24 @@ strong, b {
 }
 .ti-item { padding: 8px 10px; cursor: pointer; }
 .ti-item:hover { background: var(--color-bg-alt); }
+
+/* Checkbox lists inside collapsibles (Ciclo, Dificultad) */
+.checkbox-list {
+    background: #fff;
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.checkbox-list label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    margin: 0 !important;
+    border-bottom: 1px dashed var(--color-border-light);
+}
+.checkbox-list label:last-child { border-bottom: none; }
+.checkbox-list label:hover { background: var(--color-bg-alt); }
 .section-card:hover h3, .section-card:focus h3 { color: white; }
 .section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
