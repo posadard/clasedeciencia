@@ -30,6 +30,19 @@ $resultados = [
 try {
     if (!isset($pdo)) { throw new Exception('Conexión no disponible'); }
 
+    // Mapa de áreas (slug => nombre) para rotular chips de filtros relacionados
+    $areas_map = [];
+    try {
+        $stmtAreasMap = $pdo->query("SELECT slug, nombre FROM areas");
+        foreach ($stmtAreasMap->fetchAll(PDO::FETCH_ASSOC) as $ar) {
+            $s = (string)($ar['slug'] ?? '');
+            $n = (string)($ar['nombre'] ?? '');
+            if ($s !== '') { $areas_map[$s] = $n !== '' ? $n : $s; }
+        }
+    } catch (Throwable $eMap) {
+        error_log('buscar.php areas_map error: ' . $eMap->getMessage());
+    }
+
     // CLASES (similar a api/clases-data.php)
     $stmtC = $pdo->query("\n        SELECT \n            c.id, c.nombre, c.slug, c.ciclo, c.grados, c.dificultad, c.duracion_minutos,\n            c.resumen, c.objetivo_aprendizaje, c.imagen_portada, c.destacado,\n            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas,\n            GROUP_CONCAT(DISTINCT a.slug ORDER BY a.slug SEPARATOR ',') AS areas_slugs,\n            GROUP_CONCAT(DISTINCT comp.nombre ORDER BY comp.nombre SEPARATOR ' | ') AS competencias,\n            GROUP_CONCAT(DISTINCT ct.tag ORDER BY ct.tag SEPARATOR ', ') AS tags\n        FROM clases c\n        LEFT JOIN clase_areas ca ON ca.clase_id = c.id\n        LEFT JOIN areas a ON a.id = ca.area_id\n        LEFT JOIN clase_competencias cc ON cc.clase_id = c.id\n        LEFT JOIN competencias comp ON comp.id = cc.competencia_id\n        LEFT JOIN clase_tags ct ON ct.clase_id = c.id\n        WHERE c.activo = 1\n        GROUP BY c.id\n        ORDER BY c.destacado DESC, c.orden_popularidad DESC\n    ");
     $clases = $stmtC->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -84,11 +97,13 @@ try {
             ];
         }
     }
-    // área más frecuente entre resultados de clases
+    // áreas más frecuentes entre resultados de clases (top 3)
     $top_area_slug = '';
+    $top_area_slugs = [];
     if (!empty($area_counts)) {
         arsort($area_counts);
         $top_area_slug = (string) array_key_first($area_counts);
+        $top_area_slugs = array_slice(array_keys($area_counts), 0, 3);
     }
 
     // KITS (similar a api/kits-data.php)
@@ -110,12 +125,16 @@ try {
     $stmtM = $pdo->query("\n        SELECT m.id, m.slug, m.nombre_comun, m.advertencias_seguridad,\n               c.nombre AS categoria_nombre, c.slug AS categoria_slug\n        FROM kit_items m\n        LEFT JOIN categorias_items c ON c.id = m.categoria_id\n        ORDER BY c.nombre ASC, m.nombre_comun ASC\n    ");
     $items = $stmtM->fetchAll(PDO::FETCH_ASSOC) ?: [];
     $cat_counts = [];
+    $cat_names = [];
     foreach ($items as $it) {
         $st = $normalize(($it['nombre_comun'] ?? '') . ' ' . ($it['categoria_nombre'] ?? '') . ' ' . ($it['advertencias_seguridad'] ?? '') . ' componente');
         if ($qn === '' || ($st !== '' && strpos($st, $qn) !== false)) {
             if (!empty($it['categoria_slug'])) {
                 $cat = trim((string)$it['categoria_slug']);
-                if ($cat !== '') { $cat_counts[$cat] = ($cat_counts[$cat] ?? 0) + 1; }
+                if ($cat !== '') { 
+                    $cat_counts[$cat] = ($cat_counts[$cat] ?? 0) + 1; 
+                    if (!isset($cat_names[$cat])) { $cat_names[$cat] = (string)($it['categoria_nombre'] ?? $cat); }
+                }
             }
             $resultados['componentes'][] = [
                 'type' => 'componente',
@@ -127,9 +146,11 @@ try {
         }
     }
     $top_cat_slug = '';
+    $top_cat_slugs = [];
     if (!empty($cat_counts)) {
         arsort($cat_counts);
         $top_cat_slug = (string) array_key_first($cat_counts);
+        $top_cat_slugs = array_slice(array_keys($cat_counts), 0, 3);
     }
 } catch (Throwable $e) {
     error_log('buscar.php error: ' . $e->getMessage());
@@ -157,9 +178,10 @@ include 'includes/header.php';
     $renderSection = function ($titulo, $items, $type) {
         if (empty($items)) return;
         echo '<section class="search-section">';
-        echo '<div class="search-section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">';
+        echo '<div class="search-section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">';
         echo '<h2 style="margin:0;">' . h($titulo) . ' (' . count($items) . ')</h2>';
         $btnLabel = 'Ver relacionados';
+        echo '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">';
         echo '<button type="button" class="btn btn-secondary related-btn" onclick="window.cdcSearchRedirect(\'' . h($type) . '\')" title="' . h($btnLabel) . '" style="display:inline-flex; align-items:center; gap:8px;">'
             . '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
             . '<circle cx="11" cy="11" r="8"></circle>'
@@ -167,6 +189,24 @@ include 'includes/header.php';
             . '</svg>'
             . h($btnLabel)
             . '</button>';
+        // Chips de filtro por áreas/categorías si hay múltiples
+        if ($type === 'clase' && !empty($top_area_slugs)) {
+            foreach ($top_area_slugs as $aslug) {
+                $label = $areas_map[$aslug] ?? (ucfirst(str_replace('-', ' ', $aslug)));
+                $href = '/clases?area=' . urlencode($aslug) . ($q!=='' ? ('&busqueda=' . urlencode($q)) : '');
+                echo '<a href="' . h($href) . '" class="btn btn-light" style="padding:6px 10px; font-size:12px;">'
+                    . h($label) . '</a>';
+            }
+        }
+        if ($type === 'componente' && !empty($top_cat_slugs)) {
+            foreach ($top_cat_slugs as $cslug) {
+                $label = $cat_names[$cslug] ?? (ucfirst(str_replace('-', ' ', $cslug)));
+                $href = '/componentes?category=' . urlencode($cslug) . ($q!=='' ? ('&q=' . urlencode($q)) : '');
+                echo '<a href="' . h($href) . '" class="btn btn-light" style="padding:6px 10px; font-size:12px;">'
+                    . h($label) . '</a>';
+            }
+        }
+        echo '</div>';
         echo '</div>';
         echo '<div class="articles-grid">';
         foreach ($items as $it) {
@@ -204,7 +244,9 @@ console.log('✅ [buscar] conteos:', {
 // Sugerencias de filtros relacionados calculadas en servidor
 window.cdcRelated = {
     clase_area: <?= json_encode($top_area_slug ?? '') ?>,
-    componente_categoria: <?= json_encode($top_cat_slug ?? '') ?>
+    componente_categoria: <?= json_encode($top_cat_slug ?? '') ?>,
+    clase_areas_top: <?= json_encode($top_area_slugs ?? []) ?>,
+    comp_categorias_top: <?= json_encode($top_cat_slugs ?? []) ?>
 };
 
 // Botones de búsqueda relacionada por tipo con parseo inteligente del query
