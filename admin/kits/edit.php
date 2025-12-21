@@ -342,11 +342,17 @@ include '../header.php';
       <input type="hidden" name="action" value="add_item" />
       <div class="modal-body">
         <div class="form-group">
+          <label for="add_item_search">Buscar componente</label>
+          <input type="text" id="add_item_search" placeholder="Escribe para filtrar por nombre o SKU" />
+        </div>
+        <div class="form-group">
           <label for="add_item_id">Componente</label>
           <select id="add_item_id" name="item_id" required>
             <option value="">Selecciona componente</option>
             <?php foreach ($items as $it): ?>
-              <option value="<?= (int)$it['id'] ?>"><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+              <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-sku="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
+                <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
+              </option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -434,6 +440,68 @@ include '../header.php';
   if (formAdd) {
     formAdd.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando add_item...'));
   }
+
+  // Searchable Dropdown para agregar componente
+  (function initSearchableAddDropdown(){
+    const searchInput = document.getElementById('add_item_search');
+    const selectEl = document.getElementById('add_item_id');
+    if (!searchInput || !selectEl) { console.log('⚠️ [KitsEdit] Searchable dropdown no inicializado'); return; }
+
+    // Copia original de opciones (excluye placeholder)
+    const originalOptions = Array.from(selectEl.querySelectorAll('option'))
+      .filter(o => o.value !== '')
+      .map(o => ({ value: o.value, name: (o.dataset.name || o.textContent.trim()), sku: (o.dataset.sku || ''), text: o.textContent.trim() }));
+
+    function normalize(str){
+      return (str || '')
+        .toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function rebuildOptions(matches){
+      const currentValue = selectEl.value;
+      // Mantener el placeholder
+      selectEl.innerHTML = '<option value="">Selecciona componente</option>';
+      matches.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.value;
+        opt.textContent = m.text;
+        opt.dataset.name = m.name;
+        opt.dataset.sku = m.sku;
+        selectEl.appendChild(opt);
+      });
+      // Restaurar selección si aún existe
+      if (matches.some(m => m.value === currentValue)) {
+        selectEl.value = currentValue;
+      } else {
+        selectEl.value = '';
+      }
+    }
+
+    function filterOptions(q){
+      const nq = normalize(q);
+      const matches = nq
+        ? originalOptions.filter(o => {
+            const nt = normalize(o.text);
+            const nn = normalize(o.name);
+            const ns = normalize(o.sku);
+            return nt.includes(nq) || nn.includes(nq) || ns.includes(nq);
+          })
+        : originalOptions.slice();
+      rebuildOptions(matches);
+      console.log('🔍 [KitsEdit] Filtro componentes:', q, '→', matches.length, 'coincidencias');
+    }
+
+    // Reset al abrir el modal de agregar
+    const openAdd = document.querySelector('.js-open-add-modal');
+    if (openAdd) {
+      openAdd.addEventListener('click', () => { searchInput.value = ''; filterOptions(''); });
+    }
+
+    searchInput.addEventListener('input', (e) => filterOptions(e.target.value));
+  })();
 </script>
 <?php endif; ?>
 <?php include '../footer.php'; ?>
