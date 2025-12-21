@@ -102,12 +102,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
     // Handlers for ficha técnica attributes on Clase
     if ($is_edit && in_array($action, ['add_attr','update_attr','delete_attr','create_attr_def'], true)) {
+      $is_ajax = isset($_POST['ajax']) && $_POST['ajax'] === '1';
       try {
         if ($action === 'delete_attr') {
           $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
           if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
           $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
           $stmt->execute(['clase', $id, $def_id]);
+          if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['ok'=>true,'action'=>'delete_attr','def_id'=>$def_id]);
+            exit;
+          }
           echo '<script>console.log("✅ [ClasesEdit] delete_attr ejecutado");</script>';
         } else if ($action === 'create_attr_def') {
           $etiqueta = isset($_POST['etiqueta']) ? trim((string)$_POST['etiqueta']) : '';
@@ -145,6 +151,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $mp->execute([$def_id, 'clase', 1, $next]);
           }
           $pdo->commit();
+          if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+              'ok'=>true,
+              'action'=>'create_attr_def',
+              'def'=>[
+                'id'=>$def_id,
+                'clave'=>$clave,
+                'etiqueta'=>$etiqueta,
+                'tipo_dato'=>$tipo,
+                'cardinalidad'=>$card,
+                'unidad_defecto'=>($unidad_def !== '' ? $unidad_def : null),
+                'unidades_permitidas'=>!empty($unidades)? array_values($unidades): [],
+              ]
+            ]);
+            exit;
+          }
           echo '<script>console.log("✅ [ClasesEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
         } else {
           // add_attr / update_attr share logic: delete then insert
@@ -185,11 +208,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins->execute(['clase', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
           }
           $pdo->commit();
+          $display_vals = [];
+          foreach ($vals as $v) {
+            switch ($tipo) {
+              case 'number': $display_vals[] = is_numeric(str_replace(',', '.', $v)) ? rtrim(rtrim((string)str_replace(',', '.', $v), '0'), '.') : (string)$v; break;
+              case 'integer': $display_vals[] = (string)((int)$v); break;
+              case 'boolean': $display_vals[] = (in_array(strtolower((string)$v), ['1','true','sí','si'], true) ? 'Sí' : 'No'); break;
+              case 'date':
+              case 'datetime':
+              case 'json':
+              case 'string':
+              default: $display_vals[] = (string)$v; break;
+            }
+          }
+          $display_text = implode(', ', array_filter($display_vals, fn($x)=>$x!=='' && $x!==null));
+          $unit_effective = $unidad !== '' ? $unidad : ($def['unidad_defecto'] ?? null);
+          if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode([
+              'ok'=>true,
+              'action'=>$action,
+              'def'=>[
+                'id'=>$def_id,
+                'etiqueta'=>$def['etiqueta'],
+                'tipo_dato'=>$tipo,
+                'cardinalidad'=>$card,
+                'unidad_defecto'=>$def['unidad_defecto'] ?? null,
+                'unidades_permitidas'=> $def['unidades_permitidas_json'] ? json_decode($def['unidades_permitidas_json'], true) : [],
+              ],
+              'display'=>$display_text,
+              'unidad'=>$unit_effective,
+              'raw_values'=>$vals,
+            ]);
+            exit;
+          }
           echo '<script>console.log("✅ [ClasesEdit] ' . ($action === 'add_attr' ? 'add' : 'update') . '_attr guardado");</script>';
         }
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error en atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        if ($is_ajax) {
+          header('Content-Type: application/json');
+          echo json_encode(['ok'=>false,'error'=>$e->getMessage()]);
+          exit;
+        }
         echo '<script>console.log("❌ [ClasesEdit] attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
       // Skip the rest of save handling for attribute actions
@@ -1761,23 +1823,157 @@ include '../header.php';
   })();
 
   // Logs de envío de formularios
-  document.getElementById('formEditAttrCls')?.addEventListener('submit', () => console.log('📡 [ClasesEdit] Enviando update_attr...'));
-  document.getElementById('formAddAttrCls')?.addEventListener('submit', () => console.log('📡 [ClasesEdit] Enviando add_attr...'));
-  // Delete attribute via hidden form
-  document.querySelectorAll('.js-delete-attr-cls').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const defId = btn.getAttribute('data-def-id');
-      if (!defId) return;
-      if (!confirm('¿Eliminar este atributo de la clase?')) return;
-      const hid = document.getElementById('delete_def_id_cls');
-      const form = document.getElementById('formDeleteAttrCls');
-      if (hid && form) {
-        hid.value = defId;
-        console.log('📡 [ClasesEdit] Enviando delete_attr...', defId);
-        form.submit();
+  // Interceptar submit de Edit/Add para usar AJAX y evitar recarga
+  const formEditAttrCls = document.getElementById('formEditAttrCls');
+  const formAddAttrCls = document.getElementById('formAddAttrCls');
+  const selectedAttrsWrap = document.getElementById('selected-attrs-cls');
+
+  function computeValuesPayload(tipo, raw) {
+    const parts = (raw || '').split(/\n|,/).map(s => s.trim()).filter(Boolean);
+    if (tipo === 'boolean') {
+      return parts.map(v => (['1','true','sí','si'].includes(v.toLowerCase()) ? '1' : '0'));
+    }
+    return parts;
+  }
+  function displayFrom(tipo, values) {
+    if (!Array.isArray(values)) return '';
+    return values.map(v => {
+      if (tipo === 'number') {
+        const num = String(v).replace(',', '.');
+        return /^(?:\d+)(?:\.\d+)?$/.test(num) ? num.replace(/\.?0+$/,'').replace(/\.$/,'') : String(v);
       }
+      if (tipo === 'integer') return String(parseInt(v,10));
+      if (tipo === 'boolean') return (String(v)==='1' ? 'Sí' : 'No');
+      return String(v);
+    }).join(', ');
+  }
+
+  function upsertAttrChip(def, display, unidad, rawValues) {
+    const chip = selectedAttrsWrap.querySelector(`.component-chip[data-attr-id="${def.id}"]`);
+    const unitText = unidad ? ' ' + unidad : '';
+    if (chip) {
+      const meta = chip.querySelector('.meta');
+      if (meta) meta.innerHTML = `· <strong>${escapeHtml(display)}</strong>${escapeHtml(unitText)}`;
+      const editBtn = chip.querySelector('.js-edit-attr-cls');
+      if (editBtn) {
+        editBtn.setAttribute('data-tipo', def.tipo_dato);
+        editBtn.setAttribute('data-card', def.cardinalidad);
+        editBtn.setAttribute('data-units', JSON.stringify(def.unidades_permitidas || []));
+        editBtn.setAttribute('data-unidad_def', def.unidad_defecto || '');
+        const valsPayload = rawValues.map(v => ({
+          valor_string: def.tipo_dato==='string'? v : null,
+          valor_numero: def.tipo_dato==='number'? v : null,
+          valor_entero: def.tipo_dato==='integer'? v : null,
+          valor_booleano: def.tipo_dato==='boolean'? v : null,
+          valor_fecha: def.tipo_dato==='date'? v : null,
+          valor_datetime: def.tipo_dato==='datetime'? v : null,
+          valor_json: def.tipo_dato==='json'? (v===null? 'null' : JSON.stringify(v)) : null,
+          unidad_codigo: unidad || def.unidad_defecto || ''
+        }));
+        editBtn.setAttribute('data-values', JSON.stringify(valsPayload));
+      }
+      return;
+    }
+    // crear nuevo chip
+    const div = document.createElement('div');
+    div.className = 'component-chip';
+    div.dataset.attrId = def.id;
+    div.innerHTML = `
+      <span class="name">${escapeHtml(def.etiqueta)}</span>
+      <span class="meta">· <strong>${escapeHtml(display)}</strong>${escapeHtml(unitText)}</span>
+      <button type="button" class="edit-component js-edit-attr-cls" title="Editar"
+        data-attr-id="${def.id}"
+        data-label="${escapeHtml(def.etiqueta)}"
+        data-tipo="${def.tipo_dato}"
+        data-card="${def.cardinalidad}"
+        data-units='${JSON.stringify(def.unidades_permitidas || [])}'
+        data-unidad_def="${def.unidad_defecto || ''}"
+        data-values='${escapeHtml(JSON.stringify(rawValues.map(v=>({
+          valor_string: def.tipo_dato==='string'? v : null,
+          valor_numero: def.tipo_dato==='number'? v : null,
+          valor_entero: def.tipo_dato==='integer'? v : null,
+          valor_booleano: def.tipo_dato==='boolean'? v : null,
+          valor_fecha: def.tipo_dato==='date'? v : null,
+          valor_datetime: def.tipo_dato==='datetime'? v : null,
+          valor_json: def.tipo_dato==='json'? (v===null? 'null' : JSON.stringify(v)) : null,
+          unidad_codigo: unidad || def.unidad_defecto || ''
+        }))))}'
+      >✏️</button>
+      <button type="button" class="remove-component js-delete-attr-cls" data-def-id="${def.id}" title="Remover">×</button>
+    `;
+    selectedAttrsWrap.appendChild(div);
+    // re-bind listeners for new buttons
+    div.querySelector('.js-edit-attr-cls').addEventListener('click', () => {
+      div.querySelector('.js-edit-attr-cls').dispatchEvent(new Event('click'));
     });
-  });
+    bindDeleteAttrButtons();
+  }
+
+  function postAjax(formEl, successCb) {
+    const fd = new FormData(formEl);
+    fd.append('ajax','1');
+    console.log('📡 [ClasesEdit] AJAX', fd.get('action'));
+    fetch(window.location.href, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' }})
+      .then(r => r.json())
+      .then(data => {
+        if (!data || data.ok !== true) throw new Error(data && data.error ? data.error : 'Error desconocido');
+        console.log('✅ [ClasesEdit] AJAX ok:', data.action);
+        successCb(data);
+      })
+      .catch(err => {
+        console.log('❌ [ClasesEdit] AJAX error:', err && err.message);
+        alert('Error: ' + (err && err.message ? err.message : 'operación fallida'));
+      });
+  }
+
+  if (formEditAttrCls) {
+    formEditAttrCls.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const tipo = document.querySelector(`.js-edit-attr-cls[data-attr-id="${formEditAttrCls.edit_def_id_cls.value}"]`)?.getAttribute('data-tipo') || 'string';
+      postAjax(formEditAttrCls, (resp) => {
+        const values = computeValuesPayload(tipo, document.getElementById('edit_valor_cls').value);
+        const display = displayFrom(tipo, values);
+        upsertAttrChip(resp.def, display, resp.unidad || '', values);
+        closeModal('#modalEditAttrCls');
+      });
+    });
+  }
+  if (formAddAttrCls) {
+    formAddAttrCls.addEventListener('submit', (e) => {
+      e.preventDefault();
+      // tipo desde defs modal no está directo; usamos respuesta del servidor
+      postAjax(formAddAttrCls, (resp) => {
+        const tipo = resp.def.tipo_dato || 'string';
+        const values = computeValuesPayload(tipo, document.getElementById('add_valor_cls').value);
+        const display = displayFrom(tipo, values);
+        upsertAttrChip(resp.def, display, resp.unidad || '', values);
+        document.getElementById('attr_search_cls').value = '';
+        closeModal('#modalAddAttrCls');
+      });
+    });
+  }
+  // Delete attribute via hidden form
+  function bindDeleteAttrButtons(){
+    document.querySelectorAll('.js-delete-attr-cls').forEach(btn => {
+      if (btn.dataset.bound === '1') return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', () => {
+        const defId = btn.getAttribute('data-def-id');
+        if (!defId) return;
+        if (!confirm('¿Eliminar este atributo de la clase?')) return;
+        const form = document.getElementById('formDeleteAttrCls');
+        const hid = document.getElementById('delete_def_id_cls');
+        if (form && hid) {
+          hid.value = defId;
+          postAjax(form, () => {
+            const chip = document.querySelector(`.component-chip[data-attr-id="${defId}"]`);
+            if (chip) chip.remove();
+          });
+        }
+      });
+    });
+  }
+  bindDeleteAttrButtons();
 </script>
 <?php endif; ?>
 
