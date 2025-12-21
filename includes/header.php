@@ -111,7 +111,7 @@
                     <input 
                         type="search" 
                         class="search-input" 
-                        placeholder="Buscar por tema, área, grado, ciclo..." 
+                        placeholder="Buscar clases, kits, componentes…" 
                         aria-label="Buscar clases"
                         autocomplete="off"
                     >

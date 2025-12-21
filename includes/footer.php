@@ -45,14 +45,7 @@
     </footer>
     
     <script src="/assets/js/main.js"></script>
-    <?php 
-    // Cargar sistema de búsqueda en páginas específicas
-    $current_page = basename($_SERVER['PHP_SELF']);
-    $search_pages = ['index.php', 'clases.php'];
-    if (in_array($current_page, $search_pages) || !empty($_SERVER['HTTP_X_SEARCH_ENABLED'])): 
-    ?>
-    <!-- Search System -->
+    <!-- Search System: cargar global para que la caja del header funcione en todo el sitio -->
     <script src="/assets/js/home-search.js"></script>
-    <?php endif; ?>
 </body>
 </html>

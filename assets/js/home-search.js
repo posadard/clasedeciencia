@@ -10,7 +10,9 @@ class ClaseDeCienciaSearch {
     this.searchResults = null;
     this.isInitialized = false;
     this.debounceTimer = null;
-    this.proyectosData = null;
+    this.proyectosData = null; // clases
+    this.kitsData = null;
+    this.componentesData = null;
     this.isLoading = false;
     this.init();
   }
@@ -46,39 +48,46 @@ class ClaseDeCienciaSearch {
     if (this.isLoading) return;
     
     this.isLoading = true;
-    console.log('📡 [ClaseDeCienciaSearch] Cargando datos desde API...');
+    console.log('📡 [ClaseDeCienciaSearch] Cargando datos (clases/kits/componentes) desde API...');
     
     try {
       // Cache-busting to ensure fresh data after content updates
       const ver = (typeof window !== 'undefined' && window.SEARCH_VERSION) ? `&v=${encodeURIComponent(window.SEARCH_VERSION)}` : '';
-      const url = `/api/clases-data.php?t=${Date.now()}${ver}`;
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        cache: 'no-store'
+      const t = `t=${Date.now()}`;
+      const urls = {
+        clases: `/api/clases-data.php?${t}${ver}`,
+        kits: `/api/kits-data.php?${t}${ver}`,
+        componentes: `/api/componentes-data.php?${t}${ver}`
+      };
+
+      const [resC, resK, resM] = await Promise.all([
+        fetch(urls.clases, { method: 'GET', headers: { 'Accept': 'application/json' }, cache: 'no-store' }),
+        fetch(urls.kits, { method: 'GET', headers: { 'Accept': 'application/json' }, cache: 'no-store' }),
+        fetch(urls.componentes, { method: 'GET', headers: { 'Accept': 'application/json' }, cache: 'no-store' })
+      ]);
+
+      console.log('📡 [ClaseDeCienciaSearch] Status:', { clases: resC.status, kits: resK.status, componentes: resM.status });
+
+      const [dataC, dataK, dataM] = await Promise.all([
+        resC.ok ? resC.json() : Promise.resolve({ success: false, proyectos: [], error: `HTTP ${resC.status}` }),
+        resK.ok ? resK.json() : Promise.resolve({ success: false, kits: [], error: `HTTP ${resK.status}` }),
+        resM.ok ? resM.json() : Promise.resolve({ success: false, componentes: [], error: `HTTP ${resM.status}` })
+      ]);
+
+      this.proyectosData = (dataC && dataC.success && Array.isArray(dataC.proyectos)) ? dataC.proyectos : [];
+      this.kitsData = (dataK && dataK.success && Array.isArray(dataK.kits)) ? dataK.kits : [];
+      this.componentesData = (dataM && dataM.success && Array.isArray(dataM.componentes)) ? dataM.componentes : [];
+
+      console.log('✅ [ClaseDeCienciaSearch] Cargados:', {
+        clases: this.proyectosData?.length || 0,
+        kits: this.kitsData?.length || 0,
+        componentes: this.componentesData?.length || 0
       });
-      
-      console.log('📡 [ClaseDeCienciaSearch] Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.log('❌ [ClaseDeCienciaSearch] Error response:', errorText);
-        throw new Error(`HTTP ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('📊 [ClaseDeCienciaSearch] API data:', data);
-      
-      if (data.success && Array.isArray(data.proyectos)) {
-        this.proyectosData = data.proyectos;
-        console.log('✅ [ClaseDeCienciaSearch] API response:', data.total, 'proyectos cargados');
-      } else {
-        console.log('❌ [ClaseDeCienciaSearch] API error:', data.error || 'Formato inválido');
-        this.proyectosData = [];
-      }
     } catch (error) {
       console.log('❌ [ClaseDeCienciaSearch] Error cargando API:', error.message);
       this.proyectosData = [];
+      this.kitsData = [];
+      this.componentesData = [];
     } finally {
       this.isLoading = false;
     }
@@ -97,13 +106,17 @@ class ClaseDeCienciaSearch {
       </div>
       <div class="search-results-content">
         <div class="search-categories">
-          <div class="search-category" data-category="all">
-            <h4>Todas las Clases</h4>
-            <div class="category-results" id="all-results"></div>
+          <div class="search-category" data-category="clases">
+            <h4>Clases</h4>
+            <div class="category-results" id="clases-results"></div>
           </div>
-          <div class="search-category" data-category="destacadas">
-            <h4>⭐ Clases Destacadas</h4>
-            <div class="category-results" id="destacadas-results"></div>
+          <div class="search-category" data-category="kits">
+            <h4>Kits</h4>
+            <div class="category-results" id="kits-results"></div>
+          </div>
+          <div class="search-category" data-category="componentes">
+            <h4>Componentes</h4>
+            <div class="category-results" id="componentes-results"></div>
           </div>
         </div>
         <div class="search-actions">
@@ -493,105 +506,125 @@ class ClaseDeCienciaSearch {
     const queryNormalized = normalizeQuery(query);
     console.log('🔍 [ClaseDeCienciaSearch] Query normalizada:', queryNormalized);
     
-    const results = this.proyectosData.filter(proyecto => {
-      return proyecto.search_text && proyecto.search_text.includes(queryNormalized);
-    });
-    
-    console.log('✅ [ClaseDeCienciaSearch] Encontrados:', results.length, 'resultados para:', query);
-    
-    const destacadas = results.filter(p => p.featured).slice(0, 3);
-    const todas = results.slice(0, 8);
-    
-    this.displayResults(todas, destacadas, query);
+    const match = (item) => item.search_text && item.search_text.includes(queryNormalized);
+
+    const clases = (this.proyectosData || []).filter(match).slice(0, 6);
+    const kits = (this.kitsData || []).filter(match).slice(0, 4);
+    const componentes = (this.componentesData || []).filter(match).slice(0, 4);
+
+    console.log('✅ [ClaseDeCienciaSearch] Encontrados:', { clases: clases.length, kits: kits.length, componentes: componentes.length }, 'para:', query);
+
+    this.displayResults({ clases, kits, componentes, query });
     this.showSearchResults();
   }
   
   showDefaultResults() {
-    if (!this.proyectosData || this.proyectosData.length === 0) {
-      return;
-    }
-    
-    const destacadas = this.proyectosData.filter(p => p.featured).slice(0, 3);
-    const todas = this.proyectosData.slice(0, 6);
-    
-    this.displayResults(todas, destacadas, '');
+    if (!this.proyectosData) return;
+    const clases = (this.proyectosData || []).slice(0, 5);
+    const kits = (this.kitsData || []).slice(0, 3);
+    const componentes = (this.componentesData || []).slice(0, 3);
+    this.displayResults({ clases, kits, componentes, query: '' });
   }
-  
-  displayResults(allResults, destacadasResults, query) {
-    const allContainer = document.getElementById('all-results');
-    const destacadasContainer = document.getElementById('destacadas-results');
-    
+
+  displayResults({ clases, kits, componentes, query }) {
+    const clasesContainer = document.getElementById('clases-results');
+    const kitsContainer = document.getElementById('kits-results');
+    const compContainer = document.getElementById('componentes-results');
+
     console.log('📊 [ClaseDeCienciaSearch] displayResults - containers:', {
-      allContainer: !!allContainer,
-      destacadasContainer: !!destacadasContainer,
-      resultCount: allResults.length
+      clasesContainer: !!clasesContainer,
+      kitsContainer: !!kitsContainer,
+      compContainer: !!compContainer
     });
-    
-    if (!allContainer || !destacadasContainer) {
+
+    if (!clasesContainer || !kitsContainer || !compContainer) {
       console.log('❌ [ClaseDeCienciaSearch] Containers no encontrados');
       return;
     }
-    
-    // Update results count
+
+    const total = (clases?.length || 0) + (kits?.length || 0) + (componentes?.length || 0);
     const countElement = this.searchResults.querySelector('.results-count');
-    if (query) {
-      countElement.textContent = `${allResults.length} resultado${allResults.length !== 1 ? 's' : ''} para "${query}"`;
+    countElement.textContent = query ? `${total} resultado${total !== 1 ? 's' : ''} para "${query}"` : 'Explora clases, kits y componentes';
+
+    // Render por categoría
+    if (clases && clases.length > 0) {
+      clasesContainer.innerHTML = clases.map(item => this.createResultItem(item)).join('');
+      clasesContainer.parentElement.style.display = 'block';
     } else {
-      countElement.textContent = 'Explora nuestras clases';
+      clasesContainer.innerHTML = '';
+      clasesContainer.parentElement.style.display = 'none';
     }
-    
-    // Display all results
-    if (allResults.length > 0) {
-      allContainer.innerHTML = allResults.map(proyecto => this.createResultItem(proyecto)).join('');
-      console.log('✅ [ClaseDeCienciaSearch] Resultados renderizados:', allResults.length);
+
+    if (kits && kits.length > 0) {
+      kitsContainer.innerHTML = kits.map(item => this.createResultItem(item)).join('');
+      kitsContainer.parentElement.style.display = 'block';
     } else {
-      this.displayNoResults('No se encontraron clases para tu búsqueda');
+      kitsContainer.innerHTML = '';
+      kitsContainer.parentElement.style.display = 'none';
     }
-    
-    // Display destacadas results
-    if (destacadasResults.length > 0 && query) {
-      destacadasContainer.innerHTML = destacadasResults.map(proyecto => this.createResultItem(proyecto)).join('');
-      destacadasContainer.parentElement.style.display = 'block';
+
+    if (componentes && componentes.length > 0) {
+      compContainer.innerHTML = componentes.map(item => this.createResultItem(item)).join('');
+      compContainer.parentElement.style.display = 'block';
     } else {
-      destacadasContainer.parentElement.style.display = 'none';
+      compContainer.innerHTML = '';
+      compContainer.parentElement.style.display = 'none';
     }
   }
   
   displayNoResults(message) {
-    const allContainer = document.getElementById('all-results');
-    if (!allContainer) return;
+    const clasesContainer = document.getElementById('clases-results');
+    if (!clasesContainer) return;
     
-    allContainer.innerHTML = `
+    clasesContainer.innerHTML = `
       <div class="no-search-results">
         <h4>${message}</h4>
         <p>Intenta con otras palabras clave o explora el catálogo completo</p>
       </div>
     `;
-    
-    // Hide destacadas section
-    const destacadasContainer = document.getElementById('destacadas-results');
-    if (destacadasContainer) {
-      destacadasContainer.parentElement.style.display = 'none';
-    }
+    // Ocultar otras secciones
+    const kitsContainer = document.getElementById('kits-results');
+    const compContainer = document.getElementById('componentes-results');
+    if (kitsContainer) kitsContainer.parentElement.style.display = 'none';
+    if (compContainer) compContainer.parentElement.style.display = 'none';
   }
   
-  createResultItem(proyecto) {
-    const cicloIcon = `C${proyecto.ciclo}`;
-    const iconClass = proyecto.featured ? 'featured' : '';
-    const difficultyClass = proyecto.difficulty.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    
+  createResultItem(item) {
+    const type = (item.type || 'clase').toLowerCase();
+    const isClase = type === 'clase';
+    const isKit = type === 'kit';
+    const isComp = type === 'componente';
+
+    let iconText = 'CL';
+    if (isClase) iconText = `C${item.ciclo || ''}`.trim();
+    if (isKit) iconText = 'KIT';
+    if (isComp) iconText = 'CMP';
+
+    const iconClass = item.featured ? 'featured' : '';
+    const difficultyClass = (item.difficulty || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    const subjectBadge = isClase && item.subject ? `<span class="result-badge result-subject">${this.escapeHtml(item.subject)}</span>` : '';
+    const gradosBadge = isClase && item.grados ? `<span class="result-badge result-grados">${this.escapeHtml(item.grados)}</span>` : '';
+    const cicloBadge = isClase && item.ciclo_nombre ? `<span class="result-badge result-ciclo">${this.escapeHtml(item.ciclo_nombre)}</span>` : '';
+    const diffBadge = isClase && item.difficulty ? `<span class="result-difficulty ${difficultyClass}">${this.escapeHtml(item.difficulty)}</span>` : '';
+    const durationBadge = isClase && item.duration ? `<span class="result-badge result-duration">⏱ ${this.escapeHtml(item.duration)}</span>` : '';
+    const kitBadge = isKit && item.codigo ? `<span class="result-badge result-duration">Código: ${this.escapeHtml(item.codigo)}</span>` : '';
+    const compBadge = isComp && item.categoria ? `<span class="result-badge result-subject">${this.escapeHtml(item.categoria)}</span>` : '';
+
     return `
-      <a href="${proyecto.url}" class="search-result-item">
-        <div class="result-icon ${iconClass}">${cicloIcon}</div>
+      <a href="${item.url}" class="search-result-item">
+        <div class="result-icon ${iconClass}">${iconText}</div>
         <div class="result-content">
-          <div class="result-title">${this.escapeHtml(proyecto.title)}</div>
-          <div class="result-description">${this.escapeHtml(proyecto.description)}</div>
+          <div class="result-title">${this.escapeHtml(item.title)}</div>
+          <div class="result-description">${this.escapeHtml(item.description)}</div>
           <div class="result-meta">
-            <span class="result-badge result-ciclo">${this.escapeHtml(proyecto.ciclo_nombre)}</span>
-            ${proyecto.grados ? `<span class="result-badge result-grados">${this.escapeHtml(proyecto.grados)}</span>` : ''}
-            ${proyecto.subject ? `<span class="result-badge result-subject">${this.escapeHtml(proyecto.subject)}</span>` : ''}
-            <span class="result-difficulty ${difficultyClass}">${this.escapeHtml(proyecto.difficulty)}</span>
-            ${proyecto.duration ? `<span class="result-badge result-duration">⏱ ${proyecto.duration}</span>` : ''}
+            ${cicloBadge}
+            ${gradosBadge}
+            ${subjectBadge}
+            ${diffBadge}
+            ${durationBadge}
+            ${kitBadge}
+            ${compBadge}
           </div>
         </div>
       </a>

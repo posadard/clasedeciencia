@@ -169,6 +169,7 @@ try {
         
         // Construir objeto para búsqueda
         $proyectos[] = [
+            'type' => 'clase',
             'id' => (int)$clase['id'],
             'title' => $clase['nombre'],
             'url' => '/' . $clase['slug'],
