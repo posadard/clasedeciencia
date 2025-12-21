@@ -4133,11 +4133,13 @@ strong, b {
 .material-name {
     font-weight: 500;
     color: var(--color-text);
-    flex: 1 1 auto;
+    flex: 0 0 100%;
+    display: block;
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: 2px;
 }
 
 .material-notes {
@@ -4179,9 +4181,8 @@ strong, b {
 }
 
 .materials-list .badge-success {
-    background: var(--color-success);
-    border-color: var(--color-success);
-    color: #fff;
+    /* Ocultar 'Incluido' por redundante en el contexto del kit */
+    display: none;
 }
 
 /* Warning chip */
