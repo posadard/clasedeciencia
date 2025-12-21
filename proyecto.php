@@ -61,7 +61,7 @@ $kits = $stmt->fetchAll();
 $materiales_por_kit = [];
 foreach ($kits as $kit) {
     $stmt = $pdo->prepare("
-        SELECT kc.*, i.nombre_comun, i.sku, i.unidad 
+        SELECT kc.*, i.nombre_comun, i.sku, i.unidad, i.advertencias_seguridad 
         FROM kit_componentes kc 
         JOIN kit_items i ON kc.item_id = i.id 
         WHERE kc.kit_id = ? 
@@ -298,6 +298,9 @@ include 'includes/header.php';
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
                                 <li>
                                     <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+                                    <?php if (!empty($m['advertencias_seguridad'])): ?>
+                                        <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
+                                    <?php endif; ?>
                                     <?php if (!empty($m['cantidad'])): ?>
                                         <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
                                     <?php endif; ?>
