@@ -598,7 +598,10 @@ include '../header.php';
           </div>
           <?php endforeach; ?>
         </div>
-        <input type="text" id="attr_search_cls" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <div class="autocomplete-anchor">
+          <input type="text" id="attr_search_cls" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+          <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown_cls"></div>
+        </div>
         <div class="attr-actions" style="margin-top:6px;">
           <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
         </div>
@@ -609,7 +612,6 @@ include '../header.php';
             </option>
           <?php endforeach; ?>
         </datalist>
-        <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown_cls"></div>
       </div>
       <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
     </div>

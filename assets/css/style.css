@@ -2845,6 +2845,8 @@ strong, b {
 .kit-selector-container { position: relative; width: 100%; max-width: 600px; }
 /* Attributes chips selector container */
 .component-selector-container { position: relative; width: 100%; max-width: 600px; }
+/* Anchor to ensure dropdown aligns directly under the input */
+.autocomplete-anchor { position: relative; display: block; }
 /* Search inputs used in chips have styles above (#kit_search, #component_search). */
 .kit-code { color: #6b7280; font-size: 0.82rem; }
 .autocomplete-no-results { padding: 12px; text-align: center; color: #6b7280; font-size: 0.9rem; }
@@ -3072,7 +3074,7 @@ strong, b {
     max-height: 250px;
     overflow-y: auto;
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    z-index: 1000;
+    z-index: 5000; /* ensure above cards/forms */
     display: none;
 }
 
