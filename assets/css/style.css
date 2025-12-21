@@ -2834,6 +2834,49 @@ strong, b {
     line-height: 1.4;
 }
 
+/* Admin sections & layout helpers (used in clases edit) */
+.form-section { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-border-light); }
+.form-section:last-of-type { border-bottom: none; }
+.form-section h2 { margin-bottom: 0.5rem; font-size: 1.05rem; color: var(--color-primary-dark); }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; }
+.form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eef2f5; }
+
+/* Kits/chips selector container */
+.kit-selector-container { position: relative; width: 100%; max-width: 600px; }
+/* Search inputs used in chips have styles above (#kit_search, #component_search). */
+.kit-code { color: #6b7280; font-size: 0.82rem; }
+.autocomplete-no-results { padding: 12px; text-align: center; color: #6b7280; font-size: 0.9rem; }
+
+/* Toggle switches (Activo/Destacado) */
+.switch-label { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; padding: 6px 12px; border-radius: 6px; background: #f3f4f6; transition: background 0.2s; }
+.switch-label:hover { background: #e5e7eb; }
+.switch-input { position: relative; width: 42px; height: 22px; appearance: none; background: #cbd5e1; border-radius: 11px; cursor: pointer; transition: background 0.3s; flex-shrink: 0; }
+.switch-input:checked { background: #10b981; }
+.switch-input::before { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.switch-input:checked::before { transform: translateX(20px); }
+.switch-text { font-size: 0.875rem; font-weight: 500; color: #374151; white-space: nowrap; }
+
+/* SEO preview box */
+.seo-preview { background: #f7f7f7; padding: 8px; border-radius: 6px; }
+#seo-manual { display: none; }
+
+/* CKEditor warnings (hide noisy banners) */
+.cke .cke_warning,
+.cke .cke_panel_warning,
+.cke .cke_browser_warning,
+.cke .cke_upgrade_notice,
+.cke_warning,
+.cke_panel_warning { display: none !important; }
+.cke_notification.cke_notification_warning,
+.cke_notification.cke_notification_warning .cke_notification_message,
+.cke_notification.cke_notification_warning .cke_notification_close {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+}
+
 /* === Checkbox Grid === */
 .checkbox-grid {
     display: grid;
