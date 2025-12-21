@@ -117,6 +117,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $error_msg = 'Error al eliminar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         }
       }
+    } else if ($action === 'update_item' && $is_edit) {
+      // Actualizar cantidad, notas y orden (sort_order) para un item existente
+      $kc_item_id = isset($_POST['kc_item_id']) && ctype_digit($_POST['kc_item_id']) ? (int)$_POST['kc_item_id'] : 0;
+      $cantidad = isset($_POST['cantidad']) && is_numeric($_POST['cantidad']) ? (float)$_POST['cantidad'] : 0;
+      $notas = isset($_POST['notas']) ? trim($_POST['notas']) : '';
+      $orden = isset($_POST['orden']) && is_numeric($_POST['orden']) ? (int)$_POST['orden'] : 0;
+      if ($kc_item_id <= 0 || $cantidad <= 0) {
+        $error_msg = 'Selecciona un componente válido y cantidad positiva.';
+        echo '<script>console.log("❌ [KitsEdit] update_item inválido");</script>';
+      } else {
+        try {
+          if ($notas !== '') { $notas = mb_substr($notas, 0, 255, 'UTF-8'); } else { $notas = null; }
+          $stmt = $pdo->prepare('UPDATE kit_componentes SET cantidad = ?, notas = ?, sort_order = ? WHERE kit_id = ? AND item_id = ?');
+          $stmt->execute([$cantidad, $notas, $orden, $id, $kc_item_id]);
+          $action_msg = 'Componente actualizado.';
+          echo '<script>console.log("✅ [KitsEdit] update_item guardado");</script>';
+        } catch (PDOException $e) {
+          $error_msg = 'Error al actualizar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+          echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+        }
+      }
     }
   }
 }
@@ -223,6 +244,17 @@ include '../header.php';
           <td><?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
           <td><?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?></td>
           <td class="actions">
+            <button
+              type="button"
+              class="btn action-btn btn-secondary js-edit-item"
+              data-item-id="<?= (int)$kc['item_id'] ?>"
+              data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
+              data-notas="<?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+              data-orden="<?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?>"
+              data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
+              data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
+              data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
+            >Editar</button>
             <form method="POST" style="display:inline;">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
               <input type="hidden" name="action" value="delete_item" />
@@ -235,35 +267,9 @@ include '../header.php';
       </tbody>
     </table>
   <?php endif; ?>
-
-  <form method="POST" style="margin-top:1rem;">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-    <input type="hidden" name="action" value="add_item" />
-    <div class="form-group">
-      <label for="item_id">Agregar componente</label>
-      <select id="item_id" name="item_id" required>
-        <option value="">Selecciona componente</option>
-        <?php foreach ($items as $it): ?>
-          <option value="<?= (int)$it['id'] ?>"><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="cantidad">Cantidad</label>
-      <input type="number" step="0.01" id="cantidad" name="cantidad" value="1" required />
-    </div>
-    <div class="form-group">
-      <label for="notas">Notas (opcional)</label>
-      <input type="text" id="notas" name="notas" maxlength="255" placeholder="p.ej. Indicaciones de uso" />
-    </div>
-    <div class="form-group">
-      <label for="orden">Orden</label>
-      <input type="number" id="orden" name="orden" value="0" />
-    </div>
-    <div class="actions">
-      <button type="submit" class="btn">Agregar</button>
-    </div>
-  </form>
+  <div class="actions" style="margin-top:1rem;">
+    <button type="button" class="btn js-open-add-modal">Agregar componente</button>
+  </div>
 </div>
 <?php endif; ?>
 
@@ -271,4 +277,162 @@ include '../header.php';
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
   console.log('🔍 [KitsEdit] Items disponibles:', <?= count($items) ?>);
 </script>
+<?php if ($is_edit): ?>
+<!-- Modales para editar y agregar componentes -->
+<style>
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal { background: #fff; border-radius: 8px; max-width: 520px; width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+  .modal-header { padding: 12px 16px; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content: space-between; }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 12px 16px; border-top: 1px solid #eee; display:flex; gap: 8px; justify-content: flex-end; }
+  .modal.show { display: flex; }
+  .modal .form-group { margin-bottom: 12px; }
+  .btn-plain { background: transparent; border: none; font-size: 18px; cursor: pointer; }
+  .muted { color: #666; font-size: 0.9rem; }
+  .field-inline { display:flex; gap:12px; }
+  .field-inline > div { flex:1; }
+</style>
+
+<!-- Modal Editar Componente -->
+<div class="modal-backdrop" id="modalEditCmp">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalEditTitle">
+    <div class="modal-header">
+      <h4 id="modalEditTitle">Editar componente</h4>
+      <button type="button" class="btn-plain js-close-modal" data-target="#modalEditCmp">✖</button>
+    </div>
+    <form method="POST" id="formEditCmp">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+      <input type="hidden" name="action" value="update_item" />
+      <input type="hidden" name="kc_item_id" id="edit_kc_item_id" />
+      <div class="modal-body">
+        <div class="muted" id="editCmpInfo"></div>
+        <div class="field-inline">
+          <div class="form-group">
+            <label for="edit_cantidad">Cantidad</label>
+            <input type="number" step="0.01" id="edit_cantidad" name="cantidad" required />
+          </div>
+          <div class="form-group">
+            <label for="edit_orden">Orden</label>
+            <input type="number" id="edit_orden" name="orden" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="edit_notas">Notas</label>
+          <input type="text" id="edit_notas" name="notas" maxlength="255" placeholder="p.ej. Indicaciones de uso" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalEditCmp">Cancelar</button>
+        <button type="submit" class="btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+ </div>
+
+<!-- Modal Agregar Componente -->
+<div class="modal-backdrop" id="modalAddCmp">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAddTitle">
+    <div class="modal-header">
+      <h4 id="modalAddTitle">Agregar componente</h4>
+      <button type="button" class="btn-plain js-close-modal" data-target="#modalAddCmp">✖</button>
+    </div>
+    <form method="POST" id="formAddCmp">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+      <input type="hidden" name="action" value="add_item" />
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="add_item_id">Componente</label>
+          <select id="add_item_id" name="item_id" required>
+            <option value="">Selecciona componente</option>
+            <?php foreach ($items as $it): ?>
+              <option value="<?= (int)$it['id'] ?>"><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="field-inline">
+          <div class="form-group">
+            <label for="add_cantidad">Cantidad</label>
+            <input type="number" step="0.01" id="add_cantidad" name="cantidad" value="1" required />
+          </div>
+          <div class="form-group">
+            <label for="add_orden">Orden</label>
+            <input type="number" id="add_orden" name="orden" value="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="add_notas">Notas (opcional)</label>
+          <input type="text" id="add_notas" name="notas" maxlength="255" placeholder="p.ej. Indicaciones de uso" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddCmp">Cancelar</button>
+        <button type="submit" class="btn">Agregar</button>
+      </div>
+    </form>
+  </div>
+ </div>
+
+<script>
+  // Utilidades de modal
+  function openModal(sel) {
+    const el = document.querySelector(sel);
+    if (el) { el.classList.add('show'); console.log('🔍 [KitsEdit] Abre modal', sel); }
+  }
+  function closeModal(sel) {
+    const el = document.querySelector(sel);
+    if (el) { el.classList.remove('show'); console.log('🔍 [KitsEdit] Cierra modal', sel); }
+  }
+
+  // Abrir modal de agregar
+  const btnOpenAdd = document.querySelector('.js-open-add-modal');
+  if (btnOpenAdd) {
+    btnOpenAdd.addEventListener('click', () => openModal('#modalAddCmp'));
+  }
+
+  // Cerrar por botones con data-target
+  document.querySelectorAll('.js-close-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const t = e.currentTarget.getAttribute('data-target');
+      if (t) closeModal(t);
+    });
+  });
+
+  // Cerrar al click en backdrop
+  document.querySelectorAll('.modal-backdrop').forEach(b => {
+    b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
+  });
+
+  // Abrir modal de edición y prellenar
+  document.querySelectorAll('.js-edit-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const itemId = btn.getAttribute('data-item-id');
+      const cantidad = btn.getAttribute('data-cantidad');
+      const notas = btn.getAttribute('data-notas') || '';
+      const orden = btn.getAttribute('data-orden') || '0';
+      const nombre = btn.getAttribute('data-nombre') || '';
+      const sku = btn.getAttribute('data-sku') || '';
+      const unidad = btn.getAttribute('data-unidad') || '';
+
+      document.getElementById('edit_kc_item_id').value = itemId;
+      document.getElementById('edit_cantidad').value = cantidad;
+      document.getElementById('edit_notas').value = notas;
+      document.getElementById('edit_orden').value = orden;
+      document.getElementById('editCmpInfo').textContent = `${nombre} (SKU ${sku}) · Unidad: ${unidad}`;
+
+      console.log('🔍 [KitsEdit] Editar item', { itemId, cantidad, orden });
+      openModal('#modalEditCmp');
+    });
+  });
+
+  // Logs de envío de formularios
+  const formEdit = document.getElementById('formEditCmp');
+  if (formEdit) {
+    formEdit.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando update_item...'));
+  }
+  const formAdd = document.getElementById('formAddCmp');
+  if (formAdd) {
+    formAdd.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando add_item...'));
+  }
+</script>
+<?php endif; ?>
 <?php include '../footer.php'; ?>
