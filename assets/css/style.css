@@ -866,6 +866,43 @@ strong, b {
     .library-layout { grid-template-columns: 1fr; }
     .filters-sidebar { position: relative; top: 0; }
 }
+
+/* === Compact tweaks for library/results === */
+.library-page .library-layout {
+    gap: 0.75rem;
+}
+.library-page .filters-sidebar {
+    padding: 0.75rem;
+    border-radius: 8px;
+}
+.library-page .filters-form .filter-group { margin: 0.5rem 0 0.75rem 0; }
+.library-page .filters-form .checkbox-list label { margin-bottom: 4px; }
+.library-page .filters-form input[type="checkbox"] { width: 14px; height: 14px; }
+.library-page .filter-actions .btn { padding: 0.35rem 0.6rem; font-size: 0.875rem; }
+
+.library-page .results-header { margin: 0.25rem 0 0.75rem 0; gap: 0.75rem; }
+.library-page .results-count { font-size: 0.875rem; }
+.library-page .search-active-banner { padding: 0.25rem 0.5rem; font-size: 0.9rem; }
+.library-page .sort-selector select { padding: 0.3rem 0.5rem; font-size: 0.9rem; }
+
+.library-page .articles-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.75rem;
+}
+.library-page .article-card { border-radius: 10px; }
+.library-page .article-card .card-content { padding: 0.75rem; }
+.library-page .article-card .card-meta { gap: 0.25rem; margin-bottom: 0.25rem; }
+.library-page .section-badge,
+.library-page .difficulty-badge { font-size: 0.7rem; padding: 0.15rem 0.45rem; }
+.library-page .objective { margin: 0.15rem 0; }
+.library-page .card-footer { gap: 0.5rem; margin-top: 0.25rem; }
+.library-page .card-footer .area,
+.library-page .card-footer .age { font-size: 0.8rem; }
+
+.library-page .btn.related-btn,
+.library-page .btn-light { padding: 0.3rem 0.6rem; font-size: 0.875rem; }
+.library-page .search-section { margin: 1rem 0; }
+.library-page .search-section-header h2 { font-size: 1.2rem; }
 .section-card:hover h3, .section-card:focus h3 { color: white; }
 .section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
