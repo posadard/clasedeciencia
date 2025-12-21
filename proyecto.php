@@ -288,9 +288,7 @@ include 'includes/header.php';
                                 <span class="badge badge-secondary">Kit Opcional</span>
                             <?php endif; ?>
                         </h3>
-                        <?php if (!empty($kit['codigo'])): ?>
-                            <p class="kit-codigo">Código: <strong><?= h($kit['codigo']) ?></strong></p>
-                        <?php endif; ?>
+                        <!-- Código eliminado por no ser necesario en la vista pública -->
                     </div>
                     <?php if (!empty($materiales_por_kit[$kit['id']])): ?>
                         <h4>Componentes incluidos:</h4>
