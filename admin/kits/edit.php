@@ -292,6 +292,17 @@ include '../header.php';
   .muted { color: #666; font-size: 0.9rem; }
   .field-inline { display:flex; gap:12px; }
   .field-inline > div { flex:1; }
+  /* Combo box styles */
+  .combo { position: relative; }
+  .combo-input { width: 100%; padding: 8px 32px 8px 10px; border: 1px solid #ccc; border-radius: 4px; }
+  .combo-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: #f4f4f4; border: 1px solid #ccc; border-radius: 4px; width: 24px; height: 24px; display:flex; align-items:center; justify-content:center; cursor: pointer; }
+  .combo-list { position: absolute; z-index: 10; left: 0; right: 0; top: calc(100% + 4px); max-height: 220px; overflow: auto; border: 1px solid #ccc; border-radius: 4px; background: #fff; display: none; }
+  .combo.open .combo-list { display: block; }
+  .combo-item { padding: 8px 10px; cursor: pointer; display:flex; align-items:center; justify-content: space-between; }
+  .combo-item:hover, .combo-item.active { background: #eef6ff; }
+  .combo-sku { color: #666; font-size: 0.85rem; }
+  /* Ocultar select original pero mantenerlo para submit/validación */
+  #add_item_id { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 </style>
 
 <!-- Modal Editar Componente -->
@@ -342,17 +353,24 @@ include '../header.php';
       <input type="hidden" name="action" value="add_item" />
       <div class="modal-body">
         <div class="form-group">
-          <label for="add_item_search">Buscar componente</label>
-          <input type="text" id="add_item_search" placeholder="Escribe para filtrar por nombre o SKU" />
-        </div>
-        <div class="form-group">
-          <label for="add_item_id">Componente</label>
+          <label for="combo_item_input">Componente</label>
+          <div class="combo" id="combo_item">
+            <input type="text" id="combo_item_input" class="combo-input" placeholder="Escribe para buscar y selecciona" autocomplete="off" />
+            <button type="button" class="combo-toggle" aria-label="Abrir opciones" title="Abrir opciones">▾</button>
+            <ul class="combo-list" id="combo_item_list">
+              <?php foreach ($items as $it): ?>
+                <li class="combo-item" data-value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-sku="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
+                  <span><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="combo-sku">SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?></span>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </div>
+          <!-- Select original permanece para envío/validación; se oculta por CSS -->
           <select id="add_item_id" name="item_id" required>
             <option value="">Selecciona componente</option>
             <?php foreach ($items as $it): ?>
-              <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-sku="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
-                <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
-              </option>
+              <option value="<?= (int)$it['id'] ?>"><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -441,66 +459,83 @@ include '../header.php';
     formAdd.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando add_item...'));
   }
 
-  // Searchable Dropdown para agregar componente
-  (function initSearchableAddDropdown(){
-    const searchInput = document.getElementById('add_item_search');
+  // Combo Box para seleccionar componente (input + lista)
+  (function initComboBox(){
+    const combo = document.getElementById('combo_item');
+    const input = document.getElementById('combo_item_input');
+    const list = document.getElementById('combo_item_list');
     const selectEl = document.getElementById('add_item_id');
-    if (!searchInput || !selectEl) { console.log('⚠️ [KitsEdit] Searchable dropdown no inicializado'); return; }
+    if (!combo || !input || !list || !selectEl) { console.log('⚠️ [KitsEdit] ComboBox no inicializado'); return; }
 
-    // Copia original de opciones (excluye placeholder)
-    const originalOptions = Array.from(selectEl.querySelectorAll('option'))
-      .filter(o => o.value !== '')
-      .map(o => ({ value: o.value, name: (o.dataset.name || o.textContent.trim()), sku: (o.dataset.sku || ''), text: o.textContent.trim() }));
+    let items = Array.from(list.querySelectorAll('.combo-item')).map((li) => ({
+      value: li.getAttribute('data-value'),
+      name: li.getAttribute('data-name') || li.textContent.trim(),
+      sku: li.getAttribute('data-sku') || '',
+      text: li.textContent.trim()
+    }));
+    let activeIndex = -1;
 
     function normalize(str){
-      return (str || '')
-        .toString()
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
-
-    function rebuildOptions(matches){
-      const currentValue = selectEl.value;
-      // Mantener el placeholder
-      selectEl.innerHTML = '<option value="">Selecciona componente</option>';
-      matches.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m.value;
-        opt.textContent = m.text;
-        opt.dataset.name = m.name;
-        opt.dataset.sku = m.sku;
-        selectEl.appendChild(opt);
+    function renderList(matches){
+      list.innerHTML = '';
+      matches.forEach((m, idx) => {
+        const li = document.createElement('li');
+        li.className = 'combo-item' + (idx === 0 ? ' active' : '');
+        li.dataset.value = m.value;
+        li.dataset.name = m.name;
+        li.dataset.sku = m.sku;
+        li.innerHTML = `<span>${m.name}</span><span class="combo-sku">SKU ${m.sku}</span>`;
+        li.addEventListener('click', () => selectItem(m));
+        list.appendChild(li);
       });
-      // Restaurar selección si aún existe
-      if (matches.some(m => m.value === currentValue)) {
-        selectEl.value = currentValue;
-      } else {
-        selectEl.value = '';
-      }
+      activeIndex = matches.length ? 0 : -1;
     }
-
-    function filterOptions(q){
+    function open(){ combo.classList.add('open'); }
+    function close(){ combo.classList.remove('open'); }
+    function selectItem(item){
+      input.value = `${item.name}`;
+      selectEl.value = item.value;
+      console.log('✅ [KitsEdit] Combo select', item);
+      close();
+    }
+    function filter(q){
       const nq = normalize(q);
-      const matches = nq
-        ? originalOptions.filter(o => {
-            const nt = normalize(o.text);
-            const nn = normalize(o.name);
-            const ns = normalize(o.sku);
-            return nt.includes(nq) || nn.includes(nq) || ns.includes(nq);
-          })
-        : originalOptions.slice();
-      rebuildOptions(matches);
-      console.log('🔍 [KitsEdit] Filtro componentes:', q, '→', matches.length, 'coincidencias');
+      const matches = nq ? items.filter(i => {
+        return normalize(i.name).includes(nq) || normalize(i.sku).includes(nq) || normalize(i.text).includes(nq);
+      }) : items.slice();
+      renderList(matches);
+      open();
+      console.log('🔍 [KitsEdit] Combo filtro:', q, '→', matches.length);
     }
 
-    // Reset al abrir el modal de agregar
-    const openAdd = document.querySelector('.js-open-add-modal');
-    if (openAdd) {
-      openAdd.addEventListener('click', () => { searchInput.value = ''; filterOptions(''); });
+    // Eventos
+    input.addEventListener('focus', () => { filter(input.value); });
+    input.addEventListener('input', () => { filter(input.value); selectEl.value = ''; });
+    combo.querySelector('.combo-toggle').addEventListener('click', () => {
+      if (combo.classList.contains('open')) { close(); } else { filter(input.value); }
+    });
+    input.addEventListener('keydown', (e) => {
+      const itemsEl = Array.from(list.querySelectorAll('.combo-item'));
+      if (!itemsEl.length) return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, itemsEl.length - 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); }
+      else if (e.key === 'Enter') { e.preventDefault(); const li = itemsEl[activeIndex]; if (li) selectItem({ value: li.dataset.value, name: li.dataset.name, sku: li.dataset.sku, text: li.textContent.trim() }); }
+      else if (e.key === 'Escape') { close(); }
+      itemsEl.forEach((el, idx) => el.classList.toggle('active', idx === activeIndex));
+    });
+
+    // Reset al abrir modal
+    const btnOpenAdd = document.querySelector('.js-open-add-modal');
+    if (btnOpenAdd) {
+      btnOpenAdd.addEventListener('click', () => { input.value = ''; selectEl.value = ''; renderList(items.slice()); open(); });
     }
 
-    searchInput.addEventListener('input', (e) => filterOptions(e.target.value));
+    // Cerrar si clic fuera del combo
+    document.addEventListener('click', (e) => {
+      if (!combo.contains(e.target) && !e.target.closest('.js-open-add-modal')) close();
+    });
   })();
 </script>
 <?php endif; ?>
