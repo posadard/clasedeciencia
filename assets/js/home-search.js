@@ -683,11 +683,13 @@ class ClaseDeCienciaSearch {
 
     // Ciclo by number or name
     const cicloMatch = q.match(/ciclo\s*(1|2|3)/);
-    if (cicloMatch) ciclo = parseInt(cicloMatch[1], 10);
-    if (!ciclo) {
-      if (q.includes('exploracion')) ciclo = 1;
-      else if (q.includes('experimentacion')) ciclo = 2;
-      else if (q.includes('analisis')) ciclo = 3;
+      if (cicloMatch) ciclo = parseInt(cicloMatch[1], 10);
+      if (!ciclo) {
+        if (q.includes('cimentacion')) ciclo = 1;
+        else if (q.includes('consolidacion')) ciclo = 2;
+        else if (q.includes('exploracion')) ciclo = 3;
+        else if (q.includes('experimentacion')) ciclo = 4;
+        else if (q.includes('analisis') || q.includes('proyeccion')) ciclo = 5;
     }
 
     // Grado numeric patterns
@@ -716,15 +718,20 @@ class ClaseDeCienciaSearch {
       { slug: 'biologia', keys: ['biologia'] },
       { slug: 'ambiental', keys: ['ambiental', 'ambiente'] },
       { slug: 'tecnologia', keys: ['tecnologia', 'tecnologico'] }
+        { slug: 'matematicas', keys: ['matematicas', 'matematica'] },
+        { slug: 'ingenieria', keys: ['ingenieria', 'ingenieria y diseño', 'diseno'] },
+        { slug: 'sociales', keys: ['sociales', 'ciencias sociales'] },
+        { slug: 'artistica', keys: ['artistica', 'arte'] },
+        { slug: 'lenguaje', keys: ['lenguaje', 'comunicacion'] }
     ];
     for (const a of areaCandidates) {
       if (a.keys.some(k => q.includes(k))) { area = a.slug; break; }
     }
 
     // Dificultad
-    if (q.includes('facil')) dificultad = 'facil';
-    else if (q.includes('medio') || q.includes('media') || q.includes('intermedio') || q.includes('intermedia')) dificultad = 'medio';
-    else if (q.includes('dificil') || q.includes('avanzado')) dificultad = 'dificil';
+      if (q.includes('facil')) dificultad = 'facil';
+      else if (q.includes('medio') || q.includes('media') || q.includes('intermedio') || q.includes('intermedia')) dificultad = 'media';
+      else if (q.includes('dificil') || q.includes('avanzado')) dificultad = 'dificil';
 
     return { ciclo, grado, area, dificultad };
   }

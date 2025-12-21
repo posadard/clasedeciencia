@@ -242,15 +242,17 @@ if (!empty($filters['busqueda'])) {
     $norm = cdc_normalize_text($filters['busqueda']);
     // Ciclo
     if (empty($filters['ciclo'])) {
-        if (preg_match('/ciclo\s*(1|2|3)/', $norm, $m)) {
+        if (preg_match('/ciclo\s*(0|1|2|3|4|5)/', $norm, $m)) {
             $filters['ciclo'] = (int)$m[1];
         } else {
             $ciclos_list = cdc_get_ciclos($pdo, true);
             foreach ($ciclos_list as $c) {
-                $n = cdc_normalize_text($c['nombre'] ?? '');
-                if ($c['numero'] == 1 && (strpos($norm,'exploracion')!==false)) { $filters['ciclo'] = 1; break; }
-                if ($c['numero'] == 2 && (strpos($norm,'experimentacion')!==false)) { $filters['ciclo'] = 2; break; }
-                if ($c['numero'] == 3 && (strpos($norm,'analisis')!==false)) { $filters['ciclo'] = 3; break; }
+                $name_norm = cdc_normalize_text($c['nombre'] ?? '');
+                $slug_norm = cdc_normalize_text(str_replace('-', ' ', $c['slug'] ?? ''));
+                if (($name_norm && strpos($norm, $name_norm) !== false) || ($slug_norm && strpos($norm, $slug_norm) !== false)) {
+                    $filters['ciclo'] = (int)$c['numero'];
+                    break;
+                }
             }
         }
     }
@@ -291,7 +293,7 @@ if (!empty($filters['busqueda'])) {
     // Dificultad
     if (empty($filters['dificultad'])) {
         if (strpos($norm,'facil')!==false) { $filters['dificultad']='facil'; }
-        elseif (strpos($norm,'medio')!==false || strpos($norm,'media')!==false || strpos($norm,'intermedio')!==false || strpos($norm,'intermedia')!==false) { $filters['dificultad']='medio'; }
+        elseif (strpos($norm,'medio')!==false || strpos($norm,'media')!==false || strpos($norm,'intermedio')!==false || strpos($norm,'intermedia')!==false) { $filters['dificultad']='media'; }
         elseif (strpos($norm,'dificil')!==false || strpos($norm,'avanzado')!==false) { $filters['dificultad']='dificil'; }
     }
     // Prefer grade sort when grade inferred
@@ -396,7 +398,7 @@ include 'includes/header.php';
                     <select name="dificultad">
                         <option value="">Todas</option>
                         <option value="facil" <?= isset($filters['dificultad']) && $filters['dificultad']==='facil'?'selected':'' ?>>Fácil</option>
-                        <option value="medio" <?= isset($filters['dificultad']) && $filters['dificultad']==='medio'?'selected':'' ?>>Medio</option>
+                        <option value="media" <?= isset($filters['dificultad']) && $filters['dificultad']==='media'?'selected':'' ?>>Medio</option>
                         <option value="dificil" <?= isset($filters['dificultad']) && $filters['dificultad']==='dificil'?'selected':'' ?>>Difícil</option>
                     </select>
                 </div>
