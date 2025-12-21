@@ -50,7 +50,7 @@ function cdc_get_competencias($pdo) {
     return $stmt->fetchAll();
 }
 function cdc_get_ciclos($pdo, $activo_only = true) {
-    $sql = "SELECT numero, nombre, slug, grados_texto, activo, orden FROM ciclos ";
+    $sql = "SELECT numero, nombre, slug, grados_texto, edad_min, edad_max, activo, orden FROM ciclos ";
     if ($activo_only) $sql .= "WHERE activo = 1 ";
     $sql .= "ORDER BY orden ASC, numero ASC";
     $stmt = $pdo->query($sql);
@@ -280,6 +280,18 @@ $canonical_url = SITE_URL . ($q ? ('/clases/buscar/' . rawurlencode($q)) : '/cla
 
 $areas = cdc_get_areas($pdo);
 $competencias = cdc_get_competencias($pdo);
+// Mapa de edades por ciclo para etiquetas "Edad X–Y años"
+$__ciclos_info = cdc_get_ciclos($pdo, true);
+$__ciclos_age_map = [];
+foreach ($__ciclos_info as $__c) {
+    $num = isset($__c['numero']) ? (int)$__c['numero'] : null;
+    if ($num !== null) {
+        $__ciclos_age_map[$num] = [
+            'min' => isset($__c['edad_min']) ? (int)$__c['edad_min'] : null,
+            'max' => isset($__c['edad_max']) ? (int)$__c['edad_max'] : null,
+        ];
+    }
+}
 
 // Vista: cards | rows (desktop); en mobile se fuerza rows via CSS
 $view = isset($_GET['view']) && in_array($_GET['view'], ['cards','rows'], true) ? $_GET['view'] : 'cards';
@@ -521,12 +533,25 @@ include 'includes/header.php';
                                 <?php
                                 $area_label = !empty($p['areas_nombres']) ? $p['areas_nombres'] : ($p['areas'] ?? '');
                                 $edad_label = '';
-                                if (!empty($p['grados'])) {
-                                    $gr = json_decode($p['grados'], true);
-                                    if (is_array($gr) && count($gr) > 0) {
-                                        $minG = min($gr); $maxG = max($gr);
-                                        $edad_label = 'Grados ' . (int)$minG . '°–' . (int)$maxG . '°';
+                                // Preferir edad específica por clase si existe en JSON seguridad
+                                $emin = null; $emax = null;
+                                if (!empty($p['seguridad'])) {
+                                    $seg = json_decode($p['seguridad'], true);
+                                    if (is_array($seg)) {
+                                        if (isset($seg['edad_min']) && is_numeric($seg['edad_min'])) { $emin = (int)$seg['edad_min']; }
+                                        if (isset($seg['edad_max']) && is_numeric($seg['edad_max'])) { $emax = (int)$seg['edad_max']; }
                                     }
+                                }
+                                // Fallback al rango por ciclo
+                                if (($emin === null || $emax === null) && isset($p['ciclo'])) {
+                                    $cnum = (int)$p['ciclo'];
+                                    if (isset($__ciclos_age_map[$cnum])) {
+                                        if ($emin === null && isset($__ciclos_age_map[$cnum]['min'])) { $emin = $__ciclos_age_map[$cnum]['min']; }
+                                        if ($emax === null && isset($__ciclos_age_map[$cnum]['max'])) { $emax = $__ciclos_age_map[$cnum]['max']; }
+                                    }
+                                }
+                                if ($emin !== null && $emax !== null && $emin > 0 && $emax > 0) {
+                                    $edad_label = 'Edad ' . $emin . '–' . $emax . ' años';
                                 }
                                 ?>
                                 <?php if ($area_label): ?><span class="area">Área: <?= h($area_label) ?></span><?php endif; ?>
