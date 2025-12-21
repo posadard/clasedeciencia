@@ -7,7 +7,8 @@
  * Sanitize output for HTML
  */
 function h($string) {
-    return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+    // Coerce null to empty string to avoid deprecation warnings
+    return htmlspecialchars((string)$string, ENT_QUOTES, 'UTF-8');
 }
 
 /**

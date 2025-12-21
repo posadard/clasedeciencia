@@ -100,8 +100,8 @@ function get_material_by_slug($pdo, $slug) {
     $sql = "SELECT 
                 m.id,
                 m.sku AS slug,
-                m.nombre_comun AS nombre_comun,
-                m.advertencias_seguridad AS descripcion,
+                m.nombre_comun AS common_name,
+                m.advertencias_seguridad AS description,
                 m.categoria_id,
                 cm.nombre AS category_name, cm.slug AS category_slug
             FROM kit_items m
@@ -109,12 +109,12 @@ function get_material_by_slug($pdo, $slug) {
             WHERE m.sku = ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$slug]);
-    $material = $stmt->fetch();
+    $material = $stmt->fetch(PDO::FETCH_ASSOC);
     if (!$material) return null;
-    // Placeholders esperados por plantillas heredadas
-    $material['other_names_array'] = [];
-    $material['specifications_array'] = [];
-    $material['gallery_images_array'] = [];
-    $material['used_in_articles'] = [];
+    // Placeholders esperados por plantillas heredadas (no usados aquí, pero mantienen compatibilidad)
+    $material['other_names_array'] = $material['other_names_array'] ?? [];
+    $material['specifications_array'] = $material['specifications_array'] ?? [];
+    $material['gallery_images_array'] = $material['gallery_images_array'] ?? [];
+    $material['used_in_articles'] = $material['used_in_articles'] ?? [];
     return $material;
 }
