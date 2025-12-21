@@ -99,6 +99,101 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error_msg = 'Token CSRF inválido.';
     echo '<script>console.log("❌ [ClasesEdit] CSRF inválido");</script>';
   } else {
+    $action = isset($_POST['action']) ? $_POST['action'] : 'save';
+    // Handlers for ficha técnica attributes on Clase
+    if ($is_edit && in_array($action, ['add_attr','update_attr','delete_attr','create_attr_def'], true)) {
+      try {
+        if ($action === 'delete_attr') {
+          $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+          if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+          $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
+          $stmt->execute(['clase', $id, $def_id]);
+          echo '<script>console.log("✅ [ClasesEdit] delete_attr ejecutado");</script>';
+        } else if ($action === 'create_attr_def') {
+          $etiqueta = isset($_POST['etiqueta']) ? trim((string)$_POST['etiqueta']) : '';
+          $clave = isset($_POST['clave']) ? trim((string)$_POST['clave']) : '';
+          $tipo = isset($_POST['tipo_dato']) ? trim((string)$_POST['tipo_dato']) : 'string';
+          $card = isset($_POST['cardinalidad']) ? trim((string)$_POST['cardinalidad']) : 'one';
+          $unidad_def = isset($_POST['unidad_defecto']) ? trim((string)$_POST['unidad_defecto']) : '';
+          $unidades_raw = isset($_POST['unidades_permitidas']) ? (string)$_POST['unidades_permitidas'] : '';
+          if ($etiqueta === '') { throw new Exception('Etiqueta requerida'); }
+          if ($clave === '') { $clave = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $etiqueta)); $clave = trim($clave, '_'); }
+          else { $clave = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $clave)); $clave = trim($clave, '_'); }
+          $tipos_validos = ['string','number','integer','boolean','date','datetime','json'];
+          $cards_validas = ['one','many'];
+          if (!in_array($tipo, $tipos_validos, true)) { $tipo = 'string'; }
+          if (!in_array($card, $cards_validas, true)) { $card = 'one'; }
+          $unidades = array_filter(array_map(function($v){ return trim($v); }, preg_split('/[\n,]+/', $unidades_raw)));
+          $unidades_json = !empty($unidades) ? json_encode(array_values($unidades)) : null;
+          $pdo->beginTransaction();
+          $st = $pdo->prepare('SELECT id FROM atributos_definiciones WHERE clave = ?');
+          $st->execute([$clave]);
+          $def_id = (int)$st->fetchColumn();
+          if ($def_id <= 0) {
+            $ins = $pdo->prepare('INSERT INTO atributos_definiciones (clave, etiqueta, tipo_dato, cardinalidad, unidad_defecto, unidades_permitidas_json, aplica_a_json) VALUES (?,?,?,?,?,?,?)');
+            $aplica = json_encode(['clase']);
+            $ins->execute([$clave, $etiqueta, $tipo, $card, ($unidad_def !== '' ? $unidad_def : null), $unidades_json, $aplica]);
+            $def_id = (int)$pdo->lastInsertId();
+          }
+          $chk = $pdo->prepare('SELECT COUNT(*) FROM atributos_mapeo WHERE atributo_id = ? AND tipo_entidad = ?');
+          $chk->execute([$def_id, 'clase']);
+          if ((int)$chk->fetchColumn() === 0) {
+            $nextOrdStmt = $pdo->prepare('SELECT COALESCE(MAX(orden),0)+1 AS nextOrd FROM atributos_mapeo WHERE tipo_entidad = ?');
+            $nextOrdStmt->execute(['clase']);
+            $next = (int)$nextOrdStmt->fetchColumn();
+            $mp = $pdo->prepare('INSERT INTO atributos_mapeo (atributo_id, tipo_entidad, visible, orden) VALUES (?,?,?,?)');
+            $mp->execute([$def_id, 'clase', 1, $next]);
+          }
+          $pdo->commit();
+          echo '<script>console.log("✅ [ClasesEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
+        } else {
+          // add_attr / update_attr share logic: delete then insert
+          $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+          $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
+          $unidad = isset($_POST['unidad']) ? trim((string)$_POST['unidad']) : '';
+          if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+          $defS = $pdo->prepare('SELECT * FROM atributos_definiciones WHERE id = ?');
+          $defS->execute([$def_id]);
+          $def = $defS->fetch(PDO::FETCH_ASSOC);
+          if (!$def) { throw new Exception('Atributo no existe'); }
+          $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?')->execute(['clase', $id, $def_id]);
+          $pdo->beginTransaction();
+          $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+          $card = $def['cardinalidad'];
+          $tipo = $def['tipo_dato'];
+          $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+          $orden = 1;
+          foreach ($vals as $v) {
+            $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+            switch ($tipo) {
+              case 'number':
+                $num = is_numeric(str_replace(',', '.', $v)) ? (float)str_replace(',', '.', $v) : null; if ($num === null) continue 2; $val_numero = $num; break;
+              case 'integer':
+                $int = is_numeric($v) ? (int)$v : null; if ($int === null) continue 2; $val_entero = $int; break;
+              case 'boolean':
+                $val_bool = ($v === '1' || strtolower($v) === 'true' || strtolower($v) === 'sí' || strtolower($v) === 'si') ? 1 : 0; break;
+              case 'date':
+                $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null; if ($val_fecha === null) continue 2; break;
+              case 'datetime':
+                $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $v) ? (str_replace('T', ' ', $v) . ':00') : null; if ($val_dt === null) continue 2; break;
+              case 'json':
+                $decoded = json_decode($v, true); if ($decoded === null && strtolower(trim($v)) !== 'null') continue 2; $val_json = json_encode($decoded); break;
+              case 'string':
+              default:
+                $val_string = mb_substr((string)$v, 0, 2000, 'UTF-8'); break;
+            }
+            $ins->execute(['clase', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
+          }
+          $pdo->commit();
+          echo '<script>console.log("✅ [ClasesEdit] ' . ($action === 'add_attr' ? 'add' : 'update') . '_attr guardado");</script>';
+        }
+      } catch (Exception $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error en atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [ClasesEdit] attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+      // Skip the rest of save handling for attribute actions
+    } else {
     $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
     $slug = isset($_POST['slug']) ? trim($_POST['slug']) : '';
     $ciclo = isset($_POST['ciclo']) && $_POST['ciclo'] !== '' ? (int)$_POST['ciclo'] : null;
@@ -432,6 +527,198 @@ include '../header.php';
     <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>
   </div>
   </div>
+
+  <?php
+  // Ficha técnica para Clase
+  $attrs_defs = [];
+  $attrs_vals = [];
+  if ($is_edit) {
+    try {
+      $defs_stmt = $pdo->prepare('SELECT d.*, m.orden FROM atributos_definiciones d JOIN atributos_mapeo m ON m.atributo_id = d.id WHERE m.tipo_entidad = ? AND m.visible = 1 ORDER BY m.orden ASC, d.id ASC');
+      $defs_stmt->execute(['clase']);
+      $attrs_defs = $defs_stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) { $attrs_defs = []; }
+    try {
+      $vals_stmt = $pdo->prepare('SELECT * FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? ORDER BY orden ASC, id ASC');
+      $vals_stmt->execute(['clase', $id]);
+      $rows = $vals_stmt->fetchAll(PDO::FETCH_ASSOC);
+      foreach ($rows as $r) {
+        $aid = (int)$r['atributo_id'];
+        if (!isset($attrs_vals[$aid])) { $attrs_vals[$aid] = []; }
+        $attrs_vals[$aid][] = $r;
+      }
+    } catch (PDOException $e) {}
+  }
+  ?>
+  <?php if ($is_edit): ?>
+  <div class="card" style="margin-top:2rem;">
+    <h3>Ficha técnica (chips)</h3>
+    <div class="form-group">
+      <label for="attr_search_cls">Agregar atributo</label>
+      <div class="component-selector-container">
+        <div class="selected-components" id="selected-attrs-cls">
+          <?php foreach ($attrs_defs as $def):
+            $aid = (int)$def['id'];
+            $values = $attrs_vals[$aid] ?? [];
+            if (empty($values)) continue;
+            $label = $def['etiqueta'];
+            $tipo = $def['tipo_dato'];
+            $unit = $values[0]['unidad_codigo'] ?? '';
+            $display = [];
+            foreach ($values as $v) {
+              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+              else { $display[] = $v['valor_string']; }
+            }
+            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+          ?>
+          <div class="component-chip" data-attr-id="<?= $aid ?>">
+            <span class="name"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="meta">· <strong><?= $text ?></strong><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
+            <button type="button" class="edit-component js-edit-attr-cls" title="Editar"
+              data-attr-id="<?= $aid ?>"
+              data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+              data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+              data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
+              data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
+              data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+              data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
+            >✏️</button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo de la clase?')">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+              <input type="hidden" name="action" value="delete_attr" />
+              <input type="hidden" name="def_id" value="<?= $aid ?>" />
+              <button type="submit" class="remove-component" title="Remover">×</button>
+            </form>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <input type="text" id="attr_search_cls" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <div class="attr-actions" style="margin-top:6px;">
+          <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
+        </div>
+        <datalist id="attrs_list_cls">
+          <?php foreach ($attrs_defs as $def): ?>
+            <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($def['grupo'] ?? 'ficha', ENT_QUOTES, 'UTF-8') ?>)
+            </option>
+          <?php endforeach; ?>
+        </datalist>
+        <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown_cls"></div>
+      </div>
+      <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
+    </div>
+  </div>
+
+  <!-- Modal Editar Atributo (Clase) -->
+  <div class="modal-overlay" id="modalEditAttrCls">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrClsTitle">
+      <div class="modal-header">
+        <h4 id="modalEditAttrClsTitle">Editar atributo</h4>
+        <button type="button" class="modal-close js-close-modal" data-target="#modalEditAttrCls">✖</button>
+      </div>
+      <form method="POST" id="formEditAttrCls">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="update_attr" />
+        <input type="hidden" name="def_id" id="edit_def_id_cls" />
+        <div class="modal-body">
+          <div class="muted" id="editAttrClsInfo"></div>
+          <div class="form-group">
+            <label for="edit_valor_cls">Valor</label>
+            <textarea id="edit_valor_cls" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
+          </div>
+          <div class="form-group" id="edit_unidad_cls_group">
+            <label for="edit_unidad_cls">Unidad (si aplica)</label>
+            <select id="edit_unidad_cls" name="unidad"></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalEditAttrCls">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+   </div>
+
+  <!-- Modal Agregar Atributo (Clase) -->
+  <div class="modal-overlay" id="modalAddAttrCls">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrClsTitle">
+      <div class="modal-header">
+        <h4 id="modalAddAttrClsTitle">Agregar atributo</h4>
+        <button type="button" class="modal-close js-close-modal" data-target="#modalAddAttrCls">✖</button>
+      </div>
+      <form method="POST" id="formAddAttrCls">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="add_attr" />
+        <input type="hidden" name="def_id" id="add_def_id_cls" />
+        <div class="modal-body">
+          <div class="muted" id="addAttrClsInfo"></div>
+          <div class="form-group">
+            <label for="add_valor_cls">Valor</label>
+            <textarea id="add_valor_cls" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
+          </div>
+          <div class="form-group" id="add_unidad_cls_group">
+            <label for="add_unidad_cls">Unidad (si aplica)</label>
+            <select id="add_unidad_cls" name="unidad"></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddAttrCls">Cancelar</button>
+          <button type="submit" class="btn">Agregar</button>
+        </div>
+      </form>
+    </div>
+   </div>
+
+  <!-- Modal Crear Definición de Atributo (Clase) -->
+  <div class="modal-overlay" id="modalCreateAttrCls">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrClsTitle">
+      <div class="modal-header">
+        <h4 id="modalCreateAttrClsTitle">Crear nuevo atributo</h4>
+        <button type="button" class="modal-close js-close-modal" data-target="#modalCreateAttrCls">✖</button>
+      </div>
+      <form method="POST" id="formCreateAttrCls">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="create_attr_def" />
+        <div class="modal-body">
+          <div class="form-group"><label for="create_etiqueta_cls">Etiqueta</label><input type="text" id="create_etiqueta_cls" name="etiqueta" required /></div>
+          <div class="form-group"><label for="create_clave_cls">Clave</label><input type="text" id="create_clave_cls" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
+          <div class="field-inline">
+            <div class="form-group"><label for="create_tipo_cls">Tipo</label>
+              <select id="create_tipo_cls" name="tipo_dato">
+                <option value="string">string</option>
+                <option value="number">number</option>
+                <option value="integer">integer</option>
+                <option value="boolean">boolean</option>
+                <option value="date">date</option>
+                <option value="datetime">datetime</option>
+                <option value="json">json</option>
+              </select>
+            </div>
+            <div class="form-group"><label for="create_card_cls">Cardinalidad</label>
+              <select id="create_card_cls" name="cardinalidad">
+                <option value="one">one</option>
+                <option value="many">many</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-inline">
+            <div class="form-group"><label for="create_unidad_cls">Unidad por defecto</label><input type="text" id="create_unidad_cls" name="unidad_defecto" placeholder="opcional" /></div>
+            <div class="form-group"><label for="create_unidades_cls">Unidades permitidas</label><input type="text" id="create_unidades_cls" name="unidades_permitidas" placeholder="separa por comas" /></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttrCls">Cancelar</button>
+          <button type="submit" class="btn">Crear</button>
+        </div>
+      </form>
+    </div>
+   </div>
+  <?php endif; ?>
   
   <!-- Kits de Materiales (Autocomplete con Chips) -->
   <div class="form-section">
@@ -1450,5 +1737,174 @@ include '../header.php';
   console.log('✅ [Kits] Autocomplete inicializado');
   
 </script>
+
+<?php if ($is_edit): ?>
+<script>
+  // Utilidades de modal
+  function openModal(sel) {
+    const el = document.querySelector(sel);
+    if (el) { el.classList.add('active'); console.log('🔍 [ClasesEdit] Abre modal', sel); }
+  }
+  function closeModal(sel) {
+    const el = document.querySelector(sel);
+    if (el) { el.classList.remove('active'); console.log('🔍 [ClasesEdit] Cierra modal', sel); }
+  }
+  document.querySelectorAll('.js-close-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const t = e.currentTarget.getAttribute('data-target');
+      if (t) closeModal(t);
+    });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(b => {
+    b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
+  });
+
+  // Autocomplete + modal para atributos de clase
+  (function initAttrUICls(){
+    const dropdown = document.getElementById('attr_autocomplete_dropdown_cls');
+    const input = document.getElementById('attr_search_cls');
+    const selectedWrap = document.getElementById('selected-attrs-cls');
+    if (!dropdown || !input || !selectedWrap) { console.log('⚠️ [ClasesEdit] UI atributos no inicializada'); return; }
+
+    const defs = [
+      <?php foreach ($attrs_defs as $d): ?>
+      { id: <?= (int)$d['id'] ?>, label: '<?= htmlspecialchars($d['etiqueta'], ENT_QUOTES, 'UTF-8') ?>', tipo: '<?= htmlspecialchars($d['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>', card: '<?= htmlspecialchars($d['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>', units: <?= $d['unidades_permitidas_json'] ? $d['unidades_permitidas_json'] : '[]' ?>, unitDef: '<?= htmlspecialchars($d['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
+      <?php endforeach; ?>
+    ];
+
+    function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+    function render(list){
+      if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div><div class="autocomplete-item create-item" id="attr_create_item_cls"><strong>➕ Crear nuevo atributo</strong></div>'; dropdown.style.display='block'; const ci=document.getElementById('attr_create_item_cls'); if(ci){ ci.addEventListener('click', onCreateNewCls); } return; }
+      dropdown.innerHTML = '';
+      list.slice(0, 20).forEach(def => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.innerHTML = `<strong>${def.label}</strong><span class="cmp-code">${def.tipo}${def.unitDef? ' · '+def.unitDef:''}</span>`;
+        div.addEventListener('click', () => onChoose(def));
+        dropdown.appendChild(div);
+      });
+      dropdown.style.display = 'block';
+    }
+    function filter(q){
+      const nq = normalize(q);
+      const out = defs.filter(d => normalize(d.label).includes(nq));
+      console.log('🔍 [ClasesEdit] Buscar atributo:', q, '→', out.length);
+      render(out);
+    }
+    function onChoose(def){
+      try {
+        document.getElementById('add_def_id_cls').value = String(def.id);
+        document.getElementById('addAttrClsInfo').textContent = def.label;
+        const sel = document.getElementById('add_unidad_cls');
+        const selGroup = document.getElementById('add_unidad_cls_group');
+        sel.innerHTML = '';
+        const hasUnits = Array.isArray(def.units) && def.units.length > 0;
+        const hasDefault = !!def.unitDef;
+        if (hasUnits || hasDefault) {
+          const opt0 = document.createElement('option');
+          opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+          if (hasUnits) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+          if (selGroup) selGroup.style.display = '';
+          console.log('🔍 [ClasesEdit] Unidad visible (aplica)');
+        } else {
+          if (selGroup) selGroup.style.display = 'none';
+          console.log('🔍 [ClasesEdit] Unidad oculta (no aplica)');
+        }
+        openModal('#modalAddAttrCls');
+        setTimeout(() => { try { document.getElementById('add_valor_cls')?.focus(); } catch(_e){} }, 50);
+      } catch (e) {
+        console.log('❌ [ClasesEdit] Error preparar modal atributo:', e && e.message);
+      }
+      dropdown.style.display = 'none';
+    }
+    function onCreateNewCls(){
+      try {
+        const val = (input.value || '').trim();
+        document.getElementById('create_etiqueta_cls').value = val;
+        document.getElementById('create_clave_cls').value = '';
+        document.getElementById('create_tipo_cls').value = 'string';
+        document.getElementById('create_card_cls').value = 'one';
+        document.getElementById('create_unidad_cls').value = '';
+        document.getElementById('create_unidades_cls').value = '';
+        openModal('#modalCreateAttrCls');
+        setTimeout(() => { try { document.getElementById('create_etiqueta_cls')?.focus(); } catch(_e){} }, 50);
+        console.log('🔍 [ClasesEdit] Crear atributo desde búsqueda:', val);
+      } catch(e){ console.log('❌ [ClasesEdit] Error preparar crear atributo:', e && e.message); }
+      dropdown.style.display='none';
+    }
+    input.addEventListener('focus', () => filter(input.value));
+    input.addEventListener('input', () => filter(input.value));
+    document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
+
+    // Botón para crear atributo directamente
+    const btnCreate = document.getElementById('btn_create_attr_cls');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        try {
+          const val = (input && input.value ? input.value.trim() : '');
+          document.getElementById('create_etiqueta_cls').value = val;
+          document.getElementById('create_clave_cls').value = '';
+          document.getElementById('create_tipo_cls').value = 'string';
+          document.getElementById('create_card_cls').value = 'one';
+          document.getElementById('create_unidad_cls').value = '';
+          document.getElementById('create_unidades_cls').value = '';
+          openModal('#modalCreateAttrCls');
+          setTimeout(() => { try { document.getElementById('create_etiqueta_cls')?.focus(); } catch(_e){} }, 50);
+          console.log('🔍 [ClasesEdit] Abrir crear atributo (botón)', val);
+        } catch(e) { console.log('❌ [ClasesEdit] Error abrir crear atributo (botón):', e && e.message); }
+      });
+    }
+
+    // Editar chip existente
+    document.querySelectorAll('.js-edit-attr-cls').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const defId = btn.getAttribute('data-attr-id');
+        const label = btn.getAttribute('data-label');
+        const tipo = btn.getAttribute('data-tipo');
+        const unitsJson = btn.getAttribute('data-units');
+        const unitDef = btn.getAttribute('data-unidad_def') || '';
+        const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
+        document.getElementById('edit_def_id_cls').value = defId;
+        document.getElementById('editAttrClsInfo').textContent = label;
+        const inputEl = document.getElementById('edit_valor_cls');
+        const unitSel = document.getElementById('edit_unidad_cls');
+        const unitGroup = document.getElementById('edit_unidad_cls_group');
+        inputEl.value = '';
+        unitSel.innerHTML = '';
+        if (Array.isArray(vals) && vals.length) {
+          const parts = vals.map(v => {
+            if (tipo === 'number') return v.valor_numero;
+            if (tipo === 'integer') return v.valor_entero;
+            if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
+            if (tipo === 'date') return v.valor_fecha;
+            if (tipo === 'datetime') return v.valor_datetime;
+            if (tipo === 'json') return v.valor_json;
+            return v.valor_string;
+          }).filter(Boolean);
+          inputEl.value = parts.join(', ');
+        }
+        let units = [];
+        try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
+        const hasUnits = Array.isArray(units) && units.length > 0;
+        const hasDefault = !!unitDef;
+        if (hasUnits || hasDefault) {
+          const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+          if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
+          if (unitGroup) unitGroup.style.display = '';
+          console.log('🔍 [ClasesEdit] Unidad visible (aplica)');
+        } else {
+          if (unitGroup) unitGroup.style.display = 'none';
+          console.log('🔍 [ClasesEdit] Unidad oculta (no aplica)');
+        }
+        openModal('#modalEditAttrCls');
+      });
+    });
+  })();
+
+  // Logs de envío de formularios
+  document.getElementById('formEditAttrCls')?.addEventListener('submit', () => console.log('📡 [ClasesEdit] Enviando update_attr...'));
+  document.getElementById('formAddAttrCls')?.addEventListener('submit', () => console.log('📡 [ClasesEdit] Enviando add_attr...'));
+</script>
+<?php endif; ?>
 
 <?php include '../footer.php'; ?>
