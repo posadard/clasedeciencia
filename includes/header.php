@@ -94,7 +94,8 @@
                     <ul>
                         <li><a href="/">Inicio</a></li>
                         <li><a href="/clases">Clases</a></li>
-                        <li><a href="/contact.php">Contacto</a></li>
+                        <li><a href="/kits">Kits</a></li>
+                        <li><a href="/componentes">Componentes</a></li>
                     </ul>
                 </nav>
             </div>
