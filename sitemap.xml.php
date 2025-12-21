@@ -67,7 +67,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     foreach ($materiales as $m):
     ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/componente.php?slug=<?= h($m['slug']) ?></loc>
+        <loc><?= h(SITE_URL) ?>/componente-<?= h($m['slug']) ?></loc>
         <?php if (!empty($m['created_at'])): ?>
         <lastmod><?= h(date('Y-m-d', strtotime($m['created_at']))) ?></lastmod>
         <?php endif; ?>
@@ -94,7 +94,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     }
     foreach ($kits as $k): ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/kit.php?slug=<?= h($k['slug']) ?></loc>
+        <loc><?= h(SITE_URL) ?>/kit-<?= h($k['slug']) ?></loc>
         <?php if (!empty($k['updated_at'])): ?>
         <lastmod><?= h(date('Y-m-d', strtotime($k['updated_at']))) ?></lastmod>
         <?php endif; ?>

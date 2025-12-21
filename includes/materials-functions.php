@@ -46,7 +46,7 @@ function get_materials($pdo, $filters = [], $limit = null, $offset = 0) {
 
     $sql = "SELECT 
                 m.id,
-                m.sku AS slug,
+                m.slug AS slug,
                 m.nombre_comun AS common_name,
                 NULL AS technical_name,
                 m.advertencias_seguridad AS description,
@@ -96,17 +96,16 @@ function count_materials($pdo, $filters = []) {
 
 // Detalle de material
 function get_material_by_slug($pdo, $slug) {
-    // Usamos sku como identificador (compatibilidad con slug)
     $sql = "SELECT 
                 m.id,
-                m.sku AS slug,
+                m.slug AS slug,
                 m.nombre_comun AS common_name,
                 m.advertencias_seguridad AS description,
                 m.categoria_id,
                 cm.nombre AS category_name, cm.slug AS category_slug
             FROM kit_items m
             LEFT JOIN categorias_items cm ON m.categoria_id = cm.id
-            WHERE m.sku = ?";
+            WHERE m.slug = ?";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$slug]);
     $material = $stmt->fetch(PDO::FETCH_ASSOC);

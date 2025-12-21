@@ -404,7 +404,7 @@ function cdc_get_kit_by_slug($pdo, $slug) {
 function cdc_get_kit_componentes($pdo, $kit_id) {
     try {
         $stmt = $pdo->prepare("SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, kc.notas,
-                                      i.nombre_comun, i.sku, i.unidad, i.advertencias_seguridad
+                                      i.nombre_comun, i.slug, i.sku, i.unidad, i.advertencias_seguridad
                                FROM kit_componentes kc
                                JOIN kit_items i ON i.id = kc.item_id
                                WHERE kc.kit_id = ?

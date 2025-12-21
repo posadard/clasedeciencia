@@ -77,8 +77,8 @@ include 'includes/header.php';
             <?php else: ?>
             <div class="articles-grid">
                 <?php foreach ($items as $it): ?>
-                <article class="article-card" data-href="/componente.php?slug=<?= h($it['slug']) ?>">
-                    <a class="card-link" href="/componente.php?slug=<?= h($it['slug']) ?>">
+                <article class="article-card" data-href="/componente-<?= h($it['slug']) ?>">
+                    <a class="card-link" href="/componente-<?= h($it['slug']) ?>">
                         <div class="card-content">
                             <div class="card-meta">
                                 <span class="section-badge">Componente</span>

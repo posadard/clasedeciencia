@@ -24,7 +24,7 @@ if (!$material) {
 
 $page_title = $material['common_name'];
 $page_description = generate_excerpt($material['description'] ?? '', 160);
-$canonical_url = SITE_URL . '/componente.php?slug=' . urlencode($material['slug']);
+$canonical_url = SITE_URL . '/componente-' . urlencode($material['slug']);
 
 include 'includes/header.php';
 ?>
@@ -118,8 +118,8 @@ include 'includes/header.php';
         <h2>🧰 Kits que incluyen este componente</h2>
         <div class="articles-grid">
             <?php foreach ($kits_rel as $k): ?>
-            <article class="article-card" data-href="/kit.php?slug=<?= h($k['slug']) ?>">
-                <a class="card-link" href="/kit.php?slug=<?= h($k['slug']) ?>">
+            <article class="article-card" data-href="/kit-<?= h($k['slug']) ?>">
+                <a class="card-link" href="/kit-<?= h($k['slug']) ?>">
                     <div class="card-content">
                         <div class="card-meta">
                             <span class="section-badge">Kit</span>

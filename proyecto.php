@@ -61,7 +61,7 @@ $kits = $stmt->fetchAll();
 $materiales_por_kit = [];
 foreach ($kits as $kit) {
     $stmt = $pdo->prepare("
-        SELECT kc.*, i.nombre_comun, i.sku, i.unidad, i.advertencias_seguridad 
+        SELECT kc.*, i.nombre_comun, i.slug, i.sku, i.unidad, i.advertencias_seguridad 
         FROM kit_componentes kc 
         JOIN kit_items i ON kc.item_id = i.id 
         WHERE kc.kit_id = ? 
@@ -281,10 +281,10 @@ include 'includes/header.php';
                 <div class="kit-card">
                     <div class="kit-header">
                         <h3>
-                            <a href="/kit.php?slug=<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
+                            <a href="/kit-<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
                                 <?= h($kit['nombre']) ?>
                             </a>
-                            <a href="/kit.php?slug=<?= h($kit['slug'] ?? '') ?>" class="icon-link" title="Ver kit" aria-label="Ver kit <?= h($kit['nombre']) ?>" style="margin-left:8px;">
+                            <a href="/kit-<?= h($kit['slug'] ?? '') ?>" class="icon-link" title="Ver kit" aria-label="Ver kit <?= h($kit['nombre']) ?>" style="margin-left:8px;">
                                 🔎
                             </a>
                             <?php if (!empty($kit['es_principal'])): ?>
@@ -301,8 +301,8 @@ include 'includes/header.php';
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
                                 <li>
                                     <span class="material-name"><?= h($m['nombre_comun']) ?></span>
-                                    <?php if (!empty($m['sku'])): ?>
-                                        <a href="/componente.php?slug=<?= h($m['sku']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
+                                    <?php if (!empty($m['slug'])): ?>
+                                        <a href="/componente-<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
                                     <?php endif; ?>
                                     <?php if (!empty($m['advertencias_seguridad'])): ?>
                                         <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
