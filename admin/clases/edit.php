@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
       // Skip the rest of save handling for attribute actions
     } else {
-    $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+      $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
     $slug = isset($_POST['slug']) ? trim($_POST['slug']) : '';
     $ciclo = isset($_POST['ciclo']) && $_POST['ciclo'] !== '' ? (int)$_POST['ciclo'] : null;
     echo '<script>console.log("🔍 [ClasesEdit] POST ciclo:", ' . json_encode($ciclo) . ', "tipo:", typeof ' . json_encode($ciclo) . ');</script>';
@@ -362,6 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
       }
+    }
     }
   }
 }
