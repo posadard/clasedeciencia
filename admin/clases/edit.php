@@ -746,7 +746,10 @@ include '../header.php';
         }
         ?>
       </div>
-      <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
+      <div class="autocomplete-anchor">
+        <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
+        <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
+      </div>
       <datalist id="kits_list">
         <?php foreach ($all_kits as $kit): ?>
           <?php if ($kit['activo']): ?>
@@ -757,7 +760,6 @@ include '../header.php';
           <?php endif; ?>
         <?php endforeach; ?>
       </datalist>
-      <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
     </div>
     <small>Escribe para buscar kits. Puedes seleccionar múltiples. El primero será el kit principal.</small>
     <div id="kits-hidden"></div>
