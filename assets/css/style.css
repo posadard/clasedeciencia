@@ -876,6 +876,8 @@ strong, b {
     .filters-title { cursor: pointer; background: var(--color-bg-alt); border: 1px solid var(--color-border-light); border-radius: 8px; padding: 0.5rem 0.65rem; }
     .filters-sidebar.fs-collapsed .filters-form { display: none; }
     .filters-sidebar.fs-collapsed .filters-title .chev { transform: rotate(-90deg); }
+    /* Mobile: hide view toggle buttons */
+    .library-page .view-toggle { display: none !important; }
     /* Mobile: make primary apply button larger and full width */
     .filters-sidebar .filter-actions .btn-primary {
         width: 100%;
