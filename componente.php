@@ -64,7 +64,8 @@ include 'includes/header.php';
                 <?php if (!empty($material['category_name'])): ?><span class="material-badge" style="background:#e9ecef;color:#333"><?= h($material['category_name']) ?></span><?php endif; ?>
             </div>
             <div class="product-image">
-                <div class="product-image-fallback" aria-hidden="true">📦 <?= h($material['category_name'] ?? '') ?></div>
+                <?php $comp_img = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg'; ?>
+                <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; p.textContent='📦 ' + <?= json_encode($material['category_name'] ?? '') ?>; this.replaceWith(p);" />
             </div>
         </aside>
     </div>
@@ -148,7 +149,7 @@ include 'includes/header.php';
             <?php foreach ($clases_rel as $c): ?>
                 <a href="/<?= h($c['slug']) ?>" class="related-card">
                     <?php if (!empty($c['imagen_portada'])): ?>
-                        <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" />
+                        <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" loading="lazy" onerror="this.onerror=null; console.log('❌ [Componente] Miniatura clase falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
                     <?php endif; ?>
                     <div class="related-info">
                         <h4><?= h($c['nombre']) ?></h4>

@@ -1772,6 +1772,16 @@ strong, b {
     font-size:0.95rem;
 }
 
+/* Error state styling for component image fallback */
+.product-image-fallback.error {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f87171 0%, var(--color-error) 100%);
+    color: white;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
 /* Hide homepage quick-links by default if a full footer exists. You can re-enable
    by adding `show-quick-links` to the body element on pages that need them. */
 .quick-links { display: none; }
