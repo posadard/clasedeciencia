@@ -9,6 +9,9 @@ RewriteEngine On
 # Redirigir legacy a la ruta unificada
 RewriteRule ^catalogo\.php$ /clases [R=301,L]
 RewriteRule ^search\.php$ /clases [R=301,L]
+RewriteRule ^library\.php$ /clases [R=301,L]
+RewriteRule ^section\.php$ /clases [R=301,L]
+RewriteRule ^article\.php$ /clases [R=301,L]
 
 # Redirect antiguo formato a nuevo (SEO 301)
 RewriteCond %{QUERY_STRING} ^slug=([a-z0-9-]+)$
