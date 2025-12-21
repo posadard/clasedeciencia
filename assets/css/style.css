@@ -2641,6 +2641,21 @@ strong, b {
     border-color: #cbd5e1;
 }
 
+/* Make delete (x) buttons red */
+.kit-chip .remove-kit,
+.component-chip .remove-component {
+    background: var(--color-error);
+    border-color: var(--color-error);
+    color: #ffffff;
+}
+
+.kit-chip .remove-kit:hover,
+.component-chip .remove-component:hover {
+    background: #b71c1c; /* darker red on hover */
+    border-color: #b71c1c;
+    color: #ffffff;
+}
+
 /* Shared autocomplete dropdown */
 .autocomplete-dropdown {
     position: absolute;
@@ -2706,7 +2721,7 @@ strong, b {
 .listbox-panel {
     display: flex;
     flex-direction: column;
-    min-height: 400px;
+    min-height: 200px; /* reduced from 400px */
 }
 
 .listbox-header {
@@ -2753,7 +2768,7 @@ strong, b {
     border-top: none;
     background: white;
     padding: var(--spacing-xs);
-    max-height: 450px;
+    max-height: 225px; /* reduced from 450px */
 }
 
 .competencia-grupo {
