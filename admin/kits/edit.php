@@ -266,7 +266,10 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="codigo">Código</label>
-    <input type="text" id="codigo" name="codigo" value="<?= htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') ?>" placeholder="p.ej. KIT-PLANTA-LUZ-01" required />
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input type="text" id="codigo" name="codigo" value="<?= htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') ?>" placeholder="p.ej. KIT-PLANTA-LUZ-01" required />
+      <span id="codigo_status" style="font-size:0.85rem;color:#666;"></span>
+    </div>
     <small>Debe ser único.</small>
   </div>
   <div class="form-group">
@@ -332,6 +335,70 @@ include '../header.php';
 <script>
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
   console.log('🔍 [KitsEdit] Items disponibles:', <?= count($items) ?>);
+  // Verificación de unicidad en vivo para código de kit
+  (function initCodigoCheck(){
+    const codigoInput = document.getElementById('codigo');
+    const statusEl = document.getElementById('codigo_status');
+    const saveBtn = document.querySelector('#kit-form button[type="submit"]');
+    const isEdit = <?= $is_edit ? 'true' : 'false' ?>;
+    const currentId = <?= $is_edit ? (int)$id : 0 ?>;
+    if (!codigoInput || !statusEl || !saveBtn) { console.log('⚠️ [KitsEdit] Código checker no inicializado'); return; }
+
+    let lastVal = '';
+    let timer = null;
+
+    async function check(val){
+      if (!val) { statusEl.textContent = ''; saveBtn.disabled = false; return; }
+      statusEl.textContent = 'Verificando…'; statusEl.style.color = '#666';
+      try {
+        const resp = await fetch('/api/kits-validate-codigo.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ codigo: val, exclude_id: isEdit ? currentId : 0 })
+        });
+        console.log('📡 [KitsEdit] Check codigo status:', resp.status);
+        const data = await resp.json();
+        if (data && data.ok && data.unique !== null) {
+          if (data.unique) {
+            statusEl.textContent = 'Disponible ✅';
+            statusEl.style.color = '#2e7d32';
+            saveBtn.disabled = false;
+            console.log('✅ [KitsEdit] Código disponible');
+          } else {
+            statusEl.textContent = 'En uso ❌';
+            statusEl.style.color = '#c62828';
+            saveBtn.disabled = true;
+            console.log('❌ [KitsEdit] Código duplicado');
+          }
+        } else {
+          statusEl.textContent = 'No se pudo verificar ⚠️';
+          statusEl.style.color = '#b26a00';
+          saveBtn.disabled = false;
+          console.log('⚠️ [KitsEdit] Respuesta inválida en verificación');
+        }
+      } catch (e) {
+        statusEl.textContent = 'Error al verificar ⚠️';
+        statusEl.style.color = '#b26a00';
+        saveBtn.disabled = false;
+        console.log('❌ [KitsEdit] Error verificación:', e && e.message);
+      }
+    }
+
+    function debounced(){
+      const val = codigoInput.value.trim();
+      if (val === lastVal) return;
+      lastVal = val;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => check(val), 350);
+    }
+
+    codigoInput.addEventListener('input', debounced);
+    codigoInput.addEventListener('blur', () => check(codigoInput.value.trim()));
+    if (codigoInput.value.trim()) {
+      // Verificar inicial si existe valor
+      check(codigoInput.value.trim());
+    }
+  })();
   // Generador de slug (similar a clases)
   (function initSlugGenerator(){
     const nombreInput = document.getElementById('nombre');
