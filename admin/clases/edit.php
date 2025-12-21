@@ -553,7 +553,10 @@ include '../header.php';
   ?>
   <?php if ($is_edit): ?>
   <div class="card" style="margin-top:2rem;">
-    <h3>Ficha técnica (chips)</h3>
+    <div class="card-title-row">
+      <h3>Ficha técnica (chips)</h3>
+      <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
+    </div>
     <div class="form-group">
       <label for="attr_search_cls">Agregar atributo</label>
       <div class="component-selector-container">
@@ -601,9 +604,6 @@ include '../header.php';
         <div class="autocomplete-anchor">
           <input type="text" id="attr_search_cls" placeholder="Escribir para buscar atributo..." autocomplete="off" />
           <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown_cls"></div>
-        </div>
-        <div class="attr-actions" style="margin-top:6px;">
-          <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
         </div>
         <datalist id="attrs_list_cls">
           <?php foreach ($attrs_defs as $def): ?>

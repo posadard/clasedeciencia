@@ -2924,6 +2924,16 @@ strong, b {
     border-color: var(--color-border);
 }
 
+/* Card header row with actions (used for ficha técnica create button) */
+.card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: var(--spacing-sm);
+}
+.card-title-row h3 { margin: 0; }
+
 /* === Admin Stats === */
 .stats-grid {
     display: grid;
