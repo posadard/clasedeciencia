@@ -172,7 +172,7 @@ if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
 $page_title = 'Clases';
 $page_description = 'Explora o busca clases científicas por ciclo, grado y área.';
-$canonical_url = SITE_URL . '/clases.php' . ($q ? ('?q=' . urlencode($q)) : '');
+$canonical_url = SITE_URL . '/clases' . ($q ? ('?q=' . urlencode($q)) : '');
 
 $areas = cdc_get_areas($pdo);
 $competencias = cdc_get_competencias($pdo);
@@ -275,7 +275,7 @@ include 'includes/header.php';
     <div class="library-layout">
         <aside class="filters-sidebar">
             <h2>Filtros</h2>
-            <form method="get" action="/clases.php" class="filters-form">
+            <form method="get" action="/clases" class="filters-form">
                 <div class="filter-group">
                     <label>Ciclo</label>
                     <select name="ciclo">
@@ -305,7 +305,7 @@ include 'includes/header.php';
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
-                    <a href="/clases.php" class="btn btn-secondary">Limpiar</a>
+                    <a href="/clases" class="btn btn-secondary">Limpiar</a>
                 </div>
             </form>
         </aside>
@@ -314,7 +314,7 @@ include 'includes/header.php';
                 <?php if ($q !== '' && empty($filters)): ?>
                 <div class="search-active-banner">
                     <span class="search-term">🔍 Resultados para: <strong><?= h($q) ?></strong></span>
-                    <a href="/clases.php" class="clear-search">✕ Ver catálogo</a>
+                    <a href="/clases" class="clear-search">✕ Ver catálogo</a>
                 </div>
                 <?php endif; ?>
                 <p class="results-count">
@@ -336,7 +336,7 @@ include 'includes/header.php';
             <?php if (empty($proyectos)): ?>
             <div class="no-results">
                 <p>No hay clases con los criterios seleccionados.</p>
-                <a href="/clases.php" class="btn btn-secondary">Ver todas</a>
+                <a href="/clases" class="btn btn-secondary">Ver todas</a>
             </div>
             <?php else: ?>
             <div class="articles-grid">
@@ -387,7 +387,7 @@ include 'includes/header.php';
                 <?php endforeach; ?>
             </div>
             <?php if ($total > POSTS_PER_PAGE && empty($q)): ?>
-                <?= pagination($total, get_current_page(), '/clases.php') ?>
+                <?= pagination($total, get_current_page(), '/clases') ?>
             <?php endif; ?>
             <?php endif; ?>
         </div>

@@ -103,7 +103,7 @@ class ClaseDeCienciaSearch {
           </div>
         </div>
         <div class="search-actions">
-          <a href="/clases.php" class="view-all-link">Ver Catálogo Completo →</a>
+          <a href="/clases" class="view-all-link">Ver Catálogo Completo →</a>
         </div>
       </div>
     `;
@@ -715,7 +715,7 @@ class ClaseDeCienciaSearch {
 
     this.hideSearchResults();
     // Enviar a página exclusiva de resultados
-    window.location.href = `/clases.php?q=${encodeURIComponent(query)}`;
+    window.location.href = `/clases?q=${encodeURIComponent(query)}`;
   }
 }
 
