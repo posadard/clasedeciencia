@@ -617,13 +617,15 @@ include '../header.php';
     $seg_edad_max_val = $seg_arr['edad_max'] ?? '';
     $seg_notas_val = $seg_arr['notas'] ?? '';
   ?>
-  <div class="card" style="margin-top:1.25rem;">
+  <div class="form-group" style="margin-top:1.25rem;">
     <h3>Ficha pública (Landing)</h3>
-    <div class="form-group">
-      <label for="resumen">Resumen del kit</label>
-      <textarea id="resumen" name="resumen" rows="3" placeholder="1-2 frases claras para docentes y estudiantes"><?= htmlspecialchars($kit['resumen'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
-      <small class="hint">Breve descripción para la ficha pública.</small>
-    </div>
+  </div>
+  <div class="form-group">
+    <label for="resumen">Resumen del kit</label>
+    <textarea id="resumen" name="resumen" rows="3" placeholder="1-2 frases claras para docentes y estudiantes"><?= htmlspecialchars($kit['resumen'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <small class="hint">Breve descripción para la ficha pública.</small>
+  </div>
+  <div class="form-group">
     <div class="field-inline">
       <div class="form-group">
         <label for="imagen_portada">Imagen de portada (URL)</label>
@@ -634,39 +636,39 @@ include '../header.php';
         <input type="text" id="video_portada" name="video_portada" value="<?= htmlspecialchars($kit['video_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="p.ej. YouTube ID o URL" />
       </div>
     </div>
-    <div class="card" style="margin-top:1rem;">
-      <h4>Seguridad</h4>
-      <div class="field-inline">
-        <div class="form-group">
-          <label for="seg_edad_min">Edad mínima</label>
-          <input type="number" id="seg_edad_min" name="seg_edad_min" min="0" step="1" value="<?= htmlspecialchars($seg_edad_min_val, ENT_QUOTES, 'UTF-8') ?>" />
-        </div>
-        <div class="form-group">
-          <label for="seg_edad_max">Edad máxima</label>
-          <input type="number" id="seg_edad_max" name="seg_edad_max" min="0" step="1" value="<?= htmlspecialchars($seg_edad_max_val, ENT_QUOTES, 'UTF-8') ?>" />
-        </div>
+  </div>
+  <div class="form-group">
+    <h4>Seguridad</h4>
+    <div class="field-inline">
+      <div class="form-group">
+        <label for="seg_edad_min">Edad mínima</label>
+        <input type="number" id="seg_edad_min" name="seg_edad_min" min="0" step="1" value="<?= htmlspecialchars($seg_edad_min_val, ENT_QUOTES, 'UTF-8') ?>" />
       </div>
       <div class="form-group">
-        <label for="seg_notas">Notas de seguridad</label>
-        <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
+        <label for="seg_edad_max">Edad máxima</label>
+        <input type="number" id="seg_edad_max" name="seg_edad_max" min="0" step="1" value="<?= htmlspecialchars($seg_edad_max_val, ENT_QUOTES, 'UTF-8') ?>" />
       </div>
     </div>
-    <div class="card" style="margin-top:1rem;">
-      <h4>SEO</h4>
-      <div class="form-group">
-        <label for="seo_title">SEO Title</label>
-        <input type="text" id="seo_title" name="seo_title" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" maxlength="160" />
-      </div>
-      <div class="form-group">
-        <label for="seo_description">SEO Description</label>
-        <textarea id="seo_description" name="seo_description" rows="3" maxlength="300"><?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
-      </div>
+    <div class="form-group">
+      <label for="seg_notas">Notas de seguridad</label>
+      <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
     </div>
-    <div class="form-group" style="margin-top:1rem;">
-      <label for="contenido_html">Contenido HTML</label>
-      <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
-      <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
+  </div>
+  <div class="form-group">
+    <h4>SEO</h4>
+    <div class="form-group">
+      <label for="seo_title">SEO Title</label>
+      <input type="text" id="seo_title" name="seo_title" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" maxlength="160" />
     </div>
+    <div class="form-group">
+      <label for="seo_description">SEO Description</label>
+      <textarea id="seo_description" name="seo_description" rows="3" maxlength="300"><?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="contenido_html">Contenido HTML</label>
+    <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
   </div>
   <div class="actions" style="margin-top:1rem;">
     <button type="submit" class="btn">Guardar</button>
