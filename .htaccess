@@ -38,11 +38,6 @@ RewriteRule ^kit\.php$ /%1? [R=301,L]
 RewriteCond %{THE_REQUEST} \s/componente\.php\?slug=([^\s&]+) [NC]
 RewriteRule ^componente\.php$ /%1? [R=301,L]
 
-# Redirect legacy material.php to componente.php preserving slug
-RewriteCond %{QUERY_STRING} ^slug=([A-Za-z0-9._-]+)$ [NC]
-RewriteRule ^material\.php$ /componente-%1? [R=301,L]
-# Fallback when no slug is provided
-RewriteRule ^material\.php$ /componentes [R=301,L]
 
 # Ruta amigable de búsqueda: /clases/buscar/{termino}
 RewriteRule ^clases/buscar/(.*)$ /clases.php?q=$1 [L,QSA]

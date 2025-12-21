@@ -773,7 +773,7 @@ include '../header.php';
     <button type="submit" class="btn">Guardar</button>
     <a href="/admin/clases/index.php" class="btn btn-secondary">Cancelar</a>
     <?php if ($is_edit): ?>
-      <a href="/proyecto.php?slug=<?= htmlspecialchars($clase['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn">Ver público</a>
+      <a href="/clase.php?slug=<?= htmlspecialchars($clase['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn">Ver público</a>
     <?php endif; ?>
   </div>
 </form>

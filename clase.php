@@ -1,5 +1,5 @@
 <?php
-// Proyecto - Detalle del proyecto con guía
+// Clase - Detalle de la clase con guía (renombrado de proyecto.php)
 require_once 'config.php';
 require_once 'includes/functions.php';
 
@@ -9,12 +9,14 @@ if (!$slug) {
     exit;
 }
 
-// Redirección permanente al nuevo endpoint
-header('Location: /clase.php?slug=' . urlencode($slug), true, 301);
-exit;
-
 // Cargar clase
-// Código legacy no se ejecutará por la redirección anterior.
+$stmt = $pdo->prepare("SELECT * FROM clases WHERE slug = ? AND activo = 1");
+$stmt->execute([$slug]);
+$proyecto = $stmt->fetch();
+if (!$proyecto) {
+    header('Location: /clases');
+    exit;
+}
 
 // Cargar información completa del ciclo
 $ciclo_info = [];
@@ -95,7 +97,7 @@ if (!empty($areas)) {
 
 $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Ciencia');
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
-$canonical_url = SITE_URL . '/' . $proyecto['slug'];
+$canonical_url = SITE_URL . '/clase.php?slug=' . $proyecto['slug'];
 
 // Schema.org básico HowTo
 $schema = [
@@ -414,7 +416,7 @@ include 'includes/header.php';
             <h2>🔗 Clases Relacionadas</h2>
             <div class="related-grid">
                 <?php foreach ($clases_relacionadas as $rel): ?>
-                    <a href="/proyecto.php?slug=<?= h($rel['slug']) ?>" class="related-card">
+                    <a href="/clase.php?slug=<?= h($rel['slug']) ?>" class="related-card">
                         <?php if (!empty($rel['imagen_portada'])): ?>
                             <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" />
                         <?php endif; ?>

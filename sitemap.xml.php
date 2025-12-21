@@ -46,7 +46,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     foreach ($proyectos as $p):
     ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/proyecto.php?slug=<?= h($p['slug']) ?></loc>
+        <loc><?= h(SITE_URL) ?>/clase.php?slug=<?= h($p['slug']) ?></loc>
         <?php if (!empty($p['updated_at'])): ?>
         <lastmod><?= h(date('Y-m-d', strtotime($p['updated_at']))) ?></lastmod>
         <?php endif; ?>
