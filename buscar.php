@@ -1,6 +1,7 @@
 <?php
 // Página global de resultados de búsqueda (Clases, Kits, Componentes)
 require_once 'config.php';
+require_once 'includes/functions.php';
 
 $q = trim($_GET['q'] ?? '');
 $page_title = $q !== '' ? ('Resultados: ' . $q) : 'Resultados de búsqueda';
