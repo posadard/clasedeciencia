@@ -459,16 +459,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $cantidad = isset($_POST['cantidad']) && is_numeric($_POST['cantidad']) ? (float)$_POST['cantidad'] : 0;
       $notas = isset($_POST['notas']) ? trim($_POST['notas']) : '';
       $orden = isset($_POST['orden']) && is_numeric($_POST['orden']) ? (int)$_POST['orden'] : 0;
+      $incluido = isset($_POST['es_incluido_kit']) ? 1 : 0;
       if ($kc_item_id <= 0 || $cantidad <= 0) {
         $error_msg = 'Selecciona un componente válido y cantidad positiva.';
         echo '<script>console.log("❌ [KitsEdit] update_item inválido");</script>';
       } else {
         try {
           if ($notas !== '') { $notas = mb_substr($notas, 0, 255, 'UTF-8'); } else { $notas = null; }
-          $stmt = $pdo->prepare('UPDATE kit_componentes SET cantidad = ?, notas = ?, sort_order = ? WHERE kit_id = ? AND item_id = ?');
-          $stmt->execute([$cantidad, $notas, $orden, $id, $kc_item_id]);
+          $stmt = $pdo->prepare('UPDATE kit_componentes SET cantidad = ?, notas = ?, sort_order = ?, es_incluido_kit = ? WHERE kit_id = ? AND item_id = ?');
+          $stmt->execute([$cantidad, $notas, $orden, $incluido, $id, $kc_item_id]);
           $action_msg = 'Componente actualizado.';
-          echo '<script>console.log("✅ [KitsEdit] update_item guardado");</script>';
+          echo '<script>console.log("✅ [KitsEdit] update_item guardado; incluido=' . ($incluido? '1':'0') . '");</script>';
         } catch (PDOException $e) {
           $error_msg = 'Error al actualizar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
           echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
@@ -483,7 +484,7 @@ $componentes = [];
 if ($is_edit) {
   try {
     // Ajuste al schema: no hay kc.id ni kc.orden; usar sort_order como orden, incluir notas
-    $stmt = $pdo->prepare('SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, kc.notas, ki.nombre_comun, ki.sku, ki.unidad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, ki.nombre_comun ASC');
+    $stmt = $pdo->prepare('SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, kc.notas, kc.es_incluido_kit, ki.nombre_comun, ki.sku, ki.unidad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, ki.nombre_comun ASC');
     $stmt->execute([$id]);
     $componentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
   } catch (PDOException $e) {}
@@ -601,6 +602,7 @@ include '../header.php';
               data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
               data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
               data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
+              data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
             >✏️</button>
             <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -1132,9 +1134,6 @@ include '../header.php';
   .combo-item { padding: 8px 10px; cursor: pointer; display:flex; align-items:center; justify-content: space-between; }
   .combo-item:hover, .combo-item.active { background: #eef6ff; }
   .combo-sku { color: #666; font-size: 0.85rem; }
-  .combo-item.included { color: #777; background: #fafafa; cursor: not-allowed; }
-  .combo-item.included:hover { background: #f5f5f5; }
-  .included-badge { margin-left: 8px; font-size: 0.75rem; color: #2e7d32; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 2px 6px; border-radius: 999px; }
   /* Ocultar select original pero mantenerlo para submit/validación */
   #add_item_id { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 </style>
@@ -1166,6 +1165,12 @@ include '../header.php';
           <label for="edit_notas">Notas</label>
           <input type="text" id="edit_notas" name="notas" maxlength="255" placeholder="p.ej. Indicaciones de uso" />
         </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="edit_incluido" name="es_incluido_kit" value="1" />
+              Incluido en el kit
+            </label>
+          </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalEditCmp">Cancelar</button>
@@ -1200,7 +1205,6 @@ include '../header.php';
               <?php endforeach; ?>
             </ul>
           </div>
-          <small class="hint" style="display:block; margin-top:6px;">Los componentes ya agregados aparecen marcados como <strong>Incluido</strong> y no se pueden volver a seleccionar.</small>
           <!-- Select original permanece para envío/validación; se oculta por CSS -->
           <select id="add_item_id" name="item_id" required>
             <option value="">Selecciona componente</option>
@@ -1272,14 +1276,19 @@ include '../header.php';
       const nombre = btn.getAttribute('data-nombre') || '';
       const sku = btn.getAttribute('data-sku') || '';
       const unidad = btn.getAttribute('data-unidad') || '';
+      const incluido = btn.getAttribute('data-incluido') || '1';
 
       document.getElementById('edit_kc_item_id').value = itemId;
       document.getElementById('edit_cantidad').value = cantidad;
       document.getElementById('edit_notas').value = notas;
       document.getElementById('edit_orden').value = orden;
       document.getElementById('editCmpInfo').textContent = `${nombre} (SKU ${sku}) · Unidad: ${unidad}`;
+      try {
+        const chk = document.getElementById('edit_incluido');
+        if (chk) { chk.checked = (incluido === '1'); }
+      } catch(_e){}
 
-      console.log('🔍 [KitsEdit] Editar item', { itemId, cantidad, orden });
+      console.log('🔍 [KitsEdit] Editar item', { itemId, cantidad, orden, incluido });
       openModal('#modalEditCmp');
     });
   });
@@ -1311,36 +1320,19 @@ include '../header.php';
     }));
     let activeIndex = -1;
 
-    function selectedSet(){
-      try {
-        return new Set(Array.from(document.querySelectorAll('#selected-components .component-chip'))
-          .map(el => parseInt(el.getAttribute('data-item-id'), 10))
-          .filter(Boolean));
-      } catch(e) { console.log('⚠️ [KitsEdit] selectedSet error:', e && e.message); return new Set(); }
-    }
-
     function normalize(str){
       return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
     function renderList(matches){
       list.innerHTML = '';
-      const included = selectedSet();
       matches.forEach((m, idx) => {
         const li = document.createElement('li');
-        const isIncluded = included.has(parseInt(m.value, 10));
-        li.className = 'combo-item' + (idx === 0 ? ' active' : '') + (isIncluded ? ' included' : '');
+        li.className = 'combo-item' + (idx === 0 ? ' active' : '');
         li.dataset.value = m.value;
         li.dataset.name = m.name;
         li.dataset.sku = m.sku;
-        li.innerHTML = `<span>${m.name}</span><span><span class="combo-sku">SKU ${m.sku}</span>${isIncluded ? '<span class="included-badge">Incluido</span>' : ''}</span>`;
-        if (isIncluded) {
-          li.setAttribute('aria-disabled', 'true');
-          li.addEventListener('click', () => {
-            console.log('⚠️ [KitsEdit] Este componente ya está incluido en el kit.');
-          });
-        } else {
-          li.addEventListener('click', () => selectItem(m));
-        }
+        li.innerHTML = `<span>${m.name}</span><span class="combo-sku">SKU ${m.sku}</span>`;
+        li.addEventListener('click', () => selectItem(m));
         list.appendChild(li);
       });
       activeIndex = matches.length ? 0 : -1;
