@@ -331,6 +331,14 @@
     .article-body p:first-child { font-size: 1.125rem; }
 }
 
+/* Expand article width on desktop */
+@media (min-width: 1024px) {
+    .article-body {
+        max-width: none;
+        width: 100%;
+    }
+}
+
 /* === Print Instructions & PDF Button === */
 .print-instructions {
     margin-top: 3rem;
