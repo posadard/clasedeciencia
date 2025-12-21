@@ -643,7 +643,7 @@ include '../header.php';
             <label for="edit_valor">Valor</label>
             <textarea id="edit_valor" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="edit_unidad_group">
             <label for="edit_unidad">Unidad (si aplica)</label>
             <select id="edit_unidad" name="unidad"></select>
           </div>
@@ -673,7 +673,7 @@ include '../header.php';
             <label for="add_valor">Valor</label>
             <textarea id="add_valor" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
           </div>
-          <div class="form-group">
+          <div class="form-group" id="add_unidad_group">
             <label for="add_unidad">Unidad (si aplica)</label>
             <select id="add_unidad" name="unidad"></select>
           </div>
@@ -724,10 +724,20 @@ include '../header.php';
           document.getElementById('add_def_id').value = String(def.id);
           document.getElementById('addAttrInfo').textContent = def.label;
           const sel = document.getElementById('add_unidad');
+          const selGroup = document.getElementById('add_unidad_group');
           sel.innerHTML = '';
-          const opt0 = document.createElement('option');
-          opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-          if (Array.isArray(def.units)) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+          const hasUnits = Array.isArray(def.units) && def.units.length > 0;
+          const hasDefault = !!def.unitDef;
+          if (hasUnits || hasDefault) {
+            const opt0 = document.createElement('option');
+            opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+            if (hasUnits) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+            if (selGroup) selGroup.style.display = '';
+            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+          } else {
+            if (selGroup) selGroup.style.display = 'none';
+            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
           openModal('#modalAddAttr');
           setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
         } catch (e) {
@@ -752,6 +762,7 @@ include '../header.php';
           document.getElementById('editAttrInfo').textContent = label;
           const inputEl = document.getElementById('edit_valor');
           const unitSel = document.getElementById('edit_unidad');
+          const unitGroup = document.getElementById('edit_unidad_group');
           inputEl.value = '';
           unitSel.innerHTML = '';
           if (Array.isArray(vals) && vals.length) {
@@ -766,8 +777,19 @@ include '../header.php';
             }).filter(Boolean);
             inputEl.value = parts.join(', ');
           }
-          const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
-          try { const units = JSON.parse(unitsJson || '[]'); if (Array.isArray(units)) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); }); } catch(_e){}
+          let units = [];
+          try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
+          const hasUnits = Array.isArray(units) && units.length > 0;
+          const hasDefault = !!unitDef;
+          if (hasUnits || hasDefault) {
+            const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
+            if (unitGroup) unitGroup.style.display = '';
+            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+          } else {
+            if (unitGroup) unitGroup.style.display = 'none';
+            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
           openModal('#modalEditAttr');
         });
       });
