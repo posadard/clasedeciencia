@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
       if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
       $errores[] = 'Error agregando atributo: ' . $e->getMessage();
-      echo "<script>console.log('❌ [ComponentesEdit] add_attr error: " + htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') + "');</script>";
+      echo "<script>console.log('❌ [ComponentesEdit] add_attr error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
     }
   } else if ($action === 'update_attr' && $is_edit) {
     try {
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
       if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
       $errores[] = 'Error actualizando atributo: ' . $e->getMessage();
-      echo "<script>console.log('❌ [ComponentesEdit] update_attr error: " + htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') + "');</script>";
+      echo "<script>console.log('❌ [ComponentesEdit] update_attr error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
     }
   } else if ($action === 'delete_attr' && $is_edit) {
     try {
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       echo "<script>console.log('✅ [ComponentesEdit] delete_attr ejecutado');</script>";
     } catch (PDOException $e) {
       $errores[] = 'Error eliminando atributo: ' . $e->getMessage();
-      echo "<script>console.log('❌ [ComponentesEdit] delete_attr error: " + htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') + "');</script>";
+      echo "<script>console.log('❌ [ComponentesEdit] delete_attr error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
     }
   } else if ($action === 'save_attrs' && $is_edit) {
     // Guardar ficha técnica del componente
