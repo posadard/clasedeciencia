@@ -1132,6 +1132,9 @@ include '../header.php';
   .combo-item { padding: 8px 10px; cursor: pointer; display:flex; align-items:center; justify-content: space-between; }
   .combo-item:hover, .combo-item.active { background: #eef6ff; }
   .combo-sku { color: #666; font-size: 0.85rem; }
+  .combo-item.included { color: #777; background: #fafafa; cursor: not-allowed; }
+  .combo-item.included:hover { background: #f5f5f5; }
+  .included-badge { margin-left: 8px; font-size: 0.75rem; color: #2e7d32; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 2px 6px; border-radius: 999px; }
   /* Ocultar select original pero mantenerlo para submit/validación */
   #add_item_id { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 </style>
@@ -1197,6 +1200,7 @@ include '../header.php';
               <?php endforeach; ?>
             </ul>
           </div>
+          <small class="hint" style="display:block; margin-top:6px;">Los componentes ya agregados aparecen marcados como <strong>Incluido</strong> y no se pueden volver a seleccionar.</small>
           <!-- Select original permanece para envío/validación; se oculta por CSS -->
           <select id="add_item_id" name="item_id" required>
             <option value="">Selecciona componente</option>
@@ -1307,19 +1311,36 @@ include '../header.php';
     }));
     let activeIndex = -1;
 
+    function selectedSet(){
+      try {
+        return new Set(Array.from(document.querySelectorAll('#selected-components .component-chip'))
+          .map(el => parseInt(el.getAttribute('data-item-id'), 10))
+          .filter(Boolean));
+      } catch(e) { console.log('⚠️ [KitsEdit] selectedSet error:', e && e.message); return new Set(); }
+    }
+
     function normalize(str){
       return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     }
     function renderList(matches){
       list.innerHTML = '';
+      const included = selectedSet();
       matches.forEach((m, idx) => {
         const li = document.createElement('li');
-        li.className = 'combo-item' + (idx === 0 ? ' active' : '');
+        const isIncluded = included.has(parseInt(m.value, 10));
+        li.className = 'combo-item' + (idx === 0 ? ' active' : '') + (isIncluded ? ' included' : '');
         li.dataset.value = m.value;
         li.dataset.name = m.name;
         li.dataset.sku = m.sku;
-        li.innerHTML = `<span>${m.name}</span><span class="combo-sku">SKU ${m.sku}</span>`;
-        li.addEventListener('click', () => selectItem(m));
+        li.innerHTML = `<span>${m.name}</span><span><span class="combo-sku">SKU ${m.sku}</span>${isIncluded ? '<span class="included-badge">Incluido</span>' : ''}</span>`;
+        if (isIncluded) {
+          li.setAttribute('aria-disabled', 'true');
+          li.addEventListener('click', () => {
+            console.log('⚠️ [KitsEdit] Este componente ya está incluido en el kit.');
+          });
+        } else {
+          li.addEventListener('click', () => selectItem(m));
+        }
         list.appendChild(li);
       });
       activeIndex = matches.length ? 0 : -1;
