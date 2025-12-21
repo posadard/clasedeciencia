@@ -670,6 +670,9 @@ include '../header.php';
           <?php endforeach; ?>
         </div>
         <input type="text" id="attr_search" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <div class="attr-actions" style="margin-top:6px;">
+          <button type="button" class="btn btn-secondary" id="btn_create_attr">➕ Crear atributo</button>
+        </div>
         <datalist id="attrs_list">
           <?php foreach ($attr_defs as $def): ?>
             <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
@@ -865,6 +868,25 @@ include '../header.php';
       input.addEventListener('focus', () => filter(input.value));
       input.addEventListener('input', () => filter(input.value));
       document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
+
+      // Botón para crear atributo directamente
+      const btnCreate = document.getElementById('btn_create_attr');
+      if (btnCreate) {
+        btnCreate.addEventListener('click', () => {
+          try {
+            const val = (input && input.value ? input.value.trim() : '');
+            document.getElementById('create_etiqueta').value = val;
+            document.getElementById('create_clave').value = '';
+            document.getElementById('create_tipo').value = 'string';
+            document.getElementById('create_card').value = 'one';
+            document.getElementById('create_unidad').value = '';
+            document.getElementById('create_unidades').value = '';
+            openModal('#modalCreateAttr');
+            setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
+            console.log('🔍 [KitsEdit] Abrir crear atributo (botón)', val);
+          } catch(e) { console.log('❌ [KitsEdit] Error abrir crear atributo (botón):', e && e.message); }
+        });
+      }
 
       // Editar chip
       document.querySelectorAll('.js-edit-attr').forEach(btn => {

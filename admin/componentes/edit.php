@@ -437,6 +437,9 @@ if ($is_edit) {
         <?php endforeach; ?>
       </div>
       <input type="text" id="attr_search_cmp" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+      <div class="attr-actions" style="margin-top:6px;">
+        <button type="button" class="btn btn-secondary" id="btn_create_attr_cmp">➕ Crear atributo</button>
+      </div>
       <datalist id="attrs_list_cmp">
         <?php foreach ($attrs_defs as $def): ?>
           <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
@@ -651,6 +654,25 @@ if ($is_edit) {
     input.addEventListener('focus', () => filter(input.value));
     input.addEventListener('input', () => filter(input.value));
     document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
+
+    // Botón para crear atributo directamente
+    const btnCreate = document.getElementById('btn_create_attr_cmp');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        try {
+          const val = (input && input.value ? input.value.trim() : '');
+          document.getElementById('create_etiqueta_cmp').value = val;
+          document.getElementById('create_clave_cmp').value = '';
+          document.getElementById('create_tipo_cmp').value = 'string';
+          document.getElementById('create_card_cmp').value = 'one';
+          document.getElementById('create_unidad_cmp').value = '';
+          document.getElementById('create_unidades_cmp').value = '';
+          openModal('#modalCreateAttrCmp');
+          setTimeout(() => { try { document.getElementById('create_etiqueta_cmp')?.focus(); } catch(_e){} }, 50);
+          console.log('🔍 [ComponentesEdit] Abrir crear atributo (botón)', val);
+        } catch(e) { console.log('❌ [ComponentesEdit] Error abrir crear atributo (botón):', e && e.message); }
+      });
+    }
 
     // Editar chip existente
     document.querySelectorAll('.js-edit-attr-cmp').forEach(btn => {
