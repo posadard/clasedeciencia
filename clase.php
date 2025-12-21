@@ -424,7 +424,7 @@ include 'includes/header.php';
                         <!-- Código eliminado por no ser necesario en la vista pública -->
                     </div>
                     <?php if (!empty($materiales_por_kit[$kit['id']])): ?>
-                        <h4>Componentes incluidos:</h4>
+                        <h4>Componentes (<?= !empty($materiales_por_kit[$kit['id']]) ? count($materiales_por_kit[$kit['id']]) : 0 ?>):</h4>
                         <ul class="materials-list">
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
                                 <li>
