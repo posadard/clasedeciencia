@@ -3971,7 +3971,7 @@ strong, b {
 /* Intro row: video + seguridad lado a lado */
 .intro-row {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr 1fr; /* 50% / 50% */
     gap: var(--spacing-xl);
     align-items: start;
     margin: var(--spacing-xl) 0;
