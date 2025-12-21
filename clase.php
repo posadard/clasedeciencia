@@ -177,7 +177,7 @@ include 'includes/header.php';
         <div class="summary-content">
             <div class="summary-left">
                 <?php if (!empty($proyecto['imagen_portada'])): ?>
-                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Clase] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; p.innerHTML='\u003Cspan class=\"placeholder-icon\"\u003E🔬\u003C/span\u003E'; this.replaceWith(p);" />
+                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Clase] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
                 <?php else: ?>
                     <div class="summary-placeholder">
                         <span class="placeholder-icon">🔬</span>
@@ -407,7 +407,7 @@ include 'includes/header.php';
                 <?php foreach ($recursos as $r): ?>
                     <?php if ($r['tipo'] === 'imagen'): ?>
                         <div class="media-item">
-                            <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" onerror="this.onerror=null; console.log('❌ [Clase] Recurso imagen falló'); var p=document.createElement('div'); p.className='gallery-placeholder error'; p.innerHTML='\u003Cspan class=\"placeholder-icon\"\u003E🔬\u003C/span\u003E'; this.replaceWith(p);" />
+                            <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" onerror="this.onerror=null; console.log('❌ [Clase] Recurso imagen falló'); var p=document.createElement('div'); p.className='gallery-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
                             <?php if (!empty($r['titulo'])): ?>
                                 <p class="media-caption"><?= h($r['titulo']) ?></p>
                             <?php endif; ?>
@@ -495,7 +495,7 @@ include 'includes/header.php';
                 <?php foreach ($clases_relacionadas as $rel): ?>
                     <a href="/<?= h($rel['slug']) ?>" class="related-card">
                         <?php if (!empty($rel['imagen_portada'])): ?>
-                            <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura relacionada falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; p.innerHTML='\u003Cspan class=\"placeholder-icon\"\u003E🔬\u003C/span\u003E'; this.replaceWith(p);" />
+                            <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura relacionada falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
                         <?php endif; ?>
                         <div class="related-info">
                             <h4><?= h($rel['nombre']) ?></h4>
