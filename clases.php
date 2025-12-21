@@ -371,50 +371,40 @@ include 'includes/header.php';
             <h2>Filtros</h2>
             <form method="get" action="/clases" class="filters-form">
                 <input type="hidden" name="sort" value="<?= h($filters['sort'] ?? ($_GET['sort'] ?? '')) ?>" />
-                <div class="filter-group collapsible">
-                    <button type="button" class="collapsible-toggle" aria-expanded="true">
-                        <span>Ciclo</span>
-                        <span class="chev" aria-hidden="true">▾</span>
-                    </button>
-                    <div class="collapsible-content">
-                        <div class="checkbox-list">
-                            <?php $ciclos_filtro = cdc_get_ciclos($pdo, true); $selected_ciclos = $filters['ciclos'] ?? (isset($filters['ciclo'])?[(int)$filters['ciclo']]:[]); foreach ($ciclos_filtro as $cf): $checked = in_array((int)$cf['numero'], $selected_ciclos, true); ?>
-                            <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                                <input type="checkbox" name="ciclo[]" value="<?= h($cf['numero']) ?>" <?= $checked?'checked':'' ?> />
-                                <span><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</span>
-                            </label>
-                            <?php endforeach; ?>
-                        </div>
+                <!-- Área (sin toggle), primero -->
+                <div class="filter-group">
+                    <label class="filter-title" style="display:block; margin-bottom:6px;">Área</label>
+                    <div id="cdc-area-taginput" class="tag-input" data-name="area[]"></div>
+                    <small class="help-text" style="color: var(--color-text-muted);">Escribe para buscar áreas y presiona Enter.</small>
+                </div>
+
+                <!-- Ciclo (compacto, sin toggle) -->
+                <div class="filter-group">
+                    <label class="filter-title" style="display:block; margin-bottom:6px;">Ciclo</label>
+                    <div class="checkbox-list">
+                        <?php $ciclos_filtro = cdc_get_ciclos($pdo, true); $selected_ciclos = $filters['ciclos'] ?? (isset($filters['ciclo'])?[(int)$filters['ciclo']]:[]); foreach ($ciclos_filtro as $cf): $checked = in_array((int)$cf['numero'], $selected_ciclos, true); ?>
+                        <label>
+                            <input type="checkbox" name="ciclo[]" value="<?= h($cf['numero']) ?>" <?= $checked?'checked':'' ?> />
+                            <span><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</span>
+                        </label>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
-                <div class="filter-group collapsible">
-                    <button type="button" class="collapsible-toggle" aria-expanded="true">
-                        <span>Área</span>
-                        <span class="chev" aria-hidden="true">▾</span>
-                    </button>
-                    <div class="collapsible-content">
-                        <div id="cdc-area-taginput" class="tag-input" data-name="area[]"></div>
-                        <small class="help-text" style="color: var(--color-text-muted);">Escribe para buscar áreas y presiona Enter.</small>
-                    </div>
-                </div>
-
-                <div class="filter-group collapsible">
-                    <button type="button" class="collapsible-toggle" aria-expanded="true">
-                        <span>Dificultad</span>
-                        <span class="chev" aria-hidden="true">▾</span>
-                    </button>
-                    <div class="collapsible-content">
+                <!-- Dificultad (compacto, sin toggle) -->
+                <div class="filter-group">
+                    <label class="filter-title" style="display:block; margin-bottom:6px;">Dificultad</label>
+                    <div class="checkbox-list">
                         <?php $selected_difs = $filters['dificultades'] ?? (isset($filters['dificultad'])?[(string)$filters['dificultad']]:[]); ?>
-                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <label>
                             <input type="checkbox" name="dificultad[]" value="facil" <?= in_array('facil', $selected_difs, true)?'checked':'' ?> />
                             <span>Fácil</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <label>
                             <input type="checkbox" name="dificultad[]" value="medio" <?= in_array('medio', $selected_difs, true)?'checked':'' ?> />
                             <span>Medio</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <label>
                             <input type="checkbox" name="dificultad[]" value="dificil" <?= in_array('dificil', $selected_difs, true)?'checked':'' ?> />
                             <span>Difícil</span>
                         </label>

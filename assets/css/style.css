@@ -746,6 +746,8 @@ strong, b {
     font-weight: 600;
     color: var(--color-primary);
 }
+.filters-form { font-size: 0.92rem; }
+.filters-form .filter-title { font-size: 0.95rem; }
 .filters-form .checkbox-list label {
     cursor: pointer;
 }
@@ -993,12 +995,18 @@ strong, b {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 8px;
+    padding: 5px 8px;
     margin: 0 !important;
     border-bottom: 1px dashed var(--color-border-light);
+    font-size: 0.9rem;
 }
 .checkbox-list label:last-child { border-bottom: none; }
 .checkbox-list label:hover { background: var(--color-bg-alt); }
+
+/* Smaller font for tag input */
+.tag-input.ti { font-size: 0.92rem; }
+.tag-input .chip { font-size: 0.8rem; }
+.tag-input .ti-input { font-size: 0.92rem; }
 .section-card:hover h3, .section-card:focus h3 { color: white; }
 .section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
