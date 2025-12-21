@@ -249,6 +249,11 @@ include '../header.php';
 <?php if ($is_edit): ?>
 <div class="card" style="margin-top:2rem;">
   <h3>Componentes del Kit</h3>
+  <?php if (!empty($kit_id)): ?>
+    <div style="float:right;">
+      <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>">Manuales del Kit</a>
+    </div>
+  <?php endif; ?>
   <?php if (empty($componentes)): ?>
     <p class="help-text">No hay componentes agregados a este kit.</p>
   <?php else: ?>

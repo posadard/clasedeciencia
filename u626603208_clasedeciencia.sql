@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 20, 2025 at 05:25 PM
+-- Generation Time: Dec 21, 2025 at 03:19 PM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -238,7 +238,6 @@ CREATE TABLE `clases` (
   `seguridad` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`seguridad`)),
   `seo_title` varchar(160) DEFAULT NULL,
   `seo_description` varchar(255) DEFAULT NULL,
-  `canonical_url` varchar(255) DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
   `destacado` tinyint(1) NOT NULL DEFAULT 0,
   `orden_popularidad` int(11) NOT NULL DEFAULT 0,
@@ -254,22 +253,22 @@ CREATE TABLE `clases` (
 -- Dumping data for table `clases`
 --
 
-INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `duracion_minutos`, `resumen`, `objetivo_aprendizaje`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `canonical_url`, `activo`, `destacado`, `orden_popularidad`, `status`, `published_at`, `autor`, `contenido_html`, `created_at`, `updated_at`) VALUES
-(1, 'Microscopio sencillo', 'microscopio-sencillo', 1, '[6, 7]', 'facil', 60, 'Construye un microscopio artesanal para observar detalles invisibles.', 'Reconocer el uso de lentes para aumentar imágenes y describir observaciones científicas.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manipular lentes y objetos pequeños con cuidado\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(2, 'Pulmón mecánico', 'pulmon-mecanico', 1, '[6, 7]', 'facil', 60, 'Modelo funcional de los pulmones usando presión de aire y movimiento.', 'Explicar la relación entre presión y volumen en un sistema respiratorio sencillo.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Supervisar uso de globos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(6, 'Radio de cristal', 'radio-de-cristal', 2, '[8,9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo, bobina y antena. Capta ondas electromagnéticas del aire y conviértelas en audio audible sin necesidad de electricidad externa.', 'Explicar la propagación de ondas electromagnéticas y la conversión de energía en sistemas de comunicación. Relacionar conceptos de electromagnetismo, resonancia y semiconductores con aplicaciones tecnológicas del entorno.', '/assets/images/clases/radio-cristal-portada.jpg', 'https://www.youtube.com/embed/example-radio-cristal', '{\"edad_min\":13,\"edad_max\":15,\"notas\":\"\\u26a0\\ufe0f Manipular alambres y componentes electr\\u00f3nicos con cuidado. Supervisi\\u00f3n adulta recomendada al enrollar bobinas y soldar (si aplica). No acercar imanes potentes a dispositivos electr\\u00f3nicos.\"}', 'Radio de Cristal - Construye un Receptor sin Batería | Clase de Ciencia', 'Aprende a construir un radio de cristal funcional sin necesidad de batería. Experimenta con ondas electromagnéticas, diodos y bobinas en este proyecto de física para estudiantes de 8° y 9° grado.', '/proyecto.php?slug=radio-de-cristal', 1, 1, 5, 'published', '2025-12-20 10:00:00', 'Equipo Pedagógico Clase de Ciencia', '<h2>🔬 Introducci&oacute;n</h2>\r\n\r\n<p>&iquest;Sab&iacute;as que es posible escuchar emisoras de radio sin usar <strong>ninguna bater&iacute;a ni fuente de electricidad</strong>? Los radios de cristal, inventados a principios del siglo XX, capturan la energ&iacute;a de las ondas electromagn&eacute;ticas que viajan por el aire y la convierten directamente en sonido audible.</p>\r\n\r\n<p>En esta clase construir&aacute;s tu propio receptor de radio de cristal y explorar&aacute;s conceptos fundamentales de <strong>electromagnetismo</strong>, <strong>resonancia</strong> y <strong>semiconductores</strong>. Este proyecto te permitir&aacute; comprender c&oacute;mo funcionan las comunicaciones inal&aacute;mbricas que usamos todos los d&iacute;as.</p>\r\n\r\n<h2>📚 &iquest;Qu&eacute; aprender&aacute;s?</h2>\r\n\r\n<ul>\r\n	<li>C&oacute;mo las ondas electromagn&eacute;ticas transportan informaci&oacute;n a trav&eacute;s del espacio</li>\r\n	<li>El principio de <strong>resonancia LC</strong> para sintonizar frecuencias espec&iacute;ficas</li>\r\n	<li>El funcionamiento de un <strong>diodo como detector</strong> (rectificador de se&ntilde;al)</li>\r\n	<li>La conversi&oacute;n de energ&iacute;a electromagn&eacute;tica en energ&iacute;a sonora</li>\r\n	<li>Conceptos de impedancia y acoplamiento de antenas</li>\r\n</ul>\r\n\r\n<h2>🛠️ Materiales del Kit</h2>\r\n\r\n<ul>\r\n	<li>Diodo de germanio 1N34A o similar (detector de RF)</li>\r\n	<li>Alambre de cobre esmaltado calibre 26-28 (10 metros)</li>\r\n	<li>Tubo de PVC o cart&oacute;n (5 cm di&aacute;metro, 10 cm largo) para bobina</li>\r\n	<li>Condensador variable 100-365 pF o fijo 100 pF</li>\r\n	<li>Aud&iacute;fono o auricular de alta impedancia (&gt;1000&Omega;)</li>\r\n	<li>Cable de conexi&oacute;n</li>\r\n	<li>Clip cocodrilo (2 unidades)</li>\r\n</ul>\r\n\r\n<h2>🧪 Materiales Adicionales (conseguir en casa)</h2>\r\n\r\n<ul>\r\n	<li>Alambre largo (10-20 metros) para antena</li>\r\n	<li>Conexi&oacute;n a tierra (tuber&iacute;a met&aacute;lica, varilla enterrada, o tierra del tomacorriente)</li>\r\n	<li>Cinta aislante o pegamento</li>\r\n	<li>Base de madera o pl&aacute;stico para montar circuito (opcional)</li>\r\n</ul>\r\n\r\n<h2>🔧 Procedimiento Paso a Paso</h2>\r\n\r\n<h3>Paso 1: Construir la Bobina (Inductor)</h3>\r\n\r\n<p><strong>Tiempo: 20 minutos</strong></p>\r\n\r\n<ol>\r\n	<li>Enrolla el alambre de cobre esmaltado alrededor del tubo de PVC o cart&oacute;n.</li>\r\n	<li>Realiza aproximadamente <strong>60-80 vueltas</strong> apretadas, sin dejar espacios entre las espiras.</li>\r\n	<li>Deja unos 15 cm de alambre libre en cada extremo para las conexiones.</li>\r\n	<li>Fija la bobina con cinta aislante para que no se desenrolle.</li>\r\n	<li>Retira con cuidado el esmalte de los extremos del alambre usando lija fina o una navaja (con supervisi&oacute;n).</li>\r\n</ol>\r\n\r\n<p><strong>💡 Consejo:</strong> Mientras m&aacute;s vueltas tenga la bobina, mejor captar&aacute; se&ntilde;ales de baja frecuencia. Para AM (530-1700 kHz), 60-80 vueltas son ideales.</p>\r\n\r\n<h3>Paso 2: Ensamblar el Circuito</h3>\r\n\r\n<p><strong>Tiempo: 15 minutos</strong></p>\r\n\r\n<p><strong>Diagrama del circuito:</strong></p>\r\n\r\n<pre>\r\n  Antena ─────┬───── [Bobina] ─────┬───── Diodo ───┬───── Aud&iacute;fono (+)\r\n              │                      │               │\r\n              └───── [Condensador]──┘               │\r\n                                                     │\r\n  Tierra ─────────────────────────────────────────┘───── Aud&iacute;fono (-)\r\n  </pre>\r\n\r\n<ol>\r\n	<li>Conecta un extremo de la bobina al cable de antena.</li>\r\n	<li>Conecta el condensador variable entre la antena y el otro extremo de la bobina (circuito LC en paralelo).</li>\r\n	<li>Conecta el <strong>&aacute;nodo</strong> (+) del diodo al extremo libre de la bobina.</li>\r\n	<li>Conecta el <strong>c&aacute;todo</strong> (-) del diodo al terminal positivo del aud&iacute;fono.</li>\r\n	<li>Conecta el terminal negativo del aud&iacute;fono a la conexi&oacute;n a tierra.</li>\r\n	<li>Verifica que todas las conexiones est&eacute;n firmes y sin cortocircuitos.</li>\r\n</ol>\r\n\r\n<h3>Paso 3: Instalar la Antena y Tierra</h3>\r\n\r\n<p><strong>Tiempo: 20 minutos</strong></p>\r\n\r\n<ul>\r\n	<li><strong>Antena:</strong> Extiende un alambre largo (10-20 metros) en posici&oacute;n horizontal o vertical, lo m&aacute;s alto posible (&aacute;rbol, techo, ventana). No debe tocar objetos met&aacute;licos.</li>\r\n	<li><strong>Tierra:</strong> Conecta el cable de tierra a una tuber&iacute;a met&aacute;lica enterrada, una varilla de cobre en el suelo, o al pin de tierra de un tomacorriente (con supervisi&oacute;n adulta).</li>\r\n</ul>\r\n\r\n<p><strong>⚠️ Importante:</strong> Una buena conexi&oacute;n a tierra es esencial para el funcionamiento del radio. La antena act&uacute;a como captadora de energ&iacute;a, y la tierra completa el circuito.</p>\r\n\r\n<h3>Paso 4: Sintonizar Emisoras</h3>\r\n\r\n<p><strong>Tiempo: 15 minutos</strong></p>\r\n\r\n<ol>\r\n	<li>Coloca el aud&iacute;fono en tu o&iacute;do (usa alta impedancia para mejor sensibilidad).</li>\r\n	<li>Gira lentamente el condensador variable mientras escuchas.</li>\r\n	<li>Deber&iacute;as empezar a escuchar estaciones de radio AM. El sonido ser&aacute; d&eacute;bil pero audible.</li>\r\n	<li>Ajusta la posici&oacute;n de la antena si no captas se&ntilde;ales. Las estaciones m&aacute;s potentes se escuchan mejor.</li>\r\n	<li>Experimenta con la hora del d&iacute;a: por la noche, las ondas AM viajan m&aacute;s lejos debido a la reflexi&oacute;n ionosf&eacute;rica.</li>\r\n</ol>\r\n\r\n<h2>🎓 Explicaci&oacute;n Cient&iacute;fica</h2>\r\n\r\n<h3>1. Ondas Electromagn&eacute;ticas y Propagaci&oacute;n</h3>\r\n\r\n<p>Las emisoras de radio transmiten informaci&oacute;n mediante <strong>ondas electromagn&eacute;ticas</strong> que viajan a la velocidad de la luz (300,000 km/s). Estas ondas tienen dos componentes perpendiculares entre s&iacute;: un campo el&eacute;ctrico y un campo magn&eacute;tico oscilantes.</p>\r\n\r\n<p>La banda AM (Amplitud Modulada) opera en frecuencias de <strong>530 a 1700 kHz</strong>. Cuando estas ondas pasan por la antena, inducen una peque&ntilde;a corriente el&eacute;ctrica alterna que contiene la se&ntilde;al de audio.</p>\r\n\r\n<h3>2. Resonancia LC (Circuito Tanque)</h3>\r\n\r\n<p>El circuito formado por la <strong>bobina (L)</strong> y el <strong>condensador (C)</strong> crea un filtro resonante que solo permite pasar una frecuencia espec&iacute;fica:</p>\r\n\r\n<p><strong>f = 1 / (2&pi;&radic;(LC))</strong></p>\r\n\r\n<p>Al variar la capacitancia del condensador, cambias la frecuencia de resonancia y &quot;sintonizas&quot; diferentes emisoras. Este principio es fundamental en todas las radios modernas.</p>\r\n\r\n<h3>3. Detecci&oacute;n con Diodo (Rectificaci&oacute;n)</h3>\r\n\r\n<p>El <strong>diodo de germanio</strong> act&uacute;a como <strong>rectificador</strong>: solo permite el paso de corriente en una direcci&oacute;n, eliminando la mitad negativa de la se&ntilde;al de radiofrecuencia. Esto &quot;extrae&quot; la se&ntilde;al de audio modulada que estaba &quot;montada&quot; sobre la onda portadora de alta frecuencia.</p>\r\n\r\n<p>Se usa germanio (no silicio) porque tiene una <strong>tensi&oacute;n umbral m&aacute;s baja</strong> (~0.3V vs ~0.7V), permitiendo detectar se&ntilde;ales muy d&eacute;biles sin amplificaci&oacute;n.</p>\r\n\r\n<h3>4. Conversi&oacute;n a Sonido</h3>\r\n\r\n<p>La se&ntilde;al de audio recuperada pasa al aud&iacute;fono de alta impedancia, que convierte las variaciones de corriente en movimiento mec&aacute;nico de una membrana, generando <strong>ondas sonoras</strong> audibles.</p>\r\n\r\n<h2>🌍 Conexi&oacute;n con la Realidad</h2>\r\n\r\n<ul>\r\n	<li><strong>Historia:</strong> Los radios de cristal fueron vitales en la comunicaci&oacute;n durante la Primera Guerra Mundial y permitieron la popularizaci&oacute;n de la radiodifusi&oacute;n en los a&ntilde;os 1920.</li>\r\n	<li><strong>Tecnolog&iacute;a moderna:</strong> Los mismos principios se usan hoy en radios AM/FM, WiFi, Bluetooth, telefon&iacute;a celular y GPS.</li>\r\n	<li><strong>Energ&iacute;a:</strong> Este proyecto demuestra la <strong>transmisi&oacute;n inal&aacute;mbrica de energ&iacute;a</strong>: la antena capta microvatios de las ondas de radio, suficientes para mover el aud&iacute;fono.</li>\r\n	<li><strong>Aplicaci&oacute;n rural:</strong> En zonas sin electricidad, los radios de cristal siguen siendo &uacute;tiles para recibir informaci&oacute;n de emergencia.</li>\r\n</ul>\r\n\r\n<h2>🔬 Experimentos Adicionales</h2>\r\n\r\n<ol>\r\n	<li><strong>Variar el n&uacute;mero de espiras:</strong> Construye bobinas con 40, 60 y 80 vueltas. &iquest;C&oacute;mo afecta al rango de frecuencias captadas?</li>\r\n	<li><strong>Probar diferentes antenas:</strong> Compara una antena de 5 m vs 15 m. &iquest;Cu&aacute;l capta se&ntilde;ales m&aacute;s d&eacute;biles?</li>\r\n	<li><strong>Hora del d&iacute;a:</strong> Registra cu&aacute;ntas estaciones captas al mediod&iacute;a vs medianoche. &iquest;Por qu&eacute; hay diferencia? (Investigar propagaci&oacute;n ionosf&eacute;rica)</li>\r\n	<li><strong>Orientaci&oacute;n de la bobina:</strong> Gira la bobina 90&deg; mientras escuchas. &iquest;Cambia el volumen? (Direccionalidad de la antena)</li>\r\n</ol>\r\n\r\n<h2>❓ Preguntas para Reflexionar</h2>\r\n\r\n<ul>\r\n	<li>&iquest;Por qu&eacute; no funciona este radio con emisoras FM (88-108 MHz)?</li>\r\n	<li>&iquest;Qu&eacute; pasar&iacute;a si usaras un diodo de silicio en lugar de germanio?</li>\r\n	<li>&iquest;C&oacute;mo podr&iacute;as amplificar la se&ntilde;al para escucharla en un altavoz?</li>\r\n	<li>&iquest;Por qu&eacute; las ondas AM viajan m&aacute;s lejos de noche que de d&iacute;a?</li>\r\n	<li>Si la velocidad de la luz es 300,000 km/s y captas una emisora de 900 kHz, &iquest;cu&aacute;l es la longitud de onda? (&lambda; = c/f)</li>\r\n</ul>\r\n\r\n<h2>📖 Para Profundizar</h2>\r\n\r\n<ul>\r\n	<li><strong>Video recomendado:</strong> &quot;How Does a Crystal Radio Work?&quot; - Khan Academy</li>\r\n	<li><strong>Lectura:</strong> Historia de la radio y el papel de Guglielmo Marconi</li>\r\n	<li><strong>Concepto avanzado:</strong> Transformada de Fourier y an&aacute;lisis de se&ntilde;ales en el dominio de frecuencia</li>\r\n	<li><strong>Proyecto relacionado:</strong> Construir un transmisor AM simple (requiere licencia en muchos pa&iacute;ses)</li>\r\n</ul>\r\n\r\n<h2>📋 Competencias MEN Desarrolladas</h2>\r\n\r\n<ul>\r\n	<li><strong>Indagaci&oacute;n:</strong> Formulo preguntas sobre fen&oacute;menos electromagn&eacute;ticos, dise&ntilde;o experimentos controlados variando par&aacute;metros del circuito, y registro observaciones sistem&aacute;ticas.</li>\r\n	<li><strong>Explicaci&oacute;n:</strong> Modelo la propagaci&oacute;n de ondas electromagn&eacute;ticas, explico el funcionamiento de componentes electr&oacute;nicos (diodo, bobina, condensador), y relaciono conceptos con aplicaciones tecnol&oacute;gicas.</li>\r\n	<li><strong>Uso del conocimiento:</strong> Aplico principios de electromagnetismo para construir un dispositivo funcional, interpreto diagramas de circuitos, y propongo mejoras basadas en evidencia experimental.</li>\r\n</ul>\r\n\r\n<h2>⚠️ Normas de Seguridad Adicionales</h2>\r\n\r\n<ul>\r\n	<li>No conectar la antena a l&iacute;neas el&eacute;ctricas ni durante tormentas el&eacute;ctricas</li>\r\n	<li>Usar aud&iacute;fonos, nunca parlantes amplificados (riesgo de retroalimentaci&oacute;n)</li>\r\n	<li>Al retirar esmalte del alambre, trabajar en &aacute;rea ventilada y con supervisi&oacute;n</li>\r\n	<li>Verificar que la conexi&oacute;n a tierra no toque partes vivas de instalaciones el&eacute;ctricas</li>\r\n	<li>No usar antenas met&aacute;licas cerca de cables de alta tensi&oacute;n</li>\r\n</ul>\r\n', '2025-12-20 04:46:28', '2025-12-20 15:36:48'),
-(7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(10, 'Generador manual (dinamo)', 'generador-manual-dinamo', 2, '[8, 9]', 'media', 90, 'Genera electricidad manualmente mediante inducción electromagnética.', 'Explicar generación eléctrica relacionando movimiento y energía.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Cuidado con conexiones eléctricas\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(11, 'Carro solar', 'carro-solar', 3, '[10, 11]', 'dificil', 120, 'Construye y evalúa un vehículo impulsado por energía solar.', 'Analizar eficiencia energética y sostenibilidad en sistemas tecnológicos.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Panel frágil, manipulación cuidadosa\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(12, 'Turbina eólica de mesa', 'turbina-eolica-de-mesa', 3, '[10, 11]', 'dificil', 120, 'Diseña una turbina de mesa para convertir energía del viento.', 'Evaluar fuentes alternativas y analizar impacto tecnológico.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Hélice en movimiento, mantener distancia\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(13, 'Electroimán', 'electroiman', 3, '[10, 11]', 'dificil', 90, 'Construye un electroimán y analiza variables de fuerza y campo.', 'Analizar relación corriente-campo y formular explicaciones causales.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Calentamiento por corriente, usar brevemente\"}', NULL, NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(14, 'Tratamiento de agua', 'tratamiento-de-agua', 3, '[10, 11]', 'dificil', 120, 'Implementa un filtro de agua con capas y evalúa calidad.', 'Explicar procesos físico-químicos y relacionar ciencia con el entorno.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Uso responsable de reactivos y desecho\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(15, 'Análisis químico del entorno', 'analisis-quimico-del-entorno', 3, '[10, 11]', 'dificil', 120, 'Realiza pruebas químicas seguras a sustancias cotidianas.', 'Explicar transformaciones químicas con principios de seguridad y ética.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ No ingerir sustancias, guantes recomendados\"}', NULL, NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
+INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `duracion_minutos`, `resumen`, `objetivo_aprendizaje`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `activo`, `destacado`, `orden_popularidad`, `status`, `published_at`, `autor`, `contenido_html`, `created_at`, `updated_at`) VALUES
+(1, 'Microscopio sencillo', 'microscopio-sencillo', 1, '[6, 7]', 'facil', 60, 'Construye un microscopio artesanal para observar detalles invisibles.', 'Reconocer el uso de lentes para aumentar imágenes y describir observaciones científicas.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manipular lentes y objetos pequeños con cuidado\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(2, 'Pulmón mecánico', 'pulmon-mecanico', 1, '[6, 7]', 'facil', 60, 'Modelo funcional de los pulmones usando presión de aire y movimiento.', 'Explicar la relación entre presión y volumen en un sistema respiratorio sencillo.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Supervisar uso de globos\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 'Radio de cristal', 'radio-de-cristal', 4, '[8,9]', 'media', 90, 'Construye un receptor de radio sin batería usando un diodo, bobina y antena. Capta ondas electromagnéticas del aire y conviértelas en audio sin necesidad de electricidad externa.', 'Explicar la propagación de ondas electromagnéticas y la conversión de energía en sistemas de comunicación. Relacionar conceptos de electromagnetismo, resonancia y semiconductores con aplicaciones tecnológicas del entorno.', '/assets/images/clases/radio-cristal-portada.jpg', 'https://www.youtube.com/embed/example-radio-cristal', '{\"edad_min\":14,\"edad_max\":18,\"notas\":\"Manipular alambres y componentes electr\\u00f3nicos con cuidado. Supervisi\\u00f3n adulta recomendada al enrollar bobinas y soldar (si aplica). No acercar imanes potentes a dispositivos electr\\u00f3nicos.\"}', 'Clase de Ciencia - Física: Radio de cristal', 'Ciclo 4 (8° a 9°): Construye un receptor de radio sin batería usando un diodo, bobina y antena. Capta ondas electromagnéticas del aire y conviértelas en audio', 1, 1, 5, 'published', '2025-12-20 10:00:00', 'Clase de Ciencia SAS', '<h2>contenido</h2>\r\n', '2025-12-20 04:46:28', '2025-12-21 15:06:35'),
+(7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 'Generador manual (dinamo)', 'generador-manual-dinamo', 2, '[8, 9]', 'media', 90, 'Genera electricidad manualmente mediante inducción electromagnética.', 'Explicar generación eléctrica relacionando movimiento y energía.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Cuidado con conexiones eléctricas\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 'Carro solar', 'carro-solar', 3, '[10, 11]', 'dificil', 120, 'Construye y evalúa un vehículo impulsado por energía solar.', 'Analizar eficiencia energética y sostenibilidad en sistemas tecnológicos.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Panel frágil, manipulación cuidadosa\"}', NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 'Turbina eólica de mesa', 'turbina-eolica-de-mesa', 3, '[10, 11]', 'dificil', 120, 'Diseña una turbina de mesa para convertir energía del viento.', 'Evaluar fuentes alternativas y analizar impacto tecnológico.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Hélice en movimiento, mantener distancia\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 'Electroimán', 'electroiman', 3, '[10, 11]', 'dificil', 90, 'Construye un electroimán y analiza variables de fuerza y campo.', 'Analizar relación corriente-campo y formular explicaciones causales.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Calentamiento por corriente, usar brevemente\"}', NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 'Tratamiento de agua', 'tratamiento-de-agua', 3, '[10, 11]', 'dificil', 120, 'Implementa un filtro de agua con capas y evalúa calidad.', 'Explicar procesos físico-químicos y relacionar ciencia con el entorno.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ Uso responsable de reactivos y desecho\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 'Análisis químico del entorno', 'analisis-quimico-del-entorno', 3, '[10, 11]', 'dificil', 120, 'Realiza pruebas químicas seguras a sustancias cotidianas.', 'Explicar transformaciones químicas con principios de seguridad y ética.', NULL, NULL, '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"⚠️ No ingerir sustancias, guantes recomendados\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -319,6 +318,50 @@ CREATE TABLE `clase_competencias` (
   `competencia_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `clase_competencias`
+--
+
+INSERT INTO `clase_competencias` (`clase_id`, `competencia_id`) VALUES
+(6, 2),
+(6, 5),
+(6, 11);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `clase_kits`
+--
+
+CREATE TABLE `clase_kits` (
+  `clase_id` int(11) NOT NULL,
+  `kit_id` int(11) NOT NULL,
+  `sort_order` int(11) NOT NULL DEFAULT 0,
+  `es_principal` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Kit principal de la clase',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clase_kits`
+--
+
+INSERT INTO `clase_kits` (`clase_id`, `kit_id`, `sort_order`, `es_principal`, `created_at`) VALUES
+(1, 1, 1, 1, '2025-12-20 21:53:17'),
+(2, 2, 1, 1, '2025-12-20 21:53:17'),
+(3, 3, 1, 1, '2025-12-20 21:53:17'),
+(4, 4, 1, 1, '2025-12-20 21:53:17'),
+(5, 5, 1, 1, '2025-12-20 21:53:17'),
+(6, 6, 1, 1, '2025-12-21 15:06:35'),
+(7, 7, 1, 1, '2025-12-20 21:53:17'),
+(8, 8, 1, 1, '2025-12-20 21:53:17'),
+(9, 9, 1, 1, '2025-12-20 21:53:17'),
+(10, 10, 1, 1, '2025-12-20 21:53:17'),
+(11, 11, 1, 1, '2025-12-20 21:53:17'),
+(12, 12, 1, 1, '2025-12-20 21:53:17'),
+(13, 13, 1, 1, '2025-12-20 21:53:17'),
+(14, 14, 1, 1, '2025-12-20 21:53:17'),
+(15, 15, 1, 1, '2025-12-20 21:53:17');
+
 -- --------------------------------------------------------
 
 --
@@ -329,6 +372,128 @@ CREATE TABLE `clase_tags` (
   `clase_id` int(11) NOT NULL,
   `tag` varchar(64) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `clase_tags`
+--
+
+INSERT INTO `clase_tags` (`clase_id`, `tag`) VALUES
+(5, 'acidos'),
+(14, 'agua'),
+(11, 'ambiental'),
+(12, 'ambiental'),
+(14, 'ambiental'),
+(15, 'ambiental'),
+(15, 'analisis'),
+(2, 'anatomia'),
+(6, 'antena'),
+(1, 'aumento'),
+(5, 'bases'),
+(3, 'bateria'),
+(1, 'biologia'),
+(2, 'biologia'),
+(8, 'biologia'),
+(13, 'campo-magnetico'),
+(8, 'celula'),
+(3, 'circuito'),
+(6, 'comunicacion'),
+(13, 'corriente'),
+(4, 'decantacion'),
+(10, 'dinamo'),
+(6, 'diodo'),
+(11, 'eficiencia'),
+(3, 'electricidad'),
+(6, 'electricidad'),
+(7, 'electricidad'),
+(10, 'electricidad'),
+(13, 'electricidad'),
+(13, 'electroiman'),
+(6, 'electromagnetismo'),
+(7, 'electromagnetismo'),
+(10, 'electromagnetismo'),
+(13, 'electromagnetismo'),
+(3, 'electronica'),
+(6, 'electronica'),
+(3, 'energia'),
+(7, 'energia'),
+(10, 'energia'),
+(12, 'energia-eolica'),
+(9, 'energia-potencial'),
+(11, 'energia-solar'),
+(8, 'experimento'),
+(13, 'experimento'),
+(15, 'experimento'),
+(1, 'experimento-casero'),
+(4, 'filtracion'),
+(14, 'filtracion'),
+(6, 'fisica'),
+(7, 'fisica'),
+(9, 'fisica'),
+(10, 'fisica'),
+(11, 'fisica'),
+(12, 'fisica'),
+(13, 'fisica'),
+(9, 'friccion'),
+(9, 'fuerzas'),
+(10, 'generador'),
+(5, 'indicadores'),
+(10, 'induccion'),
+(9, 'ingenieria'),
+(5, 'laboratorio'),
+(15, 'laboratorio'),
+(3, 'led'),
+(1, 'lentes'),
+(7, 'magnetismo'),
+(10, 'magnetismo'),
+(13, 'magnetismo'),
+(9, 'mecanica'),
+(8, 'membrana'),
+(4, 'metodos-fisicos'),
+(4, 'mezclas'),
+(2, 'modelo'),
+(7, 'motor'),
+(7, 'movimiento'),
+(9, 'movimiento'),
+(1, 'observacion'),
+(6, 'ondas'),
+(1, 'optica'),
+(8, 'osmosis'),
+(11, 'panel-solar'),
+(5, 'ph'),
+(2, 'presion'),
+(14, 'purificacion'),
+(4, 'quimica'),
+(5, 'quimica'),
+(14, 'quimica'),
+(15, 'quimica'),
+(6, 'radio'),
+(15, 'reacciones'),
+(11, 'renovable'),
+(12, 'renovable'),
+(6, 'resonancia'),
+(2, 'respiracion'),
+(5, 'seguridad'),
+(15, 'seguridad'),
+(4, 'separacion'),
+(2, 'sistema-respiratorio'),
+(11, 'sostenibilidad'),
+(12, 'sostenibilidad'),
+(14, 'sostenibilidad'),
+(15, 'sustancias'),
+(3, 'tecnologia'),
+(6, 'tecnologia'),
+(7, 'tecnologia'),
+(9, 'tecnologia'),
+(10, 'tecnologia'),
+(11, 'tecnologia'),
+(12, 'tecnologia'),
+(14, 'tecnologia'),
+(8, 'transporte-celular'),
+(14, 'tratamiento'),
+(12, 'turbina'),
+(8, 'vegetales'),
+(12, 'viento'),
+(2, 'volumen');
 
 -- --------------------------------------------------------
 
@@ -616,6 +781,7 @@ CREATE TABLE `kits` (
   `id` int(11) NOT NULL,
   `clase_id` int(11) NOT NULL,
   `nombre` varchar(120) NOT NULL,
+  `slug` varchar(120) DEFAULT NULL,
   `codigo` varchar(64) DEFAULT NULL,
   `version` varchar(32) DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
@@ -627,22 +793,22 @@ CREATE TABLE `kits` (
 -- Dumping data for table `kits`
 --
 
-INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `codigo`, `version`, `activo`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Kit: Microscopio sencillo', 'KIT-MICROSCOPIO_SENCILLO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(2, 2, 'Kit: Pulmón mecánico', 'KIT-PULMON_MECANICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(3, 3, 'Kit: Circuito eléctrico básico', 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(4, 4, 'Kit: Separación de mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(5, 5, 'Kit: Test de pH', 'KIT-TEST_DE_PH', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(6, 6, 'Kit: Radio de cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(7, 7, 'Kit: Motor eléctrico simple', 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(8, 8, 'Kit: Osmosis con vegetales', 'KIT-OSMOSIS_CON_VEGETALES', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(9, 9, 'Kit: Carro trampa de ratón', 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(10, 10, 'Kit: Generador manual (dinamo)', 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(11, 11, 'Kit: Carro solar', 'KIT-CARRO_SOLAR', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(12, 12, 'Kit: Turbina eólica de mesa', 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(13, 13, 'Kit: Electroimán', 'KIT-ELECTROIMAN', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(14, 14, 'Kit: Tratamiento de agua', 'KIT-TRATAMIENTO_DE_AGUA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(15, 15, 'Kit: Análisis químico del entorno', 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
+INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `slug`, `codigo`, `version`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Microscopio sencillo', NULL, 'KIT-MICROSCOPIO_SENCILLO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-21 04:15:30'),
+(2, 2, 'Kit: Pulmón mecánico', NULL, 'KIT-PULMON_MECANICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 3, 'Kit: Circuito eléctrico básico', NULL, 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 4, 'Kit: Separación de mezclas', NULL, 'KIT-SEPARACION_DE_MEZCLAS', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(5, 5, 'Kit: Test de pH', NULL, 'KIT-TEST_DE_PH', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(6, 6, 'Radio de cristal', NULL, 'KIT-RADIO_DE_CRISTAL', '1.0', 1, '2025-12-20 04:46:28', '2025-12-21 14:49:32'),
+(7, 7, 'Kit: Motor eléctrico simple', NULL, 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 8, 'Kit: Osmosis con vegetales', NULL, 'KIT-OSMOSIS_CON_VEGETALES', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 9, 'Kit: Carro trampa de ratón', NULL, 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 10, 'Kit: Generador manual (dinamo)', NULL, 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 11, 'Kit: Carro solar', NULL, 'KIT-CARRO_SOLAR', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 12, 'Kit: Turbina eólica de mesa', NULL, 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 13, 'Kit: Electroimán', NULL, 'KIT-ELECTROIMAN', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 14, 'Kit: Tratamiento de agua', NULL, 'KIT-TRATAMIENTO_DE_AGUA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 15, 'Kit: Análisis químico del entorno', NULL, 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -721,10 +887,10 @@ CREATE TABLE `kit_items` (
 --
 
 INSERT INTO `kit_items` (`id`, `nombre_comun`, `categoria_id`, `advertencias_seguridad`, `unidad`, `sku`) VALUES
-(1, 'Lente plástico 10x', 3, '⚠️ Frágil, manipular con cuidado', 'pcs', 'BIO-LEN-10X'),
+(1, 'Lente plástico 10x', 3, 'Frágil, manipular con cuidado', 'pcs', 'BIO-LEN-10X'),
 (2, 'Cartón rígido', 5, NULL, 'pcs', 'TEC-CAR-RIG'),
 (3, 'Banda elástica', 5, NULL, 'pcs', 'TEC-BAN-ELA'),
-(4, 'Globo de látex', 3, '⚠️ Riesgo de asfixia, no apto <8 años', 'pcs', 'BIO-GLO-LAT'),
+(4, 'Globo de látex', 3, 'Riesgo de asfixia, no apto <8 años', 'pcs', 'BIO-GLO-LAT'),
 (5, 'Botella plástica 500ml', 5, NULL, 'pcs', 'TEC-BOT-500'),
 (6, 'Bomba de aire manual', 6, NULL, 'pcs', 'HER-BOM-AIR'),
 (7, 'Pila AA', 1, '⚠️ No cortocircuitar', 'pcs', 'ELE-PIL-AA'),
@@ -736,7 +902,7 @@ INSERT INTO `kit_items` (`id`, `nombre_comun`, `categoria_id`, `advertencias_seg
 (13, 'Embudo plástico', 4, NULL, 'pcs', 'QUI-EMB-PLA'),
 (14, 'Vaso precipitado plástico', 4, NULL, 'pcs', 'QUI-VAS-PLA'),
 (15, 'Tiras de pH', 4, NULL, 'pcs', 'QUI-TIR-PH'),
-(16, 'Diode germanio', 1, NULL, 'pcs', 'ELE-DIO-GER'),
+(16, 'Diode germanio', 1, 'Material frágil', 'pcs', 'ELE-DIO-GER'),
 (17, 'Auricular cristal', 1, NULL, 'pcs', 'ELE-AUR-CRI'),
 (18, 'Alambre esmaltado 28AWG', 1, NULL, 'm', 'ELE-ALM-28'),
 (19, 'Imán neodimio', 2, '⚠️ Mantener lejos de dispositivos', 'pcs', 'MAG-IMA-NEO'),
@@ -753,6 +919,30 @@ INSERT INTO `kit_items` (`id`, `nombre_comun`, `categoria_id`, `advertencias_seg
 (30, 'Grava', NULL, NULL, 'g', 'AMB-GRA-STD'),
 (31, 'Sal de mesa', 4, NULL, 'g', 'QUI-SAL-MES'),
 (32, 'Rodaja de papa', 3, NULL, 'pcs', 'BIO-ROD-PAP');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `kit_manuals`
+--
+
+CREATE TABLE `kit_manuals` (
+  `id` int(11) NOT NULL,
+  `kit_id` int(11) NOT NULL,
+  `slug` varchar(120) NOT NULL COMMENT 'Slug del manual (por kit/idioma)',
+  `version` varchar(32) NOT NULL DEFAULT '1.0',
+  `status` enum('draft','published') NOT NULL DEFAULT 'draft',
+  `idioma` varchar(10) NOT NULL DEFAULT 'es-CO',
+  `time_minutes` int(11) DEFAULT NULL COMMENT 'Tiempo estimado de armado',
+  `dificultad_ensamble` varchar(32) DEFAULT NULL,
+  `pasos_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`pasos_json`)),
+  `herramientas_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`herramientas_json`)),
+  `seguridad_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`seguridad_json`)),
+  `html` mediumtext DEFAULT NULL,
+  `published_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -975,6 +1165,15 @@ ALTER TABLE `clase_competencias`
   ADD KEY `idx_clase_competencias_comp` (`competencia_id`);
 
 --
+-- Indexes for table `clase_kits`
+--
+ALTER TABLE `clase_kits`
+  ADD PRIMARY KEY (`clase_id`,`kit_id`),
+  ADD KEY `idx_clase_kits_clase` (`clase_id`),
+  ADD KEY `idx_clase_kits_kit` (`kit_id`),
+  ADD KEY `idx_clase_kits_order` (`clase_id`,`sort_order`);
+
+--
 -- Indexes for table `clase_tags`
 --
 ALTER TABLE `clase_tags`
@@ -1072,6 +1271,7 @@ ALTER TABLE `ia_stats_clase`
 ALTER TABLE `kits`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uq_kits_codigo` (`codigo`),
+  ADD UNIQUE KEY `uk_kits_slug` (`slug`),
   ADD KEY `idx_kits_clase` (`clase_id`);
 
 --
@@ -1089,6 +1289,15 @@ ALTER TABLE `kit_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_kit_items_nombre` (`nombre_comun`),
   ADD KEY `idx_kit_items_categoria` (`categoria_id`);
+
+--
+-- Indexes for table `kit_manuals`
+--
+ALTER TABLE `kit_manuals`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_kit_manual_slug_locale` (`kit_id`,`slug`,`idioma`),
+  ADD KEY `idx_kit_manuals_kit` (`kit_id`),
+  ADD KEY `idx_kit_manuals_status` (`status`);
 
 --
 -- Indexes for table `prompts_clase`
@@ -1212,6 +1421,12 @@ ALTER TABLE `kit_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
+-- AUTO_INCREMENT for table `kit_manuals`
+--
+ALTER TABLE `kit_manuals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `prompts_clase`
 --
 ALTER TABLE `prompts_clase`
@@ -1287,6 +1502,13 @@ ALTER TABLE `clase_competencias`
   ADD CONSTRAINT `fk_clase_competencias_comp` FOREIGN KEY (`competencia_id`) REFERENCES `competencias` (`id`) ON UPDATE CASCADE;
 
 --
+-- Constraints for table `clase_kits`
+--
+ALTER TABLE `clase_kits`
+  ADD CONSTRAINT `fk_clase_kits_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_clase_kits_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `clase_tags`
 --
 ALTER TABLE `clase_tags`
@@ -1328,6 +1550,12 @@ ALTER TABLE `kit_componentes`
 --
 ALTER TABLE `kit_items`
   ADD CONSTRAINT `fk_kit_items_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categorias_items` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `kit_manuals`
+--
+ALTER TABLE `kit_manuals`
+  ADD CONSTRAINT `fk_kit_manuals_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `recursos_multimedia`
