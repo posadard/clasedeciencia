@@ -3035,6 +3035,25 @@ strong, b {
     font-weight: 500;
 }
 
+/* Small status pills inside admin chips */
+.chip-pill {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    border: 1px solid transparent;
+}
+
+.chip-danger {
+    background: var(--color-error);
+    border-color: var(--color-error);
+    color: #fff;
+}
+
 .kit-chip .edit-kit,
 .kit-chip .remove-kit,
 .component-chip .edit-component,
@@ -4190,6 +4209,14 @@ strong, b {
     order: 1;
 }
 
+/* Danger (not included) chip */
+.materials-list .badge-danger {
+    background: var(--color-error);
+    border-color: var(--color-error);
+    color: #fff;
+    order: 1;
+}
+
 /* Warning chip */
 .materials-list .material-warning {
     display: inline-flex;
@@ -4216,6 +4243,11 @@ strong, b {
 .badge-success {
     background: var(--color-success);
     color: white;
+}
+
+.badge-danger {
+    background: var(--color-error);
+    color: #fff;
 }
 
 .competencias-section {

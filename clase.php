@@ -438,8 +438,12 @@ include 'includes/header.php';
                                     <?php if (!empty($m['cantidad'])): ?>
                                         <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
                                     <?php endif; ?>
-                                    <?php if (isset($m['es_incluido_kit']) && (int)$m['es_incluido_kit'] === 1): ?>
-                                        <span class="badge badge-success">✓ Incluido</span>
+                                    <?php if (isset($m['es_incluido_kit'])): ?>
+                                        <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+                                            <span class="badge badge-success">✓ Incluido</span>
+                                        <?php else: ?>
+                                            <span class="badge badge-danger">No incluido</span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                     <?php if (!empty($m['notas'])): ?>
                                         <small class="material-notes"><?= h($m['notas']) ?></small>

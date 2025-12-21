@@ -594,6 +594,9 @@ include '../header.php';
           <div class="component-chip" data-item-id="<?= (int)$kc['item_id'] ?>" data-orden="<?= (int)$kc['orden'] ?>">
             <span class="name"><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
             <span class="meta">· <strong><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></strong> <?= htmlspecialchars(($kc['unidad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+            <?php if (isset($kc['es_incluido_kit']) && (int)$kc['es_incluido_kit'] === 0): ?>
+              <span class="chip-pill chip-danger" title="No incluido">No incluido</span>
+            <?php endif; ?>
             <button type="button" class="edit-component js-edit-item" title="Editar"
               data-item-id="<?= (int)$kc['item_id'] ?>"
               data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
