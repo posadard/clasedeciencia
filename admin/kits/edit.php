@@ -81,9 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ($slug !== '') {
         $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $slug));
         $slug = trim($slug, '-');
-        if (strpos($slug, 'kit-') !== 0) {
-          $slug = 'kit-' . ltrim($slug, '-');
-        }
+        // Eliminar prefijos repetidos 'kit-' y forzar uno solo al inicio
+        $slug = preg_replace('/^(?:kit-)+/i', '', $slug);
+        $slug = 'kit-' . ltrim($slug, '-');
       }
 
       if ($principal_clase_id <= 0 || $nombre === '' || $codigo === '' || $slug === '') {

@@ -385,3 +385,82 @@ function get_issues($pdo) {
     $stmt = $pdo->query("SELECT * FROM issues WHERE status = 'published' ORDER BY published_at DESC");
     return $stmt->fetchAll();
 }
+
+/**
+ * Kits & Manuals (CdC schema)
+ */
+
+function cdc_get_kit_by_slug($pdo, $slug) {
+    try {
+        $stmt = $pdo->prepare("SELECT id, nombre, slug, codigo, version, activo, updated_at FROM kits WHERE slug = ? AND activo = 1 LIMIT 1");
+        $stmt->execute([$slug]);
+        return $stmt->fetch();
+    } catch (Exception $e) {
+        error_log('Error cdc_get_kit_by_slug: ' . $e->getMessage());
+        return false;
+    }
+}
+
+function cdc_get_kit_componentes($pdo, $kit_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, kc.notas,
+                                      i.nombre_comun, i.sku, i.unidad, i.advertencias_seguridad
+                               FROM kit_componentes kc
+                               JOIN kit_items i ON i.id = kc.item_id
+                               WHERE kc.kit_id = ?
+                               ORDER BY kc.sort_order ASC, i.nombre_comun ASC");
+        $stmt->execute([(int)$kit_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Error cdc_get_kit_componentes: ' . $e->getMessage());
+        return [];
+    }
+}
+
+function cdc_get_kit_clases($pdo, $kit_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT c.*,
+                                      ck.es_principal, ck.sort_order
+                               FROM clases c
+                               JOIN clase_kits ck ON ck.clase_id = c.id
+                               WHERE ck.kit_id = ? AND c.activo = 1
+                               ORDER BY ck.es_principal DESC, ck.sort_order ASC, c.updated_at DESC");
+        $stmt->execute([(int)$kit_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Error cdc_get_kit_clases: ' . $e->getMessage());
+        return [];
+    }
+}
+
+function cdc_get_kit_manuals($pdo, $kit_id, $published_only = true, $idioma = null) {
+    try {
+        $where = ['kit_id = ?'];
+        $params = [(int)$kit_id];
+        if ($published_only) { $where[] = "status = 'published'"; }
+        if (!empty($idioma)) { $where[] = 'idioma = ?'; $params[] = $idioma; }
+        $sql = 'SELECT id, slug, version, status, idioma, time_minutes, dificultad_ensamble, updated_at, published_at FROM kit_manuals WHERE ' . implode(' AND ', $where) . ' ORDER BY idioma, version DESC, id DESC';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Error cdc_get_kit_manuals: ' . $e->getMessage());
+        return [];
+    }
+}
+
+function cdc_get_kit_manual_by_slug($pdo, $kit_id, $manual_slug, $published_only = true, $idioma = null) {
+    try {
+        $where = ['kit_id = ?', 'slug = ?'];
+        $params = [(int)$kit_id, $manual_slug];
+        if ($published_only) { $where[] = "status = 'published'"; }
+        if (!empty($idioma)) { $where[] = 'idioma = ?'; $params[] = $idioma; }
+        $sql = 'SELECT * FROM kit_manuals WHERE ' . implode(' AND ', $where) . ' LIMIT 1';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Error cdc_get_kit_manual_by_slug: ' . $e->getMessage());
+        return false;
+    }
+}

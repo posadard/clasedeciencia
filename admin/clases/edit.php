@@ -140,9 +140,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($slug !== '') {
       $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $slug));
       $slug = trim($slug, '-');
-      if (strpos($slug, 'clase-') !== 0) {
-        $slug = 'clase-' . ltrim($slug, '-');
-      }
+      // Eliminar prefijos repetidos 'clase-' y forzar uno solo al inicio
+      $slug = preg_replace('/^(?:clase-)+/i', '', $slug);
+      $slug = 'clase-' . ltrim($slug, '-');
     }
 
     // Validar ciclo contra ciclos activos

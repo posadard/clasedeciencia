@@ -281,7 +281,9 @@ include 'includes/header.php';
                 <div class="kit-card">
                     <div class="kit-header">
                         <h3>
-                            <?= h($kit['nombre']) ?>
+                            <a href="/kit.php?slug=<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
+                                <?= h($kit['nombre']) ?>
+                            </a>
                             <?php if (!empty($kit['es_principal'])): ?>
                                 <span class="badge badge-primary">Kit Principal</span>
                             <?php else: ?>
