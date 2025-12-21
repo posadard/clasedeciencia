@@ -766,50 +766,6 @@ include '../header.php';
           </div>
         </div>
 
-          <!-- Modal Crear Definición de Atributo (Kit) -->
-          <div class="modal-backdrop" id="modalCreateAttr">
-            <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrTitle">
-              <div class="modal-header">
-                <h4 id="modalCreateAttrTitle">Crear nuevo atributo</h4>
-                <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttr">✖</button>
-              </div>
-              <form method="POST" id="formCreateAttr">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-                <input type="hidden" name="action" value="create_attr_def" />
-                <div class="modal-body">
-                  <div class="form-group"><label for="create_etiqueta">Etiqueta</label><input type="text" id="create_etiqueta" name="etiqueta" required /></div>
-                  <div class="form-group"><label for="create_clave">Clave</label><input type="text" id="create_clave" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
-                  <div class="field-inline">
-                    <div class="form-group"><label for="create_tipo">Tipo</label>
-                      <select id="create_tipo" name="tipo_dato">
-                        <option value="string">string</option>
-                        <option value="number">number</option>
-                        <option value="integer">integer</option>
-                        <option value="boolean">boolean</option>
-                        <option value="date">date</option>
-                        <option value="datetime">datetime</option>
-                        <option value="json">json</option>
-                      </select>
-                    </div>
-                    <div class="form-group"><label for="create_card">Cardinalidad</label>
-                      <select id="create_card" name="cardinalidad">
-                        <option value="one">one</option>
-                        <option value="many">many</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="field-inline">
-                    <div class="form-group"><label for="create_unidad">Unidad por defecto</label><input type="text" id="create_unidad" name="unidad_defecto" placeholder="opcional" /></div>
-                    <div class="form-group"><label for="create_unidades">Unidades permitidas</label><input type="text" id="create_unidades" name="unidades_permitidas" placeholder="separa por comas" /></div>
-                  </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttr">Cancelar</button>
-                  <button type="submit" class="btn">Crear</button>
-                </div>
-              </form>
-            </div>
-           </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddAttr">Cancelar</button>
           <button type="submit" class="btn">Agregar</button>
@@ -817,6 +773,51 @@ include '../header.php';
       </form>
     </div>
    </div>
+
+    <!-- Modal Crear Definición de Atributo (Kit) -->
+    <div class="modal-backdrop" id="modalCreateAttr">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrTitle">
+        <div class="modal-header">
+          <h4 id="modalCreateAttrTitle">Crear nuevo atributo</h4>
+          <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttr">✖</button>
+        </div>
+        <form method="POST" id="formCreateAttr">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+          <input type="hidden" name="action" value="create_attr_def" />
+          <div class="modal-body">
+            <div class="form-group"><label for="create_etiqueta">Etiqueta</label><input type="text" id="create_etiqueta" name="etiqueta" required /></div>
+            <div class="form-group"><label for="create_clave">Clave</label><input type="text" id="create_clave" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
+            <div class="field-inline">
+              <div class="form-group"><label for="create_tipo">Tipo</label>
+                <select id="create_tipo" name="tipo_dato">
+                  <option value="string">string</option>
+                  <option value="number">number</option>
+                  <option value="integer">integer</option>
+                  <option value="boolean">boolean</option>
+                  <option value="date">date</option>
+                  <option value="datetime">datetime</option>
+                  <option value="json">json</option>
+                </select>
+              </div>
+              <div class="form-group"><label for="create_card">Cardinalidad</label>
+                <select id="create_card" name="cardinalidad">
+                  <option value="one">one</option>
+                  <option value="many">many</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-inline">
+              <div class="form-group"><label for="create_unidad">Unidad por defecto</label><input type="text" id="create_unidad" name="unidad_defecto" placeholder="opcional" /></div>
+              <div class="form-group"><label for="create_unidades">Unidades permitidas</label><input type="text" id="create_unidades" name="unidades_permitidas" placeholder="separa por comas" /></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttr">Cancelar</button>
+            <button type="submit" class="btn">Crear</button>
+          </div>
+        </form>
+      </div>
+     </div>
 
   <script>
     // Autocomplete + modal para atributos (similar a componentes)
