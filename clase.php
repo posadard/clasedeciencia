@@ -286,36 +286,40 @@ include 'includes/header.php';
         <section class="article-content">
             <?php if (!empty($proyecto['contenido_html'])): ?>
                 <!-- Contenido principal con formato rico -->
-                <?= $proyecto['contenido_html'] ?>
+                <div class="article-body">
+                    <?= $proyecto['contenido_html'] ?>
+                </div>
             <?php elseif ($guia): ?>
                 <!-- Guía básica como fallback -->
-                <?php if (!empty($guia['introduccion'])): ?>
-                    <h2>Introducción</h2>
-                    <p><?= h($guia['introduccion']) ?></p>
-                <?php endif; ?>
+                <div class="article-body">
+                    <?php if (!empty($guia['introduccion'])): ?>
+                        <h2>Introducción</h2>
+                        <p><?= h($guia['introduccion']) ?></p>
+                    <?php endif; ?>
 
-                <?php if (!empty($guia['seccion_seguridad'])): ?>
-                    <h2>Seguridad</h2>
-                    <p><?= h($guia['seccion_seguridad']) ?></p>
-                <?php endif; ?>
+                    <?php if (!empty($guia['seccion_seguridad'])): ?>
+                        <h2>Seguridad</h2>
+                        <p><?= h($guia['seccion_seguridad']) ?></p>
+                    <?php endif; ?>
 
-                <?php if (!empty($guia['pasos'])): ?>
-                    <h2>Pasos</h2>
-                    <?php $pasos = json_decode($guia['pasos'], true) ?: []; ?>
-                    <ol>
-                        <?php foreach ($pasos as $idx => $p): ?>
-                            <li>
-                                <strong><?= h($p['titulo'] ?? ('Paso ' . ($idx+1))) ?></strong>
-                                <p><?= h($p['texto'] ?? '') ?></p>
-                            </li>
-                        <?php endforeach; ?>
-                    </ol>
-                <?php endif; ?>
+                    <?php if (!empty($guia['pasos'])): ?>
+                        <h2>Pasos</h2>
+                        <?php $pasos = json_decode($guia['pasos'], true) ?: []; ?>
+                        <ol>
+                            <?php foreach ($pasos as $idx => $p): ?>
+                                <li>
+                                    <strong><?= h($p['titulo'] ?? ('Paso ' . ($idx+1))) ?></strong>
+                                    <p><?= h($p['texto'] ?? '') ?></p>
+                                </li>
+                            <?php endforeach; ?>
+                        </ol>
+                    <?php endif; ?>
 
-                <?php if (!empty($guia['explicacion_cientifica'])): ?>
-                    <h2>Explicación Científica</h2>
-                    <p><?= h($guia['explicacion_cientifica']) ?></p>
-                <?php endif; ?>
+                    <?php if (!empty($guia['explicacion_cientifica'])): ?>
+                        <h2>Explicación Científica</h2>
+                        <p><?= h($guia['explicacion_cientifica']) ?></p>
+                    <?php endif; ?>
+                </div>
             <?php else: ?>
                 <p class="no-content">El contenido detallado de esta clase se encuentra en desarrollo. Por favor contacta a tu docente para más información.</p>
             <?php endif; ?>
