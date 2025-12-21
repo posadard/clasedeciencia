@@ -677,7 +677,7 @@ include '../header.php';
 </form>
 
 <?php if ($is_edit): ?>
-<div class="card" style="margin-top:2rem;">
+<div class="form-group" style="margin-top:2rem;">
   <h3>Componentes del Kit</h3>
 
   <!-- estilos de chips y autocompletado se mueven a assets/css/style.css -->
@@ -750,7 +750,7 @@ include '../header.php';
   }
   ?>
   <?php if ($is_edit): ?>
-  <div class="card" style="margin-top:2rem;">
+  <div class="form-group" style="margin-top:2rem;">
     <h3>Ficha técnica</h3>
     <div class="form-group">
       <label for="attr_search">Agregar atributo</label>
