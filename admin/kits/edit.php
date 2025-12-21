@@ -249,11 +249,6 @@ include '../header.php';
 <?php if ($is_edit): ?>
 <div class="card" style="margin-top:2rem;">
   <h3>Componentes del Kit</h3>
-  <?php if (!empty($id)): ?>
-    <div style="float:right;">
-      <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$id ?>">Manuales del Kit</a>
-    </div>
-  <?php endif; ?>
 
   <style>
     .component-selector-container{position:relative;width:100%;max-width:800px}
@@ -311,7 +306,7 @@ include '../header.php';
     </div>
     <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
     <div class="actions" style="margin-top:0.6rem;">
-      <button type="button" class="btn js-open-add-modal">Agregar componente</button>
+      <a class="btn btn-secondary" href="/admin/componentes/edit.php" title="Crear un nuevo componente">Nuevo componente</a>
     </div>
   </div>
 </div>
