@@ -254,12 +254,12 @@ strong, b {
 
 /* === Hero Section === */
 .hero {
-    /* Fondo tipo hoja (canopia superior del árbol) */
-    background: linear-gradient(135deg, var(--color-leaf-light) 0%, var(--color-leaf) 100%);
+    /* Fondo original azulado */
+    background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-bg-alt) 100%);
     padding: var(--spacing-lg) 0.5rem;
     margin-bottom: var(--spacing-md);
     border-radius: 4px;
-    border: 1px solid var(--color-leaf-mid);
+    border: 1px solid var(--color-border-light);
     text-align: center; /* ensure hero title and content are centered */
 }
 
@@ -350,14 +350,14 @@ strong, b {
 .hero h2 {
     font-size: 3rem;
     margin-bottom: var(--spacing-md);
-    color: var(--color-secondary);
+    color: var(--color-primary);
     text-align: center;
 }
 
 .hero p,
 .hero-subtitle {
     font-size: 1.25rem;
-    color: var(--color-leaf-text);
+    color: var(--color-text-light);
     max-width: 700px;
     margin: 0 auto var(--spacing-md);
 }
