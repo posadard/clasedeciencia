@@ -714,8 +714,8 @@ include '../header.php';
   </div>
 
   <!-- Modal Editar Atributo -->
-  <div class="modal-backdrop" id="modalEditAttr">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrTitle">
+  <div class="modal-overlay" id="modalEditAttr">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrTitle">
       <div class="modal-header">
         <h4 id="modalEditAttrTitle">Editar atributo</h4>
         <button type="button" class="btn-plain js-close-modal" data-target="#modalEditAttr">✖</button>
@@ -741,11 +741,11 @@ include '../header.php';
         </div>
       </form>
     </div>
-   </div>
+  </div>
 
   <!-- Modal Agregar Atributo -->
-  <div class="modal-backdrop" id="modalAddAttr">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrTitle">
+  <div class="modal-overlay" id="modalAddAttr">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrTitle">
       <div class="modal-header">
         <h4 id="modalAddAttrTitle">Agregar atributo</h4>
         <button type="button" class="btn-plain js-close-modal" data-target="#modalAddAttr">✖</button>
@@ -772,11 +772,11 @@ include '../header.php';
         </div>
       </form>
     </div>
-   </div>
+  </div>
 
     <!-- Modal Crear Definición de Atributo (Kit) -->
-    <div class="modal-backdrop" id="modalCreateAttr">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrTitle">
+    <div class="modal-overlay" id="modalCreateAttr">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrTitle">
         <div class="modal-header">
           <h4 id="modalCreateAttrTitle">Crear nuevo atributo</h4>
           <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttr">✖</button>
@@ -1119,15 +1119,7 @@ include '../header.php';
 <?php if ($is_edit): ?>
 <!-- Modales para editar y agregar componentes -->
 <style>
-  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
-  /* Mostrar el modal cuando el backdrop tiene la clase show */
-  .modal-backdrop.show { display: flex; }
-  .modal { background: #fff; border-radius: 8px; max-width: 520px; width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-  .modal-header { padding: 12px 16px; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content: space-between; }
-  .modal-body { padding: 16px; }
-  .modal-footer { padding: 12px 16px; border-top: 1px solid #eee; display:flex; gap: 8px; justify-content: flex-end; }
-  .modal .form-group { margin-bottom: 12px; }
-  .btn-plain { background: transparent; border: none; font-size: 18px; cursor: pointer; }
+  /* Reusar estilos globales para modales; mantener utilidades locales */
   .muted { color: #666; font-size: 0.9rem; }
   .field-inline { display:flex; gap:12px; }
   .field-inline > div { flex:1; }
@@ -1145,8 +1137,8 @@ include '../header.php';
 </style>
 
 <!-- Modal Editar Componente -->
-<div class="modal-backdrop" id="modalEditCmp">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalEditTitle">
+<div class="modal-overlay" id="modalEditCmp">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditTitle">
     <div class="modal-header">
       <h4 id="modalEditTitle">Editar componente</h4>
       <button type="button" class="btn-plain js-close-modal" data-target="#modalEditCmp">✖</button>
@@ -1181,8 +1173,8 @@ include '../header.php';
  </div>
 
 <!-- Modal Agregar Componente -->
-<div class="modal-backdrop" id="modalAddCmp">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAddTitle">
+<div class="modal-overlay" id="modalAddCmp">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddTitle">
     <div class="modal-header">
       <h4 id="modalAddTitle">Agregar componente</h4>
       <button type="button" class="btn-plain js-close-modal" data-target="#modalAddCmp">✖</button>
@@ -1240,11 +1232,11 @@ include '../header.php';
   // Utilidades de modal
   function openModal(sel) {
     const el = document.querySelector(sel);
-    if (el) { el.classList.add('show'); console.log('🔍 [KitsEdit] Abre modal', sel); }
+    if (el) { el.classList.add('active'); console.log('🔍 [KitsEdit] Abre modal', sel); }
   }
   function closeModal(sel) {
     const el = document.querySelector(sel);
-    if (el) { el.classList.remove('show'); console.log('🔍 [KitsEdit] Cierra modal', sel); }
+    if (el) { el.classList.remove('active'); console.log('🔍 [KitsEdit] Cierra modal', sel); }
   }
 
   // Abrir modal de agregar
@@ -1262,7 +1254,7 @@ include '../header.php';
   });
 
   // Cerrar al click en backdrop
-  document.querySelectorAll('.modal-backdrop').forEach(b => {
+  document.querySelectorAll('.modal-overlay').forEach(b => {
     b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
   });
 

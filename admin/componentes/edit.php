@@ -454,8 +454,8 @@ if ($is_edit) {
 </div>
 
 <!-- Modal Editar Atributo (Componente) -->
-<div class="modal-backdrop" id="modalEditAttrCmp">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrCmpTitle">
+<div class="modal-overlay" id="modalEditAttrCmp">
+     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrCmpTitle">
     <div class="modal-header">
       <h4 id="modalEditAttrCmpTitle">Editar atributo</h4>
       <button type="button" class="btn-plain js-close-modal" data-target="#modalEditAttrCmp">✖</button>
@@ -484,8 +484,8 @@ if ($is_edit) {
  </div>
 
 <!-- Modal Agregar Atributo (Componente) -->
-<div class="modal-backdrop" id="modalAddAttrCmp">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrCmpTitle">
+<div class="modal-overlay" id="modalAddAttrCmp">
+     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrCmpTitle">
     <div class="modal-header">
       <h4 id="modalAddAttrCmpTitle">Agregar atributo</h4>
       <button type="button" class="btn-plain js-close-modal" data-target="#modalAddAttrCmp">✖</button>
@@ -515,8 +515,8 @@ if ($is_edit) {
  </div>
 
 <!-- Modal Crear Definición de Atributo (Componente) -->
-<div class="modal-backdrop" id="modalCreateAttrCmp">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrCmpTitle">
+<div class="modal-overlay" id="modalCreateAttrCmp">
+         <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrCmpTitle">
     <div class="modal-header">
       <h4 id="modalCreateAttrCmpTitle">Crear nuevo atributo</h4>
       <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttrCmp">✖</button>
@@ -563,11 +563,11 @@ if ($is_edit) {
   // Utilidades de modal (compartidas)
   function openModal(sel) {
     const el = document.querySelector(sel);
-    if (el) { el.classList.add('show'); console.log('🔍 [ComponentesEdit] Abre modal', sel); }
+    if (el) { el.classList.add('active'); console.log('🔍 [ComponentesEdit] Abre modal', sel); }
   }
   function closeModal(sel) {
     const el = document.querySelector(sel);
-    if (el) { el.classList.remove('show'); console.log('🔍 [ComponentesEdit] Cierra modal', sel); }
+    if (el) { el.classList.remove('active'); console.log('🔍 [ComponentesEdit] Cierra modal', sel); }
   }
   document.querySelectorAll('.js-close-modal').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -575,12 +575,12 @@ if ($is_edit) {
       if (t) closeModal(t);
     });
   });
-  document.querySelectorAll('.modal-backdrop').forEach(b => {
-    b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
+    document.querySelectorAll('.modal-overlay').forEach(b => {
+     b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
   });
 
   // Autocomplete + modal para atributos de componentes
-  (function initAttrUICmp(){
+    (function initAttrUICmp(){
     const dropdown = document.getElementById('attr_autocomplete_dropdown_cmp');
     const input = document.getElementById('attr_search_cmp');
     const selectedWrap = document.getElementById('selected-attrs-cmp');
@@ -751,16 +751,8 @@ if ($is_edit) {
   })();
 </script>
 <style>
-  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
-  .modal-backdrop.show { display: flex; }
-  .modal { background: #fff; border-radius: 8px; max-width: 520px; width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-  .modal-header { padding: 12px 16px; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content: space-between; }
-  .modal-body { padding: 16px; }
-  .modal-footer { padding: 12px 16px; border-top: 1px solid #eee; display:flex; gap: 8px; justify-content: flex-end; }
-  .modal .form-group { margin-bottom: 12px; }
-  .btn-plain { background: transparent; border: none; font-size: 18px; cursor: pointer; }
+  /* Reusar estilos globales para modales en admin; utilidades mínimas */
   .muted { color: #666; font-size: 0.9rem; }
-  /* Chips container reuses existing classes from kits UI */
 </style>
 <?php endif; ?>
 

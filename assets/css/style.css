@@ -3523,6 +3523,11 @@ strong, b {
     color: white;
 }
 
+/* Admin modals use h4 in headers; ensure white text for consistency */
+.modal-header h4 {
+    color: white;
+}
+
 .modal-body {
     padding: var(--spacing-xl);
 }
