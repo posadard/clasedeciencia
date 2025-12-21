@@ -715,7 +715,8 @@ class ClaseDeCienciaSearch {
 
     this.hideSearchResults();
     // Enviar a página exclusiva de resultados
-    window.location.href = `/clases?q=${encodeURIComponent(query)}`;
+    const term = encodeURIComponent(query.trim());
+    window.location.href = `/clases/buscar/${term}`;
   }
 }
 

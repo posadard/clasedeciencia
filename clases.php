@@ -172,7 +172,7 @@ if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
 $page_title = 'Clases';
 $page_description = 'Explora o busca clases científicas por ciclo, grado y área.';
-$canonical_url = SITE_URL . '/clases' . ($q ? ('?q=' . urlencode($q)) : '');
+$canonical_url = SITE_URL . ($q ? ('/clases/buscar/' . rawurlencode($q)) : '/clases');
 
 $areas = cdc_get_areas($pdo);
 $competencias = cdc_get_competencias($pdo);

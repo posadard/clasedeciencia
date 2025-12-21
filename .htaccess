@@ -13,6 +13,9 @@ RewriteRule ^proyecto\.php$ /%1? [R=301,L]
 # URL amigable para catálogo unificado: /clases -> /clases.php
 RewriteRule ^clases$ /clases.php [L,QSA]
 
+# Ruta amigable de búsqueda: /clases/buscar/{termino}
+RewriteRule ^clases/buscar/(.*)$ /clases.php?q=$1 [L,QSA]
+
 # URLs amigables dinámicas: /{slug} puede ser ciclo, área o proyecto
 # clases.php detectará automáticamente si el slug es un ciclo o área
 # Si no es ninguno, proyecto.php manejará el slug como proyecto
