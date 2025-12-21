@@ -467,13 +467,13 @@ strong, b {
     overflow: hidden;
 }
 
-/* Gradientes específicos por ciclo - Escala personalizada Verde profundo → Naranja intenso */
+/* Gradientes específicos por ciclo - Gradación Verde oscuro → Naranja con centro en ciclo 3 */
 .ciclo-icon.ciclo-0 { background: linear-gradient(135deg, #9e9e9e, #757575); } /* Gris oscuro (Desarrollo Inicial) */
-.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #1b5e20, #0d3010); } /* Verde profundo (Cimentación) */
-.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #4a7a1c, #355713); } /* Verde oliva (Consolidación) */
-.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #7f8f1a, #5d6812); } /* Verde amarillento (Exploración) */
-.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #b39a14, #8a730f); } /* Mostaza (Experimentación) */
-.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #e65100, #b33e00); } /* Naranja intenso (Análisis) */
+.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #2e7d32, #1b5e20); } /* Verde hoja oscuro (Cimentación) */
+.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #558b2f, #33691e); } /* Verde medio (Consolidación) */
+.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #c49000, #9a6e00); } /* Amarillo/Dorado central (Exploración) */
+.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #ef6c00, #d84315); } /* Naranja medio (Experimentación) */
+.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #f57c00, #e65100); } /* Naranja oscuro (Análisis) */
 
 /* Efecto shine en hover */
 .ciclo-icon::after {
