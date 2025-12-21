@@ -903,6 +903,84 @@ strong, b {
 .library-page .btn-light { padding: 0.3rem 0.6rem; font-size: 0.875rem; }
 .library-page .search-section { margin: 1rem 0; }
 .library-page .search-section-header h2 { font-size: 1.2rem; }
+
+/* Collapsible filters */
+.filters-form .collapsible { border-top: 1px dashed var(--color-border-light); padding-top: 0.5rem; }
+.filters-form .collapsible:first-of-type { border-top: none; padding-top: 0; }
+.collapsible-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: transparent;
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    cursor: pointer;
+}
+.collapsible-toggle .chev { opacity: 0.6; transition: transform 0.15s ease; }
+.collapsible-toggle[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+.collapsible-content { margin-top: 0.5rem; }
+
+/* Tag Input (Área) */
+.tag-input.ti {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 6px;
+    background: #fff;
+    min-height: 38px;
+    position: relative;
+}
+.ti-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ti-input {
+    flex: 1 0 120px;
+    min-width: 120px;
+    border: none;
+    outline: none;
+    font: inherit;
+    padding: 4px 6px;
+}
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(31,60,136,0.08);
+    color: var(--color-primary);
+    border: 1px solid rgba(31,60,136,0.18);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 0.82rem;
+    line-height: 1.2;
+}
+.chip-remove {
+    background: transparent;
+    border: none;
+    color: var(--color-text-light);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+}
+.chip-remove:hover { color: var(--color-error); }
+
+.ti-suggestions {
+    position: absolute;
+    left: 0; right: 0; top: calc(100% + 4px);
+    background: #fff;
+    border: 1px solid var(--color-border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    max-height: 220px;
+    overflow: auto;
+    z-index: 20;
+}
+.ti-item { padding: 8px 10px; cursor: pointer; }
+.ti-item:hover { background: var(--color-bg-alt); }
 .section-card:hover h3, .section-card:focus h3 { color: white; }
 .section-card:hover p, .section-card:focus p { color: rgba(255, 255, 255, 0.9); }
 .section-card:focus { outline: 3px solid rgba(31, 60, 136, 0.14); outline-offset: 2px; }
