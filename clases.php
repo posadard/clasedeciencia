@@ -371,59 +371,43 @@ include 'includes/header.php';
             <h2>Filtros</h2>
             <form method="get" action="/clases" class="filters-form">
                 <input type="hidden" name="sort" value="<?= h($filters['sort'] ?? ($_GET['sort'] ?? '')) ?>" />
-                <div class="filter-group" data-filter="ciclo">
-                    <div class="filter-header">
-                        <div class="filter-title">Ciclo</div>
-                        <div class="filter-summary" data-summary="ciclo"></div>
-                        <button type="button" class="filter-toggle" data-target="ciclo">Mostrar opciones</button>
-                    </div>
-                    <div class="checkbox-list is-collapsed" id="filter-list-ciclo">
+                <div class="filter-group">
+                    <label style="display:block; margin-bottom:6px;">Ciclo</label>
+                    <div class="checkbox-list">
                         <?php $ciclos_filtro = cdc_get_ciclos($pdo, true); $selected_ciclos = $filters['ciclos'] ?? (isset($filters['ciclo'])?[(int)$filters['ciclo']]:[]); foreach ($ciclos_filtro as $cf): $checked = in_array((int)$cf['numero'], $selected_ciclos, true); ?>
-                        <label class="filter-check">
+                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                             <input type="checkbox" name="ciclo[]" value="<?= h($cf['numero']) ?>" <?= $checked?'checked':'' ?> />
-                            <span class="check-label" data-value="<?= h($cf['numero']) ?>" data-chip="<?= h($cf['nombre']) ?>"><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</span>
+                            <span><?= h($cf['nombre']) ?> (<?= h($cf['grados_texto']) ?>)</span>
                         </label>
                         <?php endforeach; ?>
                     </div>
                 </div>
-
-                <div class="filter-group" data-filter="area">
-                    <div class="filter-header">
-                        <div class="filter-title">Área</div>
-                        <div class="filter-summary" data-summary="area"></div>
-                        <button type="button" class="filter-toggle" data-target="area">Mostrar opciones</button>
-                    </div>
-                    <div class="checkbox-list is-collapsed" id="filter-list-area">
+                <div class="filter-group">
+                    <label style="display:block; margin-bottom:6px;">Área</label>
+                    <div class="checkbox-list" style="max-height:200px; overflow:auto;">
                         <?php $selected_areas = $filters['areas'] ?? (isset($filters['area'])?[(string)$filters['area']]:[]); foreach($areas as $a): $checked = in_array($a['slug'], $selected_areas, true); ?>
-                        <label class="filter-check">
+                        <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
                             <input type="checkbox" name="area[]" value="<?= h($a['slug']) ?>" <?= $checked?'checked':'' ?> />
-                            <span class="check-label" data-value="<?= h($a['slug']) ?>" data-chip="<?= h($a['nombre']) ?>"><?= h($a['nombre']) ?></span>
+                            <span><?= h($a['nombre']) ?></span>
                         </label>
                         <?php endforeach; ?>
                     </div>
                 </div>
-
-                <div class="filter-group" data-filter="dificultad">
-                    <div class="filter-header">
-                        <div class="filter-title">Dificultad</div>
-                        <div class="filter-summary" data-summary="dificultad"></div>
-                        <button type="button" class="filter-toggle" data-target="dificultad">Mostrar opciones</button>
-                    </div>
-                    <div class="checkbox-list is-collapsed" id="filter-list-dificultad">
-                        <?php $selected_difs = $filters['dificultades'] ?? (isset($filters['dificultad'])?[(string)$filters['dificultad']]:[]); ?>
-                        <label class="filter-check">
-                            <input type="checkbox" name="dificultad[]" value="facil" <?= in_array('facil', $selected_difs, true)?'checked':'' ?> />
-                            <span class="check-label" data-value="facil" data-chip="Fácil">Fácil</span>
-                        </label>
-                        <label class="filter-check">
-                            <input type="checkbox" name="dificultad[]" value="medio" <?= in_array('medio', $selected_difs, true)?'checked':'' ?> />
-                            <span class="check-label" data-value="medio" data-chip="Medio">Medio</span>
-                        </label>
-                        <label class="filter-check">
-                            <input type="checkbox" name="dificultad[]" value="dificil" <?= in_array('dificil', $selected_difs, true)?'checked':'' ?> />
-                            <span class="check-label" data-value="dificil" data-chip="Difícil">Difícil</span>
-                        </label>
-                    </div>
+                <div class="filter-group">
+                    <label style="display:block; margin-bottom:6px;">Dificultad</label>
+                    <?php $selected_difs = $filters['dificultades'] ?? (isset($filters['dificultad'])?[(string)$filters['dificultad']]:[]); ?>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="checkbox" name="dificultad[]" value="facil" <?= in_array('facil', $selected_difs, true)?'checked':'' ?> />
+                        <span>Fácil</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="checkbox" name="dificultad[]" value="medio" <?= in_array('medio', $selected_difs, true)?'checked':'' ?> />
+                        <span>Medio</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                        <input type="checkbox" name="dificultad[]" value="dificil" <?= in_array('dificil', $selected_difs, true)?'checked':'' ?> />
+                        <span>Difícil</span>
+                    </label>
                 </div>
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
@@ -525,61 +509,5 @@ function updateSort(sortValue) {
     url.searchParams.set('sort', sortValue);
     window.location.href = url.toString();
 }
-
-// Compact, expandable filter groups with selected-only summary chips
-(function initFilterGroups(){
-    const groups = document.querySelectorAll('.filters-sidebar .filter-group');
-    if (!groups.length) { console.log('⚠️ [clases] No hay grupos de filtros'); return; }
-
-    function buildSummary(listEl, summaryEl) {
-        const items = Array.from(listEl.querySelectorAll('input[type="checkbox"]'));
-        const selected = items.filter(i => i.checked);
-        summaryEl.innerHTML = '';
-        if (!selected.length) {
-            const none = document.createElement('span');
-            none.className = 'filter-summary-empty';
-            none.textContent = summaryEl.dataset.summary === 'area' ? 'Todas' : (summaryEl.dataset.summary === 'ciclo' ? 'Todos' : 'Todas');
-            summaryEl.appendChild(none);
-            return;
-        }
-        selected.forEach(cb => {
-            const label = cb.closest('label');
-            const chipText = label?.querySelector('.check-label')?.getAttribute('data-chip') || label?.innerText || cb.value;
-            const chip = document.createElement('span');
-            chip.className = 'filter-chip';
-            chip.textContent = chipText.trim();
-            // Click on chip toggles checkbox
-            chip.addEventListener('click', () => { cb.checked = false; cb.dispatchEvent(new Event('change')); });
-            summaryEl.appendChild(chip);
-        });
-    }
-
-    groups.forEach(g => {
-        const target = g.getAttribute('data-filter');
-        const list = g.querySelector('#filter-list-' + target);
-        const summary = g.querySelector('.filter-summary');
-        const toggleBtn = g.querySelector('.filter-toggle');
-        if (!list || !summary || !toggleBtn) return;
-
-        const update = () => buildSummary(list, summary);
-        update();
-
-        // Collapse by default; expand if there are no selections and user clicks
-        toggleBtn.addEventListener('click', () => {
-            const isCollapsed = list.classList.toggle('is-collapsed');
-            toggleBtn.textContent = isCollapsed ? 'Mostrar opciones' : 'Ocultar opciones';
-            console.log('🔍 [clases] Toggle filtro', target, 'collapsed:', isCollapsed);
-        });
-
-        list.addEventListener('change', () => {
-            update();
-            console.log('✅ [clases] Filtro cambiado:', target);
-        });
-
-        // If there are selections, keep list collapsed; otherwise collapsed as well.
-        list.classList.add('is-collapsed');
-        toggleBtn.textContent = 'Mostrar opciones';
-    });
-})();
 </script>
 <?php include 'includes/footer.php'; ?>

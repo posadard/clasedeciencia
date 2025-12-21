@@ -1678,42 +1678,6 @@ strong, b {
     .product-card { position: sticky; top: calc(var(--spacing-md) + 0.5rem); }
 }
 
-/* === Filter Group Enhancements (clases.php) === */
-.filters-form .filter-header {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto auto;
-    column-gap: 0.5rem;
-    align-items: center;
-    margin-bottom: 0.35rem;
-}
-.filters-form .filter-title { font-weight: 700; color: var(--color-primary-dark); }
-.filters-form .filter-summary { grid-column: 1 / span 1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.filters-form .filter-summary-empty { color: var(--color-text-muted); font-size: 0.85rem; }
-.filters-form .filter-toggle { grid-column: 2 / span 1; justify-self: end; background: none; border: 1px solid var(--color-border); color: var(--color-primary); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
-.filters-form .filter-toggle:hover { border-color: var(--color-accent); color: var(--color-primary-dark); background: var(--color-bg-alt); }
-
-.filter-chip {
-    background: rgba(31, 60, 136, 0.08);
-    color: var(--color-primary);
-    border: 1px solid rgba(31, 60, 136, 0.15);
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    line-height: 1.2;
-    cursor: pointer;
-}
-.filter-chip:hover { background: rgba(31, 60, 136, 0.12); }
-
-.filters-form .filter-check { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-.filters-form .filter-check .check-label { font-weight: 500; color: var(--color-text); }
-.filters-form .checkbox-list.is-collapsed { display: none; }
-
-/* Compact tweaks for library page */
-.library-page .filters-form .filter-toggle { padding: 2px 8px; font-size: 0.8rem; }
-.library-page .filter-chip { font-size: 0.78rem; padding: 2px 7px; }
-
 @media (max-width: 900px) {
     .material-top { grid-template-columns: 1fr; }
     .product-card { order: 2; }
