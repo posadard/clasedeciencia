@@ -19,173 +19,8 @@ $kit = [
   'version' => '1',
   'activo' => 1,
 ];
-
-      <label for="search-attrs">Atributos</label>
-      <div class="dual-listbox-container two-panels">
-        <div class="listbox-panel">
-          <div class="listbox-header">
-            <strong>Disponibles</strong>
-            <span id="attrs-available-count" class="counter">(0)</span>
-          </div>
-          <input type="text" id="search-attrs" class="listbox-search" placeholder="🔍 Buscar atributos...">
-          <div class="listbox-content" id="available-attrs">
-            <?php foreach ($attr_defs as $def):
-              $aid = (int)$def['id'];
-              $values = $attr_vals[$aid] ?? [];
-              $hasValues = !empty($values);
-              $label = $def['etiqueta'];
-              $tipo = $def['tipo_dato'];
-              $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
-              $unitDef = $def['unidad_defecto'] ?? '';
-            ?>
-            <div class="competencia-item <?= $hasValues ? 'hidden' : '' ?>"
-                 data-id="<?= $aid ?>"
-                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                 data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
-                 data-units='<?= $unitsJson ?>'
-                 data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
-                 onclick="selectAttr(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo">Tipo <?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?><?= $unitDef ? ' · ' . htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') : '' ?></span>
-            </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <div class="listbox-panel">
-          <div class="listbox-header">
-            <strong>Seleccionados</strong>
-            <span id="attrs-selected-count" class="counter">(0)</span>
-          </div>
-          <div class="listbox-content" id="selected-attrs-dl">
-            <?php foreach ($attr_defs as $def):
-              $aid = (int)$def['id'];
-              $values = $attr_vals[$aid] ?? [];
-              if (empty($values)) continue;
-              $label = $def['etiqueta'];
-              $tipo = $def['tipo_dato'];
-              $unitDef = $def['unidad_defecto'] ?? '';
-              $display = [];
-              foreach ($values as $v) {
-                if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
-                else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
-                else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
-                else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
-                else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
-                else if ($tipo === 'json') { $display[] = $v['valor_json']; }
-                else { $display[] = $v['valor_string']; }
-              }
-              $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
-            ?>
-            <div class="competencia-item selected"
-                 data-id="<?= $aid ?>"
-                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                 data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
-                 data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                 data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
-                 onclick="editAttrItem(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo"><strong><?= $text ?></strong><?= ($values[0]['unidad_codigo'] ?? '') ? ' ' . htmlspecialchars($values[0]['unidad_codigo'], ENT_QUOTES, 'UTF-8') : '' ?></span>
-              <form method="POST" style="display:inline; margin-left:auto;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-                <input type="hidden" name="action" value="delete_attr" />
-                <input type="hidden" name="def_id" value="<?= $aid ?>" />
-                <button type="submit" class="remove-btn" title="Remover">×</button>
-              </form>
-            </div>
-            <?php endforeach; ?>
-          </div>
-          <small class="hint" style="margin-top: 10px; display: block;">Haz clic para editar. Usa × para quitar.</small>
-        </div>
-      </div>
-          // Obtener valores del POST
-          $values = [];
-          $units = [];
-          if ($card === 'many') {
-            $raw = isset($_POST['attr_' . $attr_id]) ? $_POST['attr_' . $attr_id] : '';
-            if (is_array($raw)) {
-              $values = $raw;
-            } else {
-              $values = array_filter(array_map('trim', preg_split('/[\n,]+/', (string)$raw)));
-            }
-            $units = isset($_POST['unit_' . $attr_id]) ? (array)$_POST['unit_' . $attr_id] : [];
-          } else {
-            $v = isset($_POST['attr_' . $attr_id]) ? trim((string)$_POST['attr_' . $attr_id]) : '';
-            if ($v !== '') { $values = [$v]; }
-            $u = isset($_POST['unit_' . $attr_id]) ? trim((string)$_POST['unit_' . $attr_id]) : '';
-            if ($u !== '') { $units = [$u]; }
-          }
-
-          // Borrar existentes
-          $del = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
-          $del->execute(['kit', $id, $attr_id]);
-
-          // Insertar nuevos
-          $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
-          $orden = 1;
-          foreach ($values as $idx => $valRaw) {
-            if ($valRaw === '' || $valRaw === null) { continue; }
-            $unidad_codigo = null;
-            if (!empty($perm_units) || !empty($def['unidad_defecto'])) {
-              $unidad_sel = $card === 'many' ? ($units[$idx] ?? '') : ($units[0] ?? '');
-              if ($unidad_sel === '' && !empty($def['unidad_defecto'])) { $unidad_sel = $def['unidad_defecto']; }
-              if ($unidad_sel !== '') { $unidad_codigo = $unidad_sel; }
-            }
-
-            $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
-            try {
-              switch ($tipo) {
-                case 'number':
-                  $num = is_numeric(str_replace(',', '.', $valRaw)) ? (float)str_replace(',', '.', $valRaw) : null;
-                  if ($num === null) { continue 2; }
-                  $val_numero = $num;
-                  break;
-                case 'integer':
-                  $int = is_numeric($valRaw) ? (int)$valRaw : null;
-                  if ($int === null) { continue 2; }
-                  $val_entero = $int;
-                  break;
-                case 'boolean':
-                  $val_bool = ($valRaw === '1' || strtolower($valRaw) === 'true' || strtolower($valRaw) === 'sí' || strtolower($valRaw) === 'si') ? 1 : 0;
-                  break;
-                case 'date':
-                  $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $valRaw) ? $valRaw : null;
-                  if ($val_fecha === null) { continue 2; }
-                  break;
-                case 'datetime':
-                  $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $valRaw) ? str_replace('T', ' ', $valRaw) . ':00' : null;
-                  if ($val_dt === null) { continue 2; }
-                  break;
-                case 'json':
-                  $decoded = json_decode($valRaw, true);
-                  if ($decoded === null && strtolower(trim($valRaw)) !== 'null') { continue 2; }
-                  $val_json = json_encode($decoded);
-                  break;
-                case 'string':
-                default:
-                  $val_string = mb_substr((string)$valRaw, 0, 2000, 'UTF-8');
-                  break;
-              }
-            } catch (Exception $e) {
-              continue;
-            }
-
-            $ins->execute([
-              'kit', $id, $attr_id,
-              $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json,
-              $unidad_codigo, 'es-CO', $orden++, 'manual'
-            ]);
-          }
-        }
-        $pdo->commit();
-        $action_msg = 'Ficha técnica guardada.';
-        echo '<script>console.log("✅ [KitsEdit] Ficha técnica guardada para kit ' . (int)$id . '");</script>';
-      } catch (PDOException $e) {
-        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-        $error_msg = 'Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-        echo '<script>console.log("❌ [KitsEdit] Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
-      }
-    } else if ($action === 'add_attr' && $is_edit) {
+ 
+    if ($action === 'add_attr' && $is_edit) {
       try {
         $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
         $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
@@ -495,8 +330,6 @@ $kit = [
         }
       }
     }
-  }
-}
 
 // Cargar lista de componentes del kit
 $componentes = [];
@@ -534,7 +367,7 @@ include '../header.php';
       if (!btn) { console.log('⚠️ [KitsEdit] Botón crear atributo no encontrado'); return; }
       btn.addEventListener('click', function(){
         try {
-          const q = (document.getElementById('attr_search')?.value || '').trim();
+          const q = (document.getElementById('search-attrs')?.value || document.getElementById('attr_search')?.value || '').trim();
           const et = document.getElementById('create_etiqueta');
           const cl = document.getElementById('create_clave');
           const tp = document.getElementById('create_tipo');
@@ -675,63 +508,84 @@ include '../header.php';
       <button type="button" class="btn btn-secondary" id="btn_create_attr">➕ Crear atributo</button>
     </div>
     <div class="form-group">
-      <label for="attr_search">Agregar atributo</label>
-      <div class="component-selector-container">
-        <div class="selected-components" id="selected-attrs">
-          <?php foreach ($attr_defs as $def):
-            $aid = (int)$def['id'];
-            $values = $attr_vals[$aid] ?? [];
-            if (empty($values)) continue;
-            // Render resumen
-            $label = $def['etiqueta'];
-            $tipo = $def['tipo_dato'];
-            $unit = $values[0]['unidad_codigo'] ?? '';
-            $display = [];
-            foreach ($values as $v) {
-              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
-              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
-              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
-              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
-              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
-              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
-              else { $display[] = $v['valor_string']; }
-            }
-            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
-          ?>
-          <div class="component-chip" data-attr-id="<?= $aid ?>">
-            <span class="name"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="meta">· <strong><?= $text ?></strong><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
-            <button type="button" class="edit-component js-edit-attr" title="Editar"
-              data-attr-id="<?= $aid ?>"
-              data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-              data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
-              data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
-              data-units="<?= htmlspecialchars($def['unidades_permitidas_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?>"
-              data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-              data-values="<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>"
-            >✏️</button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="delete_attr" />
-              <input type="hidden" name="def_id" value="<?= $aid ?>" />
-              <button type="submit" class="remove-component" title="Remover">×</button>
-            </form>
+      <label for="search-attrs">Atributos</label>
+      <div class="dual-listbox-container two-panels">
+        <div class="listbox-panel">
+          <div class="listbox-header">
+            <strong>Disponibles</strong>
+            <span id="attrs-available-count" class="counter">(0)</span>
           </div>
-          <?php endforeach; ?>
+          <input type="text" id="search-attrs" class="listbox-search" placeholder="🔍 Buscar atributos...">
+          <div class="listbox-content" id="available-attrs">
+            <?php foreach ($attr_defs as $def):
+              $aid = (int)$def['id'];
+              $values = $attr_vals[$aid] ?? [];
+              $hasValues = !empty($values);
+              $label = $def['etiqueta'];
+              $tipo = $def['tipo_dato'];
+              $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
+              $unitDef = $def['unidad_defecto'] ?? '';
+            ?>
+            <div class="competencia-item <?= $hasValues ? 'hidden' : '' ?>"
+                 data-id="<?= $aid ?>"
+                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+                 data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
+                 data-units='<?= $unitsJson ?>'
+                 data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
+                 onclick="selectAttr(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo">Tipo <?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?><?= $unitDef ? ' · ' . htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') : '' ?></span>
+            </div>
+            <?php endforeach; ?>
+          </div>
         </div>
-        <div class="autocomplete-anchor">
-          <input type="text" id="attr_search" placeholder="Escribir para buscar atributo..." autocomplete="off" />
-          <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown"></div>
+        <div class="listbox-panel">
+          <div class="listbox-header">
+            <strong>Seleccionados</strong>
+            <span id="attrs-selected-count" class="counter">(0)</span>
+          </div>
+          <div class="listbox-content" id="selected-attrs-dl">
+            <?php foreach ($attr_defs as $def):
+              $aid = (int)$def['id'];
+              $values = $attr_vals[$aid] ?? [];
+              if (empty($values)) continue;
+              $label = $def['etiqueta'];
+              $tipo = $def['tipo_dato'];
+              $unitDef = $def['unidad_defecto'] ?? '';
+              $display = [];
+              foreach ($values as $v) {
+                if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+                else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+                else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+                else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+                else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+                else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+                else { $display[] = $v['valor_string']; }
+              }
+              $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+            ?>
+            <div class="competencia-item selected"
+                 data-id="<?= $aid ?>"
+                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+                 data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+                 data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
+                 data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                 data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
+                 onclick="editAttrItem(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo"><strong><?= $text ?></strong><?= ($values[0]['unidad_codigo'] ?? '') ? ' ' . htmlspecialchars($values[0]['unidad_codigo'], ENT_QUOTES, 'UTF-8') : '' ?></span>
+              <form method="POST" style="display:inline; margin-left:auto;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+                <input type="hidden" name="action" value="delete_attr" />
+                <input type="hidden" name="def_id" value="<?= $aid ?>" />
+                <button type="submit" class="remove-btn" title="Remover">×</button>
+              </form>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <small class="hint" style="margin-top: 10px; display: block;">Haz clic para editar. Usa × para quitar.</small>
         </div>
-        <datalist id="attrs_list">
-          <?php foreach ($attr_defs as $def): ?>
-            <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
-              <?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($def['grupo'] ?? 'ficha', ENT_QUOTES, 'UTF-8') ?>)
-            </option>
-          <?php endforeach; ?>
-        </datalist>
       </div>
-      <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
     </div>
   </div>
 
