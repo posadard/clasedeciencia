@@ -31,11 +31,9 @@ try {
                 m.advertencias_seguridad,
                 m.categoria_id,
                 c.nombre AS categoria_nombre,
-                c.slug AS categoria_slug,
-                m.activo
+                c.slug AS categoria_slug
             FROM kit_items m
             LEFT JOIN categorias_items c ON c.id = m.categoria_id
-            WHERE m.activo = 1
             ORDER BY c.nombre ASC, m.nombre_comun ASC";
     $stmt = $pdo->query($sql);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
