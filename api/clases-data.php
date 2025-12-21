@@ -6,7 +6,10 @@
  */
 
 header('Content-Type: application/json; charset=utf-8');
-header('Cache-Control: public, max-age=3600'); // Cache 1 hora
+// Evitar resultados desactualizados en el buscador (forzar fresh fetch)
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
 
 // Mostrar errores en desarrollo (desactivar en producción)
 error_reporting(E_ALL);

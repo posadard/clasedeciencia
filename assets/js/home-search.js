@@ -49,9 +49,12 @@ class ClaseDeCienciaSearch {
     console.log('📡 [ClaseDeCienciaSearch] Cargando datos desde API...');
     
     try {
-      const response = await fetch('/api/clases-data.php', {
+      // Cache-busting to ensure fresh data after content updates
+      const url = `/api/clases-data.php?t=${Date.now()}`;
+      const response = await fetch(url, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' }
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store'
       });
       
       console.log('📡 [ClaseDeCienciaSearch] Response status:', response.status);
