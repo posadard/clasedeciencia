@@ -3959,6 +3959,7 @@ strong, b {
     align-items: center;
     gap: var(--spacing-xs);
 }
+.article-byline .ficha { display: inline; }
 
 .kits-section {
     margin: var(--spacing-xl) 0;

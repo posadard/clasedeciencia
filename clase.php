@@ -248,34 +248,7 @@ include 'includes/header.php';
         </div>
         <?php endif; ?>
 
-        <?php if (!empty($ficha_attrs)): ?>
-        <section class="ficha-tecnica">
-            <h2>🧪 Ficha técnica</h2>
-            <dl class="ficha-list">
-                <?php foreach ($ficha_attrs as $attr): ?>
-                    <?php 
-                        $vals = $attr['values'];
-                        // Determinar si todas las unidades son iguales
-                        $units = array_values(array_unique(array_filter(array_map(fn($v)=>$v['unit'] ?? '', $vals))));
-                        $singleUnit = count($units) === 1 ? $units[0] : '';
-                        $texts = array_map(function($v) use ($singleUnit){
-                            $t = (string)$v['text'];
-                            // Si hay múltiples unidades distintas, adjuntar al valor
-                            if ($singleUnit === '' && !empty($v['unit'])) $t .= ' ' . $v['unit'];
-                            return $t;
-                        }, $vals);
-                        $display = implode(', ', $texts);
-                    ?>
-                    <div class="ficha-row">
-                        <dt class="ficha-term"><?= h($attr['label']) ?></dt>
-                        <dd class="ficha-def">
-                            <?= h($display) ?><?= $singleUnit ? ' ' . h($singleUnit) : '' ?>
-                        </dd>
-                    </div>
-                <?php endforeach; ?>
-            </dl>
-        </section>
-        <?php endif; ?>
+        <?php /* Ficha técnica se mostrará al final en la byline */ ?>
 
         <?php 
         // Información de seguridad estructurada
@@ -458,7 +431,34 @@ include 'includes/header.php';
         </section>
         <?php endif; ?>
 
-        <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at'])): ?>
+        <?php
+        // Construir ficha técnica en línea (resumen compacto)
+        $ficha_inline = '';
+        if (!empty($ficha_attrs)) {
+            $parts = [];
+            $count = 0; $max = 5; // limitar para evitar líneas demasiado largas
+            foreach ($ficha_attrs as $attr) {
+                if ($count >= $max) { break; }
+                $vals = $attr['values'];
+                $units = array_values(array_unique(array_filter(array_map(fn($v)=>$v['unit'] ?? '', $vals))));
+                $singleUnit = count($units) === 1 ? $units[0] : '';
+                $texts = array_map(function($v) use ($singleUnit){
+                    $t = (string)$v['text'];
+                    if ($singleUnit === '' && !empty($v['unit'])) $t .= ' ' . $v['unit'];
+                    return $t;
+                }, $vals);
+                $display = implode(', ', $texts);
+                if ($singleUnit) { $display .= ' ' . $singleUnit; }
+                $parts[] = ($attr['label'] . ': ' . $display);
+                $count++;
+            }
+            if (!empty($parts)) {
+                $ficha_inline = implode(' · ', $parts);
+                if (count($ficha_attrs) > $max) { $ficha_inline .= '…'; }
+            }
+        }
+        ?>
+        <?php if (!empty($proyecto['autor']) || !empty($proyecto['published_at']) || $ficha_inline !== ''): ?>
         <div class="article-byline">
             <?php if (!empty($proyecto['autor'])): ?>
                 <span class="author">✍️ <?= h($proyecto['autor']) ?></span>
@@ -468,6 +468,9 @@ include 'includes/header.php';
             <?php endif; ?>
             <?php if (!empty($proyecto['updated_at']) && $proyecto['updated_at'] !== $proyecto['published_at']): ?>
                 <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($proyecto['updated_at'])) ?></span>
+            <?php endif; ?>
+            <?php if ($ficha_inline !== ''): ?>
+                <span class="ficha">🧪 <?= h($ficha_inline) ?></span>
             <?php endif; ?>
         </div>
         <?php endif; ?>
