@@ -25,9 +25,9 @@
     --color-sky: #1565c0;            /* Azul cielo intenso */
     --color-sky-dark: #0f4c81;       /* Azul cielo oscuro (pantone classic blue) */
     --color-sky-darker: #0b3a6d;     /* Azul cielo más profundo */
-    --color-grass: #2e7d32;          /* Verde césped */
-    --color-grass-dark: #1b5e20;     /* Verde césped oscuro */
-    --color-grass-darker: #0f3d1b;   /* Verde césped muy oscuro */
+    --color-grass: #286a2b;          /* Verde césped */
+    --color-grass-dark: #14461a;     /* Verde césped más oscuro */
+    --color-grass-darker: #0a2e12;   /* Verde césped aún más oscuro */
 
     /* Tonos de hoja para secciones superiores (hero) */
     --color-leaf-light: #e8f5e9;     /* Verde hoja muy claro */
