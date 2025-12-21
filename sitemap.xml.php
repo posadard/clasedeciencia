@@ -67,7 +67,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     foreach ($materiales as $m):
     ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/componente-<?= h($m['slug']) ?></loc>
+        <loc><?= h(SITE_URL) ?>/<?= h($m['slug']) ?></loc>
         <?php if (!empty($m['created_at'])): ?>
         <lastmod><?= h(date('Y-m-d', strtotime($m['created_at']))) ?></lastmod>
         <?php endif; ?>

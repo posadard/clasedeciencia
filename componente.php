@@ -24,7 +24,7 @@ if (!$material) {
 
 $page_title = $material['common_name'];
 $page_description = generate_excerpt($material['description'] ?? '', 160);
-$canonical_url = SITE_URL . '/componente-' . urlencode($material['slug']);
+$canonical_url = SITE_URL . '/' . urlencode($material['slug']);
 
 include 'includes/header.php';
 ?>

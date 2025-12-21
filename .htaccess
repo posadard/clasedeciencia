@@ -27,16 +27,16 @@ RewriteRule ^componentes$ /componentes.php [L,QSA]
 # URL amigable para detalle de componente (opcional)
 RewriteRule ^componente$ /componente.php [L,QSA]
 
-# URLs amigables para detalle de kits y componentes con prefijo
-RewriteRule ^kit-([a-z0-9-]+)/?$ /kit.php?slug=$1 [L,QSA]
-RewriteRule ^componente-([a-z0-9-]+)/?$ /componente.php?slug=$1 [L,QSA]
+# URLs amigables para detalle de kits y componentes con prefijo en el propio slug
+RewriteRule ^(kit-[a-z0-9-]+)/?$ /kit.php?slug=$1 [L,QSA]
+RewriteRule ^(componente-[a-z0-9-]+)/?$ /componente.php?slug=$1 [L,QSA]
 
 # Redirecciones 301 desde URLs con query a las rutas bonitas
 RewriteCond %{THE_REQUEST} \s/kit\.php\?slug=([^\s&]+) [NC]
-RewriteRule ^kit\.php$ /kit-%1? [R=301,L]
+RewriteRule ^kit\.php$ /%1? [R=301,L]
 
 RewriteCond %{THE_REQUEST} \s/componente\.php\?slug=([^\s&]+) [NC]
-RewriteRule ^componente\.php$ /componente-%1? [R=301,L]
+RewriteRule ^componente\.php$ /%1? [R=301,L]
 
 # Redirect legacy material.php to componente.php preserving slug
 RewriteCond %{QUERY_STRING} ^slug=([A-Za-z0-9._-]+)$ [NC]
