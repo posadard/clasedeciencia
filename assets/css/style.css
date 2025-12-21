@@ -20,6 +20,14 @@
     --color-accent: #f9a825;         /* Amarillo suave (curiosidad y descubrimiento) */
     --color-accent-light: #ffc107;   /* Amarillo brillante */
     --color-accent-dark: #f57f17;    /* Amarillo oscuro */
+
+    /* Tema cielo/pasto para header/footer */
+    --color-sky: #1565c0;            /* Azul cielo intenso */
+    --color-sky-dark: #0f4c81;       /* Azul cielo oscuro (pantone classic blue) */
+    --color-sky-darker: #0b3a6d;     /* Azul cielo más profundo */
+    --color-grass: #2e7d32;          /* Verde césped */
+    --color-grass-dark: #1b5e20;     /* Verde césped oscuro */
+    --color-grass-darker: #0f3d1b;   /* Verde césped muy oscuro */
     
     /* Estados y Utilidades */
     --color-success: #2e7d32;        /* Verde - confirmación */
@@ -153,7 +161,8 @@ strong, b {
 
 /* === Header === */
 .site-header {
-    background: var(--color-primary);
+    /* Fondo tipo cielo (oscuro, institucional) */
+    background: linear-gradient(180deg, var(--color-sky-dark) 0%, var(--color-sky-darker) 100%);
     color: white;
     padding: var(--spacing-md) 0.5rem;
     margin-bottom: var(--spacing-lg);
@@ -1671,7 +1680,8 @@ strong, b {
 
 /* === Footer === */
 .site-footer {
-    background: var(--color-primary);
+    /* Fondo tipo césped (verde más oscuro) */
+    background: linear-gradient(180deg, var(--color-grass-dark) 0%, var(--color-grass-darker) 100%);
     color: white;
     padding: var(--spacing-xl) 0 var(--spacing-lg);
     margin-top: var(--spacing-2xl);
