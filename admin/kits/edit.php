@@ -165,6 +165,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = 'Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         echo '<script>console.log("❌ [KitsEdit] Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
+    } else if ($action === 'add_attr' && $is_edit) {
+      try {
+        $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+        $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
+        $unidad = isset($_POST['unidad']) ? trim((string)$_POST['unidad']) : '';
+        if ($def_id <= 0 || $valor === '') { throw new Exception('Datos inválidos'); }
+        $defS = $pdo->prepare('SELECT * FROM atributos_definiciones WHERE id = ?');
+        $defS->execute([$def_id]);
+        $def = $defS->fetch(PDO::FETCH_ASSOC);
+        if (!$def) { throw new Exception('Atributo no existe'); }
+        $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?')->execute(['kit', $id, $def_id]);
+        $pdo->beginTransaction();
+        $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+        $card = $def['cardinalidad'];
+        $tipo = $def['tipo_dato'];
+        $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+        $orden = 1;
+        foreach ($vals as $v) {
+          $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+          switch ($tipo) {
+            case 'number':
+              $num = is_numeric(str_replace(',', '.', $v)) ? (float)str_replace(',', '.', $v) : null; if ($num === null) continue 2; $val_numero = $num; break;
+            case 'integer':
+              $int = is_numeric($v) ? (int)$v : null; if ($int === null) continue 2; $val_entero = $int; break;
+            case 'boolean':
+              $val_bool = ($v === '1' || strtolower($v) === 'true' || strtolower($v) === 'sí' || strtolower($v) === 'si') ? 1 : 0; break;
+            case 'date':
+              $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null; if ($val_fecha === null) continue 2; break;
+            case 'datetime':
+              $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $v) ? (str_replace('T', ' ', $v) . ':00') : null; if ($val_dt === null) continue 2; break;
+            case 'json':
+              $decoded = json_decode($v, true); if ($decoded === null && strtolower(trim($v)) !== 'null') continue 2; $val_json = json_encode($decoded); break;
+            case 'string':
+            default:
+              $val_string = mb_substr((string)$v, 0, 2000, 'UTF-8'); break;
+          }
+          $ins->execute(['kit', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
+        }
+        $pdo->commit();
+        $action_msg = 'Atributo agregado.';
+        echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>';
+      } catch (Exception $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error agregando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+    } else if ($action === 'update_attr' && $is_edit) {
+      try {
+        $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+        $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
+        $unidad = isset($_POST['unidad']) ? trim((string)$_POST['unidad']) : '';
+        if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+        $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?')->execute(['kit', $id, $def_id]);
+        // reusar add_attr
+        $defS = $pdo->prepare('SELECT * FROM atributos_definiciones WHERE id = ?');
+        $defS->execute([$def_id]);
+        $def = $defS->fetch(PDO::FETCH_ASSOC);
+        if (!$def) { throw new Exception('Atributo no existe'); }
+        $pdo->beginTransaction();
+        $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+        $card = $def['cardinalidad'];
+        $tipo = $def['tipo_dato'];
+        $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+        $orden = 1;
+        foreach ($vals as $v) {
+          $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+          switch ($tipo) {
+            case 'number':
+              $num = is_numeric(str_replace(',', '.', $v)) ? (float)str_replace(',', '.', $v) : null; if ($num === null) continue 2; $val_numero = $num; break;
+            case 'integer':
+              $int = is_numeric($v) ? (int)$v : null; if ($int === null) continue 2; $val_entero = $int; break;
+            case 'boolean':
+              $val_bool = ($v === '1' || strtolower($v) === 'true' || strtolower($v) === 'sí' || strtolower($v) === 'si') ? 1 : 0; break;
+            case 'date':
+              $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null; if ($val_fecha === null) continue 2; break;
+            case 'datetime':
+              $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $v) ? (str_replace('T', ' ', $v) . ':00') : null; if ($val_dt === null) continue 2; break;
+            case 'json':
+              $decoded = json_decode($v, true); if ($decoded === null && strtolower(trim($v)) !== 'null') continue 2; $val_json = json_encode($decoded); break;
+            case 'string':
+            default:
+              $val_string = mb_substr((string)$v, 0, 2000, 'UTF-8'); break;
+          }
+          $ins->execute(['kit', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
+        }
+        $pdo->commit();
+        $action_msg = 'Atributo actualizado.';
+        echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>';
+      } catch (Exception $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error actualizando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+    } else if ($action === 'delete_attr' && $is_edit) {
+      try {
+        $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+        if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+        $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
+        $stmt->execute(['kit', $id, $def_id]);
+        $action_msg = 'Atributo eliminado.';
+        echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>';
+      } catch (PDOException $e) {
+        $error_msg = 'Error eliminando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
     } else if ($action === 'save') {
       // Clases seleccionadas (transfer list)
       $clases_sel = isset($_POST['clases']) && is_array($_POST['clases']) ? array_map('intval', $_POST['clases']) : [];
@@ -437,6 +542,238 @@ include '../header.php';
 </div>
 <?php endif; ?>
 
+  <?php
+  // Definiciones y valores actuales de atributos del Kit (para UI tipo chips)
+  $attr_defs = [];
+  $attr_vals = [];
+  if ($is_edit) {
+    try {
+      $st = $pdo->prepare('SELECT d.* FROM atributos_definiciones d JOIN atributos_mapeo m ON m.atributo_id = d.id WHERE m.tipo_entidad = ? AND m.visible = 1 ORDER BY m.orden ASC, d.id ASC');
+      $st->execute(['kit']);
+      $attr_defs = $st->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) { $attr_defs = []; }
+    try {
+      $sv = $pdo->prepare('SELECT * FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? ORDER BY atributo_id ASC, orden ASC');
+      $sv->execute(['kit', $id]);
+      $rows = $sv->fetchAll(PDO::FETCH_ASSOC);
+      foreach ($rows as $r) {
+        $aid = (int)$r['atributo_id'];
+        if (!isset($attr_vals[$aid])) $attr_vals[$aid] = [];
+        $attr_vals[$aid][] = $r;
+      }
+    } catch (PDOException $e) {}
+  }
+  ?>
+  <?php if ($is_edit): ?>
+  <div class="card" style="margin-top:2rem;">
+    <h3>Ficha técnica</h3>
+    <div class="form-group">
+      <label for="attr_search">Agregar atributo</label>
+      <div class="component-selector-container">
+        <div class="selected-components" id="selected-attrs">
+          <?php foreach ($attr_defs as $def):
+            $aid = (int)$def['id'];
+            $values = $attr_vals[$aid] ?? [];
+            if (empty($values)) continue;
+            // Render resumen
+            $label = $def['etiqueta'];
+            $tipo = $def['tipo_dato'];
+            $unit = $values[0]['unidad_codigo'] ?? '';
+            $display = [];
+            foreach ($values as $v) {
+              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+              else { $display[] = $v['valor_string']; }
+            }
+            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+          ?>
+          <div class="component-chip" data-attr-id="<?= $aid ?>">
+            <span class="name"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="meta">· <strong><?= $text ?></strong><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
+            <button type="button" class="edit-component js-edit-attr" title="Editar"
+              data-attr-id="<?= $aid ?>"
+              data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+              data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+              data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
+              data-units="<?= htmlspecialchars($def['unidades_permitidas_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?>"
+              data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+              data-values="<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>"
+            >✏️</button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+              <input type="hidden" name="action" value="delete_attr" />
+              <input type="hidden" name="def_id" value="<?= $aid ?>" />
+              <button type="submit" class="remove-component" title="Remover">×</button>
+            </form>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <input type="text" id="attr_search" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <datalist id="attrs_list">
+          <?php foreach ($attr_defs as $def): ?>
+            <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($def['grupo'] ?? 'ficha', ENT_QUOTES, 'UTF-8') ?>)
+            </option>
+          <?php endforeach; ?>
+        </datalist>
+        <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown"></div>
+      </div>
+      <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
+    </div>
+  </div>
+
+  <!-- Modal Editar Atributo -->
+  <div class="modal-backdrop" id="modalEditAttr">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrTitle">
+      <div class="modal-header">
+        <h4 id="modalEditAttrTitle">Editar atributo</h4>
+        <button type="button" class="btn-plain js-close-modal" data-target="#modalEditAttr">✖</button>
+      </div>
+      <form method="POST" id="formEditAttr">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="update_attr" />
+        <input type="hidden" name="def_id" id="edit_def_id" />
+        <div class="modal-body">
+          <div class="muted" id="editAttrInfo"></div>
+          <div class="form-group">
+            <label for="edit_valor">Valor</label>
+            <textarea id="edit_valor" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="edit_unidad">Unidad (si aplica)</label>
+            <select id="edit_unidad" name="unidad"></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalEditAttr">Cancelar</button>
+          <button type="submit" class="btn">Guardar</button>
+        </div>
+      </form>
+    </div>
+   </div>
+
+  <!-- Modal Agregar Atributo -->
+  <div class="modal-backdrop" id="modalAddAttr">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrTitle">
+      <div class="modal-header">
+        <h4 id="modalAddAttrTitle">Agregar atributo</h4>
+        <button type="button" class="btn-plain js-close-modal" data-target="#modalAddAttr">✖</button>
+      </div>
+      <form method="POST" id="formAddAttr">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="add_attr" />
+        <input type="hidden" name="def_id" id="add_def_id" />
+        <div class="modal-body">
+          <div class="muted" id="addAttrInfo"></div>
+          <div class="form-group">
+            <label for="add_valor">Valor</label>
+            <textarea id="add_valor" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="add_unidad">Unidad (si aplica)</label>
+            <select id="add_unidad" name="unidad"></select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddAttr">Cancelar</button>
+          <button type="submit" class="btn">Agregar</button>
+        </div>
+      </form>
+    </div>
+   </div>
+
+  <script>
+    // Autocomplete + modal para atributos (similar a componentes)
+    (function initAttrUI(){
+      const dropdown = document.getElementById('attr_autocomplete_dropdown');
+      const input = document.getElementById('attr_search');
+      const selectedWrap = document.getElementById('selected-attrs');
+      if (!dropdown || !input || !selectedWrap) { console.log('⚠️ [KitsEdit] UI atributos no inicializada'); return; }
+
+      const defs = [
+        <?php foreach ($attr_defs as $d): ?>
+        { id: <?= (int)$d['id'] ?>, label: '<?= htmlspecialchars($d['etiqueta'], ENT_QUOTES, 'UTF-8') ?>', tipo: '<?= htmlspecialchars($d['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>', card: '<?= htmlspecialchars($d['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>', units: <?= $d['unidades_permitidas_json'] ? $d['unidades_permitidas_json'] : '[]' ?>, unitDef: '<?= htmlspecialchars($d['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
+        <?php endforeach; ?>
+      ];
+
+      function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+      function render(list){
+        if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div>'; dropdown.style.display='block'; return; }
+        dropdown.innerHTML = '';
+        list.slice(0, 20).forEach(def => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item';
+          div.innerHTML = `<strong>${def.label}</strong><span class="cmp-code">${def.tipo}${def.unitDef? ' · '+def.unitDef:''}</span>`;
+          div.addEventListener('click', () => onChoose(def));
+          dropdown.appendChild(div);
+        });
+        dropdown.style.display = 'block';
+      }
+      function filter(q){
+        const nq = normalize(q);
+        const out = defs.filter(d => normalize(d.label).includes(nq));
+        console.log('🔍 [KitsEdit] Buscar atributo:', q, '→', out.length);
+        render(out);
+      }
+      function onChoose(def){
+        try {
+          document.getElementById('add_def_id').value = String(def.id);
+          document.getElementById('addAttrInfo').textContent = def.label;
+          const sel = document.getElementById('add_unidad');
+          sel.innerHTML = '';
+          const opt0 = document.createElement('option');
+          opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+          if (Array.isArray(def.units)) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+          openModal('#modalAddAttr');
+          setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
+        } catch (e) {
+          console.log('❌ [KitsEdit] Error preparar modal atributo:', e && e.message);
+        }
+        dropdown.style.display = 'none';
+      }
+      input.addEventListener('focus', () => filter(input.value));
+      input.addEventListener('input', () => filter(input.value));
+      document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
+
+      // Editar chip
+      document.querySelectorAll('.js-edit-attr').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const defId = btn.getAttribute('data-attr-id');
+          const label = btn.getAttribute('data-label');
+          const tipo = btn.getAttribute('data-tipo');
+          const unitsJson = btn.getAttribute('data-units');
+          const unitDef = btn.getAttribute('data-unidad_def') || '';
+          const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
+          document.getElementById('edit_def_id').value = defId;
+          document.getElementById('editAttrInfo').textContent = label;
+          const inputEl = document.getElementById('edit_valor');
+          const unitSel = document.getElementById('edit_unidad');
+          inputEl.value = '';
+          unitSel.innerHTML = '';
+          if (Array.isArray(vals) && vals.length) {
+            const parts = vals.map(v => {
+              if (tipo === 'number') return v.valor_numero;
+              if (tipo === 'integer') return v.valor_entero;
+              if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
+              if (tipo === 'date') return v.valor_fecha;
+              if (tipo === 'datetime') return v.valor_datetime;
+              if (tipo === 'json') return v.valor_json;
+              return v.valor_string;
+            }).filter(Boolean);
+            inputEl.value = parts.join(', ');
+          }
+          const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+          try { const units = JSON.parse(unitsJson || '[]'); if (Array.isArray(units)) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); }); } catch(_e){}
+          openModal('#modalEditAttr');
+        });
+      });
+    })();
+  </script>
+  <?php endif; ?>
 <script>
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
   console.log('🔍 [KitsEdit] Items disponibles:', <?= count($items) ?>);
