@@ -30,7 +30,7 @@ if (isset($_GET['slug_dinamico']) && !empty($_GET['slug_dinamico'])) {
                 // Proyecto
                 $_GET['slug'] = $slug_dinamico;
                 unset($_GET['slug_dinamico']);
-                include 'proyecto.php';
+                include 'clase.php';
                 exit;
             }
         }

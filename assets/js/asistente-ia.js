@@ -1,5 +1,5 @@
 // Asistente IA - Widget Cliente
-// Uso: en proyecto.php, llama initAsistenteIA({ proyectoId })
+// Uso: en clase.php, llama initAsistenteIA({ proyectoId })
 
 (function () {
   function createUI() {

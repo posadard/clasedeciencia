@@ -14,8 +14,6 @@ RewriteRule ^section\.php$ /clases [R=301,L]
 RewriteRule ^article\.php$ /clases [R=301,L]
 
 # Redirect antiguo formato a nuevo (SEO 301)
-RewriteCond %{QUERY_STRING} ^slug=([a-z0-9-]+)$
-RewriteRule ^proyecto\.php$ /%1? [R=301,L]
 RewriteCond %{QUERY_STRING} ^slug=(clase-[a-z0-9-]+)$ [NC]
 RewriteRule ^clase\.php$ /%1? [R=301,L]
 
@@ -45,9 +43,9 @@ RewriteRule ^componente\.php$ /%1? [R=301,L]
 # Ruta amigable de búsqueda: /clases/buscar/{termino}
 RewriteRule ^clases/buscar/(.*)$ /clases.php?q=$1 [L,QSA]
 
-# URLs amigables dinámicas: /{slug} puede ser ciclo, área o proyecto
+# URLs amigables dinámicas: /{slug} puede ser ciclo, área o clase
 # clases.php detectará automáticamente si el slug es un ciclo o área
-# Si no es ninguno, proyecto.php manejará el slug como proyecto
+# Si no es ninguno, clase.php manejará el slug como clase
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/(admin|api|assets|includes|base_paginas|marco)/

@@ -1,5 +1,5 @@
 <?php
-// Clase - Detalle de la clase con guía (renombrado de proyecto.php)
+// Clase - Detalle de la clase con guía
 require_once 'config.php';
 require_once 'includes/functions.php';
 
