@@ -41,7 +41,7 @@ include 'includes/header.php';
             </div>
             <div class="ciclos-grid">
                 <?php foreach ($ciclos as $c): ?>
-                <article class="ciclo-card" data-ciclo="<?= h($c['numero']) ?>">
+                <article class="ciclo-card" data-ciclo="<?= h($c['numero']) ?>" data-href="/<?= h($c['slug']) ?>" tabindex="0" role="link">
                     <!-- Icono central con número de ciclo -->
                     <div class="ciclo-icon ciclo-<?= h($c['numero']) ?>">
                         <span class="ciclo-numero"><?= h($c['numero']) ?></span>
@@ -129,6 +129,35 @@ console.log('📊 [home] Proyectos por área:', <?= json_encode(array_map(functi
     return ['nombre' => $a['nombre'], 'total' => (int)$a['total_proyectos']]; 
 }, $areas)) ?>);
 <?php endif; ?>
+</script>
+
+<script>
+// Hacer clickeables los cards de ciclos completos (no solo el botón)
+document.addEventListener('DOMContentLoaded', function() {
+    const cicloCards = document.querySelectorAll('.ciclo-card');
+    cicloCards.forEach(card => {
+        const href = card.dataset.href;
+        if (!href) return;
+        card.style.cursor = 'pointer';
+
+        // Click en el card (evita interferir con enlaces internos)
+        card.addEventListener('click', (e) => {
+            if (e.defaultPrevented) return;
+            if (e.target.closest('a')) return; // ya hay un <a> interno
+            console.log('🔍 [home] Click en ciclo card:', card.dataset.ciclo, '→', href);
+            window.location.href = href;
+        });
+
+        // Navegación con teclado (Enter/Espacio)
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                console.log('🔍 [home] Tecla en ciclo card:', card.dataset.ciclo, '→', href);
+                window.location.href = href;
+            }
+        });
+    });
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>
