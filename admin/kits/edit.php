@@ -417,7 +417,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
         }
       }
-    }
     } else if ($action === 'create_attr_def' && $is_edit) {
       try {
         $etiqueta = isset($_POST['etiqueta']) ? trim((string)$_POST['etiqueta']) : '';
