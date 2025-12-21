@@ -711,10 +711,11 @@ class ClaseDeCienciaSearch {
     if (area) params.set('area', area);
 
     console.log('🔍 [ClaseDeCienciaSearch] Intent parse:', { query, grado, ciclo, dificultad, area });
-    console.log('✅ [ClaseDeCienciaSearch] Redirigiendo con params:', params.toString());
+    console.log('✅ [ClaseDeCienciaSearch] Redirigiendo a resultados de búsqueda');
 
     this.hideSearchResults();
-    window.location.href = `/catalogo.php?${params.toString()}`;
+    // Enviar a página exclusiva de resultados
+    window.location.href = `/search.php?q=${encodeURIComponent(query)}`;
   }
 }
 
