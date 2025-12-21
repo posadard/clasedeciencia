@@ -411,8 +411,8 @@ include 'includes/header.php';
                     </div>
                 </div>
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">Aplicar Filtros</button>
                     <a href="/clases" class="btn btn-secondary">Limpiar</a>
+                    <span class="auto-note" style="color: var(--color-text-muted); font-size: 0.85rem;">Los filtros se aplican automáticamente</span>
                 </div>
             </form>
         </aside>
@@ -510,6 +510,129 @@ function updateSort(sortValue) {
     url.searchParams.set('sort', sortValue);
     window.location.href = url.toString();
 }
+
+// Auto-apply filters with debounce
+(function(){
+    const form = document.querySelector('.filters-form');
+    let timer = null;
+    function scheduleSubmit(){
+        if (!form) return;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(()=>{
+            console.log('✅ [clases] Auto-aplicando filtros');
+            form.submit();
+        }, 350);
+    }
+    // Listen to checkbox changes (ciclo, dificultad)
+    document.querySelectorAll('.filters-form input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', ()=>{
+            console.log('🔍 [clases] Checkbox cambiado:', cb.name, cb.value, cb.checked);
+            scheduleSubmit();
+        });
+    });
+
+    // Tag Input for Áreas (multi-select autocomplete + chips)
+    const container = document.getElementById('cdc-area-taginput');
+    if (!container) return;
+    const nameAttr = container.getAttribute('data-name') || 'area[]';
+    const OPTIONS = <?= json_encode(array_map(function($a){ return ['slug'=>$a['slug'], 'nombre'=>$a['nombre']]; }, $areas)) ?>;
+    const SELECTED = <?= json_encode($filters['areas'] ?? (isset($filters['area'])?[(string)$filters['area']]:[])) ?>;
+
+    console.log('🔍 [area-taginput] Opciones:', OPTIONS.length);
+    console.log('🔍 [area-taginput] Seleccionadas iniciales:', SELECTED);
+
+    const normalize = (s) => (s||'').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,' ').trim();
+
+    container.classList.add('ti');
+    container.innerHTML = '<div class="ti-chips"></div><input type="text" class="ti-input" placeholder="Escribe un área..." autocomplete="off" /><div class="ti-suggestions" style="display:none;"></div>';
+    const chipsEl = container.querySelector('.ti-chips');
+    const inputEl = container.querySelector('.ti-input');
+    const suggEl = container.querySelector('.ti-suggestions');
+
+    const hiddenInputs = new Map(); // slug -> input
+    const selectedSet = new Set();
+
+    function renderChip(slug, label){
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = label;
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'chip-remove';
+        close.setAttribute('aria-label','Quitar área');
+        close.textContent = '×';
+        close.addEventListener('click', () => removeValue(slug));
+        chip.appendChild(close);
+        chipsEl.appendChild(chip);
+    }
+
+    function addValue(slug){
+        if (selectedSet.has(slug)) return;
+        const opt = OPTIONS.find(o=>o.slug===slug);
+        if (!opt) return;
+        selectedSet.add(slug);
+        // hidden input
+        const hi = document.createElement('input');
+        hi.type = 'hidden'; hi.name = nameAttr; hi.value = slug;
+        container.appendChild(hi);
+        hiddenInputs.set(slug, hi);
+        renderChip(slug, opt.nombre);
+        console.log('✅ [area-taginput] Añadida:', slug);
+        scheduleSubmit();
+    }
+
+    function removeValue(slug){
+        if (!selectedSet.has(slug)) return;
+        selectedSet.delete(slug);
+        const hi = hiddenInputs.get(slug); if (hi) { hi.remove(); hiddenInputs.delete(slug); }
+        // remove chip
+        chipsEl.querySelectorAll('.chip').forEach(ch=>{ if (ch.firstChild && ch.firstChild.nodeType===3 && normalize(ch.firstChild.textContent) === normalize(OPTIONS.find(o=>o.slug===slug)?.nombre||'')) ch.remove(); });
+        console.log('⚠️ [area-taginput] Removida:', slug);
+        scheduleSubmit();
+    }
+
+    function showSuggestions(list){
+        if (!list.length){ suggEl.style.display='none'; suggEl.innerHTML=''; return; }
+        suggEl.innerHTML = list.map(o=>`<div class=\"ti-item\" data-slug=\"${o.slug}\">${o.nombre}</div>`).join('');
+        suggEl.style.display='block';
+    }
+
+    function filterOptions(q){
+        const qn = normalize(q);
+        if (!qn) return OPTIONS.filter(o=>!selectedSet.has(o.slug)).slice(0,8);
+        return OPTIONS.filter(o=>!selectedSet.has(o.slug) && normalize(o.nombre).includes(qn)).slice(0,8);
+    }
+
+    suggEl.addEventListener('click', (e)=>{
+        const item = e.target.closest('.ti-item');
+        if (!item) return;
+        addValue(item.getAttribute('data-slug'));
+        inputEl.value=''; suggEl.style.display='none';
+        inputEl.focus();
+    });
+
+    inputEl.addEventListener('input', ()=>{
+        const list = filterOptions(inputEl.value);
+        console.log('🔍 [area-taginput] Sugerencias:', list.length);
+        showSuggestions(list);
+    });
+    inputEl.addEventListener('keydown', (e)=>{
+        if (e.key==='Enter'){
+            e.preventDefault();
+            const list = filterOptions(inputEl.value);
+            if (list.length){ addValue(list[0].slug); inputEl.value=''; showSuggestions([]); }
+        } else if (e.key==='Backspace' && !inputEl.value) {
+            // remove last selected
+            const last = Array.from(selectedSet).pop();
+            if (last) removeValue(last);
+        }
+    });
+
+    // Init with preselected
+    (SELECTED||[]).forEach(s=> addValue(String(s)));
+})();
 
 // Collapsible toggles
 document.querySelectorAll('.collapsible-toggle').forEach(btn => {
