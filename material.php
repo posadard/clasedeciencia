@@ -5,24 +5,17 @@
  */
 
 require_once 'config.php';
-require_once 'includes/functions.php';
-require_once 'includes/db-functions.php';
-require_once 'includes/materials-functions.php';
-
-$slug = $_GET['slug'] ?? '';
-
-if (!$slug) {
-    header('Location: /materials.php');
+// Este archivo ha sido reemplazado por componente.php
+// Redirigimos permanentemente para mantener compatibilidad con enlaces antiguos
+$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+if ($slug === '') {
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: /componentes');
     exit;
 }
-
-$material = get_material_by_slug($pdo, $slug);
-
-if (!$material) {
-    header('HTTP/1.0 404 Not Found');
-    echo "Material not found.";
-    exit;
-}
+header('HTTP/1.1 301 Moved Permanently');
+header('Location: /componente.php?slug=' . urlencode($slug));
+exit;
 
 $page_title = $material['seo_title'] ?: $material['common_name'];
 $page_description = $material['seo_description'] ?: substr(strip_tags($material['description']), 0, 160);
@@ -240,10 +233,9 @@ include 'includes/header.php';
 
 <div class="container material-detail">
     <div class="breadcrumb">
-        <a href="/">Home</a> / 
-        <a href="/materials.php">Materials</a> / 
-        <a href="/materials.php?category=<?= urlencode($material['category_slug']) ?>"><?= htmlspecialchars($material['category_name']) ?></a> / 
-        <strong><?= htmlspecialchars($material['common_name']) ?></strong>
+        <a href="/">Inicio</a> / 
+        <a href="/componentes">Componentes</a> / 
+        <strong>Redirigido…</strong>
     </div>
 
     <div class="material-top">

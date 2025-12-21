@@ -24,6 +24,9 @@ RewriteRule ^clases$ /clases.php [L,QSA]
 RewriteRule ^kits$ /kits.php [L,QSA]
 RewriteRule ^componentes$ /componentes.php [L,QSA]
 
+# URL amigable para detalle de componente (opcional)
+RewriteRule ^componente$ /componente.php [L,QSA]
+
 # Ruta amigable de búsqueda: /clases/buscar/{termino}
 RewriteRule ^clases/buscar/(.*)$ /clases.php?q=$1 [L,QSA]
 
