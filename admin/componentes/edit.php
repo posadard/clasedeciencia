@@ -723,6 +723,31 @@ if ($is_edit) {
   // Logs de envío de formularios
   document.getElementById('formEditAttrCmp')?.addEventListener('submit', () => console.log('📡 [ComponentesEdit] Enviando update_attr...'));
   document.getElementById('formAddAttrCmp')?.addEventListener('submit', () => console.log('📡 [ComponentesEdit] Enviando add_attr...'));
+  // Fallback binder to ensure the create-attribute button opens the modal
+  (function bindCreateAttrButtonCmp(){
+    const btn = document.getElementById('btn_create_attr_cmp');
+    if (!btn) { console.log('⚠️ [ComponentesEdit] Botón crear atributo no encontrado'); return; }
+    btn.addEventListener('click', function(){
+      try {
+        const q = (document.getElementById('attr_search_cmp')?.value || '').trim();
+        const et = document.getElementById('create_etiqueta_cmp');
+        const cl = document.getElementById('create_clave_cmp');
+        const tp = document.getElementById('create_tipo_cmp');
+        const cd = document.getElementById('create_card_cmp');
+        const ud = document.getElementById('create_unidad_cmp');
+        const ups = document.getElementById('create_unidades_cmp');
+        if (et) et.value = q;
+        if (cl) cl.value = '';
+        if (tp) tp.value = 'string';
+        if (cd) cd.value = 'one';
+        if (ud) ud.value = '';
+        if (ups) ups.value = '';
+        openModal('#modalCreateAttrCmp');
+        setTimeout(() => { try { et?.focus(); } catch(_e){} }, 50);
+        console.log('✅ [ComponentesEdit] Modal crear atributo abierto');
+      } catch(e) { console.log('❌ [ComponentesEdit] Error abrir modal crear atributo:', e && e.message); }
+    });
+  })();
 </script>
 <style>
   .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }

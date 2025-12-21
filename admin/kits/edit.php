@@ -507,6 +507,33 @@ include '../header.php';
     console.log('🔍 [Admin] Edit mode:', <?= $is_edit ? 'true' : 'false' ?>);
     console.log('🔍 [Admin] Kit ID:', <?= $is_edit ? (int)$id : 'null' ?>);
   </script>
+  <script>
+    // Fallback binder to ensure the create-attribute button opens the modal
+    (function bindCreateAttrButton(){
+      const btn = document.getElementById('btn_create_attr');
+      if (!btn) { console.log('⚠️ [KitsEdit] Botón crear atributo no encontrado'); return; }
+      btn.addEventListener('click', function(){
+        try {
+          const q = (document.getElementById('attr_search')?.value || '').trim();
+          const et = document.getElementById('create_etiqueta');
+          const cl = document.getElementById('create_clave');
+          const tp = document.getElementById('create_tipo');
+          const cd = document.getElementById('create_card');
+          const ud = document.getElementById('create_unidad');
+          const ups = document.getElementById('create_unidades');
+          if (et) et.value = q;
+          if (cl) cl.value = '';
+          if (tp) tp.value = 'string';
+          if (cd) cd.value = 'one';
+          if (ud) ud.value = '';
+          if (ups) ups.value = '';
+          openModal('#modalCreateAttr');
+          setTimeout(() => { try { et?.focus(); } catch(_e){} }, 50);
+          console.log('✅ [KitsEdit] Modal crear atributo abierto');
+        } catch(e) { console.log('❌ [KitsEdit] Error abrir modal crear atributo:', e && e.message); }
+      });
+    })();
+  </script>
 </div>
 
 <?php if ($error_msg !== ''): ?>
