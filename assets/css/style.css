@@ -2838,6 +2838,8 @@ strong, b {
 .form-section { margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-border-light); }
 .form-section:last-of-type { border-bottom: none; }
 .form-section h2 { margin-bottom: 0.5rem; font-size: 1.05rem; color: var(--color-primary-dark); }
+.form-section .section-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.5rem; }
+.form-section .section-header h2 { margin: 0; }
 .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.5rem; }
 .form-actions { display: flex; gap: 0.5rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #eef2f5; }
 

@@ -553,7 +553,12 @@ include '../header.php';
   ?>
   <?php if ($is_edit): ?>
   <div class="form-section">
-    <h2>Ficha técnica</h2>
+    <div class="section-header">
+      <h2>Ficha técnica</h2>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
+      </div>
+    </div>
     <div class="form-group">
       <label for="attr_search_cls">Agregar atributo</label>
       <div class="component-selector-container">
@@ -594,9 +599,6 @@ include '../header.php';
           <?php endforeach; ?>
         </div>
         <input type="text" id="attr_search_cls" placeholder="Escribir para buscar atributo..." autocomplete="off" />
-        <div class="attr-actions" style="margin-top:6px;">
-          <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
-        </div>
         <datalist id="attrs_list_cls">
           <?php foreach ($attrs_defs as $def): ?>
             <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
