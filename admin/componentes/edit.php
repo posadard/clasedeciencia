@@ -204,6 +204,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $errores[] = 'Error guardando atributos: ' . $e->getMessage();
       echo "<script>console.log('❌ [ComponentesEdit] Error guardando atributos: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
     }
+  } else if ($action === 'create_attr_def' && $is_edit) {
+    try {
+      $etiqueta = isset($_POST['etiqueta']) ? trim((string)$_POST['etiqueta']) : '';
+      $clave = isset($_POST['clave']) ? trim((string)$_POST['clave']) : '';
+      $tipo_dato = isset($_POST['tipo_dato']) ? trim((string)$_POST['tipo_dato']) : 'string';
+      $cardinalidad = isset($_POST['cardinalidad']) ? trim((string)$_POST['cardinalidad']) : 'one';
+      $unidad_defecto = isset($_POST['unidad_defecto']) ? trim((string)$_POST['unidad_defecto']) : '';
+      $unidades_permitidas = isset($_POST['unidades_permitidas']) ? trim((string)$_POST['unidades_permitidas']) : '';
+      if ($etiqueta === '') { throw new Exception('Etiqueta requerida'); }
+      if ($clave === '') {
+        $base = iconv('UTF-8','ASCII//TRANSLIT', $etiqueta);
+        $base = strtolower(preg_replace('/[^a-z0-9]+/i','-', $base));
+        $clave = trim($base, '-');
+      } else {
+        $clave = strtolower(preg_replace('/[^a-z0-9]+/i','-', $clave));
+        $clave = trim($clave, '-');
+      }
+      if (!in_array($tipo_dato, ['string','integer','number','boolean','date','datetime','json'], true)) { $tipo_dato = 'string'; }
+      if (!in_array($cardinalidad, ['one','many'], true)) { $cardinalidad = 'one'; }
+      $chk = $pdo->prepare('SELECT COUNT(*) FROM atributos_definiciones WHERE clave = ?');
+      $chk->execute([$clave]);
+      if ((int)$chk->fetchColumn() > 0) { throw new Exception('La clave ya existe'); }
+      $unitsArr = [];
+      if ($unidades_permitidas !== '') {
+        $unitsArr = array_values(array_filter(array_map('trim', preg_split('/[,\n]+/', $unidades_permitidas))));
+      }
+      $aplica = json_encode(['componente']);
+      $unitsJson = !empty($unitsArr) ? json_encode($unitsArr) : null;
+      $insDef = $pdo->prepare('INSERT INTO atributos_definiciones (clave, etiqueta, tipo_dato, cardinalidad, unidad_defecto, unidades_permitidas_json, aplica_a_json) VALUES (?,?,?,?,?,?,?)');
+      $insDef->execute([$clave, $etiqueta, $tipo_dato, $cardinalidad, ($unidad_defecto ?: null), $unitsJson, $aplica]);
+      $newId = (int)$pdo->lastInsertId();
+      $ordStmt = $pdo->prepare('SELECT COALESCE(MAX(orden),0)+1 FROM atributos_mapeo WHERE tipo_entidad = ?');
+      $ordStmt->execute(['componente']);
+      $nextOrden = (int)$ordStmt->fetchColumn();
+      $insMap = $pdo->prepare('INSERT INTO atributos_mapeo (atributo_id, tipo_entidad, visible, orden, ui_hint) VALUES (?,?,?,?,?)');
+      $insMap->execute([$newId, 'componente', 1, $nextOrden, 'chip']);
+      echo "<script>console.log('✅ [ComponentesEdit] create_attr_def OK, id=" . (int)$newId . "');</script>";
+    } catch (Exception $e) {
+      $errores[] = 'Error creando atributo: ' . $e->getMessage();
+      echo "<script>console.log('❌ [ComponentesEdit] create_attr_def error: " . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . "');</script>";
+    }
   } else {
     // Guardar campos básicos del componente
     $nombre_comun = trim($_POST['nombre_comun'] ?? '');
@@ -457,6 +498,61 @@ if ($is_edit) {
   </div>
  </div>
 
+  <!-- Modal Crear Atributo (Componente) -->
+  <div class="modal-backdrop" id="modalCreateAttrCmp">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrCmpTitle">
+      <div class="modal-header">
+        <h4 id="modalCreateAttrCmpTitle">Crear atributo</h4>
+        <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttrCmp">✖</button>
+      </div>
+      <form method="POST" id="formCreateAttrCmp">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="create_attr_def" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="create_etiqueta_cmp">Etiqueta</label>
+            <input type="text" id="create_etiqueta_cmp" name="etiqueta" required />
+          </div>
+          <div class="form-group">
+            <label for="create_clave_cmp">Clave</label>
+            <input type="text" id="create_clave_cmp" name="clave" placeholder="Se autogenera si se deja vacío" />
+          </div>
+          <div class="form-group">
+            <label for="create_tipo_cmp">Tipo de dato</label>
+            <select id="create_tipo_cmp" name="tipo_dato">
+              <option value="string">string</option>
+              <option value="integer">integer</option>
+              <option value="number">number</option>
+              <option value="boolean">boolean</option>
+              <option value="date">date</option>
+              <option value="datetime">datetime</option>
+              <option value="json">json</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="create_card_cmp">Cardinalidad</label>
+            <select id="create_card_cmp" name="cardinalidad">
+              <option value="one">one</option>
+              <option value="many">many</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="create_unidad_def_cmp">Unidad (por defecto)</label>
+            <input type="text" id="create_unidad_def_cmp" name="unidad_defecto" placeholder="Ej: GRM, CMT" />
+          </div>
+          <div class="form-group">
+            <label for="create_unidades_cmp">Unidades permitidas</label>
+            <input type="text" id="create_unidades_cmp" name="unidades_permitidas" placeholder="Separar con comas" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttrCmp">Cancelar</button>
+          <button type="submit" class="btn">Crear</button>
+        </div>
+      </form>
+    </div>
+   </div>
+
 <script>
   // Utilidades de modal (compartidas)
   function openModal(sel) {
@@ -491,9 +587,31 @@ if ($is_edit) {
     ];
 
     function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-    function render(list){
-      if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div>'; dropdown.style.display='block'; return; }
+    function render(list, q){
       dropdown.innerHTML = '';
+      const nq = (q || '').trim();
+      if (nq) {
+        const createDiv = document.createElement('div');
+        createDiv.className = 'autocomplete-item';
+        createDiv.innerHTML = `➕ Crear "${nq}"…`;
+        createDiv.addEventListener('click', () => {
+          try {
+            const et = document.getElementById('create_etiqueta_cmp');
+            const cl = document.getElementById('create_clave_cmp');
+            const tp = document.getElementById('create_tipo_cmp');
+            const cd = document.getElementById('create_card_cmp');
+            if (et) et.value = nq;
+            const base = nq.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+            if (cl) cl.value = base;
+            if (tp) tp.value = 'string';
+            if (cd) cd.value = 'one';
+            openModal('#modalCreateAttrCmp');
+          } catch(e){ console.log('❌ [ComponentesEdit] Prep create modal error:', e && e.message); }
+          dropdown.style.display = 'none';
+        });
+        dropdown.appendChild(createDiv);
+      }
+      if (!list.length){ dropdown.innerHTML += '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div>'; dropdown.style.display='block'; return; }
       list.slice(0, 20).forEach(def => {
         const div = document.createElement('div');
         div.className = 'autocomplete-item';
@@ -507,7 +625,7 @@ if ($is_edit) {
       const nq = normalize(q);
       const out = defs.filter(d => normalize(d.label).includes(nq));
       console.log('🔍 [ComponentesEdit] Buscar atributo:', q, '→', out.length);
-      render(out);
+      render(out, q);
     }
     function onChoose(def){
       try {
@@ -588,6 +706,8 @@ if ($is_edit) {
   // Logs de envío de formularios
   document.getElementById('formEditAttrCmp')?.addEventListener('submit', () => console.log('📡 [ComponentesEdit] Enviando update_attr...'));
   document.getElementById('formAddAttrCmp')?.addEventListener('submit', () => console.log('📡 [ComponentesEdit] Enviando add_attr...'));
+  // Create attr form logs
+  document.getElementById('formCreateAttrCmp')?.addEventListener('submit', () => console.log('📡 [ComponentesEdit] Enviando create_attr_def...'));
 </script>
 <style>
   .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }

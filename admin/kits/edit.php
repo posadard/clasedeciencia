@@ -418,6 +418,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       }
     }
+    } else if ($action === 'create_attr_def' && $is_edit) {
+      try {
+        $etiqueta = isset($_POST['etiqueta']) ? trim((string)$_POST['etiqueta']) : '';
+        $clave = isset($_POST['clave']) ? trim((string)$_POST['clave']) : '';
+        $tipo_dato = isset($_POST['tipo_dato']) ? trim((string)$_POST['tipo_dato']) : 'string';
+        $cardinalidad = isset($_POST['cardinalidad']) ? trim((string)$_POST['cardinalidad']) : 'one';
+        $unidad_defecto = isset($_POST['unidad_defecto']) ? trim((string)$_POST['unidad_defecto']) : '';
+        $unidades_permitidas = isset($_POST['unidades_permitidas']) ? trim((string)$_POST['unidades_permitidas']) : '';
+        if ($etiqueta === '') { throw new Exception('Etiqueta requerida'); }
+        // Normalizar clave si vacía
+        if ($clave === '') {
+          $base = iconv('UTF-8','ASCII//TRANSLIT', $etiqueta);
+          $base = strtolower(preg_replace('/[^a-z0-9]+/i','-', $base));
+          $clave = trim($base, '-');
+        } else {
+          $clave = strtolower(preg_replace('/[^a-z0-9]+/i','-', $clave));
+          $clave = trim($clave, '-');
+        }
+        if (!in_array($tipo_dato, ['string','integer','number','boolean','date','datetime','json'], true)) { $tipo_dato = 'string'; }
+        if (!in_array($cardinalidad, ['one','many'], true)) { $cardinalidad = 'one'; }
+        // Verificar clave única
+        $chk = $pdo->prepare('SELECT COUNT(*) FROM atributos_definiciones WHERE clave = ?');
+        $chk->execute([$clave]);
+        if ((int)$chk->fetchColumn() > 0) { throw new Exception('La clave ya existe'); }
+        // Construir JSON de unidades
+        $unitsArr = [];
+        if ($unidades_permitidas !== '') {
+          $unitsArr = array_values(array_filter(array_map('trim', preg_split('/[,\n]+/', $unidades_permitidas))));
+        }
+        $aplica = json_encode(['kit']);
+        $unitsJson = !empty($unitsArr) ? json_encode($unitsArr) : null;
+        // Insert definición
+        $insDef = $pdo->prepare('INSERT INTO atributos_definiciones (clave, etiqueta, tipo_dato, cardinalidad, unidad_defecto, unidades_permitidas_json, aplica_a_json) VALUES (?,?,?,?,?,?,?)');
+        $insDef->execute([$clave, $etiqueta, $tipo_dato, $cardinalidad, ($unidad_defecto ?: null), $unitsJson, $aplica]);
+        $newId = (int)$pdo->lastInsertId();
+        // Orden siguiente en mapeo
+        $ordStmt = $pdo->prepare('SELECT COALESCE(MAX(orden),0)+1 FROM atributos_mapeo WHERE tipo_entidad = ?');
+        $ordStmt->execute(['kit']);
+        $nextOrden = (int)$ordStmt->fetchColumn();
+        // Insert mapeo visible
+        $insMap = $pdo->prepare('INSERT INTO atributos_mapeo (atributo_id, tipo_entidad, visible, orden, ui_hint) VALUES (?,?,?,?,?)');
+        $insMap->execute([$newId, 'kit', 1, $nextOrden, 'chip']);
+        $action_msg = 'Atributo creado: ' . htmlspecialchars($etiqueta, ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("✅ [KitsEdit] create_attr_def OK, id=' . $newId . '");</script>';
+      } catch (Exception $e) {
+        $error_msg = 'Error creando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
   }
 }
 
@@ -686,6 +734,61 @@ include '../header.php';
     </div>
    </div>
 
+  <!-- Modal Crear Atributo -->
+  <div class="modal-backdrop" id="modalCreateAttr">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrTitle">
+      <div class="modal-header">
+        <h4 id="modalCreateAttrTitle">Crear atributo</h4>
+        <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttr">✖</button>
+      </div>
+      <form method="POST" id="formCreateAttr">
+        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" name="action" value="create_attr_def" />
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="create_etiqueta">Etiqueta</label>
+            <input type="text" id="create_etiqueta" name="etiqueta" required />
+          </div>
+          <div class="form-group">
+            <label for="create_clave">Clave</label>
+            <input type="text" id="create_clave" name="clave" placeholder="Se autogenera si se deja vacío" />
+          </div>
+          <div class="form-group">
+            <label for="create_tipo">Tipo de dato</label>
+            <select id="create_tipo" name="tipo_dato">
+              <option value="string">string</option>
+              <option value="integer">integer</option>
+              <option value="number">number</option>
+              <option value="boolean">boolean</option>
+              <option value="date">date</option>
+              <option value="datetime">datetime</option>
+              <option value="json">json</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="create_card">Cardinalidad</label>
+            <select id="create_card" name="cardinalidad">
+              <option value="one">one</option>
+              <option value="many">many</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="create_unidad_def">Unidad (por defecto)</label>
+            <input type="text" id="create_unidad_def" name="unidad_defecto" placeholder="Ej: GRM, CMT" />
+          </div>
+          <div class="form-group">
+            <label for="create_unidades">Unidades permitidas</label>
+            <input type="text" id="create_unidades" name="unidades_permitidas" placeholder="Separar con comas" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttr">Cancelar</button>
+          <button type="submit" class="btn">Crear</button>
+        </div>
+      </form>
+    </div>
+   </div>
+
   <script>
     // Autocomplete + modal para atributos (similar a componentes)
     (function initAttrUI(){
@@ -701,9 +804,33 @@ include '../header.php';
       ];
 
       function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-      function render(list){
-        if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div>'; dropdown.style.display='block'; return; }
+      function render(list, q){
         dropdown.innerHTML = '';
+        // Crear opción al inicio para nuevo atributo
+        const nq = (q || '').trim();
+        if (nq) {
+          const createDiv = document.createElement('div');
+          createDiv.className = 'autocomplete-item';
+          createDiv.innerHTML = `➕ Crear "${nq}"…`;
+          createDiv.addEventListener('click', () => {
+            try {
+              const et = document.getElementById('create_etiqueta');
+              const cl = document.getElementById('create_clave');
+              const tp = document.getElementById('create_tipo');
+              const cd = document.getElementById('create_card');
+              if (et) et.value = nq;
+              // Autogenerar clave sugerida
+              const base = nq.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+              if (cl) cl.value = base;
+              if (tp) tp.value = 'string';
+              if (cd) cd.value = 'one';
+              openModal('#modalCreateAttr');
+            } catch(e){ console.log('❌ [KitsEdit] Prep create modal error:', e && e.message); }
+            dropdown.style.display = 'none';
+          });
+          dropdown.appendChild(createDiv);
+        }
+        if (!list.length){ dropdown.innerHTML += '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div>'; dropdown.style.display='block'; return; }
         list.slice(0, 20).forEach(def => {
           const div = document.createElement('div');
           div.className = 'autocomplete-item';
@@ -717,7 +844,7 @@ include '../header.php';
         const nq = normalize(q);
         const out = defs.filter(d => normalize(d.label).includes(nq));
         console.log('🔍 [KitsEdit] Buscar atributo:', q, '→', out.length);
-        render(out);
+        render(out, q);
       }
       function onChoose(def){
         try {
@@ -794,6 +921,8 @@ include '../header.php';
         });
       });
     })();
+    // Create attr form logs
+    document.getElementById('formCreateAttr')?.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando create_attr_def...'));
   </script>
   <?php endif; ?>
 <script>
