@@ -36,6 +36,19 @@ if ($is_edit) {
   } catch (PDOException $e) {}
 }
 
+// Relaciones existentes: clases asignadas a este kit (via clase_kits)
+$existing_clase_ids = [];
+if ($is_edit) {
+  try {
+    $stmt = $pdo->prepare('SELECT clase_id FROM clase_kits WHERE kit_id = ? ORDER BY es_principal DESC, sort_order ASC');
+    $stmt->execute([$id]);
+    $existing_clase_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($existing_clase_ids) && !empty($kit['clase_id'])) {
+      $existing_clase_ids = [(int)$kit['clase_id']];
+    }
+  } catch (PDOException $e) {}
+}
+
 $error_msg = '';
 $action_msg = '';
 
@@ -47,14 +60,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
 
     if ($action === 'save') {
-      $clase_id = isset($_POST['clase_id']) && ctype_digit($_POST['clase_id']) ? (int)$_POST['clase_id'] : 0;
+      // Clases seleccionadas (transfer list)
+      $clases_sel = isset($_POST['clases']) && is_array($_POST['clases']) ? array_map('intval', $_POST['clases']) : [];
+      $principal_clase_id = !empty($clases_sel) ? (int)$clases_sel[0] : 0;
+      // Mantener compatibilidad si vienen datos legacy de clase_id
+      $legacy_clase_id = isset($_POST['clase_id']) && ctype_digit($_POST['clase_id']) ? (int)$_POST['clase_id'] : 0;
+      if ($principal_clase_id === 0 && $legacy_clase_id > 0) { $principal_clase_id = $legacy_clase_id; }
       $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
       $codigo = isset($_POST['codigo']) ? trim($_POST['codigo']) : '';
       $version = isset($_POST['version']) ? trim($_POST['version']) : '1';
       $activo = isset($_POST['activo']) ? 1 : 0;
 
-      if ($clase_id <= 0 || $nombre === '' || $codigo === '') {
-        $error_msg = 'Completa clase, nombre y código válidos.';
+      if ($principal_clase_id <= 0 || $nombre === '' || $codigo === '') {
+        $error_msg = 'Selecciona al menos una clase, y completa nombre y código.';
       } else {
         try {
           // Enforce unique code
@@ -69,14 +87,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($exists > 0) {
             $error_msg = 'El código de kit ya existe. Elige otro.';
           } else {
+            $pdo->beginTransaction();
             if ($is_edit) {
               $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, codigo=?, version=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$clase_id, $nombre, $codigo, $version, $activo, $id]);
+              $stmt->execute([$principal_clase_id, $nombre, $codigo, $version, $activo, $id]);
             } else {
               $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, codigo, version, activo, updated_at) VALUES (?,?,?,?,?,NOW())');
-              $stmt->execute([$clase_id, $nombre, $codigo, $version, $activo]);
+              $stmt->execute([$principal_clase_id, $nombre, $codigo, $version, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
+            }
+
+            // Actualizar relaciones en clase_kits
+            try {
+              $pdo->prepare('DELETE FROM clase_kits WHERE kit_id = ?')->execute([$id]);
+              if (!empty($clases_sel)) {
+                $ins = $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,?)');
+                $sort = 1;
+                foreach ($clases_sel as $cid) {
+                  $es_principal = ($sort === 1) ? 1 : 0;
+                  $ins->execute([(int)$cid, $id, $sort++, $es_principal]);
+                }
+              } else if ($principal_clase_id > 0) {
+                // Fallback: al menos principal
+                $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,1)')
+                    ->execute([$principal_clase_id, $id, 1]);
+              }
+              $pdo->commit();
+              echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits guardados");</script>';
+            } catch (PDOException $e) {
+              if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+              throw $e;
             }
             header('Location: /admin/kits/index.php');
             exit;
@@ -184,13 +225,57 @@ include '../header.php';
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
   <input type="hidden" name="action" value="save" />
   <div class="form-group">
-    <label for="clase_id">Clase</label>
-    <select id="clase_id" name="clase_id" required>
-      <option value="">Selecciona</option>
-      <?php foreach ($clases as $c): ?>
-        <option value="<?= (int)$c['id'] ?>" <?= ($kit['clase_id'] == $c['id']) ? 'selected' : '' ?>><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?> (Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>)</option>
-      <?php endforeach; ?>
-    </select>
+    <label>Clases vinculadas al Kit</label>
+    <small class="hint" style="display:block; margin-bottom:6px;">Selecciona una o varias clases. La primera será la principal (se usa en kits.clase_id para compatibilidad).</small>
+    <div class="dual-listbox-container">
+      <div class="listbox-panel">
+        <div class="listbox-header">
+          <strong>Disponibles</strong>
+          <span id="clases-available-count" class="counter">(<?= count($clases) ?>)</span>
+        </div>
+        <input type="text" id="search-clases" class="listbox-search" placeholder="🔍 Buscar clases...">
+        <div class="listbox-content" id="available-clases">
+          <?php foreach ($clases as $c): 
+            $isSelected = in_array($c['id'], $existing_clase_ids);
+          ?>
+            <div class="competencia-item <?= $isSelected ? 'hidden' : '' ?>" 
+                 data-id="<?= (int)$c['id'] ?>"
+                 data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                 data-ciclo="<?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>"
+                 onclick="selectClaseItem(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo">Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?></span>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      <div class="listbox-buttons">
+        <button type="button" onclick="moveAllClases(true)" title="Agregar todas">➡️</button>
+        <button type="button" onclick="moveAllClases(false)" title="Quitar todas">⬅️</button>
+      </div>
+      <div class="listbox-panel">
+        <div class="listbox-header">
+          <strong>Seleccionadas</strong>
+          <span id="clases-selected-count" class="counter">(<?= count($existing_clase_ids) ?>)</span>
+        </div>
+        <div class="listbox-content" id="selected-clases">
+          <?php foreach ($clases as $c): if (in_array($c['id'], $existing_clase_ids)): ?>
+            <div class="competencia-item selected" 
+                 data-id="<?= (int)$c['id'] ?>"
+                 data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+                 data-ciclo="<?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>"
+                 onclick="deselectClaseItem(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo">Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?></span>
+              <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectClaseItem(this.parentElement)">×</button>
+            </div>
+          <?php endif; endforeach; ?>
+        </div>
+        <small class="hint" style="margin-top: 10px; display: block;">Haz clic para quitar. Orden superior define el principal.</small>
+      </div>
+      <!-- Hidden inputs para enviar clases seleccionadas -->
+      <div id="clases-hidden"></div>
+    </div>
   </div>
   <div class="form-group">
     <label for="nombre">Nombre del Kit</label>
@@ -459,6 +544,85 @@ include '../header.php';
     formAdd.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando add_item...'));
   }
 
+  // --- Dual Listbox: Clases vinculadas al kit ---
+  (function initClasesTransfer(){
+    const available = document.getElementById('available-clases');
+    const selected = document.getElementById('selected-clases');
+    const search = document.getElementById('search-clases');
+    const hidden = document.getElementById('clases-hidden');
+    const availableCount = document.getElementById('clases-available-count');
+    const selectedCount = document.getElementById('clases-selected-count');
+    if (!available || !selected || !hidden) { console.log('⚠️ [KitsEdit] Transfer de clases no inicializado'); return; }
+
+    function updateHidden(){
+      hidden.innerHTML = '';
+      const ids = Array.from(selected.querySelectorAll('.competencia-item')).map(el => parseInt(el.dataset.id, 10)).filter(Boolean);
+      ids.forEach((id, idx) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'clases[]';
+        input.value = id;
+        hidden.appendChild(input);
+      });
+      if (selectedCount) selectedCount.textContent = '(' + ids.length + ')';
+      const availVisible = available.querySelectorAll('.competencia-item:not(.hidden)').length;
+      if (availableCount) availableCount.textContent = '(' + availVisible + ')';
+      console.log('🔍 [KitsEdit] Clases seleccionadas:', ids);
+    }
+
+    window.selectClaseItem = function(el){
+      el.classList.add('hidden');
+      const id = el.dataset.id;
+      const nombre = el.dataset.nombre;
+      const ciclo = el.dataset.ciclo;
+      const node = document.createElement('div');
+      node.className = 'competencia-item selected';
+      node.dataset.id = id;
+      node.dataset.nombre = nombre;
+      node.dataset.ciclo = ciclo;
+      node.innerHTML = `<span class="comp-nombre">${nombre}</span><span class="comp-codigo">Ciclo ${ciclo}</span><button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectClaseItem(this.parentElement)">×</button>`;
+      node.onclick = function(){ window.deselectClaseItem(node); };
+      selected.appendChild(node);
+      updateHidden();
+    };
+
+    window.deselectClaseItem = function(el){
+      const id = el.dataset.id;
+      el.remove();
+      const avail = available.querySelector(`.competencia-item[data-id="${id}"]`);
+      if (avail) avail.classList.remove('hidden');
+      updateHidden();
+    };
+
+    window.moveAllClases = function(add){
+      if (add) {
+        const vis = Array.from(available.querySelectorAll('.competencia-item:not(.hidden)'));
+        vis.forEach(el => selectClaseItem(el));
+      } else {
+        const sel = Array.from(selected.querySelectorAll('.competencia-item'));
+        sel.forEach(el => deselectClaseItem(el));
+      }
+      updateHidden();
+    };
+
+    if (search) {
+      search.addEventListener('input', () => {
+        const q = (search.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        available.querySelectorAll('.competencia-item').forEach(el => {
+          const n = (el.dataset.nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const c = (el.dataset.ciclo || '').toString();
+          const match = n.includes(q) || c.includes(q);
+          el.style.display = match ? '' : 'none';
+        });
+        const visibleCount = Array.from(available.querySelectorAll('.competencia-item')).filter(el => el.style.display !== 'none' && !el.classList.contains('hidden')).length;
+        if (availableCount) availableCount.textContent = '(' + visibleCount + ')';
+        console.log('🔍 [KitsEdit] Buscar clases:', search.value, '→', visibleCount);
+      });
+    }
+
+    // Inicializar inputs ocultos con selección actual
+    updateHidden();
+  })();
   // Combo Box para seleccionar componente (input + lista)
   (function initComboBox(){
     const combo = document.getElementById('combo_item');
