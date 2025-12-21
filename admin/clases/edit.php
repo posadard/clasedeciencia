@@ -194,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
       // Skip the rest of save handling for attribute actions
     } else {
-      $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+    $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
     $slug = isset($_POST['slug']) ? trim($_POST['slug']) : '';
     $ciclo = isset($_POST['ciclo']) && $_POST['ciclo'] !== '' ? (int)$_POST['ciclo'] : null;
     echo '<script>console.log("🔍 [ClasesEdit] POST ciclo:", ' . json_encode($ciclo) . ', "tipo:", typeof ' . json_encode($ciclo) . ');</script>';
@@ -362,7 +362,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
       }
-    }
     }
   }
 }
@@ -553,90 +552,65 @@ include '../header.php';
   ?>
   <?php if ($is_edit): ?>
   <div class="card" style="margin-top:2rem;">
-    <div class="card-title-row">
-      <h3>Ficha técnica (chips)</h3>
-      <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
-    </div>
+    <h3>Ficha técnica (chips)</h3>
     <div class="form-group">
-      <label for="search-attrs-cls">Atributos</label>
-      <div class="dual-listbox-container two-panels">
-        <div class="listbox-panel">
-          <div class="listbox-header">
-            <strong>Disponibles</strong>
-            <span id="attrs-available-count-cls" class="counter">(0)</span>
+      <label for="attr_search_cls">Agregar atributo</label>
+      <div class="component-selector-container">
+        <div class="selected-components" id="selected-attrs-cls">
+          <?php foreach ($attrs_defs as $def):
+            $aid = (int)$def['id'];
+            $values = $attrs_vals[$aid] ?? [];
+            if (empty($values)) continue;
+            $label = $def['etiqueta'];
+            $tipo = $def['tipo_dato'];
+            $unit = $values[0]['unidad_codigo'] ?? '';
+            $display = [];
+            foreach ($values as $v) {
+              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+              else { $display[] = $v['valor_string']; }
+            }
+            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+          ?>
+          <div class="component-chip" data-attr-id="<?= $aid ?>">
+            <span class="name"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="meta">· <strong><?= $text ?></strong><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
+            <button type="button" class="edit-component js-edit-attr-cls" title="Editar"
+              data-attr-id="<?= $aid ?>"
+              data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+              data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+              data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
+              data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
+              data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+              data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
+            >✏️</button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo de la clase?')">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+              <input type="hidden" name="action" value="delete_attr" />
+              <input type="hidden" name="def_id" value="<?= $aid ?>" />
+              <button type="submit" class="remove-component" title="Remover">×</button>
+            </form>
           </div>
-          <input type="text" id="search-attrs-cls" class="listbox-search" placeholder="🔍 Buscar atributos...">
-          <div class="listbox-content" id="available-attrs-cls">
-            <?php foreach ($attrs_defs as $def):
-              $aid = (int)$def['id'];
-              $values = $attrs_vals[$aid] ?? [];
-              $hasValues = !empty($values);
-              $label = $def['etiqueta'];
-              $tipo = $def['tipo_dato'];
-              $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
-              $unitDef = $def['unidad_defecto'] ?? '';
-            ?>
-            <div class="competencia-item <?= $hasValues ? 'hidden' : '' ?>"
-                 data-id="<?= $aid ?>"
-                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                 data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
-                 data-units='<?= $unitsJson ?>'
-                 data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
-                 onclick="selectAttrCls(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo">Tipo <?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?><?= $unitDef ? ' · ' . htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') : '' ?></span>
-            </div>
-            <?php endforeach; ?>
-          </div>
+          <?php endforeach; ?>
         </div>
-
-        <div class="listbox-panel">
-          <div class="listbox-header">
-            <strong>Seleccionados</strong>
-            <span id="attrs-selected-count-cls" class="counter">(0)</span>
-          </div>
-          <div class="listbox-content" id="selected-attrs-cls-dl">
-            <?php foreach ($attrs_defs as $def):
-              $aid = (int)$def['id'];
-              $values = $attrs_vals[$aid] ?? [];
-              if (empty($values)) continue;
-              $label = $def['etiqueta'];
-              $tipo = $def['tipo_dato'];
-              $unitDef = $def['unidad_defecto'] ?? '';
-              $display = [];
-              foreach ($values as $v) {
-                if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
-                else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
-                else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
-                else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
-                else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
-                else if ($tipo === 'json') { $display[] = $v['valor_json']; }
-                else { $display[] = $v['valor_string']; }
-              }
-              $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
-            ?>
-            <div class="competencia-item selected"
-                 data-id="<?= $aid ?>"
-                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                 data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-units='<?= $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : "[]" ?>'
-                 data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                 data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
-                 onclick="editAttrClsItem(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo"><strong><?= $text ?></strong><?= ($values[0]['unidad_codigo'] ?? '') ? ' ' . htmlspecialchars($values[0]['unidad_codigo'], ENT_QUOTES, 'UTF-8') : '' ?></span>
-              <form method="POST" style="display:inline; margin-left:auto;" onsubmit="return confirm('¿Eliminar este atributo de la clase?')">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-                <input type="hidden" name="action" value="delete_attr" />
-                <input type="hidden" name="def_id" value="<?= $aid ?>" />
-                <button type="submit" class="remove-btn" title="Remover">×</button>
-              </form>
-            </div>
-            <?php endforeach; ?>
-          </div>
-          <small class="hint" style="margin-top: 10px; display: block;">Haz clic para editar. Usa × para quitar.</small>
+        <input type="text" id="attr_search_cls" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <div class="attr-actions" style="margin-top:6px;">
+          <button type="button" class="btn btn-secondary" id="btn_create_attr_cls">➕ Crear atributo</button>
         </div>
+        <datalist id="attrs_list_cls">
+          <?php foreach ($attrs_defs as $def): ?>
+            <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($def['grupo'] ?? 'ficha', ENT_QUOTES, 'UTF-8') ?>)
+            </option>
+          <?php endforeach; ?>
+        </datalist>
+        <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown_cls"></div>
       </div>
+      <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
     </div>
   </div>
 
@@ -769,10 +743,7 @@ include '../header.php';
         }
         ?>
       </div>
-      <div class="autocomplete-anchor">
-        <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
-        <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
-      </div>
+      <input type="text" id="kit_search" placeholder="Escribir para buscar kit..." autocomplete="off" />
       <datalist id="kits_list">
         <?php foreach ($all_kits as $kit): ?>
           <?php if ($kit['activo']): ?>
@@ -783,6 +754,7 @@ include '../header.php';
           <?php endif; ?>
         <?php endforeach; ?>
       </datalist>
+      <div class="autocomplete-dropdown" id="autocomplete_dropdown"></div>
     </div>
     <small>Escribe para buscar kits. Puedes seleccionar múltiples. El primero será el kit principal.</small>
     <div id="kits-hidden"></div>
@@ -1638,68 +1610,51 @@ include '../header.php';
     b.addEventListener('click', (e) => { if (e.target === b) closeModal('#' + b.id); });
   });
 
-  // Dual-listbox para atributos de clase (sin dropdown auto)
-  (function initAttrDualListCls(){
-    const available = document.getElementById('available-attrs-cls');
-    const selected = document.getElementById('selected-attrs-cls-dl');
-    const search = document.getElementById('search-attrs-cls');
-    const availCount = document.getElementById('attrs-available-count-cls');
-    const selCount = document.getElementById('attrs-selected-count-cls');
-    if (!available || !selected) { console.log('⚠️ [ClasesEdit] Dual-list atributos no inicializada'); return; }
+  // Autocomplete + modal para atributos de clase
+  (function initAttrUICls(){
+    const dropdown = document.getElementById('attr_autocomplete_dropdown_cls');
+    const input = document.getElementById('attr_search_cls');
+    const selectedWrap = document.getElementById('selected-attrs-cls');
+    if (!dropdown || !input || !selectedWrap) { console.log('⚠️ [ClasesEdit] UI atributos no inicializada'); return; }
+
+    const defs = [
+      <?php foreach ($attrs_defs as $d): ?>
+      { id: <?= (int)$d['id'] ?>, label: '<?= htmlspecialchars($d['etiqueta'], ENT_QUOTES, 'UTF-8') ?>', tipo: '<?= htmlspecialchars($d['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>', card: '<?= htmlspecialchars($d['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>', units: <?= $d['unidades_permitidas_json'] ? $d['unidades_permitidas_json'] : '[]' ?>, unitDef: '<?= htmlspecialchars($d['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
+      <?php endforeach; ?>
+    ];
 
     function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-    function updateCounts(){
-      const availVisible = Array.from(available.querySelectorAll('.competencia-item'))
-        .filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
-      const selTotal = selected.querySelectorAll('.competencia-item').length;
-      if (availCount) availCount.textContent = `(${availVisible})`;
-      if (selCount) selCount.textContent = `(${selTotal})`;
-    }
-    function attachAvailableHandlers(){
-      available.querySelectorAll('.competencia-item').forEach(item => {
-        item.addEventListener('click', () => selectAttrCls(item));
+    function render(list){
+      if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div><div class="autocomplete-item create-item" id="attr_create_item_cls"><strong>➕ Crear nuevo atributo</strong></div>'; dropdown.style.display='block'; const ci=document.getElementById('attr_create_item_cls'); if(ci){ ci.addEventListener('click', onCreateNewCls); } return; }
+      dropdown.innerHTML = '';
+      list.slice(0, 20).forEach(def => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.innerHTML = `<strong>${def.label}</strong><span class="cmp-code">${def.tipo}${def.unitDef? ' · '+def.unitDef:''}</span>`;
+        div.addEventListener('click', () => onChoose(def));
+        dropdown.appendChild(div);
       });
+      dropdown.style.display = 'block';
     }
-    function attachSelectedHandlers(){
-      selected.querySelectorAll('.competencia-item').forEach(item => {
-        item.addEventListener('click', () => editAttrClsItem(item));
-      });
+    function filter(q){
+      const nq = normalize(q);
+      const out = defs.filter(d => normalize(d.label).includes(nq));
+      console.log('🔍 [ClasesEdit] Buscar atributo:', q, '→', out.length);
+      render(out);
     }
-    if (search) {
-      search.addEventListener('input', function(){
-        const q = normalize(this.value.trim());
-        available.querySelectorAll('.competencia-item').forEach(it => {
-          if (it.classList.contains('hidden')) return; // ya seleccionado
-          const label = normalize(it.getAttribute('data-label')||'');
-          const tipo = normalize(it.getAttribute('data-tipo')||'');
-          const show = !q || label.includes(q) || tipo.includes(q);
-          it.style.display = show ? 'flex' : 'none';
-        });
-        updateCounts();
-        console.log('🔍 [ClasesEdit] Filtro atributos:', this.value);
-      });
-    }
-
-    // Exponer funciones globales usadas por onclick en DOM
-    window.selectAttrCls = function(item){
+    function onChoose(def){
       try {
-        const defId = item.getAttribute('data-id');
-        const label = item.getAttribute('data-label');
-        const unitsJson = item.getAttribute('data-units') || '[]';
-        const unitDef = item.getAttribute('data-unidad_def') || '';
-        document.getElementById('add_def_id_cls').value = String(defId);
-        document.getElementById('addAttrClsInfo').textContent = label;
+        document.getElementById('add_def_id_cls').value = String(def.id);
+        document.getElementById('addAttrClsInfo').textContent = def.label;
         const sel = document.getElementById('add_unidad_cls');
         const selGroup = document.getElementById('add_unidad_cls_group');
         sel.innerHTML = '';
-        let units = [];
-        try { const u = JSON.parse(unitsJson); if (Array.isArray(u)) units = u; } catch(_e){}
-        const hasUnits = Array.isArray(units) && units.length > 0;
-        const hasDefault = !!unitDef;
+        const hasUnits = Array.isArray(def.units) && def.units.length > 0;
+        const hasDefault = !!def.unitDef;
         if (hasUnits || hasDefault) {
           const opt0 = document.createElement('option');
-          opt0.value = ''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-          if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
+          opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+          if (hasUnits) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
           if (selGroup) selGroup.style.display = '';
           console.log('🔍 [ClasesEdit] Unidad visible (aplica)');
         } else {
@@ -1708,17 +1663,58 @@ include '../header.php';
         }
         openModal('#modalAddAttrCls');
         setTimeout(() => { try { document.getElementById('add_valor_cls')?.focus(); } catch(_e){} }, 50);
-      } catch(e){ console.log('❌ [ClasesEdit] Error selectAttrCls:', e && e.message); }
+      } catch (e) {
+        console.log('❌ [ClasesEdit] Error preparar modal atributo:', e && e.message);
+      }
+      dropdown.style.display = 'none';
+    }
+    function onCreateNewCls(){
+      try {
+        const val = (input.value || '').trim();
+        document.getElementById('create_etiqueta_cls').value = val;
+        document.getElementById('create_clave_cls').value = '';
+        document.getElementById('create_tipo_cls').value = 'string';
+        document.getElementById('create_card_cls').value = 'one';
+        document.getElementById('create_unidad_cls').value = '';
+        document.getElementById('create_unidades_cls').value = '';
+        openModal('#modalCreateAttrCls');
+        setTimeout(() => { try { document.getElementById('create_etiqueta_cls')?.focus(); } catch(_e){} }, 50);
+        console.log('🔍 [ClasesEdit] Crear atributo desde búsqueda:', val);
+      } catch(e){ console.log('❌ [ClasesEdit] Error preparar crear atributo:', e && e.message); }
+      dropdown.style.display='none';
+    }
+    input.addEventListener('focus', () => filter(input.value));
+    input.addEventListener('input', () => filter(input.value));
+    document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
+
+    // Botón para crear atributo directamente
+    const btnCreate = document.getElementById('btn_create_attr_cls');
+    if (btnCreate) {
+      btnCreate.addEventListener('click', () => {
+        try {
+          const val = (input && input.value ? input.value.trim() : '');
+          document.getElementById('create_etiqueta_cls').value = val;
+          document.getElementById('create_clave_cls').value = '';
+          document.getElementById('create_tipo_cls').value = 'string';
+          document.getElementById('create_card_cls').value = 'one';
+          document.getElementById('create_unidad_cls').value = '';
+          document.getElementById('create_unidades_cls').value = '';
+          openModal('#modalCreateAttrCls');
+          setTimeout(() => { try { document.getElementById('create_etiqueta_cls')?.focus(); } catch(_e){} }, 50);
+          console.log('🔍 [ClasesEdit] Abrir crear atributo (botón)', val);
+        } catch(e) { console.log('❌ [ClasesEdit] Error abrir crear atributo (botón):', e && e.message); }
+      });
     }
 
-    window.editAttrClsItem = function(item){
-      try {
-        const defId = item.getAttribute('data-id');
-        const label = item.getAttribute('data-label');
-        const tipo = item.getAttribute('data-tipo');
-        const unitsJson = item.getAttribute('data-units');
-        const unitDef = item.getAttribute('data-unidad_def') || '';
-        const vals = JSON.parse(item.getAttribute('data-values') || '[]');
+    // Editar chip existente
+    document.querySelectorAll('.js-edit-attr-cls').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const defId = btn.getAttribute('data-attr-id');
+        const label = btn.getAttribute('data-label');
+        const tipo = btn.getAttribute('data-tipo');
+        const unitsJson = btn.getAttribute('data-units');
+        const unitDef = btn.getAttribute('data-unidad_def') || '';
+        const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
         document.getElementById('edit_def_id_cls').value = defId;
         document.getElementById('editAttrClsInfo').textContent = label;
         const inputEl = document.getElementById('edit_valor_cls');
@@ -1752,32 +1748,8 @@ include '../header.php';
           console.log('🔍 [ClasesEdit] Unidad oculta (no aplica)');
         }
         openModal('#modalEditAttrCls');
-      } catch(e){ console.log('❌ [ClasesEdit] Error editAttrClsItem:', e && e.message); }
-    }
-
-    // Botón crear atributo (usa búsqueda si hay texto)
-    const btnCreate = document.getElementById('btn_create_attr_cls');
-    if (btnCreate) {
-      btnCreate.addEventListener('click', () => {
-        try {
-          const q = (search && search.value ? search.value.trim() : '');
-          document.getElementById('create_etiqueta_cls').value = q;
-          document.getElementById('create_clave_cls').value = '';
-          document.getElementById('create_tipo_cls').value = 'string';
-          document.getElementById('create_card_cls').value = 'one';
-          document.getElementById('create_unidad_cls').value = '';
-          document.getElementById('create_unidades_cls').value = '';
-          openModal('#modalCreateAttrCls');
-          setTimeout(() => { try { document.getElementById('create_etiqueta_cls')?.focus(); } catch(_e){} }, 50);
-          console.log('🔍 [ClasesEdit] Abrir crear atributo (botón)', q);
-        } catch(e) { console.log('❌ [ClasesEdit] Error abrir crear atributo (botón):', e && e.message); }
       });
-    }
-
-    attachAvailableHandlers();
-    attachSelectedHandlers();
-    updateCounts();
-    console.log('✅ [ClasesEdit] Dual-list atributos inicializado');
+    });
   })();
 
   // Logs de envío de formularios

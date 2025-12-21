@@ -2845,8 +2845,6 @@ strong, b {
 .kit-selector-container { position: relative; width: 100%; max-width: 600px; }
 /* Attributes chips selector container */
 .component-selector-container { position: relative; width: 100%; max-width: 600px; }
-/* Anchor to ensure dropdown aligns directly under the input */
-.autocomplete-anchor { position: relative; display: block; }
 /* Search inputs used in chips have styles above (#kit_search, #component_search). */
 .kit-code { color: #6b7280; font-size: 0.82rem; }
 .autocomplete-no-results { padding: 12px; text-align: center; color: #6b7280; font-size: 0.9rem; }
@@ -2862,24 +2860,6 @@ strong, b {
     transition: border-color 0.2s;
 }
 #attr_search_cls:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(31,60,136,0.08);
-}
-
-/* Match styles for other attribute search inputs to keep parity */
-#attr_search,
-#attr_search_cmp {
-    width: 100%;
-    max-width: 600px;
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 0.92rem;
-    transition: border-color 0.2s;
-}
-#attr_search:focus,
-#attr_search_cmp:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 3px rgba(31,60,136,0.08);
@@ -2941,16 +2921,6 @@ strong, b {
 .admin-main .card {
     border-color: var(--color-border);
 }
-
-/* Card header row with actions (used for ficha técnica create button) */
-.card-title-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: var(--spacing-sm);
-}
-.card-title-row h3 { margin: 0; }
 
 /* === Admin Stats === */
 .stats-grid {
@@ -3102,7 +3072,7 @@ strong, b {
     max-height: 250px;
     overflow-y: auto;
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-    z-index: 5000; /* ensure above cards/forms */
+    z-index: 1000;
     display: none;
 }
 
@@ -3149,17 +3119,6 @@ strong, b {
     border-radius: var(--border-radius);
     padding: var(--spacing-lg);
     background: var(--color-bg-alt);
-}
-
-/* Two-panel variant (no middle buttons) */
-.dual-listbox-container.two-panels {
-    grid-template-columns: 1fr 1fr;
-}
-.dual-listbox-container.two-panels .listbox-panel {
-    min-width: 0; /* allow panels to shrink properly */
-}
-.dual-listbox-container.two-panels .listbox-content {
-    max-height: none; /* let it grow within card; controlled by parent */
 }
 
 .listbox-panel {
