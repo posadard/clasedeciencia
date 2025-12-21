@@ -261,7 +261,6 @@ strong, b {
     border-radius: 4px;
     border: 1px solid var(--color-border-light);
     text-align: center; /* ensure hero title and content are centered */
-    position: relative; /* allow overlay positioning */
 }
 
 /* === Header Search Container (Siempre visible) === */
@@ -1823,48 +1822,6 @@ strong, b {
     h1 { font-size: 1.75rem; }
     h2 { font-size: 1.5rem; }
     
-
-/* === Decorative Leaf Overlay (Hero) === */
-.leaf-overlay {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    z-index: 0;
-}
-
-.leaf {
-    position: absolute;
-    left: -10vw;
-    top: var(--top, 10%);
-    width: var(--size, 26px);
-    height: var(--size, 26px);
-    opacity: var(--opacity, 0.75);
-    transform-origin: 50% 50%;
-    will-change: transform;
-    animation: leaf-drift var(--duration, 14s) linear var(--delay, 0s) forwards;
-}
-
-.leaf.rev {
-    left: auto;
-    right: -10vw;
-    animation-name: leaf-drift-rev;
-}
-
-@keyframes leaf-drift {
-    from { transform: translate3d(0, 0, 0) rotate(0deg); }
-    to   { transform: translate3d(120vw, 0, 0) rotate(var(--spin, 90deg)); }
-}
-
-@keyframes leaf-drift-rev {
-    from { transform: translate3d(0, 0, 0) rotate(0deg); }
-    to   { transform: translate3d(-120vw, 0, 0) rotate(var(--spin, -90deg)); }
-}
-
-/* Respect reduced motion: no animated leaves */
-@media (prefers-reduced-motion: reduce) {
-    .leaf { animation: none !important; display: none !important; }
-}
     .btn {
         width: 100%;
         text-align: center;

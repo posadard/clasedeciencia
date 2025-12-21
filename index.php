@@ -22,7 +22,6 @@ include 'includes/header.php';
 <div class="container">
     <!-- Hero Section -->
     <section class="hero">
-        <div class="leaf-overlay" aria-hidden="true"></div>
         <h2>Bienvenido a <?= SITE_NAME ?></h2>
         <p class="hero-subtitle">Plataforma de formación científica para grados 1° a 11°</p>
         <p>Apoya y fortalece el desarrollo de competencias científicas con guías interactivas, proyectos prácticos y orientación personalizada para cada proceso de aprendizaje.</p>
