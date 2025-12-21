@@ -589,12 +589,7 @@ include '../header.php';
               data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
               data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, "UTF-8") ?>'
             >✏️</button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo de la clase?')">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="delete_attr" />
-              <input type="hidden" name="def_id" value="<?= $aid ?>" />
-              <button type="submit" class="remove-component" title="Remover">×</button>
-            </form>
+            <button type="button" class="remove-component js-delete-attr-cls" data-def-id="<?= $aid ?>" title="Remover">×</button>
           </div>
           <?php endforeach; ?>
         </div>
@@ -615,110 +610,6 @@ include '../header.php';
     </div>
   </div>
 
-  <!-- Modal Editar Atributo (Clase) -->
-  <div class="modal-overlay" id="modalEditAttrCls">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrClsTitle">
-      <div class="modal-header">
-        <h4 id="modalEditAttrClsTitle">Editar atributo</h4>
-        <button type="button" class="modal-close js-close-modal" data-target="#modalEditAttrCls">✖</button>
-      </div>
-      <form method="POST" id="formEditAttrCls">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-        <input type="hidden" name="action" value="update_attr" />
-        <input type="hidden" name="def_id" id="edit_def_id_cls" />
-        <div class="modal-body">
-          <div class="muted" id="editAttrClsInfo"></div>
-          <div class="form-group">
-            <label for="edit_valor_cls">Valor</label>
-            <textarea id="edit_valor_cls" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
-          </div>
-          <div class="form-group" id="edit_unidad_cls_group">
-            <label for="edit_unidad_cls">Unidad (si aplica)</label>
-            <select id="edit_unidad_cls" name="unidad"></select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalEditAttrCls">Cancelar</button>
-          <button type="submit" class="btn">Guardar</button>
-        </div>
-      </form>
-    </div>
-   </div>
-
-  <!-- Modal Agregar Atributo (Clase) -->
-  <div class="modal-overlay" id="modalAddAttrCls">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrClsTitle">
-      <div class="modal-header">
-        <h4 id="modalAddAttrClsTitle">Agregar atributo</h4>
-        <button type="button" class="modal-close js-close-modal" data-target="#modalAddAttrCls">✖</button>
-      </div>
-      <form method="POST" id="formAddAttrCls">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-        <input type="hidden" name="action" value="add_attr" />
-        <input type="hidden" name="def_id" id="add_def_id_cls" />
-        <div class="modal-body">
-          <div class="muted" id="addAttrClsInfo"></div>
-          <div class="form-group">
-            <label for="add_valor_cls">Valor</label>
-            <textarea id="add_valor_cls" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
-          </div>
-          <div class="form-group" id="add_unidad_cls_group">
-            <label for="add_unidad_cls">Unidad (si aplica)</label>
-            <select id="add_unidad_cls" name="unidad"></select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddAttrCls">Cancelar</button>
-          <button type="submit" class="btn">Agregar</button>
-        </div>
-      </form>
-    </div>
-   </div>
-
-  <!-- Modal Crear Definición de Atributo (Clase) -->
-  <div class="modal-overlay" id="modalCreateAttrCls">
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrClsTitle">
-      <div class="modal-header">
-        <h4 id="modalCreateAttrClsTitle">Crear nuevo atributo</h4>
-        <button type="button" class="modal-close js-close-modal" data-target="#modalCreateAttrCls">✖</button>
-      </div>
-      <form method="POST" id="formCreateAttrCls">
-        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-        <input type="hidden" name="action" value="create_attr_def" />
-        <div class="modal-body">
-          <div class="form-group"><label for="create_etiqueta_cls">Etiqueta</label><input type="text" id="create_etiqueta_cls" name="etiqueta" required /></div>
-          <div class="form-group"><label for="create_clave_cls">Clave</label><input type="text" id="create_clave_cls" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
-          <div class="field-inline">
-            <div class="form-group"><label for="create_tipo_cls">Tipo</label>
-              <select id="create_tipo_cls" name="tipo_dato">
-                <option value="string">string</option>
-                <option value="number">number</option>
-                <option value="integer">integer</option>
-                <option value="boolean">boolean</option>
-                <option value="date">date</option>
-                <option value="datetime">datetime</option>
-                <option value="json">json</option>
-              </select>
-            </div>
-            <div class="form-group"><label for="create_card_cls">Cardinalidad</label>
-              <select id="create_card_cls" name="cardinalidad">
-                <option value="one">one</option>
-                <option value="many">many</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-inline">
-            <div class="form-group"><label for="create_unidad_cls">Unidad por defecto</label><input type="text" id="create_unidad_cls" name="unidad_defecto" placeholder="opcional" /></div>
-            <div class="form-group"><label for="create_unidades_cls">Unidades permitidas</label><input type="text" id="create_unidades_cls" name="unidades_permitidas" placeholder="separa por comas" /></div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttrCls">Cancelar</button>
-          <button type="submit" class="btn">Crear</button>
-        </div>
-      </form>
-    </div>
-   </div>
   <?php endif; ?>
   
   <!-- Kits de Materiales (Autocomplete con Chips) -->
@@ -916,6 +807,120 @@ include '../header.php';
     <?php endif; ?>
   </div>
 </form>
+
+<?php if ($is_edit): ?>
+<!-- Hidden delete form for Clase attributes (outside main form) -->
+<form method="POST" id="formDeleteAttrCls" style="display:none;">
+  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+  <input type="hidden" name="action" value="delete_attr" />
+  <input type="hidden" name="def_id" id="delete_def_id_cls" />
+</form>
+
+<!-- Modal Editar Atributo (Clase) - moved outside main form -->
+<div class="modal-overlay" id="modalEditAttrCls">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrClsTitle">
+    <div class="modal-header">
+      <h4 id="modalEditAttrClsTitle">Editar atributo</h4>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalEditAttrCls">✖</button>
+    </div>
+    <form method="POST" id="formEditAttrCls">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+      <input type="hidden" name="action" value="update_attr" />
+      <input type="hidden" name="def_id" id="edit_def_id_cls" />
+      <div class="modal-body">
+        <div class="muted" id="editAttrClsInfo"></div>
+        <div class="form-group">
+          <label for="edit_valor_cls">Valor</label>
+          <textarea id="edit_valor_cls" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
+        </div>
+        <div class="form-group" id="edit_unidad_cls_group">
+          <label for="edit_unidad_cls">Unidad (si aplica)</label>
+          <select id="edit_unidad_cls" name="unidad"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalEditAttrCls">Cancelar</button>
+        <button type="submit" class="btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+ </div>
+
+<!-- Modal Agregar Atributo (Clase) - moved outside main form -->
+<div class="modal-overlay" id="modalAddAttrCls">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrClsTitle">
+    <div class="modal-header">
+      <h4 id="modalAddAttrClsTitle">Agregar atributo</h4>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalAddAttrCls">✖</button>
+    </div>
+    <form method="POST" id="formAddAttrCls">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+      <input type="hidden" name="action" value="add_attr" />
+      <input type="hidden" name="def_id" id="add_def_id_cls" />
+      <div class="modal-body">
+        <div class="muted" id="addAttrClsInfo"></div>
+        <div class="form-group">
+          <label for="add_valor_cls">Valor</label>
+          <textarea id="add_valor_cls" name="valor" rows="3" placeholder="Para múltiples, separa por comas"></textarea>
+        </div>
+        <div class="form-group" id="add_unidad_cls_group">
+          <label for="add_unidad_cls">Unidad (si aplica)</label>
+          <select id="add_unidad_cls" name="unidad"></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddAttrCls">Cancelar</button>
+        <button type="submit" class="btn">Agregar</button>
+      </div>
+    </form>
+  </div>
+ </div>
+
+<!-- Modal Crear Definición de Atributo (Clase) - moved outside main form -->
+<div class="modal-overlay" id="modalCreateAttrCls">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrClsTitle">
+    <div class="modal-header">
+      <h4 id="modalCreateAttrClsTitle">Crear nuevo atributo</h4>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalCreateAttrCls">✖</button>
+    </div>
+    <form method="POST" id="formCreateAttrCls">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+      <input type="hidden" name="action" value="create_attr_def" />
+      <div class="modal-body">
+        <div class="form-group"><label for="create_etiqueta_cls">Etiqueta</label><input type="text" id="create_etiqueta_cls" name="etiqueta" required /></div>
+        <div class="form-group"><label for="create_clave_cls">Clave</label><input type="text" id="create_clave_cls" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
+        <div class="field-inline">
+          <div class="form-group"><label for="create_tipo_cls">Tipo</label>
+            <select id="create_tipo_cls" name="tipo_dato">
+              <option value="string">string</option>
+              <option value="number">number</option>
+              <option value="integer">integer</option>
+              <option value="boolean">boolean</option>
+              <option value="date">date</option>
+              <option value="datetime">datetime</option>
+              <option value="json">json</option>
+            </select>
+          </div>
+          <div class="form-group"><label for="create_card_cls">Cardinalidad</label>
+            <select id="create_card_cls" name="cardinalidad">
+              <option value="one">one</option>
+              <option value="many">many</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-inline">
+          <div class="form-group"><label for="create_unidad_cls">Unidad por defecto</label><input type="text" id="create_unidad_cls" name="unidad_defecto" placeholder="opcional" /></div>
+          <div class="form-group"><label for="create_unidades_cls">Unidades permitidas</label><input type="text" id="create_unidades_cls" name="unidades_permitidas" placeholder="separa por comas" /></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttrCls">Cancelar</button>
+        <button type="submit" class="btn">Crear</button>
+      </div>
+    </form>
+  </div>
+ </div>
+<?php endif; ?>
 
 <!-- Editor: CKEditor 4 (matches article-edit, no API key) -->
 <script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
@@ -1756,6 +1761,21 @@ include '../header.php';
   // Logs de envío de formularios
   document.getElementById('formEditAttrCls')?.addEventListener('submit', () => console.log('📡 [ClasesEdit] Enviando update_attr...'));
   document.getElementById('formAddAttrCls')?.addEventListener('submit', () => console.log('📡 [ClasesEdit] Enviando add_attr...'));
+  // Delete attribute via hidden form
+  document.querySelectorAll('.js-delete-attr-cls').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const defId = btn.getAttribute('data-def-id');
+      if (!defId) return;
+      if (!confirm('¿Eliminar este atributo de la clase?')) return;
+      const hid = document.getElementById('delete_def_id_cls');
+      const form = document.getElementById('formDeleteAttrCls');
+      if (hid && form) {
+        hid.value = defId;
+        console.log('📡 [ClasesEdit] Enviando delete_attr...', defId);
+        form.submit();
+      }
+    });
+  });
 </script>
 <?php endif; ?>
 
