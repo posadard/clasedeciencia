@@ -50,7 +50,8 @@ class ClaseDeCienciaSearch {
     
     try {
       // Cache-busting to ensure fresh data after content updates
-      const url = `/api/clases-data.php?t=${Date.now()}`;
+      const ver = (typeof window !== 'undefined' && window.SEARCH_VERSION) ? `&v=${encodeURIComponent(window.SEARCH_VERSION)}` : '';
+      const url = `/api/clases-data.php?t=${Date.now()}${ver}`;
       const response = await fetch(url, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },

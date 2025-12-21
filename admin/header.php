@@ -111,6 +111,7 @@
         <?php endif; ?>
         </h1>
         <div>
+            <button id="btnRefreshSearch" class="btn" style="margin-right:10px;">🔄 Refrescar buscador</button>
             <a href="/">Ver Sitio</a>
             <a href="/admin/logout.php">Salir (<?= isset($_SESSION['admin_username']) ? htmlspecialchars($_SESSION['admin_username'], ENT_QUOTES, 'UTF-8') : 'anon' ?>)</a>
         </div>
@@ -134,3 +135,30 @@
         </aside>
         
         <main class="admin-main">
+                        <script>
+                        (function(){
+                            const btn = document.getElementById('btnRefreshSearch');
+                            if (!btn) return;
+                            btn.addEventListener('click', async function(){
+                                btn.disabled = true;
+                                const prevText = btn.textContent;
+                                btn.textContent = '⏳ Actualizando…';
+                                try {
+                                    const resp = await fetch('/api/search-refresh.php', { method: 'POST', headers: { 'Accept':'application/json' } });
+                                    const data = await resp.json();
+                                    console.log('📡 [Admin] search-refresh status:', resp.status, data);
+                                    if (data && data.ok) {
+                                        btn.textContent = '✅ Refrescado';
+                                        setTimeout(() => { btn.textContent = prevText; btn.disabled = false; }, 1200);
+                                    } else {
+                                        btn.textContent = '⚠️ Error';
+                                        setTimeout(() => { btn.textContent = prevText; btn.disabled = false; }, 1500);
+                                    }
+                                } catch (e) {
+                                    console.log('❌ [Admin] search-refresh error:', e && e.message);
+                                    btn.textContent = '⚠️ Error de red';
+                                    setTimeout(() => { btn.textContent = prevText; btn.disabled = false; }, 1500);
+                                }
+                            });
+                        })();
+                        </script>

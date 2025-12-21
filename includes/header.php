@@ -60,6 +60,19 @@
     <?= $schema_json ?>
     </script>
     <?php endif; ?>
+        <?php
+            // Exponer versión del buscador para cache-busting controlado
+            $search_version = '';
+            $verFile = __DIR__ . '/../assets/cache/search-version.txt';
+            if (is_file($verFile)) {
+                    $v = @file_get_contents($verFile);
+                    if ($v !== false) { $search_version = trim($v); }
+            }
+        ?>
+        <script>
+            window.SEARCH_VERSION = '<?= htmlspecialchars($search_version, ENT_QUOTES, 'UTF-8') ?>';
+            console.log('🔍 [Header] SEARCH_VERSION:', window.SEARCH_VERSION || '(none)');
+        </script>
 </head>
 <body class="<?= isset($body_class) ? h($body_class) : '' ?>">
     <header class="site-header">
