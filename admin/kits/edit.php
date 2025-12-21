@@ -14,6 +14,7 @@ if (!isset($_SESSION['csrf_token'])) {
 $kit = [
   'clase_id' => '',
   'nombre' => '',
+  'slug' => '',
   'codigo' => '',
   'version' => '1',
   'activo' => 1,
@@ -29,7 +30,7 @@ try {
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, codigo, version, activo FROM kits WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, activo FROM kits WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
@@ -67,12 +68,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $legacy_clase_id = isset($_POST['clase_id']) && ctype_digit($_POST['clase_id']) ? (int)$_POST['clase_id'] : 0;
       if ($principal_clase_id === 0 && $legacy_clase_id > 0) { $principal_clase_id = $legacy_clase_id; }
       $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+      $slug = isset($_POST['slug']) ? trim($_POST['slug']) : '';
       $codigo = isset($_POST['codigo']) ? trim($_POST['codigo']) : '';
       $version = isset($_POST['version']) ? trim($_POST['version']) : '1';
       $activo = isset($_POST['activo']) ? 1 : 0;
 
-      if ($principal_clase_id <= 0 || $nombre === '' || $codigo === '') {
-        $error_msg = 'Selecciona al menos una clase, y completa nombre y código.';
+      // Autogenerar slug si viene vacío
+      if ($slug === '' && $nombre !== '') {
+        $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nombre));
+        $slug = trim($slug, '-');
+      }
+
+      if ($principal_clase_id <= 0 || $nombre === '' || $codigo === '' || $slug === '') {
+        $error_msg = 'Selecciona al menos una clase y completa nombre, código y slug.';
       } else {
         try {
           // Enforce unique code
@@ -87,13 +95,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($exists > 0) {
             $error_msg = 'El código de kit ya existe. Elige otro.';
           } else {
+            // Validar slug único
+            if ($is_edit) {
+              $checkS = $pdo->prepare('SELECT COUNT(*) FROM kits WHERE slug = ? AND id <> ?');
+              $checkS->execute([$slug, $id]);
+            } else {
+              $checkS = $pdo->prepare('SELECT COUNT(*) FROM kits WHERE slug = ?');
+              $checkS->execute([$slug]);
+            }
+            $slugExists = (int)$checkS->fetchColumn();
+            if ($slugExists > 0) {
+              $error_msg = 'El slug ya existe. Elige otro.';
+            } else {
             $pdo->beginTransaction();
             if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, codigo=?, version=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $codigo, $version, $activo, $id]);
+              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, activo=?, updated_at=NOW() WHERE id=?');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo, $id]);
             } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, codigo, version, activo, updated_at) VALUES (?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $codigo, $version, $activo]);
+              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, activo, updated_at) VALUES (?,?,?,?,?,?,NOW())');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
             }
@@ -121,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             header('Location: /admin/kits/index.php');
             exit;
+            }
           }
         } catch (PDOException $e) {
           $error_msg = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
@@ -229,6 +250,14 @@ include '../header.php';
     <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>" required />
   </div>
   <div class="form-group">
+    <label for="slug">Slug</label>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($kit['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="se genera automáticamente" style="flex:1;" />
+      <button type="button" id="btn_generar_slug" style="padding:8px 16px; background:#0066cc; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">⚡ Generar</button>
+    </div>
+    <small class="hint">URL amigable. Ejemplo: carro-solar</small>
+  </div>
+  <div class="form-group">
     <label for="codigo">Código</label>
     <input type="text" id="codigo" name="codigo" value="<?= htmlspecialchars($kit['codigo'], ENT_QUOTES, 'UTF-8') ?>" placeholder="p.ej. KIT-PLANTA-LUZ-01" required />
     <small>Debe ser único.</small>
@@ -296,6 +325,24 @@ include '../header.php';
 <script>
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
   console.log('🔍 [KitsEdit] Items disponibles:', <?= count($items) ?>);
+  // Generador de slug (similar a clases)
+  (function initSlugGenerator(){
+    const nombreInput = document.getElementById('nombre');
+    const slugInput = document.getElementById('slug');
+    const btnGenerar = document.getElementById('btn_generar_slug');
+    function genSlug(str){
+      return (str || '').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+    }
+    if (btnGenerar && nombreInput && slugInput) {
+      btnGenerar.addEventListener('click', function(){
+        const v = nombreInput.value.trim();
+        if (!v) { alert('Por favor ingresa el nombre del kit primero'); nombreInput.focus(); return; }
+        const s = genSlug(v);
+        slugInput.value = s;
+        console.log('⚡ [KitsEdit] slug generado con botón:', s);
+      });
+    }
+  })();
 </script>
 <!-- Clases vinculadas al Kit (Transfer List) -->
 <div class="card" style="margin-top:2rem;">
