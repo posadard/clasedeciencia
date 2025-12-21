@@ -552,8 +552,8 @@ include '../header.php';
   }
   ?>
   <?php if ($is_edit): ?>
-  <div class="card" style="margin-top:2rem;">
-    <h3>Ficha técnica (chips)</h3>
+  <div class="form-section">
+    <h2>Ficha técnica</h2>
     <div class="form-group">
       <label for="attr_search_cls">Agregar atributo</label>
       <div class="component-selector-container">
