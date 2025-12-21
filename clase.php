@@ -76,6 +76,49 @@ $stmt = $pdo->prepare("SELECT * FROM recursos_multimedia WHERE clase_id = ? ORDE
 $stmt->execute([$proyecto['id']]);
 $recursos = $stmt->fetchAll();
 
+// Ficha técnica (atributos de clase)
+$ficha_rows = [];
+try {
+    $stmt = $pdo->prepare("SELECT c.atributo_id, c.valor_string, c.valor_numero, c.valor_entero, c.valor_booleano, c.valor_fecha, c.valor_datetime, c.valor_json, c.unidad_codigo, c.orden,
+                                   d.etiqueta, d.tipo_dato, d.unidad_defecto,
+                                   COALESCE(m.orden, 9999) AS map_orden
+                              FROM atributos_contenidos c
+                              JOIN atributos_definiciones d ON d.id = c.atributo_id
+                              LEFT JOIN atributos_mapeo m ON m.atributo_id = c.atributo_id AND m.tipo_entidad = 'clase'
+                             WHERE c.tipo_entidad = 'clase' AND c.entidad_id = ?
+                             ORDER BY map_orden ASC, c.atributo_id ASC, c.orden ASC, c.id ASC");
+    $stmt->execute([$proyecto['id']]);
+    $ficha_rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} catch (PDOException $e) {
+    error_log('Error ficha tecnica: ' . $e->getMessage());
+    $ficha_rows = [];
+}
+
+$ficha_attrs = [];
+foreach ($ficha_rows as $r) {
+    $aid = (int)$r['atributo_id'];
+    if (!isset($ficha_attrs[$aid])) {
+        $ficha_attrs[$aid] = [
+            'label' => $r['etiqueta'],
+            'tipo' => $r['tipo_dato'],
+            'unidad_def' => $r['unidad_defecto'] ?? '',
+            'values' => []
+        ];
+    }
+    $tipo = $r['tipo_dato'];
+    $unit = $r['unidad_codigo'] ?: '';
+    $val = '';
+    if ($tipo === 'number') { $val = $r['valor_numero'] !== null ? rtrim(rtrim((string)$r['valor_numero'], '0'), '.') : ''; }
+    elseif ($tipo === 'integer') { $val = $r['valor_entero'] !== null ? (string)$r['valor_entero'] : ''; }
+    elseif ($tipo === 'boolean') { $val = ((int)$r['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+    elseif ($tipo === 'date') { $val = $r['valor_fecha'] ?: ''; }
+    elseif ($tipo === 'datetime') { $val = $r['valor_datetime'] ?: ''; }
+    elseif ($tipo === 'json') { $val = $r['valor_json'] ?: ''; }
+    else { $val = $r['valor_string'] ?: ''; }
+    if ($val === '' || $val === null) continue;
+    $ficha_attrs[$aid]['values'][] = [ 'text' => (string)$val, 'unit' => $unit ];
+}
+
 // Clases relacionadas (por área o competencia)
 $clases_relacionadas = [];
 if (!empty($areas)) {
@@ -203,6 +246,35 @@ include 'includes/header.php';
         <div class="resumen-section">
             <p class="lead"><?= h($proyecto['resumen']) ?></p>
         </div>
+        <?php endif; ?>
+
+        <?php if (!empty($ficha_attrs)): ?>
+        <section class="ficha-tecnica">
+            <h2>🧪 Ficha técnica</h2>
+            <dl class="ficha-list">
+                <?php foreach ($ficha_attrs as $attr): ?>
+                    <?php 
+                        $vals = $attr['values'];
+                        // Determinar si todas las unidades son iguales
+                        $units = array_values(array_unique(array_filter(array_map(fn($v)=>$v['unit'] ?? '', $vals))));
+                        $singleUnit = count($units) === 1 ? $units[0] : '';
+                        $texts = array_map(function($v) use ($singleUnit){
+                            $t = (string)$v['text'];
+                            // Si hay múltiples unidades distintas, adjuntar al valor
+                            if ($singleUnit === '' && !empty($v['unit'])) $t .= ' ' . $v['unit'];
+                            return $t;
+                        }, $vals);
+                        $display = implode(', ', $texts);
+                    ?>
+                    <div class="ficha-row">
+                        <dt class="ficha-term"><?= h($attr['label']) ?></dt>
+                        <dd class="ficha-def">
+                            <?= h($display) ?><?= $singleUnit ? ' ' . h($singleUnit) : '' ?>
+                        </dd>
+                    </div>
+                <?php endforeach; ?>
+            </dl>
+        </section>
         <?php endif; ?>
 
         <?php 
