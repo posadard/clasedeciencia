@@ -298,26 +298,26 @@ include 'includes/header.php';
                     <?php if (!empty($seguridad['notas'])): ?>
                         <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
                     <?php endif; ?>
+                    <?php if ($has_kit_warnings): ?>
+                        <div class="safety-kits-inline">
+                            <h3 class="safety-subtitle">🧪 Para practicar: A tener en cuenta</h3>
+                            <ul class="safety-kit-list">
+                                <?php foreach ($kit_warnings as $kw): ?>
+                                    <li>
+                                        <?php if (!empty($kw['slug'])): ?>
+                                            <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
+                                        <?php else: ?>
+                                            <strong><?= h($kw['nombre']) ?></strong>
+                                        <?php endif; ?>
+                                        <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </section>
         </div>
-        <?php if ($has_kit_warnings): ?>
-        <section class="safety-info safety-kits">
-            <h2 class="safety-title">🧪 Para practicar: A tener en cuenta</h2>
-            <ul class="safety-kit-list">
-                <?php foreach ($kit_warnings as $kw): ?>
-                    <li>
-                        <?php if (!empty($kw['slug'])): ?>
-                            <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
-                        <?php else: ?>
-                            <strong><?= h($kw['nombre']) ?></strong>
-                        <?php endif; ?>
-                        <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
-        </section>
-        <?php endif; ?>
         <?php else: ?>
             <?php if ($has_seguridad): ?>
             <section class="safety-info">
@@ -328,6 +328,23 @@ include 'includes/header.php';
                     <?php endif; ?>
                     <?php if (!empty($seguridad['notas'])): ?>
                         <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
+                    <?php endif; ?>
+                    <?php if ($has_kit_warnings): ?>
+                        <div class="safety-kits-inline">
+                            <h3 class="safety-subtitle">🧪 Para practicar: A tener en cuenta</h3>
+                            <ul class="safety-kit-list">
+                                <?php foreach ($kit_warnings as $kw): ?>
+                                    <li>
+                                        <?php if (!empty($kw['slug'])): ?>
+                                            <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
+                                        <?php else: ?>
+                                            <strong><?= h($kw['nombre']) ?></strong>
+                                        <?php endif; ?>
+                                        <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
                     <?php endif; ?>
                 </div>
             </section>
@@ -340,24 +357,6 @@ include 'includes/header.php';
                     <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
                 </div>
             </div>
-            <?php endif; ?>
-
-            <?php if ($has_kit_warnings): ?>
-            <section class="safety-info safety-kits">
-                <h2 class="safety-title">🧪 Para practicar: A tener en cuenta</h2>
-                <ul class="safety-kit-list">
-                    <?php foreach ($kit_warnings as $kw): ?>
-                        <li>
-                            <?php if (!empty($kw['slug'])): ?>
-                                <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
-                            <?php else: ?>
-                                <strong><?= h($kw['nombre']) ?></strong>
-                            <?php endif; ?>
-                            <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </section>
             <?php endif; ?>
         <?php endif; ?>
 

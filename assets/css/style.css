@@ -3954,6 +3954,13 @@ strong, b {
     color: var(--color-text);
 }
 
+.safety-subtitle {
+    color: var(--color-primary-dark);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    font-size: 1.1rem;
+}
+
 .edad-recomendada {
     font-size: 1.05rem;
     margin-bottom: var(--spacing-md);
