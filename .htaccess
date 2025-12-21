@@ -10,18 +10,18 @@ RewriteEngine On
 RewriteCond %{QUERY_STRING} ^slug=([a-z0-9-]+)$
 RewriteRule ^proyecto\.php$ /%1? [R=301,L]
 
-# URL amigable para catálogo: /clases -> /catalogo.php
-RewriteRule ^clases$ /catalogo.php [L,QSA]
+# URL amigable para catálogo unificado: /clases -> /clases.php
+RewriteRule ^clases$ /clases.php [L,QSA]
 
 # URLs amigables dinámicas: /{slug} puede ser ciclo, área o proyecto
-# catalogo.php detectará automáticamente si el slug es un ciclo o área
+# clases.php detectará automáticamente si el slug es un ciclo o área
 # Si no es ninguno, proyecto.php manejará el slug como proyecto
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/(admin|api|assets|includes|base_paginas|marco)/
 RewriteCond %{REQUEST_URI} !\.php$
 RewriteCond %{REQUEST_URI} !\.(css|js|jpg|jpeg|png|gif|svg|webp|ico|txt|xml|sql|md)$
-RewriteRule ^([a-z0-9-]+)$ /catalogo.php?slug_dinamico=$1 [L,QSA]
+RewriteRule ^([a-z0-9-]+)$ /clases.php?slug_dinamico=$1 [L,QSA]
 # ============================================================
 
 # Force HTTPS (uncomment in production)

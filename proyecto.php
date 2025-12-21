@@ -181,7 +181,7 @@ include 'includes/header.php';
                         <span class="spec-label">🔬 Áreas</span>
                         <span class="spec-value">
                             <?php foreach ($areas as $idx => $area): ?>
-                                <a href="/catalogo.php?area=<?= h($area['slug']) ?>" class="area-link"><?= h($area['nombre']) ?></a><?= $idx < count($areas) - 1 ? ', ' : '' ?>
+                                <a href="/clases.php?area=<?= h($area['slug']) ?>" class="area-link"><?= h($area['nombre']) ?></a><?= $idx < count($areas) - 1 ? ', ' : '' ?>
                             <?php endforeach; ?>
                         </span>
                     </div>
@@ -396,7 +396,7 @@ include 'includes/header.php';
             <h3>🏷️ Tags</h3>
             <div class="tags-container">
                 <?php foreach ($tags as $tag): ?>
-                    <a href="/catalogo.php?busqueda=<?= urlencode($tag) ?>" class="tag-pill"><?= h($tag) ?></a>
+                    <a href="/clases.php?busqueda=<?= urlencode($tag) ?>" class="tag-pill"><?= h($tag) ?></a>
                 <?php endforeach; ?>
             </div>
         </section>
@@ -469,7 +469,7 @@ include 'includes/header.php';
                 <?php endif; ?>
                 
                 <div class="modal-actions">
-                    <a href="/catalogo.php?ciclo=<?= h($ciclo_info['numero']) ?>" class="btn btn-primary">Ver Clases de este Ciclo</a>
+                    <a href="/clases.php?ciclo=<?= h($ciclo_info['numero']) ?>" class="btn btn-primary">Ver Clases de este Ciclo</a>
                     <button onclick="toggleCicloModal()" class="btn btn-secondary">Cerrar</button>
                 </div>
             </div>

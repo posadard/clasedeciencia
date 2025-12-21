@@ -1,4 +1,8 @@
 <?php
+// Catalogo (DEPRECADO): redirige a clases.php
+header('Location: /clases.php' . (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : ''));
+exit;
+
 // Catalogo - Lista de proyectos con filtros (CdC)
 require_once 'config.php';
 require_once 'includes/functions.php';

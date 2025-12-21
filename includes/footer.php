@@ -48,7 +48,7 @@
     <?php 
     // Cargar sistema de búsqueda en páginas específicas
     $current_page = basename($_SERVER['PHP_SELF']);
-    $search_pages = ['index.php', 'catalogo.php'];
+    $search_pages = ['index.php', 'clases.php'];
     if (in_array($current_page, $search_pages) || !empty($_SERVER['HTTP_X_SEARCH_ENABLED'])): 
     ?>
     <!-- Search System -->

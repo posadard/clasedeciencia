@@ -1,4 +1,8 @@
 <?php
+// Search (DEPRECADO): redirige a clases.php
+header('Location: /clases.php' . (isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] !== '' ? '?' . $_SERVER['QUERY_STRING'] : ''));
+exit;
+
 /**
  * Página de Resultados de Búsqueda (Clases)
  * - Mismo layout que el catálogo de clases
