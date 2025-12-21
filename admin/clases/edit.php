@@ -641,51 +641,7 @@ include '../header.php';
       width: 100%;
       max-width: 600px;
     }
-    .selected-kits {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 8px;
-      min-height: 32px;
-    }
-    .kit-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px 4px 12px;
-      background: linear-gradient(135deg, #1f3c88 0%, #2e7d32 100%);
-      color: white;
-      border-radius: 16px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-    }
-    .kit-chip .edit-kit,
-    .kit-chip .remove-kit {
-      background: rgba(255,255,255,0.3);
-      border: none;
-      border-radius: 50%;
-      width: 18px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: white;
-      font-size: 12px;
-      line-height: 1;
-      padding: 0;
-      transition: background 0.2s;
-    }
-    .kit-chip .edit-kit {
-      font-size: 11px;
-    }
-    .kit-chip .edit-kit:hover {
-      background: rgba(249, 168, 37, 0.9);
-    }
-    .kit-chip .remove-kit:hover {
-      background: rgba(244, 67, 54, 0.9);
-    }
+    /* chips movidos a assets/css/style.css: .selected-kits, .kit-chip, .edit-kit/.remove-kit */
     #kit_search {
       width: 100%;
       padding: 8px 12px;

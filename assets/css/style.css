@@ -2588,6 +2588,107 @@ strong, b {
     display: inline-block;
 }
 
+/* === Admin Chips & Autocomplete (shared) === */
+/* Pills used in kits/clases editors for selected items */
+.selected-kits,
+.selected-components {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+    min-height: 32px;
+}
+
+.kit-chip,
+.component-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: #f3f4f6;
+    color: #111;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 500;
+}
+
+.kit-chip .edit-kit,
+.kit-chip .remove-kit,
+.component-chip .edit-component,
+.component-chip .remove-component {
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #374151;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.kit-chip .edit-kit:hover,
+.kit-chip .remove-kit:hover,
+.component-chip .edit-component:hover,
+.component-chip .remove-component:hover {
+    background: #e5e7eb;
+    border-color: #cbd5e1;
+}
+
+/* Shared autocomplete dropdown */
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    margin-top: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    z-index: 1000;
+    display: none;
+}
+
+.autocomplete-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: #f9fafb; }
+.autocomplete-item strong { display: block; color: #111; margin-bottom: 2px; }
+.autocomplete-item .cmp-code { color: #6b7280; font-size: 0.82rem; }
+
+/* Search inputs used with chips */
+#kit_search,
+#component_search {
+    width: 100%;
+    max-width: 600px;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    transition: border-color 0.2s;
+}
+
+#kit_search:focus,
+#component_search:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(31,60,136,0.08);
+}
+
 /* === Dual Listbox System === */
 /* Transfer list para selección de competencias MEN */
 

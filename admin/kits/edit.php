@@ -250,23 +250,7 @@ include '../header.php';
 <div class="card" style="margin-top:2rem;">
   <h3>Componentes del Kit</h3>
 
-  <style>
-    .component-selector-container{position:relative;width:100%;max-width:800px}
-    .selected-components{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:32px}
-    .component-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 12px;background:linear-gradient(135deg,#1f3c88 0%,#2e7d32 100%);color:#fff;border-radius:16px;font-size:.85rem;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.15)}
-    .component-chip .meta{opacity:.9}
-    .component-chip .edit-component,.component-chip .remove-component{background:rgba(255,255,255,.3);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;line-height:1;padding:0;transition:background .2s}
-    .component-chip .edit-component:hover{background:rgba(249,168,37,.9)}
-    .component-chip .remove-component:hover{background:rgba(244,67,54,.9)}
-    #component_search{width:100%;max-width:600px;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:.92rem;transition:border-color .2s}
-    #component_search:focus{outline:none;border-color:#1f3c88;box-shadow:0 0 0 3px rgba(31,60,136,.1)}
-    .autocomplete-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-top:4px;max-height:250px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;display:none}
-    .autocomplete-item{padding:10px 12px;cursor:pointer;transition:background .15s;border-bottom:1px solid #f3f4f6}
-    .autocomplete-item:last-child{border-bottom:none}
-    .autocomplete-item:hover{background:#f9fafb}
-    .autocomplete-item strong{display:block;color:#111;margin-bottom:2px}
-    .autocomplete-item .cmp-code{color:#6b7280;font-size:.82rem}
-  </style>
+  <!-- estilos de chips y autocompletado se mueven a assets/css/style.css -->
 
   <div class="form-group">
     <label for="component_search">Buscar Componentes</label>
