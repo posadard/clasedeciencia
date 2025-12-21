@@ -458,7 +458,7 @@ if ($is_edit) {
      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrCmpTitle">
     <div class="modal-header">
       <h4 id="modalEditAttrCmpTitle">Editar atributo</h4>
-      <button type="button" class="btn-plain js-close-modal" data-target="#modalEditAttrCmp">✖</button>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalEditAttrCmp">✖</button>
     </div>
     <form method="POST" id="formEditAttrCmp">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -488,7 +488,7 @@ if ($is_edit) {
      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrCmpTitle">
     <div class="modal-header">
       <h4 id="modalAddAttrCmpTitle">Agregar atributo</h4>
-      <button type="button" class="btn-plain js-close-modal" data-target="#modalAddAttrCmp">✖</button>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalAddAttrCmp">✖</button>
     </div>
     <form method="POST" id="formAddAttrCmp">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -519,7 +519,7 @@ if ($is_edit) {
          <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrCmpTitle">
     <div class="modal-header">
       <h4 id="modalCreateAttrCmpTitle">Crear nuevo atributo</h4>
-      <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttrCmp">✖</button>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalCreateAttrCmp">✖</button>
     </div>
     <form method="POST" id="formCreateAttrCmp">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />

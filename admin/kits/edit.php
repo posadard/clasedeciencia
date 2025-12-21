@@ -718,7 +718,7 @@ include '../header.php';
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditAttrTitle">
       <div class="modal-header">
         <h4 id="modalEditAttrTitle">Editar atributo</h4>
-        <button type="button" class="btn-plain js-close-modal" data-target="#modalEditAttr">✖</button>
+        <button type="button" class="modal-close js-close-modal" data-target="#modalEditAttr">✖</button>
       </div>
       <form method="POST" id="formEditAttr">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -748,7 +748,7 @@ include '../header.php';
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddAttrTitle">
       <div class="modal-header">
         <h4 id="modalAddAttrTitle">Agregar atributo</h4>
-        <button type="button" class="btn-plain js-close-modal" data-target="#modalAddAttr">✖</button>
+        <button type="button" class="modal-close js-close-modal" data-target="#modalAddAttr">✖</button>
       </div>
       <form method="POST" id="formAddAttr">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -779,7 +779,7 @@ include '../header.php';
       <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrTitle">
         <div class="modal-header">
           <h4 id="modalCreateAttrTitle">Crear nuevo atributo</h4>
-          <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttr">✖</button>
+          <button type="button" class="modal-close js-close-modal" data-target="#modalCreateAttr">✖</button>
         </div>
         <form method="POST" id="formCreateAttr">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -1141,7 +1141,7 @@ include '../header.php';
   <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalEditTitle">
     <div class="modal-header">
       <h4 id="modalEditTitle">Editar componente</h4>
-      <button type="button" class="btn-plain js-close-modal" data-target="#modalEditCmp">✖</button>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalEditCmp">✖</button>
     </div>
     <form method="POST" id="formEditCmp">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -1177,7 +1177,7 @@ include '../header.php';
   <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalAddTitle">
     <div class="modal-header">
       <h4 id="modalAddTitle">Agregar componente</h4>
-      <button type="button" class="btn-plain js-close-modal" data-target="#modalAddCmp">✖</button>
+      <button type="button" class="modal-close js-close-modal" data-target="#modalAddCmp">✖</button>
     </div>
     <form method="POST" id="formAddCmp">
       <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
