@@ -229,6 +229,75 @@ if (isset($_GET['busqueda']) && trim($_GET['busqueda']) !== '') $filters['busque
 if (isset($_GET['dificultad'])) $filters['dificultad'] = $_GET['dificultad'];
 if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
+// Fallback: infer filters from busqueda when params missing
+function cdc_normalize_text($text) {
+    $text = mb_strtolower($text, 'UTF-8');
+    $text = str_replace(['á','é','í','ó','ú','ñ','ü'], ['a','e','i','o','u','n','u'], $text);
+    $text = preg_replace('/[^a-z0-9°\s]+/u', ' ', $text);
+    $text = preg_replace('/\s+/u', ' ', $text);
+    return trim($text);
+}
+
+if (!empty($filters['busqueda'])) {
+    $norm = cdc_normalize_text($filters['busqueda']);
+    // Ciclo
+    if (empty($filters['ciclo'])) {
+        if (preg_match('/ciclo\s*(1|2|3)/', $norm, $m)) {
+            $filters['ciclo'] = (int)$m[1];
+        } else {
+            $ciclos_list = cdc_get_ciclos($pdo, true);
+            foreach ($ciclos_list as $c) {
+                $n = cdc_normalize_text($c['nombre'] ?? '');
+                if ($c['numero'] == 1 && (strpos($norm,'exploracion')!==false)) { $filters['ciclo'] = 1; break; }
+                if ($c['numero'] == 2 && (strpos($norm,'experimentacion')!==false)) { $filters['ciclo'] = 2; break; }
+                if ($c['numero'] == 3 && (strpos($norm,'analisis')!==false)) { $filters['ciclo'] = 3; break; }
+            }
+        }
+    }
+    // Grado
+    if (empty($filters['grado'])) {
+        $grado = null;
+        if (preg_match('/grado\s*(\d{1,2})/', $norm, $gm)) {
+            $grado = (int)$gm[1];
+        } elseif (preg_match('/(\d{1,2})\s*°/', $norm, $gm2)) {
+            $grado = (int)$gm2[1];
+        } else {
+            $ord = [
+                'primero'=>1,'segundo'=>2,'tercero'=>3,'cuarto'=>4,'quinto'=>5,
+                'sexto'=>6,'septimo'=>7,'octavo'=>8,'noveno'=>9,'decimo'=>10,
+                'undecimo'=>11,'once'=>11
+            ];
+            foreach ($ord as $k=>$v) { if (strpos($norm,$k)!==false) { $grado=$v; break; } }
+        }
+        if ($grado && $grado>=1 && $grado<=11) { $filters['grado'] = $grado; }
+    }
+    // Área (DB-backed)
+    if (empty($filters['area'])) {
+        $areas_all = cdc_get_areas($pdo);
+        $foundArea = null;
+        foreach ($areas_all as $a) {
+            $slug = cdc_normalize_text($a['slug'] ?? '');
+            $name = cdc_normalize_text($a['nombre'] ?? '');
+            if ($slug && strpos($norm, $slug) !== false) { $foundArea = $a['slug']; break; }
+            if ($name && strpos($norm, $name) !== false) { $foundArea = $a['slug']; break; }
+        }
+        // Common synonyms fallback
+        if (!$foundArea) {
+            $syn = [ 'fisica'=>'fisica', 'quimica'=>'quimica', 'biologia'=>'biologia', 'ambiental'=>'ambiental', 'ambiente'=>'ambiental', 'tecnologia'=>'tecnologia' ];
+            foreach ($syn as $k=>$v) { if (strpos($norm,$k)!==false) { $foundArea=$v; break; } }
+        }
+        if ($foundArea) { $filters['area'] = $foundArea; }
+    }
+    // Dificultad
+    if (empty($filters['dificultad'])) {
+        if (strpos($norm,'facil')!==false) { $filters['dificultad']='facil'; }
+        elseif (strpos($norm,'medio')!==false || strpos($norm,'media')!==false || strpos($norm,'intermedio')!==false || strpos($norm,'intermedia')!==false) { $filters['dificultad']='medio'; }
+        elseif (strpos($norm,'dificil')!==false || strpos($norm,'avanzado')!==false) { $filters['dificultad']='dificil'; }
+    }
+    // Prefer grade sort when grade inferred
+    if (!isset($filters['sort']) && !empty($filters['grado'])) { $filters['sort'] = 'grado'; }
+}
+
 $page_title = 'Clases disponibles';
 $page_description = 'Explora clases científicas por ciclo, grado, área y competencias MEN.';
 $canonical_url = SITE_URL . '/catalogo.php';
@@ -433,6 +502,9 @@ include 'includes/header.php';
 <script>
 console.log('🔍 [catalogo] Filtros activos:', <?= json_encode($filters) ?>);
 console.log('✅ [catalogo] Clases cargadas:', <?= count($proyectos) ?>);
+<?php if (!empty($filters['busqueda'])): ?>
+console.log('🔍 [catalogo] Busqueda original:', '<?= h($filters['busqueda']) ?>');
+<?php endif; ?>
 
 function updateSort(sortValue) {
     const url = new URL(window.location.href);

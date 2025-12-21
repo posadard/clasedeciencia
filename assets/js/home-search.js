@@ -640,10 +640,93 @@ class ClaseDeCienciaSearch {
   
   handleEnterKey() {
     const query = this.searchInput.value.trim();
-    if (query) {
-      this.hideSearchResults();
-      window.location.href = `/catalogo.php?busqueda=${encodeURIComponent(query)}`;
+    if (!query) return;
+    this.hideSearchResults();
+
+    // Parse semantic intent from query (ciclo, grado, área, dificultad)
+    const intent = this.parseQueryIntent(query);
+    console.log('🔍 [ClaseDeCienciaSearch] Intent parse:', intent);
+
+    const url = new URL(window.location.origin + '/catalogo.php');
+    url.searchParams.set('busqueda', query);
+    if (intent.ciclo) url.searchParams.set('ciclo', String(intent.ciclo));
+    if (intent.grado) url.searchParams.set('grado', String(intent.grado));
+    if (intent.area) url.searchParams.set('area', intent.area);
+    if (intent.dificultad) url.searchParams.set('dificultad', intent.dificultad);
+
+    // Optional: bias sort when degree present
+    if (intent.grado && !url.searchParams.get('sort')) {
+      url.searchParams.set('sort', 'grado');
     }
+
+    console.log('✅ [ClaseDeCienciaSearch] Redirigiendo a catálogo con filtros:', url.toString());
+    window.location.href = url.toString();
+  }
+
+  // Helpers
+  parseQueryIntent(query) {
+    const norm = (text) => {
+      return (text || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9°\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    const q = norm(query);
+
+    let ciclo = null;
+    let grado = null;
+    let area = null;
+    let dificultad = null;
+
+    // Ciclo by number or name
+    const cicloMatch = q.match(/ciclo\s*(1|2|3)/);
+    if (cicloMatch) ciclo = parseInt(cicloMatch[1], 10);
+    if (!ciclo) {
+      if (q.includes('exploracion')) ciclo = 1;
+      else if (q.includes('experimentacion')) ciclo = 2;
+      else if (q.includes('analisis')) ciclo = 3;
+    }
+
+    // Grado numeric patterns
+    const gradoNum = (() => {
+      const m1 = q.match(/grado\s*(\d{1,2})/);
+      if (m1) return parseInt(m1[1], 10);
+      const m2 = q.match(/(\d{1,2})\s*°/);
+      if (m2) return parseInt(m2[1], 10);
+      // Spanish ordinals
+      const ordMap = {
+        'primero': 1, 'segundo': 2, 'tercero': 3, 'cuarto': 4, 'quinto': 5,
+        'sexto': 6, 'septimo': 7, 'octavo': 8, 'noveno': 9,
+        'decimo': 10, 'undecimo': 11, 'once': 11
+      };
+      for (const [k, v] of Object.entries(ordMap)) {
+        if (q.includes(k)) return v;
+      }
+      return null;
+    })();
+    if (gradoNum && gradoNum >= 1 && gradoNum <= 11) grado = gradoNum;
+
+    // Área by common slugs/keywords
+    const areaCandidates = [
+      { slug: 'fisica', keys: ['fisica'] },
+      { slug: 'quimica', keys: ['quimica'] },
+      { slug: 'biologia', keys: ['biologia'] },
+      { slug: 'ambiental', keys: ['ambiental', 'ambiente'] },
+      { slug: 'tecnologia', keys: ['tecnologia', 'tecnologico'] }
+    ];
+    for (const a of areaCandidates) {
+      if (a.keys.some(k => q.includes(k))) { area = a.slug; break; }
+    }
+
+    // Dificultad
+    if (q.includes('facil')) dificultad = 'facil';
+    else if (q.includes('medio') || q.includes('media') || q.includes('intermedio') || q.includes('intermedia')) dificultad = 'medio';
+    else if (q.includes('dificil') || q.includes('avanzado')) dificultad = 'dificil';
+
+    return { ciclo, grado, area, dificultad };
   }
 }
 
