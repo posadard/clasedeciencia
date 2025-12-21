@@ -123,14 +123,16 @@ include 'includes/header.php';
         <div class="search-active-banner">
             <span class="search-term">🔍 Búsqueda: <strong><?= h($q) ?></strong></span>
         </div>
-        <p class="results-count">
-            <?= count($resultados['clases']) + count($resultados['kits']) + count($resultados['componentes']) ?> resultados totales
-            (Clases: <?= count($resultados['clases']) ?> · Kits: <?= count($resultados['kits']) ?> · Componentes: <?= count($resultados['componentes']) ?>)
-        </p>
-        <div class="related-search-actions" style="margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-primary" id="btn-buscar-clases">Ver en Clases</button>
-            <button type="button" class="btn btn-secondary" id="btn-buscar-kits">Ver en Kits</button>
-            <button type="button" class="btn" id="btn-buscar-componentes">Ver en Componentes</button>
+        <div class="results-row" style="display:flex; align-items:center; justify-content: space-between; gap:12px; flex-wrap: wrap; margin-top:8px;">
+            <p class="results-count" style="margin:0;">
+                <?= count($resultados['clases']) + count($resultados['kits']) + count($resultados['componentes']) ?> resultados totales
+                (Clases: <?= count($resultados['clases']) ?> · Kits: <?= count($resultados['kits']) ?> · Componentes: <?= count($resultados['componentes']) ?>)
+            </p>
+            <div class="related-search-actions" style="display:flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" id="btn-buscar-clases">Ver en Clases</button>
+                <button type="button" class="btn btn-secondary" id="btn-buscar-kits">Ver en Kits</button>
+                <button type="button" class="btn" id="btn-buscar-componentes">Ver en Componentes</button>
+            </div>
         </div>
     </div>
 
