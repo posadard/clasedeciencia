@@ -127,6 +127,11 @@ include 'includes/header.php';
             <?= count($resultados['clases']) + count($resultados['kits']) + count($resultados['componentes']) ?> resultados totales
             (Clases: <?= count($resultados['clases']) ?> · Kits: <?= count($resultados['kits']) ?> · Componentes: <?= count($resultados['componentes']) ?>)
         </p>
+        <div class="related-search-actions" style="margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="btn-buscar-clases">Ver en Clases</button>
+            <button type="button" class="btn btn-secondary" id="btn-buscar-kits">Ver en Kits</button>
+            <button type="button" class="btn" id="btn-buscar-componentes">Ver en Componentes</button>
+        </div>
     </div>
 
     <?php
@@ -166,5 +171,93 @@ console.log('✅ [buscar] conteos:', {
   kits: <?= (int)count($resultados['kits']) ?>,
   componentes: <?= (int)count($resultados['componentes']) ?>
 });
+
+// Botones de búsqueda relacionada por tipo con parseo inteligente del query
+(function(){
+    const query = <?= json_encode($q) ?> || '';
+    const normalize = (text) => (text||'')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9°\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    const parseIntent = (q) => {
+        const qn = normalize(q);
+        const tokens = qn.split(' ').filter(Boolean);
+        const out = { grado:null, ciclo:null, dificultad:null, area:null };
+
+        // grado
+        const gradoWords = { 'primero':1, 'primer':1, 'segundo':2, 'tercero':3, 'cuarto':4, 'quinto':5, 'sexto':6, 'septimo':7, 'séptimo':7, 'octavo':8, 'noveno':9, 'decimo':10, 'décimo':10, 'once':11, 'undecimo':11, 'undécimo':11 };
+        let grado = null;
+        const m1 = qn.match(/grado\s*(\d{1,2})/); if (m1) grado = parseInt(m1[1],10);
+        if (!grado){ const m2 = qn.match(/(\d{1,2})\s*°/); if (m2) grado = parseInt(m2[1],10); }
+        if (!grado){ for (const t of tokens){ if (gradoWords[t]) { grado = gradoWords[t]; break; } } }
+        if (grado && grado>=1 && grado<=11) out.grado = grado;
+
+        // ciclo
+        let ciclo = null; const mC = qn.match(/ciclo\s*(\d)/); if (mC) ciclo = parseInt(mC[1],10);
+        if (!ciclo){ if (tokens.includes('exploracion')) ciclo=1; else if (tokens.includes('experimentacion')) ciclo=2; else if (tokens.includes('analisis')) ciclo=3; }
+        if (ciclo && [1,2,3].includes(ciclo)) out.ciclo = ciclo;
+
+        // dificultad
+        if (tokens.includes('facil')) out.dificultad='facil';
+        if (tokens.includes('medio')||tokens.includes('media')||tokens.includes('intermedio')) out.dificultad='medio';
+        if (tokens.includes('dificil')||tokens.includes('avanzado')) out.dificultad='dificil';
+
+        // area
+        const areaMap = { 'fisica':'fisica','quimica':'quimica','biologia':'biologia','ambiental':'ambiental','tecnologia':'tecnologia' };
+        for (const t of tokens){ if (areaMap[t]) { out.area = areaMap[t]; break; } }
+
+        return out;
+    };
+
+    const intent = parseIntent(query);
+    console.log('🔍 [buscar] Intent parse:', intent);
+
+    const buildUrl = (base, params) => {
+        const usp = new URLSearchParams();
+        Object.entries(params).forEach(([k,v])=>{ if (v!==null && v!=='' && v!==undefined) usp.set(k,String(v)); });
+        const qs = usp.toString();
+        return qs ? `${base}?${qs}` : base;
+    };
+
+    // Clases button
+    const btnClases = document.getElementById('btn-buscar-clases');
+    if (btnClases){ btnClases.addEventListener('click', ()=>{
+        const params = { busqueda: query };
+        if (intent.grado) params.grado = intent.grado;
+        if (intent.ciclo) params.ciclo = intent.ciclo;
+        if (intent.dificultad) params.dificultad = intent.dificultad;
+        if (intent.area) params.area = intent.area;
+        const url = buildUrl('/clases', params);
+        console.log('✅ [buscar] Redirigiendo a Clases:', url);
+        window.location.href = url;
+    }); }
+
+    // Kits button
+    const btnKits = document.getElementById('btn-buscar-kits');
+    if (btnKits){ btnKits.addEventListener('click', ()=>{
+        const url = buildUrl('/kits', { q: query });
+        console.log('✅ [buscar] Redirigiendo a Kits:', url);
+        window.location.href = url;
+    }); }
+
+    // Componentes button
+    const btnComp = document.getElementById('btn-buscar-componentes');
+    if (btnComp){ btnComp.addEventListener('click', ()=>{
+        // Intento de categoría si coincide con token (opcional)
+        const categoriaTokens = ['quimicos','electricos','mecanicos','plasticos','vidrio']; // ajustar si corresponde
+        const tokens = normalize(query).split(' ').filter(Boolean);
+        let category = '';
+        for (const t of tokens){ if (categoriaTokens.includes(t)) { category = t; break; } }
+        const params = { q: query };
+        if (category) params.category = category;
+        const url = buildUrl('/componentes', params);
+        console.log('✅ [buscar] Redirigiendo a Componentes:', url);
+        window.location.href = url;
+    }); }
+})();
 </script>
 <?php include 'includes/footer.php'; ?>
