@@ -249,41 +249,39 @@ include '../header.php';
 <?php if ($is_edit): ?>
 <div class="card" style="margin-top:2rem;">
   <h3>Componentes del Kit</h3>
-  <?php if (!empty($kit_id)): ?>
+  <?php if (!empty($id)): ?>
     <div style="float:right;">
-      <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>">Manuales del Kit</a>
+      <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$id ?>">Manuales del Kit</a>
     </div>
   <?php endif; ?>
-  <?php if (empty($componentes)): ?>
-    <p class="help-text">No hay componentes agregados a este kit.</p>
-  <?php else: ?>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Item ID</th>
-          <th>Componente</th>
-          <th>SKU</th>
-          <th>Cantidad</th>
-          <th>Unidad</th>
-          <th>Notas</th>
-          <th>Orden</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($componentes as $kc): ?>
-        <tr>
-          <td><?= (int)$kc['item_id'] ?></td>
-          <td><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></td>
-          <td><code><?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?></code></td>
-          <td><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></td>
-          <td><?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
-          <td><?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
-          <td><?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?></td>
-          <td class="actions">
-            <button
-              type="button"
-              class="btn action-btn btn-secondary js-edit-item"
+
+  <style>
+    .component-selector-container{position:relative;width:100%;max-width:800px}
+    .selected-components{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:32px}
+    .component-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px 4px 12px;background:linear-gradient(135deg,#1f3c88 0%,#2e7d32 100%);color:#fff;border-radius:16px;font-size:.85rem;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+    .component-chip .meta{opacity:.9}
+    .component-chip .edit-component,.component-chip .remove-component{background:rgba(255,255,255,.3);border:none;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:12px;line-height:1;padding:0;transition:background .2s}
+    .component-chip .edit-component:hover{background:rgba(249,168,37,.9)}
+    .component-chip .remove-component:hover{background:rgba(244,67,54,.9)}
+    #component_search{width:100%;max-width:600px;padding:8px 12px;border:2px solid #d1d5db;border-radius:6px;font-size:.92rem;transition:border-color .2s}
+    #component_search:focus{outline:none;border-color:#1f3c88;box-shadow:0 0 0 3px rgba(31,60,136,.1)}
+    .autocomplete-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-top:4px;max-height:250px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:1000;display:none}
+    .autocomplete-item{padding:10px 12px;cursor:pointer;transition:background .15s;border-bottom:1px solid #f3f4f6}
+    .autocomplete-item:last-child{border-bottom:none}
+    .autocomplete-item:hover{background:#f9fafb}
+    .autocomplete-item strong{display:block;color:#111;margin-bottom:2px}
+    .autocomplete-item .cmp-code{color:#6b7280;font-size:.82rem}
+  </style>
+
+  <div class="form-group">
+    <label for="component_search">Buscar Componentes</label>
+    <div class="component-selector-container">
+      <div class="selected-components" id="selected-components">
+        <?php if (!empty($componentes)): foreach ($componentes as $kc): ?>
+          <div class="component-chip" data-item-id="<?= (int)$kc['item_id'] ?>" data-orden="<?= (int)$kc['orden'] ?>">
+            <span class="name"><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="meta">· <strong><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></strong> <?= htmlspecialchars(($kc['unidad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+            <button type="button" class="edit-component js-edit-item" title="Editar"
               data-item-id="<?= (int)$kc['item_id'] ?>"
               data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
               data-notas="<?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
@@ -291,21 +289,30 @@ include '../header.php';
               data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
               data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
               data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
-            >Editar</button>
-            <form method="POST" style="display:inline;">
+            >✏️</button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
               <input type="hidden" name="action" value="delete_item" />
               <input type="hidden" name="kc_item_id" value="<?= (int)$kc['item_id'] ?>" />
-              <button type="submit" class="btn btn-danger action-btn" onclick="return confirm('¿Eliminar componente del kit?')">Eliminar</button>
+              <button type="submit" class="remove-component" title="Remover">×</button>
             </form>
-          </td>
-        </tr>
+          </div>
+        <?php endforeach; endif; ?>
+      </div>
+      <input type="text" id="component_search" placeholder="Escribir para buscar componente..." autocomplete="off" />
+      <datalist id="components_list">
+        <?php foreach ($items as $it): ?>
+          <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
+            <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
+          </option>
         <?php endforeach; ?>
-      </tbody>
-    </table>
-  <?php endif; ?>
-  <div class="actions" style="margin-top:1rem;">
-    <button type="button" class="btn js-open-add-modal">Agregar componente</button>
+      </datalist>
+      <div class="autocomplete-dropdown" id="cmp_autocomplete_dropdown"></div>
+    </div>
+    <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
+    <div class="actions" style="margin-top:0.6rem;">
+      <button type="button" class="btn js-open-add-modal">Agregar componente</button>
+    </div>
   </div>
 </div>
 <?php endif; ?>
@@ -627,6 +634,74 @@ include '../header.php';
     // Cerrar si clic fuera del combo
     document.addEventListener('click', (e) => {
       if (!combo.contains(e.target) && !e.target.closest('.js-open-add-modal')) close();
+    });
+  })();
+
+  // Selector de componentes: búsqueda + autocompletado + abrir modal de agregar
+  (function initComponentSearch(){
+    const input = document.getElementById('component_search');
+    const dropdown = document.getElementById('cmp_autocomplete_dropdown');
+    const selectedWrap = document.getElementById('selected-components');
+    const addSelect = document.getElementById('add_item_id');
+    const comboInput = document.getElementById('combo_item_input');
+    if (!input || !dropdown || !selectedWrap || !addSelect || !comboInput) { console.log('⚠️ [KitsEdit] Selector de componentes no inicializado'); return; }
+
+    // Construir dataset de items disponibles
+    const items = [
+      <?php foreach ($items as $it): ?>
+      { id: <?= (int)$it['id'] ?>, name: '<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>', sku: '<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>', unidad: '<?= htmlspecialchars($it['unidad'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
+      <?php endforeach; ?>
+    ];
+
+    function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+    function selectedIds(){ return new Set(Array.from(selectedWrap.querySelectorAll('.component-chip')).map(el => parseInt(el.getAttribute('data-item-id'),10)).filter(Boolean)); }
+    function nextOrden(){
+      const ords = Array.from(selectedWrap.querySelectorAll('.component-chip')).map(el => parseInt(el.getAttribute('data-orden')||'0',10));
+      const max = ords.length ? Math.max.apply(null, ords) : 0; return (isFinite(max) ? max : 0) + 1;
+    }
+    function render(list){
+      if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div>'; dropdown.style.display='block'; return; }
+      dropdown.innerHTML = '';
+      list.slice(0, 20).forEach(it => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.innerHTML = `<strong>${it.name}</strong><span class="cmp-code">SKU ${it.sku}${it.unidad? ' · '+it.unidad:''}</span>`;
+        div.addEventListener('click', () => onChoose(it));
+        dropdown.appendChild(div);
+      });
+      dropdown.style.display = 'block';
+    }
+    function filter(q){
+      const sel = selectedIds();
+      const nq = normalize(q);
+      const out = items.filter(it => !sel.has(it.id) && (nq ? (normalize(it.name).includes(nq) || normalize(it.sku).includes(nq)) : true));
+      console.log('🔍 [KitsEdit] Buscar componente:', q, '→', out.length);
+      render(out);
+    }
+    function onChoose(it){
+      try {
+        // Preseleccionar en modal de agregar
+        addSelect.value = String(it.id);
+        comboInput.value = it.name;
+        // Sugerir siguiente orden
+        const ordEl = document.getElementById('add_orden');
+        if (ordEl) ordEl.value = nextOrden();
+        const qtyEl = document.getElementById('add_cantidad');
+        if (qtyEl && (!qtyEl.value || Number(qtyEl.value) <= 0)) qtyEl.value = 1;
+        console.log('✅ [KitsEdit] Seleccionado para agregar:', it);
+        openModal('#modalAddCmp');
+        setTimeout(() => { try { document.getElementById('add_cantidad')?.focus(); } catch(_e){} }, 50);
+      } catch (e) {
+        console.log('❌ [KitsEdit] Error al preparar modal agregar:', e && e.message);
+      }
+      dropdown.style.display = 'none';
+    }
+
+    input.addEventListener('focus', () => filter(input.value));
+    input.addEventListener('input', () => filter(input.value));
+
+    document.addEventListener('click', (e) => {
+      if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none';
     });
   })();
 </script>
