@@ -4083,6 +4083,15 @@ strong, b {
     margin-bottom: var(--spacing-sm);
 }
 
+/* Reordenar: lupa primero, luego nombre del kit, luego badges */
+.kit-header h3 .icon-link {
+    order: 0;
+    margin-left: 0 !important;
+    margin-right: var(--spacing-sm);
+}
+.kit-header h3 > a:first-of-type { order: 1; }
+.kit-header h3 .badge { order: 2; }
+
 .kit-codigo {
     color: var(--color-text-light);
     font-size: 0.9rem;
@@ -4111,6 +4120,8 @@ strong, b {
     align-items: center;
     gap: var(--spacing-sm);
     flex-wrap: wrap;
+    position: relative;
+    padding-bottom: calc(var(--spacing-md) + 28px);
     transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .materials-list li + li { margin-top: var(--spacing-sm); }
@@ -4142,10 +4153,13 @@ strong, b {
 
 /* Icon link alignment and visibility */
 .materials-list .icon-link {
-    margin-left: auto;
+    position: absolute;
+    right: var(--spacing-sm);
+    bottom: var(--spacing-sm);
     text-decoration: none;
-    opacity: 0.8;
+    opacity: 0.85;
     transition: opacity 0.15s ease, transform 0.15s ease;
+    font-size: 1rem;
 }
 .materials-list li:hover .icon-link { opacity: 1; transform: translateY(-1px); }
 
