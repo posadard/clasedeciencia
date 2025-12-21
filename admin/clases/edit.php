@@ -559,7 +559,7 @@ include '../header.php';
     </div>
     <div class="form-group">
       <label for="search-attrs-cls">Atributos</label>
-      <div class="dual-listbox-container">
+      <div class="dual-listbox-container two-panels">
         <div class="listbox-panel">
           <div class="listbox-header">
             <strong>Disponibles</strong>

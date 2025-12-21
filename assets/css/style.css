@@ -3151,6 +3151,17 @@ strong, b {
     background: var(--color-bg-alt);
 }
 
+/* Two-panel variant (no middle buttons) */
+.dual-listbox-container.two-panels {
+    grid-template-columns: 1fr 1fr;
+}
+.dual-listbox-container.two-panels .listbox-panel {
+    min-width: 0; /* allow panels to shrink properly */
+}
+.dual-listbox-container.two-panels .listbox-content {
+    max-height: none; /* let it grow within card; controlled by parent */
+}
+
 .listbox-panel {
     display: flex;
     flex-direction: column;
