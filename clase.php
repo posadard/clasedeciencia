@@ -300,7 +300,7 @@ include 'includes/header.php';
                     <?php endif; ?>
                     <?php if ($has_kit_warnings): ?>
                         <div class="safety-kits-inline">
-                            <h3 class="safety-subtitle">🧪 Advertencias de seguridad durante la práctica</h3>
+                            <h3 class="safety-subtitle">🧪 Advertencias de materiales</h3>
                             <ul class="safety-kit-list">
                                 <?php foreach ($kit_warnings as $kw): ?>
                                     <li>
@@ -331,7 +331,7 @@ include 'includes/header.php';
                     <?php endif; ?>
                     <?php if ($has_kit_warnings): ?>
                         <div class="safety-kits-inline">
-                            <h3 class="safety-subtitle">🧪 Advertencias de seguridad durante la práctica</h3>
+                            <h3 class="safety-subtitle">🧪 Advertencias de materiales</h3>
                             <ul class="safety-kit-list">
                                 <?php foreach ($kit_warnings as $kw): ?>
                                     <li>
