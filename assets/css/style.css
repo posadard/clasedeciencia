@@ -738,6 +738,8 @@ strong, b {
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
 }
+.filters-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.filters-title .chev { opacity: 0.6; }
 
 .filters-form .filter-group {
     margin: 0.75rem 0 1rem 0;
@@ -867,6 +869,9 @@ strong, b {
 @media (max-width: 860px) {
     .library-layout { grid-template-columns: 1fr; }
     .filters-sidebar { position: relative; top: 0; }
+    .filters-title { cursor: pointer; background: var(--color-bg-alt); border: 1px solid var(--color-border-light); border-radius: 8px; padding: 0.5rem 0.65rem; }
+    .filters-sidebar.fs-collapsed .filters-form { display: none; }
+    .filters-sidebar.fs-collapsed .filters-title .chev { transform: rotate(-90deg); }
 }
 
 /* === Compact tweaks for library/results === */

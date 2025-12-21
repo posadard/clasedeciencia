@@ -368,7 +368,7 @@ include 'includes/header.php';
 
     <div class="library-layout">
         <aside class="filters-sidebar">
-            <h2>Filtros</h2>
+            <h2 class="filters-title" aria-expanded="true"><span>Filtros</span><span class="chev" aria-hidden="true">▾</span></h2>
             <form method="get" action="/clases" class="filters-form">
                 <input type="hidden" name="sort" value="<?= h($filters['sort'] ?? ($_GET['sort'] ?? '')) ?>" />
                 <!-- Área (sin toggle), primero -->
@@ -623,6 +623,25 @@ document.querySelectorAll('.collapsible-toggle').forEach(btn => {
 
     // Init with preselected
     (SELECTED||[]).forEach(s=> addValue(String(s)));
+})();
+
+// Mobile: toggle Filters sidebar when clicking the title
+(function(){
+    const sidebar = document.querySelector('.filters-sidebar');
+    const title = sidebar ? sidebar.querySelector('.filters-title') : null;
+    if (!sidebar || !title) return;
+    const updateAria = () => {
+        const collapsed = sidebar.classList.contains('fs-collapsed');
+        title.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    };
+    title.addEventListener('click', () => {
+        // Always toggle; CSS will only collapse on mobile widths
+        sidebar.classList.toggle('fs-collapsed');
+        updateAria();
+        const state = sidebar.classList.contains('fs-collapsed') ? 'collapsed' : 'expanded';
+        console.log('✅ [filters] Sidebar toggle:', state);
+    });
+    updateAria();
 })();
 </script>
 <?php include 'includes/footer.php'; ?>
