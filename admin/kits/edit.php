@@ -750,9 +750,9 @@ include '../header.php';
   }
   ?>
   <?php if ($is_edit): ?>
-  <div class="form-group" style="margin-top:2rem;">
+  <div class="form-section" style="margin-top:2rem;">
     <div class="section-header">
-      <h3>Ficha técnica</h3>
+      <h2>Ficha técnica</h2>
       <div class="actions">
         <button type="button" class="btn btn-secondary" id="btn_create_attr">➕ Crear atributo</button>
       </div>
