@@ -132,9 +132,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tags_list = array_values(array_filter(array_map(function($t){ return trim($t); }, explode(',', $tags_input))));
     $kits_sel = isset($_POST['kits']) && is_array($_POST['kits']) ? array_map('intval', $_POST['kits']) : [];
 
+    // Normalizar y prefijar slug para clases
     if ($slug === '' && $nombre !== '') {
       $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nombre));
       $slug = trim($slug, '-');
+    }
+    if ($slug !== '') {
+      $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $slug));
+      $slug = trim($slug, '-');
+      if (strpos($slug, 'clase-') !== 0) {
+        $slug = 'clase-' . ltrim($slug, '-');
+      }
     }
 
     // Validar ciclo contra ciclos activos
@@ -305,7 +313,7 @@ include '../header.php';
       <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($clase['slug'], ENT_QUOTES, 'UTF-8') ?>" placeholder="se genera automáticamente" style="flex: 1;" />
       <button type="button" id="btn_generar_slug" style="padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar</button>
     </div>
-    <small class="hint">URL amigable. Ejemplo: radio-de-cristal</small>
+    <small class="hint">URL amigable. Ejemplo: clase-radio-de-cristal</small>
   </div>
   <div class="form-group">
     <label for="ciclo">Ciclo</label>
@@ -881,10 +889,18 @@ include '../header.php';
       console.log(seoToggle.checked ? '✅ [SEO] override manual activado' : '🔍 [SEO] usando auto');
     });
   }
+  function normalizeSlugBase(val){
+    return (val || '').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+  }
+  function ensureClasePrefix(val){
+    const base = normalizeSlugBase(val);
+    return base.startsWith('clase-') ? base : ('clase-' + (base.replace(/^clase-+/,'').replace(/^-+/,'')));
+  }
+
   nombreInput.addEventListener('blur', () => {
     console.log('🔍 [ClasesEdit] blur nombre');
     if (!slugInput.value && nombreInput.value) {
-      const s = nombreInput.value.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+      const s = ensureClasePrefix(nombreInput.value);
       slugInput.value = s;
       console.log('✅ [ClasesEdit] slug generado:', s);
     }
@@ -901,10 +917,23 @@ include '../header.php';
         nombreInput.focus();
         return;
       }
-      const s = nombreVal.toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+      const s = ensureClasePrefix(nombreVal);
       slugInput.value = s;
       console.log('⚡ [ClasesEdit] slug generado con botón:', s);
       computeSeo();
+    });
+  }
+
+  // Asegurar prefijo al editar manualmente el slug
+  if (slugInput) {
+    slugInput.addEventListener('blur', () => {
+      if (slugInput.value) {
+        const fixed = ensureClasePrefix(slugInput.value);
+        if (fixed !== slugInput.value) {
+          console.log('⚠️ [ClasesEdit] corrigiendo slug con prefijo:', fixed);
+          slugInput.value = fixed;
+        }
+      }
     });
   }
   

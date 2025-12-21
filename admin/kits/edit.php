@@ -73,10 +73,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $version = isset($_POST['version']) ? trim($_POST['version']) : '1';
       $activo = isset($_POST['activo']) ? 1 : 0;
 
-      // Autogenerar slug si viene vacío
+      // Autogenerar/normalizar slug con prefijo kit-
       if ($slug === '' && $nombre !== '') {
         $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nombre));
         $slug = trim($slug, '-');
+      }
+      if ($slug !== '') {
+        $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $slug));
+        $slug = trim($slug, '-');
+        if (strpos($slug, 'kit-') !== 0) {
+          $slug = 'kit-' . ltrim($slug, '-');
+        }
       }
 
       if ($principal_clase_id <= 0 || $nombre === '' || $codigo === '' || $slug === '') {
@@ -255,7 +262,7 @@ include '../header.php';
       <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($kit['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="se genera automáticamente" style="flex:1;" />
       <button type="button" id="btn_generar_slug" style="padding:8px 16px; background:#0066cc; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">⚡ Generar</button>
     </div>
-    <small class="hint">URL amigable. Ejemplo: carro-solar</small>
+    <small class="hint">URL amigable. Ejemplo: kit-carro-solar</small>
   </div>
   <div class="form-group">
     <label for="codigo">Código</label>
@@ -330,16 +337,29 @@ include '../header.php';
     const nombreInput = document.getElementById('nombre');
     const slugInput = document.getElementById('slug');
     const btnGenerar = document.getElementById('btn_generar_slug');
-    function genSlug(str){
-      return (str || '').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+    function normalizeBase(str){ return (str || '').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, ''); }
+    function withKitPrefix(val){
+      const base = normalizeBase(val).replace(/^kit-+/,'');
+      return base.startsWith('kit-') ? base : ('kit-' + base);
     }
     if (btnGenerar && nombreInput && slugInput) {
       btnGenerar.addEventListener('click', function(){
         const v = nombreInput.value.trim();
         if (!v) { alert('Por favor ingresa el nombre del kit primero'); nombreInput.focus(); return; }
-        const s = genSlug(v);
+        const s = withKitPrefix(v);
         slugInput.value = s;
         console.log('⚡ [KitsEdit] slug generado con botón:', s);
+      });
+    }
+    if (slugInput) {
+      slugInput.addEventListener('blur', function(){
+        if (slugInput.value) {
+          const fixed = withKitPrefix(slugInput.value);
+          if (fixed !== slugInput.value) {
+            console.log('⚠️ [KitsEdit] corrigiendo slug con prefijo:', fixed);
+            slugInput.value = fixed;
+          }
+        }
       });
     }
   })();
