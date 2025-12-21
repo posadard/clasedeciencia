@@ -467,13 +467,13 @@ strong, b {
     overflow: hidden;
 }
 
-/* Gradientes específicos por ciclo (paleta científica) */
-.ciclo-icon.ciclo-0 { background: linear-gradient(135deg, #f9a825, #ffc107); }
-.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #4caf50, #2e7d32); }
-.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #3d5ba9, #1f3c88); }
-.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #1976d2, #1565c0); }
-.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #d32f2f, #c62828); }
-.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #7b1fa2, #6a1b9a); }
+/* Gradientes específicos por ciclo - Gradación Verde → Naranja (Madurez educativa) */
+.ciclo-icon.ciclo-0 { background: linear-gradient(135deg, #e0e0e0, #bdbdbd); } /* Gris (Desarrollo Inicial) */
+.ciclo-icon.ciclo-1 { background: linear-gradient(135deg, #66bb6a, #43a047); } /* Verde (Cimentación) */
+.ciclo-icon.ciclo-2 { background: linear-gradient(135deg, #9ccc65, #7cb342); } /* Verde lima (Consolidación) */
+.ciclo-icon.ciclo-3 { background: linear-gradient(135deg, #ffca28, #ffa000); } /* Amarillo (Exploración) */
+.ciclo-icon.ciclo-4 { background: linear-gradient(135deg, #ffa726, #f57c00); } /* Naranja claro (Experimentación) */
+.ciclo-icon.ciclo-5 { background: linear-gradient(135deg, #ff7043, #e64a19); } /* Naranja fuerte (Análisis) */
 
 /* Efecto shine en hover */
 .ciclo-icon::after {
