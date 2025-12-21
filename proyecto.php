@@ -281,10 +281,10 @@ include 'includes/header.php';
                 <div class="kit-card">
                     <div class="kit-header">
                         <h3>
-                            <a href="/kit-<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
+                            <a href="/<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
                                 <?= h($kit['nombre']) ?>
                             </a>
-                            <a href="/kit-<?= h($kit['slug'] ?? '') ?>" class="icon-link" title="Ver kit" aria-label="Ver kit <?= h($kit['nombre']) ?>" style="margin-left:8px;">
+                            <a href="/<?= h($kit['slug'] ?? '') ?>" class="icon-link" title="Ver kit" aria-label="Ver kit <?= h($kit['nombre']) ?>" style="margin-left:8px;">
                                 🔎
                             </a>
                             <?php if (!empty($kit['es_principal'])): ?>

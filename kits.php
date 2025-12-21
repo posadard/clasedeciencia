@@ -103,8 +103,8 @@ include 'includes/header.php';
             <?php else: ?>
             <div class="articles-grid">
                 <?php foreach ($kits as $k): ?>
-                <article class="article-card" data-href="/kit-<?= h($k['slug']) ?>">
-                    <a class="card-link" href="/kit-<?= h($k['slug']) ?>">
+                <article class="article-card" data-href="/<?= h($k['slug']) ?>">
+                    <a class="card-link" href="/<?= h($k['slug']) ?>">
                         <div class="card-content">
                             <div class="card-meta">
                                 <span class="section-badge">Kit</span>

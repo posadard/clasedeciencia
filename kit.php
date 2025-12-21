@@ -29,7 +29,7 @@ $manuales = cdc_get_kit_manuals($pdo, (int)$kit['id'], true);
 
 $page_title = h(($kit['nombre'] ?? 'Kit') . ' - Clase de Ciencia');
 $page_description = 'Componentes, clases relacionadas y manuales del kit ' . h($kit['nombre'] ?? '');
-$canonical_url = SITE_URL . '/kit-' . urlencode($kit['slug']);
+$canonical_url = SITE_URL . '/' . urlencode($kit['slug']);
 
 include 'includes/header.php';
 ?>

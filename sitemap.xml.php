@@ -94,7 +94,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     }
     foreach ($kits as $k): ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/kit-<?= h($k['slug']) ?></loc>
+        <loc><?= h(SITE_URL) ?>/<?= h($k['slug']) ?></loc>
         <?php if (!empty($k['updated_at'])): ?>
         <lastmod><?= h(date('Y-m-d', strtotime($k['updated_at']))) ?></lastmod>
         <?php endif; ?>
