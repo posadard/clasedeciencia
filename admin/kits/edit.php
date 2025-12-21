@@ -305,9 +305,6 @@ include '../header.php';
       <div class="autocomplete-dropdown" id="cmp_autocomplete_dropdown"></div>
     </div>
     <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
-    <div class="actions" style="margin-top:0.6rem;">
-      <a class="btn btn-secondary" href="/admin/componentes/edit.php" title="Crear un nuevo componente">Nuevo componente</a>
-    </div>
   </div>
 </div>
 <?php endif; ?>
