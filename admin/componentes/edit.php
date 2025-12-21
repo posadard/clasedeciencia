@@ -336,8 +336,6 @@ if ($is_edit) {
   } catch (PDOException $e) {}
 }
 ?>
-<?php endif; ?>
-
 <?php if ($is_edit): ?>
 <div class="card" style="margin-top:2rem;">
   <h3>Ficha técnica (chips)</h3>
