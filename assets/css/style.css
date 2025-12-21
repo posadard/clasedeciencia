@@ -4134,12 +4134,12 @@ strong, b {
     font-weight: 500;
     color: var(--color-text);
     flex: 0 0 100%;
-    display: block;
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 2px;
+    display: block;
+    margin-bottom: var(--spacing-xs);
 }
 
 .material-notes {
@@ -4152,6 +4152,7 @@ strong, b {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    order: 2;
 }
 
 /* Icon link alignment and visibility */
@@ -4178,11 +4179,15 @@ strong, b {
     background: var(--color-bg-light);
     border: 1px solid var(--color-border-light);
     color: var(--color-text);
+    order: 1;
+    margin-right: var(--spacing-xs);
 }
 
 .materials-list .badge-success {
-    /* Ocultar 'Incluido' por redundante en el contexto del kit */
-    display: none;
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: #fff;
+    order: 1;
 }
 
 /* Warning chip */
