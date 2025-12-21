@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 21, 2025 at 06:55 PM
+-- Generation Time: Dec 21, 2025 at 07:08 PM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -156,6 +156,152 @@ INSERT INTO `areas` (`id`, `nombre`, `slug`, `explicacion`) VALUES
 (8, 'Ciencias Sociales', 'sociales', 'Estudia las sociedades humanas, sus estructuras, procesos históricos y relaciones culturales. Incluye historia, geografía, economía y democracia. Importante para contextualizar el impacto social de proyectos científicos y CTeI.'),
 (9, 'Educación Artística', 'artistica', 'Desarrolla capacidades expresivas y creativas a través del arte visual, musical y escénico. Relevante para diseño de prototipos, presentaciones creativas y comunicación visual de proyectos científicos.'),
 (10, 'Lenguaje y Comunicación', 'lenguaje', 'Desarrolla competencias en lectura, escritura, expresión oral y comprensión de textos. Incluye comunicación científica, redacción de informes, presentaciones y documentación de proyectos. Esencial para comunicar resultados científicos.');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `atributos_contenidos`
+--
+
+CREATE TABLE `atributos_contenidos` (
+  `id` bigint(20) NOT NULL,
+  `tipo_entidad` enum('clase','manual','multimedia','kit','componente') NOT NULL,
+  `entidad_id` int(11) NOT NULL,
+  `atributo_id` int(11) NOT NULL,
+  `valor_string` text DEFAULT NULL,
+  `valor_numero` decimal(18,6) DEFAULT NULL,
+  `valor_entero` int(11) DEFAULT NULL,
+  `valor_booleano` tinyint(1) DEFAULT NULL,
+  `valor_fecha` date DEFAULT NULL,
+  `valor_datetime` datetime DEFAULT NULL,
+  `valor_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `unidad_codigo` varchar(12) DEFAULT NULL COMMENT 'unitCode UNECE (ej: KGM, CMT, VLT, LTR)',
+  `lang` varchar(10) DEFAULT NULL COMMENT 'ej: es-CO',
+  `orden` int(11) NOT NULL DEFAULT 0,
+  `fuente` varchar(32) DEFAULT NULL COMMENT 'manual|import|api',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `atributos_definiciones`
+--
+
+CREATE TABLE `atributos_definiciones` (
+  `id` int(11) NOT NULL,
+  `clave` varchar(120) NOT NULL COMMENT 'Identificador técnico estable (ej: peso, tension_v)',
+  `etiqueta` varchar(160) NOT NULL COMMENT 'Nombre visible (ej: Peso, Tensión)',
+  `descripcion` text DEFAULT NULL,
+  `tipo_dato` enum('string','integer','number','boolean','date','datetime','json') NOT NULL DEFAULT 'string',
+  `cardinalidad` enum('one','many') NOT NULL DEFAULT 'one',
+  `grupo` varchar(64) DEFAULT NULL COMMENT 'ficha|seguridad|empaque|electrico|multimedia|otros',
+  `estado` enum('activo','borrador') NOT NULL DEFAULT 'activo',
+  `schema_propiedad` varchar(160) DEFAULT NULL COMMENT 'Prop. de schema.org o ruta (ej: Product.weight, additionalProperty.voltage)',
+  `unidad_defecto` varchar(12) DEFAULT NULL COMMENT 'unitCode UNECE/UN/CEFACT (ej: KGM, CMT, VLT)',
+  `opciones_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `unidades_permitidas_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `aplica_a_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT 'Ej: kit|componente',
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `atributos_definiciones`
+--
+
+INSERT INTO `atributos_definiciones` (`id`, `clave`, `etiqueta`, `descripcion`, `tipo_dato`, `cardinalidad`, `grupo`, `estado`, `schema_propiedad`, `unidad_defecto`, `opciones_json`, `unidades_permitidas_json`, `aplica_a_json`, `created_at`, `updated_at`) VALUES
+(1, 'material', 'Material', 'Material(es) principal(es) del producto', 'string', 'many', 'ficha', 'activo', 'Product.material', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(2, 'color', 'Color', 'Color principal', 'string', 'one', 'ficha', 'activo', 'Product.color', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(3, 'peso', 'Peso', 'Peso neto del producto', 'number', 'one', 'ficha', 'activo', 'Product.weight', 'KGM', NULL, '[\"KGM\",\"GRM\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(4, 'alto', 'Alto', 'Altura del producto', 'number', 'one', 'ficha', 'activo', 'Product.height', 'CMT', NULL, '[\"CMT\",\"MMT\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(5, 'ancho', 'Ancho', 'Ancho del producto', 'number', 'one', 'ficha', 'activo', 'Product.width', 'CMT', NULL, '[\"CMT\",\"MMT\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(6, 'largo', 'Largo', 'Largo/profundidad del producto', 'number', 'one', 'ficha', 'activo', 'Product.depth', 'CMT', NULL, '[\"CMT\",\"MMT\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(7, 'volumen', 'Volumen', 'Volumen del contenido', 'number', 'one', 'ficha', 'activo', 'Product.volume', 'LTR', NULL, '[\"LTR\",\"MLT\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(8, 'pais_fabricacion', 'País de fabricación', 'País de origen del producto', 'string', 'one', 'ficha', 'activo', 'Product.countryOfOrigin', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(9, 'garantia_meses', 'Garantía (meses)', 'Duración de la garantía en meses', 'integer', 'one', 'ficha', 'activo', 'Offer.warranty', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(10, 'tension_v', 'Tensión (V)', 'Tensión de operación', 'number', 'one', 'electrico', 'activo', 'additionalProperty.voltage', 'VLT', NULL, '[\"VLT\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(11, 'corriente_a', 'Corriente (A)', 'Corriente de operación', 'number', 'one', 'electrico', 'activo', 'additionalProperty.current', 'AMP', NULL, '[\"AMP\",\"mA\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(12, 'potencia_w', 'Potencia (W)', 'Potencia nominal', 'number', 'one', 'electrico', 'activo', 'additionalProperty.power', 'WTT', NULL, '[\"WTT\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(13, 'polaridad', 'Polaridad', 'Tipo de corriente o polaridad', 'string', 'one', 'electrico', 'activo', 'additionalProperty.polarity', NULL, '[\"AC\",\"DC\",\"AC/DC\"]', NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(14, 'norma_certificacion', 'Norma/Certificación', 'Normas o certificaciones aplicables (CE, ASTM, ISO)', 'string', 'many', 'seguridad', 'activo', 'conformsTo', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(15, 'edad_segura_min', 'Edad segura mínima', 'Edad mínima recomendada para uso', 'integer', 'one', 'seguridad', 'activo', 'audience.suggestedMinAge', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(16, 'edad_segura_max', 'Edad segura máxima', 'Edad máxima recomendada para uso', 'integer', 'one', 'seguridad', 'activo', 'audience.suggestedMaxAge', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(17, 'pictogramas_ghs', 'Pictogramas GHS', 'Pictogramas de peligrosidad química (multi)', 'string', 'many', 'seguridad', 'activo', 'additionalProperty.ghsPictograms', NULL, '[\"GHS01\",\"GHS02\",\"GHS03\",\"GHS04\",\"GHS05\",\"GHS06\",\"GHS07\",\"GHS08\",\"GHS09\"]', NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(18, 'epp_requerido', 'EPP Requerido', 'Equipo de protección personal recomendado', 'string', 'many', 'seguridad', 'activo', 'additionalProperty.PPE', NULL, '[\"Gafas\",\"Guantes\",\"Bata\",\"Mascarilla\",\"Protección auditiva\"]', NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
+(19, 'contenido_piezas', 'Contenido (piezas)', 'Número total de piezas incluidas', 'integer', 'one', 'empaque', 'activo', 'Product.numberOfItems', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(20, 'peso_empaque', 'Peso con empaque', 'Peso total para envío', 'number', 'one', 'empaque', 'activo', 'Product.shippingWeight', 'KGM', NULL, '[\"KGM\",\"GRM\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(21, 'condiciones_almacenamiento', 'Condiciones de almacenamiento', 'Recomendaciones de almacenamiento', 'string', 'one', 'empaque', 'activo', 'additionalProperty.storageConditions', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `atributos_mapeo`
+--
+
+CREATE TABLE `atributos_mapeo` (
+  `id` int(11) NOT NULL,
+  `atributo_id` int(11) NOT NULL,
+  `tipo_entidad` enum('clase','manual','multimedia','kit','componente') NOT NULL,
+  `requerido` tinyint(1) NOT NULL DEFAULT 0,
+  `visible` tinyint(1) NOT NULL DEFAULT 1,
+  `orden` int(11) NOT NULL DEFAULT 0,
+  `validaciones_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ui_hint` varchar(32) DEFAULT NULL COMMENT 'input|select|slider|quantitative|tags',
+  `buscable` tinyint(1) NOT NULL DEFAULT 0,
+  `facetable` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `atributos_mapeo`
+--
+
+INSERT INTO `atributos_mapeo` (`id`, `atributo_id`, `tipo_entidad`, `requerido`, `visible`, `orden`, `validaciones_json`, `ui_hint`, `buscable`, `facetable`, `created_at`, `updated_at`) VALUES
+(1, 1, 'kit', 0, 1, 10, NULL, 'tags', 1, 1, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(2, 2, 'kit', 0, 1, 20, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(3, 3, 'kit', 0, 1, 30, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(4, 4, 'kit', 0, 1, 40, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(5, 5, 'kit', 0, 1, 50, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(6, 6, 'kit', 0, 1, 60, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(7, 7, 'kit', 0, 1, 70, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(8, 8, 'kit', 0, 1, 80, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(9, 9, 'kit', 0, 1, 90, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(10, 10, 'kit', 0, 1, 110, NULL, 'input', 1, 1, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(11, 11, 'kit', 0, 1, 120, NULL, 'input', 1, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(12, 12, 'kit', 0, 1, 130, NULL, 'input', 1, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(13, 13, 'kit', 0, 1, 140, NULL, 'input', 1, 1, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(14, 14, 'kit', 0, 1, 210, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(15, 15, 'kit', 0, 1, 220, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(16, 16, 'kit', 0, 1, 230, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(17, 17, 'kit', 0, 1, 240, NULL, 'tags', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(18, 18, 'kit', 0, 1, 250, NULL, 'tags', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(19, 19, 'kit', 0, 1, 310, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(20, 20, 'kit', 0, 1, 320, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(21, 21, 'kit', 0, 1, 330, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(32, 1, 'componente', 0, 1, 10, NULL, 'tags', 1, 1, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(33, 2, 'componente', 0, 1, 20, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(34, 3, 'componente', 0, 1, 30, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(35, 4, 'componente', 0, 1, 40, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(36, 5, 'componente', 0, 1, 50, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(37, 6, 'componente', 0, 1, 60, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(38, 7, 'componente', 0, 1, 70, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(39, 8, 'componente', 0, 1, 80, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(40, 9, 'componente', 0, 1, 90, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(41, 10, 'componente', 0, 1, 110, NULL, 'input', 1, 1, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(42, 11, 'componente', 0, 1, 120, NULL, 'input', 1, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(43, 12, 'componente', 0, 1, 130, NULL, 'input', 1, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(44, 13, 'componente', 0, 1, 140, NULL, 'input', 1, 1, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(45, 14, 'componente', 0, 1, 210, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(46, 15, 'componente', 0, 1, 220, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(47, 16, 'componente', 0, 1, 230, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(48, 17, 'componente', 0, 1, 240, NULL, 'tags', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(49, 18, 'componente', 0, 1, 250, NULL, 'tags', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(50, 19, 'componente', 0, 1, 310, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(51, 20, 'componente', 0, 1, 320, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(52, 21, 'componente', 0, 1, 330, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45');
 
 -- --------------------------------------------------------
 
@@ -1121,6 +1267,30 @@ ALTER TABLE `areas`
   ADD UNIQUE KEY `uq_areas_nombre` (`nombre`);
 
 --
+-- Indexes for table `atributos_contenidos`
+--
+ALTER TABLE `atributos_contenidos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_contenidos_entidad` (`tipo_entidad`,`entidad_id`),
+  ADD KEY `idx_contenidos_atributo` (`atributo_id`),
+  ADD KEY `idx_contenidos_entidad_attr` (`tipo_entidad`,`atributo_id`);
+
+--
+-- Indexes for table `atributos_definiciones`
+--
+ALTER TABLE `atributos_definiciones`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_atributos_clave` (`clave`);
+
+--
+-- Indexes for table `atributos_mapeo`
+--
+ALTER TABLE `atributos_mapeo`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_mapeo_attr_entidad` (`atributo_id`,`tipo_entidad`),
+  ADD KEY `idx_mapeo_entidad` (`tipo_entidad`,`orden`);
+
+--
 -- Indexes for table `categorias_items`
 --
 ALTER TABLE `categorias_items`
@@ -1330,6 +1500,24 @@ ALTER TABLE `areas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
+-- AUTO_INCREMENT for table `atributos_contenidos`
+--
+ALTER TABLE `atributos_contenidos`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `atributos_definiciones`
+--
+ALTER TABLE `atributos_definiciones`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+
+--
+-- AUTO_INCREMENT for table `atributos_mapeo`
+--
+ALTER TABLE `atributos_mapeo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+
+--
 -- AUTO_INCREMENT for table `categorias_items`
 --
 ALTER TABLE `categorias_items`
@@ -1485,6 +1673,18 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL S
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `atributos_contenidos`
+--
+ALTER TABLE `atributos_contenidos`
+  ADD CONSTRAINT `fk_contenidos_atributo` FOREIGN KEY (`atributo_id`) REFERENCES `atributos_definiciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `atributos_mapeo`
+--
+ALTER TABLE `atributos_mapeo`
+  ADD CONSTRAINT `fk_mapeo_atributo` FOREIGN KEY (`atributo_id`) REFERENCES `atributos_definiciones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `clase_areas`
