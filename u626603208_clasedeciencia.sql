@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 21, 2025 at 07:08 PM
+-- Generation Time: Dec 21, 2025 at 11:16 PM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -183,6 +183,18 @@ CREATE TABLE `atributos_contenidos` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `atributos_contenidos`
+--
+
+INSERT INTO `atributos_contenidos` (`id`, `tipo_entidad`, `entidad_id`, `atributo_id`, `valor_string`, `valor_numero`, `valor_entero`, `valor_booleano`, `valor_fecha`, `valor_datetime`, `valor_json`, `unidad_codigo`, `lang`, `orden`, `fuente`, `created_at`, `updated_at`) VALUES
+(1, 'kit', 4, 1, 'madera', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 19:42:19', '2025-12-21 19:42:19'),
+(2, 'componente', 12, 2, 'Blanco', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 19:45:31', '2025-12-21 19:45:31'),
+(3, 'kit', 4, 2, 'rojo, azul, verde', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 19:47:50', '2025-12-21 19:47:50'),
+(4, 'kit', 6, 2, 'verde', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 20:07:11', '2025-12-21 20:07:11'),
+(5, 'clase', 1, 22, '10', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 20:58:13', '2025-12-21 20:58:13'),
+(15, 'clase', 6, 23, 'jjj', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 21:39:39', '2025-12-21 21:39:39');
+
 -- --------------------------------------------------------
 
 --
@@ -232,7 +244,14 @@ INSERT INTO `atributos_definiciones` (`id`, `clave`, `etiqueta`, `descripcion`, 
 (18, 'epp_requerido', 'EPP Requerido', 'Equipo de protección personal recomendado', 'string', 'many', 'seguridad', 'activo', 'additionalProperty.PPE', NULL, '[\"Gafas\",\"Guantes\",\"Bata\",\"Mascarilla\",\"Protección auditiva\"]', NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:44', '2025-12-21 19:07:44'),
 (19, 'contenido_piezas', 'Contenido (piezas)', 'Número total de piezas incluidas', 'integer', 'one', 'empaque', 'activo', 'Product.numberOfItems', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
 (20, 'peso_empaque', 'Peso con empaque', 'Peso total para envío', 'number', 'one', 'empaque', 'activo', 'Product.shippingWeight', 'KGM', NULL, '[\"KGM\",\"GRM\"]', '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
-(21, 'condiciones_almacenamiento', 'Condiciones de almacenamiento', 'Recomendaciones de almacenamiento', 'string', 'one', 'empaque', 'activo', 'additionalProperty.storageConditions', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45');
+(21, 'condiciones_almacenamiento', 'Condiciones de almacenamiento', 'Recomendaciones de almacenamiento', 'string', 'one', 'empaque', 'activo', 'additionalProperty.storageConditions', NULL, NULL, NULL, '[\"kit\",\"componente\"]', '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(22, 'interactivity_type', 'Tipo de interactividad', 'Expositivo, activo o mixto', 'string', 'one', 'didactica', 'activo', 'LearningResource.interactivityType', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:44:33', '2025-12-21 20:44:33'),
+(23, 'course_mode', 'Modalidad del curso', 'Presencial, laboratorio, taller, etc.', 'string', 'one', 'didactica', 'activo', 'CourseInstance.courseMode', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:45:43', '2025-12-21 20:45:43'),
+(24, 'instructor_notes', 'Notas del docente', 'Orientaciones/metodología para el docente', 'string', 'one', 'didactica', 'activo', 'CreativeWork.teachingMethod', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:46:09', '2025-12-21 20:46:09'),
+(25, 'tool_extra', 'Herramientas adicionales', 'Herramientas no incluidas en el kit', 'string', 'many', 'didactica', 'activo', 'HowTo.tool', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:46:09', '2025-12-21 20:46:09'),
+(26, 'supply_extra', 'Insumos adicionales', 'Materiales extra fuera del kit', 'string', 'many', 'didactica', 'activo', 'HowTo.supply', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:46:09', '2025-12-21 20:46:09'),
+(27, 'accessibility_summary', 'Resumen de accesibilidad', 'Resumen de apoyos o ajustes', 'string', 'one', 'accesibilidad', 'activo', 'CreativeWork.accessibilitySummary', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:46:27', '2025-12-21 20:46:27'),
+(28, 'accessibility_feature', 'Características de accesibilidad', 'Captions, transcript, lectura fácil, etc.', 'string', 'many', 'accesibilidad', 'activo', 'CreativeWork.accessibilityFeature', NULL, NULL, NULL, '[\"clase\"]', '2025-12-21 20:46:28', '2025-12-21 20:46:28');
 
 -- --------------------------------------------------------
 
@@ -301,7 +320,14 @@ INSERT INTO `atributos_mapeo` (`id`, `atributo_id`, `tipo_entidad`, `requerido`,
 (49, 18, 'componente', 0, 1, 250, NULL, 'tags', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
 (50, 19, 'componente', 0, 1, 310, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
 (51, 20, 'componente', 0, 1, 320, NULL, 'quantitative', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
-(52, 21, 'componente', 0, 1, 330, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45');
+(52, 21, 'componente', 0, 1, 330, NULL, 'input', 0, 0, '2025-12-21 19:07:45', '2025-12-21 19:07:45'),
+(63, 22, 'clase', 0, 1, 10, NULL, 'input', 0, 0, '2025-12-21 20:46:35', '2025-12-21 20:46:35'),
+(64, 23, 'clase', 0, 1, 20, NULL, 'input', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53'),
+(65, 24, 'clase', 0, 1, 30, NULL, 'input', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53'),
+(66, 25, 'clase', 0, 1, 40, NULL, 'tags', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53'),
+(67, 26, 'clase', 0, 1, 50, NULL, 'tags', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53'),
+(68, 27, 'clase', 0, 1, 60, NULL, 'input', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53'),
+(69, 28, 'clase', 0, 1, 70, NULL, 'tags', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53');
 
 -- --------------------------------------------------------
 
@@ -405,7 +431,7 @@ INSERT INTO `clases` (`id`, `nombre`, `slug`, `ciclo`, `grados`, `dificultad`, `
 (3, 'Circuito eléctrico básico', 'circuito-electrico-basico', 1, '[6, 7]', 'facil', 60, 'Arma un circuito simple con batería, interruptor y LED.', 'Identificar componentes eléctricos básicos y observar transformaciones de energía.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No cortocircuitar baterías\"}', NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (4, 'Separación de mezclas', 'separacion-de-mezclas', 1, '[6, 7]', 'facil', 60, 'Aplica métodos físicos para separar mezclas cotidianas.', 'Clasificar mezclas y aplicar filtración y decantación de manera segura.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ Manejo cuidadoso de agua y utensilios\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (5, 'Test de pH', 'test-de-ph', 1, '[6, 7]', 'facil', 45, 'Usa tiras de pH para identificar ácidos y bases.', 'Reconocer propiedades químicas y aplicar normas de seguridad en el laboratorio escolar.', NULL, NULL, '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"⚠️ No ingerir sustancias\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(6, 'Emisión de ondas AM', 'clase-emision-de-ondas-am', 4, '[8,9,10]', 'media', 90, 'Comprende cómo se generan, transmiten y reciben las ondas de radio AM. Analiza el sistema emisor–canal–receptor, la modulación en amplitud, la resonancia LC y la detección por diodo desde una perspectiva conceptual.', 'Explicar la modulación AM y la propagación de ondas electromagnéticas. Describir el rol de antena, tierra, circuito resonante LC, diodo detector y auricular; interpretar selectividad, sensibilidad, ancho de banda y acoplo de impedancias en la recepción de señales.', '/assets/images/clases/radio-cristal-portada.jpg', 'https://www.youtube.com/embed/example-radio-cristal', '{\"edad_min\":14,\"edad_max\":18,\"notas\":\"Evita cables muy extensos en interiores y no conectes el circuito a la red el\\u00e9ctrica. Usa antena y tierra de manera segura, preferiblemente con supervisi\\u00f3n. No uses herramientas punzantes sin cuidado.\"}', 'Clase de Ciencia - Ciencias Ambientales: Emisión de ondas AM', 'Ciclo 4 (8° a 9°): Comprende cómo se generan, transmiten y reciben las ondas de radio AM. Analiza el sistema emisor–canal–receptor, la modulación en amplitud,', 1, 1, 5, 'published', '2025-12-20 10:00:00', 'Clase de Ciencia SAS', '<h2>Introducci&oacute;n</h2>\r\n\r\n<p>Las ondas de radio son ondas electromagn&eacute;ticas que viajan por el espacio y permiten la comunicaci&oacute;n a distancia. En la <strong>modulaci&oacute;n en amplitud (AM)</strong>, la amplitud de una onda portadora de alta frecuencia var&iacute;a siguiendo la forma de la se&ntilde;al de audio.</p>\r\n\r\n<h2>&iquest;Para qu&eacute; sirven las ondas de radio?</h2>\r\n\r\n<ul>\r\n	<li>Radiodifusi&oacute;n (AM), comunicaci&oacute;n mar&iacute;tima y aeron&aacute;utica, avisos de emergencia.</li>\r\n	<li>Sistemas educativos y culturales con amplia cobertura territorial.</li>\r\n</ul>\r\n\r\n<h2>Modelo de comunicaci&oacute;n AM</h2>\r\n\r\n<ul>\r\n	<li><strong>Emisor:</strong> Genera una portadora y la modula en amplitud con una se&ntilde;al de audio.</li>\r\n	<li><strong>Canal:</strong> Propagaci&oacute;n de la onda por el aire (y reflexi&oacute;n ionosf&eacute;rica en ciertas bandas y horarios).</li>\r\n	<li><strong>Receptor:</strong> Sintoniza una frecuencia, detecta la envolvente (audio) y la convierte en sonido.</li>\r\n</ul>\r\n\r\n<h2>Componentes del receptor (rol acad&eacute;mico)</h2>\r\n\r\n<ul>\r\n	<li><strong>Antena:</strong> Intercepta parte de la energ&iacute;a de la onda electromagn&eacute;tica y la convierte en una peque&ntilde;a se&ntilde;al el&eacute;ctrica.</li>\r\n	<li><strong>Tierra (referencia):</strong> Cierra el circuito y estabiliza potenciales, favoreciendo la circulaci&oacute;n de corriente de RF.</li>\r\n	<li><strong>Circuito resonante LC:</strong> Un inductor (L) y un capacitor (C) forman un filtro selectivo que <em>resuena</em> en una frecuencia. Su funci&oacute;n es <em>seleccionar</em> una emisora dentro del espectro.</li>\r\n	<li><strong>Diodo detector:</strong> Rectifica la se&ntilde;al AM (permite mayor paso de un semiciclo), de modo que puede recuperarse la <em>envolvente</em> (audio).</li>\r\n	<li><strong>Auricular de alta impedancia:</strong> Transduce la se&ntilde;al detectada en sonido; su alta impedancia minimiza la carga sobre el circuito.</li>\r\n	<li><strong>(Opcional) Capacitor de filtro:</strong> Suaviza la se&ntilde;al rectificada para perfilar la envolvente (equilibrando fidelidad y respuesta).</li>\r\n</ul>\r\n\r\n<h2>Funcionamiento del circuito</h2>\r\n\r\n<p>El circuito LC logra un m&aacute;ximo de respuesta en su frecuencia de resonancia, que depende de L y C. Aproximadamente: f &asymp; 1/(2&pi;&radic;(LC)). En resonancia, la tensi&oacute;n de RF en el nodo sintonizado aumenta. El diodo deja pasar preferentemente un semiciclo; combinando con la inercia del circuito y/o un filtro, se obtiene la envolvente (la informaci&oacute;n de audio), que el auricular transforma en sonido.</p>\r\n\r\n<h2>Variables y relaciones clave</h2>\r\n\r\n<ul>\r\n	<li><strong>Frecuencia de sinton&iacute;a (f):</strong> Cambia al variar L o C. Menor L o C &rarr; mayor f.</li>\r\n	<li><strong>Selectividad y factor Q:</strong> Q alto &rarr; banda estrecha y mejor separaci&oacute;n entre emisoras, pero m&aacute;s sensible a desajustes.</li>\r\n	<li><strong>Sensibilidad:</strong> Capacidad para captar se&ntilde;ales d&eacute;biles; mejora con antena adecuada y p&eacute;rdidas bajas.</li>\r\n	<li><strong>Impedancia y acoplo:</strong> Una carga muy baja &ldquo;tira&rdquo; la se&ntilde;al. Auriculares de alta impedancia reducen p&eacute;rdidas; un transformador puede ayudar al acoplo.</li>\r\n	<li><strong>Antena:</strong> Longitud y ubicaci&oacute;n influyen en la cantidad de se&ntilde;al captada; el entorno (edificios, cables) modifica la recepci&oacute;n.</li>\r\n	<li><strong>Comportamiento del canal:</strong> En AM de onda media, la propagaci&oacute;n cambia entre d&iacute;a y noche por la ionosfera.</li>\r\n</ul>\r\n\r\n<h2>Actividades de an&aacute;lisis conceptual (sin armado)</h2>\r\n\r\n<ul>\r\n	<li>Identifica en un diagrama de bloques d&oacute;nde ocurren <em>selecci&oacute;n (LC)</em>, <em>detecci&oacute;n (diodo)</em> y <em>transducci&oacute;n (auricular)</em>.</li>\r\n	<li>Predice c&oacute;mo cambia la frecuencia de sinton&iacute;a al duplicar C; explica el efecto sobre selectividad.</li>\r\n	<li>Compara AM vs FM: &iquest;qu&eacute; caracter&iacute;stica de la portadora cambia en cada caso?</li>\r\n	<li>Discute por qu&eacute; un diodo de germanio (&asymp;0,2&ndash;0,3 V) suele ser mejor que uno de silicio (&asymp;0,6&ndash;0,7 V) para se&ntilde;ales peque&ntilde;as.</li>\r\n	<li>Relaciona <em>ancho de banda</em> con <em>calidad de audio</em> y con la separaci&oacute;n entre emisoras.</li>\r\n</ul>\r\n\r\n<h2>Evaluaci&oacute;n formativa</h2>\r\n\r\n<ul>\r\n	<li>Explica con tus palabras la diferencia entre portadora, se&ntilde;al modulante y envolvente.</li>\r\n	<li>Describe el papel de la antena y de la tierra en la captaci&oacute;n de la se&ntilde;al.</li>\r\n	<li>Argumenta c&oacute;mo el circuito LC act&uacute;a como &ldquo;sintonizador&rdquo;.</li>\r\n	<li>Prop&oacute;n mejoras te&oacute;ricas para aumentar sensibilidad sin sacrificar demasiada selectividad.</li>\r\n</ul>\r\n\r\n<h2>Glosario b&aacute;sico</h2>\r\n\r\n<ul>\r\n	<li><strong>Portadora:</strong> Se&ntilde;al de alta frecuencia que transporta la informaci&oacute;n.</li>\r\n	<li><strong>Modulaci&oacute;n:</strong> Proceso de &ldquo;imprimir&rdquo; informaci&oacute;n en la portadora (en AM: variar amplitud).</li>\r\n	<li><strong>Resonancia:</strong> M&aacute;xima respuesta de un circuito a una frecuencia espec&iacute;fica.</li>\r\n	<li><strong>Envolvente:</strong> Perfil lento que contiene la informaci&oacute;n de audio.</li>\r\n	<li><strong>Selectividad:</strong> Capacidad de separar se&ntilde;ales cercanas en frecuencia.</li>\r\n</ul>\r\n', '2025-12-20 04:46:28', '2025-12-21 17:57:47'),
+(6, 'Emisión de ondas AM', 'clase-emision-de-ondas-am', 4, '[8,9,10]', 'media', 90, 'Comprende cómo se generan, transmiten y reciben las ondas de radio AM. Analiza el sistema emisor–canal–receptor, la modulación en amplitud, la resonancia LC y la detección por diodo desde una perspectiva conceptual.', 'Explicar la modulación AM y la propagación de ondas electromagnéticas. Describir el rol de antena, tierra, circuito resonante LC, diodo detector y auricular; interpretar selectividad, sensibilidad, ancho de banda y acoplo de impedancias en la recepción de señales.', '/assets/images/clases/radio-cristal-portada.jpg', 'https://www.youtube.com/embed/example-radio-cristal', '{\"edad_min\":14,\"edad_max\":18,\"notas\":\"Evita cables muy extensos en interiores y no conectes el circuito a la red el\\u00e9ctrica. Usa antena y tierra de manera segura, preferiblemente con supervisi\\u00f3n. No uses herramientas punzantes sin cuidado.\"}', 'Clase de Ciencia - Ciencias Ambientales: Emisión de ondas AM', 'Ciclo 4 (8° a 9°): Comprende cómo se generan, transmiten y reciben las ondas de radio AM. Analiza el sistema emisor–canal–receptor, la modulación en amplitud,', 1, 1, 5, 'published', '2025-12-20 10:00:00', 'Clase de Ciencia SAS', '<h2>Introducci&oacute;n</h2>\r\n\r\n<p>Las ondas de radio son ondas electromagn&eacute;ticas que viajan por el espacio y permiten la comunicaci&oacute;n a distancia. En la <strong>modulaci&oacute;n en amplitud (AM)</strong>, la amplitud de una onda portadora de alta frecuencia var&iacute;a siguiendo la forma de la se&ntilde;al de audio.</p>\r\n\r\n<h2>&iquest;Para qu&eacute; sirven las ondas de radio?</h2>\r\n\r\n<ul>\r\n	<li>Radiodifusi&oacute;n (AM), comunicaci&oacute;n mar&iacute;tima y aeron&aacute;utica, avisos de emergencia.</li>\r\n	<li>Sistemas educativos y culturales con amplia cobertura territorial.</li>\r\n</ul>\r\n\r\n<h2>Modelo de comunicaci&oacute;n AM</h2>\r\n\r\n<ul>\r\n	<li><strong>Emisor:</strong> Genera una portadora y la modula en amplitud con una se&ntilde;al de audio.</li>\r\n	<li><strong>Canal:</strong> Propagaci&oacute;n de la onda por el aire (y reflexi&oacute;n ionosf&eacute;rica en ciertas bandas y horarios).</li>\r\n	<li><strong>Receptor:</strong> Sintoniza una frecuencia, detecta la envolvente (audio) y la convierte en sonido.</li>\r\n</ul>\r\n\r\n<h2>Componentes del receptor (rol acad&eacute;mico)</h2>\r\n\r\n<ul>\r\n	<li><strong>Antena:</strong> Intercepta parte de la energ&iacute;a de la onda electromagn&eacute;tica y la convierte en una peque&ntilde;a se&ntilde;al el&eacute;ctrica.</li>\r\n	<li><strong>Tierra (referencia):</strong> Cierra el circuito y estabiliza potenciales, favoreciendo la circulaci&oacute;n de corriente de RF.</li>\r\n	<li><strong>Circuito resonante LC:</strong> Un inductor (L) y un capacitor (C) forman un filtro selectivo que <em>resuena</em> en una frecuencia. Su funci&oacute;n es <em>seleccionar</em> una emisora dentro del espectro.</li>\r\n	<li><strong>Diodo detector:</strong> Rectifica la se&ntilde;al AM (permite mayor paso de un semiciclo), de modo que puede recuperarse la <em>envolvente</em> (audio).</li>\r\n	<li><strong>Auricular de alta impedancia:</strong> Transduce la se&ntilde;al detectada en sonido; su alta impedancia minimiza la carga sobre el circuito.</li>\r\n	<li><strong>(Opcional) Capacitor de filtro:</strong> Suaviza la se&ntilde;al rectificada para perfilar la envolvente (equilibrando fidelidad y respuesta).</li>\r\n</ul>\r\n\r\n<h2>Funcionamiento del circuito</h2>\r\n\r\n<p>El circuito LC logra un m&aacute;ximo de respuesta en su frecuencia de resonancia, que depende de L y C. Aproximadamente: f &asymp; 1/(2&pi;&radic;(LC)). En resonancia, la tensi&oacute;n de RF en el nodo sintonizado aumenta. El diodo deja pasar preferentemente un semiciclo; combinando con la inercia del circuito y/o un filtro, se obtiene la envolvente (la informaci&oacute;n de audio), que el auricular transforma en sonido.</p>\r\n\r\n<h2>Variables y relaciones clave</h2>\r\n\r\n<ul>\r\n	<li><strong>Frecuencia de sinton&iacute;a (f):</strong> Cambia al variar L o C. Menor L o C &rarr; mayor f.</li>\r\n	<li><strong>Selectividad y factor Q:</strong> Q alto &rarr; banda estrecha y mejor separaci&oacute;n entre emisoras, pero m&aacute;s sensible a desajustes.</li>\r\n	<li><strong>Sensibilidad:</strong> Capacidad para captar se&ntilde;ales d&eacute;biles; mejora con antena adecuada y p&eacute;rdidas bajas.</li>\r\n	<li><strong>Impedancia y acoplo:</strong> Una carga muy baja &ldquo;tira&rdquo; la se&ntilde;al. Auriculares de alta impedancia reducen p&eacute;rdidas; un transformador puede ayudar al acoplo.</li>\r\n	<li><strong>Antena:</strong> Longitud y ubicaci&oacute;n influyen en la cantidad de se&ntilde;al captada; el entorno (edificios, cables) modifica la recepci&oacute;n.</li>\r\n	<li><strong>Comportamiento del canal:</strong> En AM de onda media, la propagaci&oacute;n cambia entre d&iacute;a y noche por la ionosfera.</li>\r\n</ul>\r\n\r\n<h2>Actividades de an&aacute;lisis conceptual (sin armado)</h2>\r\n\r\n<ul>\r\n	<li>Identifica en un diagrama de bloques d&oacute;nde ocurren <em>selecci&oacute;n (LC)</em>, <em>detecci&oacute;n (diodo)</em> y <em>transducci&oacute;n (auricular)</em>.</li>\r\n	<li>Predice c&oacute;mo cambia la frecuencia de sinton&iacute;a al duplicar C; explica el efecto sobre selectividad.</li>\r\n	<li>Compara AM vs FM: &iquest;qu&eacute; caracter&iacute;stica de la portadora cambia en cada caso?</li>\r\n	<li>Discute por qu&eacute; un diodo de germanio (&asymp;0,2&ndash;0,3 V) suele ser mejor que uno de silicio (&asymp;0,6&ndash;0,7 V) para se&ntilde;ales peque&ntilde;as.</li>\r\n	<li>Relaciona <em>ancho de banda</em> con <em>calidad de audio</em> y con la separaci&oacute;n entre emisoras.</li>\r\n</ul>\r\n\r\n<h2>Evaluaci&oacute;n formativa</h2>\r\n\r\n<ul>\r\n	<li>Explica con tus palabras la diferencia entre portadora, se&ntilde;al modulante y envolvente.</li>\r\n	<li>Describe el papel de la antena y de la tierra en la captaci&oacute;n de la se&ntilde;al.</li>\r\n	<li>Argumenta c&oacute;mo el circuito LC act&uacute;a como &ldquo;sintonizador&rdquo;.</li>\r\n	<li>Prop&oacute;n mejoras te&oacute;ricas para aumentar sensibilidad sin sacrificar demasiada selectividad.</li>\r\n</ul>\r\n\r\n<h2>Glosario b&aacute;sico</h2>\r\n\r\n<ul>\r\n	<li><strong>Portadora:</strong> Se&ntilde;al de alta frecuencia que transporta la informaci&oacute;n.</li>\r\n	<li><strong>Modulaci&oacute;n:</strong> Proceso de &ldquo;imprimir&rdquo; informaci&oacute;n en la portadora (en AM: variar amplitud).</li>\r\n	<li><strong>Resonancia:</strong> M&aacute;xima respuesta de un circuito a una frecuencia espec&iacute;fica.</li>\r\n	<li><strong>Envolvente:</strong> Perfil lento que contiene la informaci&oacute;n de audio.</li>\r\n	<li><strong>Selectividad:</strong> Capacidad de separar se&ntilde;ales cercanas en frecuencia.</li>\r\n</ul>\r\n', '2025-12-20 04:46:28', '2025-12-21 21:39:42'),
 (7, 'Motor eléctrico simple', 'motor-electrico-simple', 2, '[8, 9]', 'media', 90, 'Arma un motor básico que convierte energía eléctrica en movimiento.', 'Relacionar electricidad y magnetismo y analizar variables que afectan el movimiento.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Imán potente, evitar acercar a dispositivos\"}', NULL, NULL, 1, 1, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (8, 'Osmosis con vegetales', 'osmosis-con-vegetales', 2, '[8, 9]', 'media', 60, 'Observa cambios por transporte celular en vegetales con soluciones salinas.', 'Explicar procesos celulares usando evidencia experimental.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Higiene y manejo de alimentos\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
 (9, 'Carro trampa de ratón', 'carro-trampa-de-raton', 2, '[8, 9]', 'media', 90, 'Construye un carro impulsado por energía potencial de una trampa.', 'Analizar fuerzas, fricción y transformación de energías en sistemas mecánicos.', NULL, NULL, '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"⚠️ Riesgo de pellizco, usar bajo supervisión\"}', NULL, NULL, 1, 0, 0, 'published', '2025-12-20 04:46:28', NULL, NULL, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
@@ -496,9 +522,9 @@ INSERT INTO `clase_kits` (`clase_id`, `kit_id`, `sort_order`, `es_principal`, `c
 (1, 1, 1, 1, '2025-12-20 21:53:17'),
 (2, 2, 1, 1, '2025-12-20 21:53:17'),
 (3, 3, 1, 1, '2025-12-20 21:53:17'),
-(4, 4, 1, 1, '2025-12-21 16:46:28'),
+(4, 4, 1, 1, '2025-12-21 19:48:45'),
 (5, 5, 1, 1, '2025-12-20 21:53:17'),
-(6, 6, 1, 1, '2025-12-21 17:57:47'),
+(6, 6, 1, 1, '2025-12-21 21:39:42'),
 (7, 7, 1, 1, '2025-12-20 21:53:17'),
 (8, 8, 1, 1, '2025-12-20 21:53:17'),
 (9, 9, 1, 1, '2025-12-20 21:53:17'),
@@ -928,6 +954,13 @@ CREATE TABLE `kits` (
   `slug` varchar(120) DEFAULT NULL,
   `codigo` varchar(64) DEFAULT NULL,
   `version` varchar(32) DEFAULT NULL,
+  `resumen` text DEFAULT NULL,
+  `contenido_html` mediumtext DEFAULT NULL,
+  `imagen_portada` varchar(255) DEFAULT NULL,
+  `video_portada` varchar(255) DEFAULT NULL,
+  `seguridad` longtext DEFAULT NULL CHECK (json_valid(`seguridad`)),
+  `seo_title` varchar(160) DEFAULT NULL,
+  `seo_description` varchar(255) DEFAULT NULL,
   `activo` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -937,22 +970,22 @@ CREATE TABLE `kits` (
 -- Dumping data for table `kits`
 --
 
-INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `slug`, `codigo`, `version`, `activo`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Microscopio sencillo', NULL, 'KIT-MICROSCOPIO_SENCILLO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-21 04:15:30'),
-(2, 2, 'Kit: Pulmón mecánico', NULL, 'KIT-PULMON_MECANICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(3, 3, 'Kit: Circuito eléctrico básico', NULL, 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(4, 4, 'Separación de mezclas', 'kit-separacion-de-mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', 1, '2025-12-20 04:46:28', '2025-12-21 16:46:28'),
-(5, 5, 'Test de pH', NULL, 'KIT-TEST_DE_PH', '1.0', 1, '2025-12-20 04:46:28', '2025-12-21 16:46:06'),
-(6, 6, 'Radio de cristal', 'kit-radio-de-cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', 1, '2025-12-20 04:46:28', '2025-12-21 15:59:17'),
-(7, 7, 'Kit: Motor eléctrico simple', NULL, 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(8, 8, 'Kit: Osmosis con vegetales', NULL, 'KIT-OSMOSIS_CON_VEGETALES', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(9, 9, 'Kit: Carro trampa de ratón', NULL, 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(10, 10, 'Kit: Generador manual (dinamo)', NULL, 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(11, 11, 'Kit: Carro solar', NULL, 'KIT-CARRO_SOLAR', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(12, 12, 'Kit: Turbina eólica de mesa', NULL, 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(13, 13, 'Kit: Electroimán', NULL, 'KIT-ELECTROIMAN', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(14, 14, 'Kit: Tratamiento de agua', NULL, 'KIT-TRATAMIENTO_DE_AGUA', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(15, 15, 'Kit: Análisis químico del entorno', NULL, 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
+INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `slug`, `codigo`, `version`, `resumen`, `contenido_html`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `activo`, `created_at`, `updated_at`) VALUES
+(1, 1, 'Microscopio sencillo', NULL, 'KIT-MICROSCOPIO_SENCILLO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 04:15:30'),
+(2, 2, 'Kit: Pulmón mecánico', NULL, 'KIT-PULMON_MECANICO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(3, 3, 'Kit: Circuito eléctrico básico', NULL, 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(4, 4, 'Separación de mezclas', 'kit-separacion-de-mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 19:48:45'),
+(5, 5, 'Test de pH', NULL, 'KIT-TEST_DE_PH', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 16:46:06'),
+(6, 6, 'Radio de cristal', 'kit-radio-de-cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 15:59:17'),
+(7, 7, 'Kit: Motor eléctrico simple', NULL, 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(8, 8, 'Kit: Osmosis con vegetales', NULL, 'KIT-OSMOSIS_CON_VEGETALES', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(9, 9, 'Kit: Carro trampa de ratón', NULL, 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(10, 10, 'Kit: Generador manual (dinamo)', NULL, 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(11, 11, 'Kit: Carro solar', NULL, 'KIT-CARRO_SOLAR', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(12, 12, 'Kit: Turbina eólica de mesa', NULL, 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(13, 13, 'Kit: Electroimán', NULL, 'KIT-ELECTROIMAN', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(14, 14, 'Kit: Tratamiento de agua', NULL, 'KIT-TRATAMIENTO_DE_AGUA', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
+(15, 15, 'Kit: Análisis químico del entorno', NULL, 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
 
 -- --------------------------------------------------------
 
@@ -1043,7 +1076,7 @@ INSERT INTO `kit_items` (`id`, `nombre_comun`, `slug`, `categoria_id`, `adverten
 (9, 'Cable conductor', 'componente-cable-conductor', 1, NULL, 'm', 'ELE-CAB-CON'),
 (10, 'Interruptor mini', 'componente-interruptor-mini', 1, NULL, 'pcs', 'ELE-INT-MIN'),
 (11, 'Bombillo LED 3V', 'componente-bombillo-led-3v', 1, NULL, 'pcs', 'ELE-LED-3V'),
-(12, 'Papel filtro', 'componente-papel-filtro', 4, '⚠️ Material frágil', 'pcs', 'QUI-PAP-FIL'),
+(12, 'Papel filtro', 'componente-papel-filtro', 4, 'Material frágil', 'pcs', 'QUI-PAP-FIL'),
 (13, 'Embudo plástico', 'componente-embudo-plastico', 4, NULL, 'pcs', 'QUI-EMB-PLA'),
 (14, 'Vaso precipitado plástico', 'componente-vaso-precipitado-plastico', 4, NULL, 'pcs', 'QUI-VAS-PLA'),
 (15, 'Tiras de pH', 'componente-tiras-de-ph', 4, NULL, 'pcs', 'QUI-TIR-PH'),
@@ -1503,19 +1536,19 @@ ALTER TABLE `areas`
 -- AUTO_INCREMENT for table `atributos_contenidos`
 --
 ALTER TABLE `atributos_contenidos`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `atributos_definiciones`
 --
 ALTER TABLE `atributos_definiciones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `atributos_mapeo`
 --
 ALTER TABLE `atributos_mapeo`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT for table `categorias_items`

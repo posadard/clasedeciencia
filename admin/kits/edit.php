@@ -17,6 +17,13 @@ $kit = [
   'slug' => '',
   'codigo' => '',
   'version' => '1',
+  'resumen' => '',
+  'contenido_html' => '',
+  'imagen_portada' => '',
+  'video_portada' => '',
+  'seguridad' => null,
+  'seo_title' => '',
+  'seo_description' => '',
   'activo' => 1,
 ];
 
@@ -30,7 +37,7 @@ try {
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, activo FROM kits WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
@@ -340,6 +347,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $version = isset($_POST['version']) ? trim($_POST['version']) : '1';
       $activo = isset($_POST['activo']) ? 1 : 0;
 
+      // Campos landing/SEO
+      $resumen = isset($_POST['resumen']) ? trim((string)$_POST['resumen']) : '';
+      $contenido_html = isset($_POST['contenido_html']) ? (string)$_POST['contenido_html'] : '';
+      $imagen_portada = isset($_POST['imagen_portada']) ? trim((string)$_POST['imagen_portada']) : '';
+      $video_portada = isset($_POST['video_portada']) ? trim((string)$_POST['video_portada']) : '';
+      $seo_title = isset($_POST['seo_title']) ? trim((string)$_POST['seo_title']) : '';
+      $seo_description = isset($_POST['seo_description']) ? trim((string)$_POST['seo_description']) : '';
+      // Seguridad estructurada → JSON
+      $seg_edad_min = (isset($_POST['seg_edad_min']) && $_POST['seg_edad_min'] !== '') ? (int)$_POST['seg_edad_min'] : null;
+      $seg_edad_max = (isset($_POST['seg_edad_max']) && $_POST['seg_edad_max'] !== '') ? (int)$_POST['seg_edad_max'] : null;
+      $seg_notas = isset($_POST['seg_notas']) ? trim((string)$_POST['seg_notas']) : '';
+      if ($seg_notas === '') { $seg_notas = null; }
+      $seguridad_json = null;
+      if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
+        $seguridad_json = json_encode([
+          'edad_min' => $seg_edad_min,
+          'edad_max' => $seg_edad_max,
+          'notas' => $seg_notas
+        ], JSON_UNESCAPED_UNICODE);
+      }
+
+      // Normalizar longitudes razonables
+      if ($seo_title !== '') { $seo_title = mb_substr($seo_title, 0, 160, 'UTF-8'); }
+      if ($seo_description !== '') { $seo_description = mb_substr($seo_description, 0, 300, 'UTF-8'); }
+      if ($imagen_portada === '') { $imagen_portada = null; }
+      if ($video_portada === '') { $video_portada = null; }
+
       // Autogenerar/normalizar slug con prefijo kit-
       if ($slug === '' && $nombre !== '') {
         $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nombre));
@@ -383,11 +417,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
             $pdo->beginTransaction();
             if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo, $id]);
+              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
             } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, activo, updated_at) VALUES (?,?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo]);
+              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
             }
@@ -573,6 +607,66 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label><input type="checkbox" name="activo" <?= ((int)$kit['activo']) ? 'checked' : '' ?> /> Activo</label>
+  </div>
+  <?php
+    $seg_arr = null;
+    if (!empty($kit['seguridad'])) {
+      try { $tmp = json_decode((string)$kit['seguridad'], true); if (is_array($tmp)) { $seg_arr = $tmp; } } catch (Exception $e) { $seg_arr = null; }
+    }
+    $seg_edad_min_val = $seg_arr['edad_min'] ?? '';
+    $seg_edad_max_val = $seg_arr['edad_max'] ?? '';
+    $seg_notas_val = $seg_arr['notas'] ?? '';
+  ?>
+  <div class="card" style="margin-top:1.25rem;">
+    <h3>Ficha pública (Landing)</h3>
+    <div class="form-group">
+      <label for="resumen">Resumen del kit</label>
+      <textarea id="resumen" name="resumen" rows="3" placeholder="1-2 frases claras para docentes y estudiantes"><?= htmlspecialchars($kit['resumen'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+      <small class="hint">Breve descripción para la ficha pública.</small>
+    </div>
+    <div class="field-inline">
+      <div class="form-group">
+        <label for="imagen_portada">Imagen de portada (URL)</label>
+        <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($kit['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="/assets/img/kits/kit-xyz.webp" />
+      </div>
+      <div class="form-group">
+        <label for="video_portada">Video portada (URL o ID)</label>
+        <input type="text" id="video_portada" name="video_portada" value="<?= htmlspecialchars($kit['video_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="p.ej. YouTube ID o URL" />
+      </div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h4>Seguridad</h4>
+      <div class="field-inline">
+        <div class="form-group">
+          <label for="seg_edad_min">Edad mínima</label>
+          <input type="number" id="seg_edad_min" name="seg_edad_min" min="0" step="1" value="<?= htmlspecialchars($seg_edad_min_val, ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
+        <div class="form-group">
+          <label for="seg_edad_max">Edad máxima</label>
+          <input type="number" id="seg_edad_max" name="seg_edad_max" min="0" step="1" value="<?= htmlspecialchars($seg_edad_max_val, ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="seg_notas">Notas de seguridad</label>
+        <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
+      </div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h4>SEO</h4>
+      <div class="form-group">
+        <label for="seo_title">SEO Title</label>
+        <input type="text" id="seo_title" name="seo_title" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" maxlength="160" />
+      </div>
+      <div class="form-group">
+        <label for="seo_description">SEO Description</label>
+        <textarea id="seo_description" name="seo_description" rows="3" maxlength="300"><?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:1rem;">
+      <label for="contenido_html">Contenido HTML</label>
+      <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+      <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
+    </div>
   </div>
   <div class="actions" style="margin-top:1rem;">
     <button type="submit" class="btn">Guardar</button>
