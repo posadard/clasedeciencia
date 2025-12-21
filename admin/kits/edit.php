@@ -324,40 +324,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($slugExists > 0) {
               $error_msg = 'El slug ya existe. Elige otro.';
             } else {
-            $pdo->beginTransaction();
-            if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo, $id]);
-            } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, activo, updated_at) VALUES (?,?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo]);
-              $id = (int)$pdo->lastInsertId();
-              $is_edit = true;
-            }
-
-            // Actualizar relaciones en clase_kits
-            try {
-              $pdo->prepare('DELETE FROM clase_kits WHERE kit_id = ?')->execute([$id]);
-              if (!empty($clases_sel)) {
-                $ins = $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,?)');
-                $sort = 1;
-                foreach ($clases_sel as $cid) {
-                  $es_principal = ($sort === 1) ? 1 : 0;
-                  $ins->execute([(int)$cid, $id, $sort++, $es_principal]);
-                }
-              } else if ($principal_clase_id > 0) {
-                // Fallback: al menos principal
-                $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,1)')
-                    ->execute([$principal_clase_id, $id, 1]);
+              $pdo->beginTransaction();
+              if ($is_edit) {
+                $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, activo=?, updated_at=NOW() WHERE id=?');
+                $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo, $id]);
+              } else {
+                $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, activo, updated_at) VALUES (?,?,?,?,?,?,NOW())');
+                $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $activo]);
+                $id = (int)$pdo->lastInsertId();
+                $is_edit = true;
               }
-              $pdo->commit();
-              echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits guardados");</script>';
-            } catch (PDOException $e) {
-              if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-              throw $e;
-            }
-            header('Location: /admin/kits/index.php');
-            exit;
+
+              // Actualizar relaciones en clase_kits
+              try {
+                $pdo->prepare('DELETE FROM clase_kits WHERE kit_id = ?')->execute([$id]);
+                if (!empty($clases_sel)) {
+                  $ins = $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,?)');
+                  $sort = 1;
+                  foreach ($clases_sel as $cid) {
+                    $es_principal = ($sort === 1) ? 1 : 0;
+                    $ins->execute([(int)$cid, $id, $sort++, $es_principal]);
+                  }
+                } else if ($principal_clase_id > 0) {
+                  // Fallback: al menos principal
+                  $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,1)')
+                      ->execute([$principal_clase_id, $id, 1]);
+                }
+                $pdo->commit();
+                echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits guardados");</script>';
+              } catch (PDOException $e) {
+                if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+                throw $e;
+              }
+              header('Location: /admin/kits/index.php');
+              exit;
             }
           }
         } catch (PDOException $e) {
