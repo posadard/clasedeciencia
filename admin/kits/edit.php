@@ -93,7 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_msg = 'Selecciona un componente y cantidad válida.';
       } else {
         try {
-          $stmt = $pdo->prepare('INSERT INTO kit_componentes (kit_id, item_id, cantidad, orden) VALUES (?,?,?,?)');
+          // Ajuste al schema: usar sort_order en vez de orden
+          $stmt = $pdo->prepare('INSERT INTO kit_componentes (kit_id, item_id, cantidad, sort_order) VALUES (?,?,?,?)');
           $stmt->execute([$id, $item_id, $cantidad, $orden]);
           $action_msg = 'Componente agregado.';
         } catch (PDOException $e) {
@@ -101,13 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
       }
     } else if ($action === 'delete_item' && $is_edit) {
-      $kc_id = isset($_POST['kc_id']) && ctype_digit($_POST['kc_id']) ? (int)$_POST['kc_id'] : 0;
-      if ($kc_id <= 0) {
-        $error_msg = 'ID de componente inválido.';
+      // El schema no tiene columna id en kit_componentes; borrar por (kit_id, item_id)
+      $kc_item_id = isset($_POST['kc_item_id']) && ctype_digit($_POST['kc_item_id']) ? (int)$_POST['kc_item_id'] : 0;
+      if ($kc_item_id <= 0) {
+        $error_msg = 'Componente inválido.';
       } else {
         try {
-          $stmt = $pdo->prepare('DELETE FROM kit_componentes WHERE id = ? AND kit_id = ?');
-          $stmt->execute([$kc_id, $id]);
+          $stmt = $pdo->prepare('DELETE FROM kit_componentes WHERE kit_id = ? AND item_id = ?');
+          $stmt->execute([$id, $kc_item_id]);
           $action_msg = 'Componente eliminado.';
         } catch (PDOException $e) {
           $error_msg = 'Error al eliminar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
@@ -121,7 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $componentes = [];
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT kc.id, kc.item_id, kc.cantidad, kc.orden, ki.nombre_comun, ki.sku, ki.unidad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY kc.orden ASC, ki.nombre_comun ASC');
+    // Ajuste al schema: no hay kc.id ni kc.orden; usar sort_order como orden
+    $stmt = $pdo->prepare('SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, ki.nombre_comun, ki.sku, ki.unidad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY kc.sort_order ASC, ki.nombre_comun ASC');
     $stmt->execute([$id]);
     $componentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
   } catch (PDOException $e) {}
@@ -197,7 +200,7 @@ include '../header.php';
     <table class="data-table">
       <thead>
         <tr>
-          <th>ID</th>
+          <th>Item ID</th>
           <th>Componente</th>
           <th>SKU</th>
           <th>Cantidad</th>
@@ -209,7 +212,7 @@ include '../header.php';
       <tbody>
         <?php foreach ($componentes as $kc): ?>
         <tr>
-          <td><?= (int)$kc['id'] ?></td>
+          <td><?= (int)$kc['item_id'] ?></td>
           <td><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></td>
           <td><code><?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?></code></td>
           <td><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></td>
@@ -219,7 +222,7 @@ include '../header.php';
             <form method="POST" style="display:inline;">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
               <input type="hidden" name="action" value="delete_item" />
-              <input type="hidden" name="kc_id" value="<?= (int)$kc['id'] ?>" />
+              <input type="hidden" name="kc_item_id" value="<?= (int)$kc['item_id'] ?>" />
               <button type="submit" class="btn btn-danger action-btn" onclick="return confirm('¿Eliminar componente del kit?')">Eliminar</button>
             </form>
           </td>
