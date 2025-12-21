@@ -253,34 +253,59 @@ include 'includes/header.php';
         <?php /* Ficha técnica se mostrará al final en la byline */ ?>
 
         <?php 
-        // Información de seguridad estructurada
+        // Preparar flags de seguridad y video
+        $has_seguridad = false;
+        $seguridad = null;
         if (!empty($proyecto['seguridad'])) {
             $seguridad = json_decode($proyecto['seguridad'], true);
-            if (is_array($seguridad) && (!empty($seguridad['edad_min']) || !empty($seguridad['notas']))): 
-        ?>
-        <section class="safety-info">
-            <h2 class="safety-title">⚠️ Información de Seguridad</h2>
-            <div class="safety-content">
-                <?php if (!empty($seguridad['edad_min']) && !empty($seguridad['edad_max'])): ?>
-                    <p class="edad-recomendada"><strong>👥 Edad recomendada:</strong> <?= (int)$seguridad['edad_min'] ?> a <?= (int)$seguridad['edad_max'] ?> años</p>
-                <?php endif; ?>
-                <?php if (!empty($seguridad['notas'])): ?>
-                    <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
-                <?php endif; ?>
-            </div>
-        </section>
-        <?php 
-            endif;
+            $has_seguridad = is_array($seguridad) && (!empty($seguridad['edad_min']) || !empty($seguridad['notas']));
         }
+        $has_video = !empty($proyecto['video_portada']);
         ?>
-        
-        <?php if (!empty($proyecto['video_portada'])): ?>
-        <div class="video-portada-section">
-            <h2>🎥 Video Introductorio</h2>
-            <div class="video-wrapper">
-                <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
-            </div>
+
+        <?php if ($has_seguridad && $has_video): ?>
+        <div class="intro-row">
+            <section class="video-portada-section">
+                <h2>🎥 Video Introductorio</h2>
+                <div class="video-wrapper">
+                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
+                </div>
+            </section>
+            <section class="safety-info">
+                <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+                <div class="safety-content">
+                    <?php if (!empty($seguridad['edad_min']) && !empty($seguridad['edad_max'])): ?>
+                        <p class="edad-recomendada"><strong>👥 Edad recomendada:</strong> <?= (int)$seguridad['edad_min'] ?> a <?= (int)$seguridad['edad_max'] ?> años</p>
+                    <?php endif; ?>
+                    <?php if (!empty($seguridad['notas'])): ?>
+                        <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
+                    <?php endif; ?>
+                </div>
+            </section>
         </div>
+        <?php else: ?>
+            <?php if ($has_seguridad): ?>
+            <section class="safety-info">
+                <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+                <div class="safety-content">
+                    <?php if (!empty($seguridad['edad_min']) && !empty($seguridad['edad_max'])): ?>
+                        <p class="edad-recomendada"><strong>👥 Edad recomendada:</strong> <?= (int)$seguridad['edad_min'] ?> a <?= (int)$seguridad['edad_max'] ?> años</p>
+                    <?php endif; ?>
+                    <?php if (!empty($seguridad['notas'])): ?>
+                        <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
+                    <?php endif; ?>
+                </div>
+            </section>
+            <?php endif; ?>
+
+            <?php if ($has_video): ?>
+            <div class="video-portada-section">
+                <h2>🎥 Video Introductorio</h2>
+                <div class="video-wrapper">
+                    <iframe src="<?= h($proyecto['video_portada']) ?>" title="Video de <?= h($proyecto['nombre']) ?>" allowfullscreen></iframe>
+                </div>
+            </div>
+            <?php endif; ?>
         <?php endif; ?>
 
         <section class="article-content">
