@@ -221,62 +221,9 @@ include '../header.php';
   <div class="message success"><?= htmlspecialchars($action_msg, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
 
-<form method="POST">
+<form method="POST" id="kit-form">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
   <input type="hidden" name="action" value="save" />
-  <div class="form-group">
-    <label>Clases vinculadas al Kit</label>
-    <small class="hint" style="display:block; margin-bottom:6px;">Selecciona una o varias clases. La primera será la principal (se usa en kits.clase_id para compatibilidad).</small>
-    <div class="dual-listbox-container">
-      <div class="listbox-panel">
-        <div class="listbox-header">
-          <strong>Disponibles</strong>
-          <span id="clases-available-count" class="counter">(<?= count($clases) ?>)</span>
-        </div>
-        <input type="text" id="search-clases" class="listbox-search" placeholder="🔍 Buscar clases...">
-        <div class="listbox-content" id="available-clases">
-          <?php foreach ($clases as $c): 
-            $isSelected = in_array($c['id'], $existing_clase_ids);
-          ?>
-            <div class="competencia-item <?= $isSelected ? 'hidden' : '' ?>" 
-                 data-id="<?= (int)$c['id'] ?>"
-                 data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-ciclo="<?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>"
-                 onclick="selectClaseItem(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo">Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?></span>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-      <div class="listbox-buttons">
-        <button type="button" onclick="moveAllClases(true)" title="Agregar todas">➡️</button>
-        <button type="button" onclick="moveAllClases(false)" title="Quitar todas">⬅️</button>
-      </div>
-      <div class="listbox-panel">
-        <div class="listbox-header">
-          <strong>Seleccionadas</strong>
-          <span id="clases-selected-count" class="counter">(<?= count($existing_clase_ids) ?>)</span>
-        </div>
-        <div class="listbox-content" id="selected-clases">
-          <?php foreach ($clases as $c): if (in_array($c['id'], $existing_clase_ids)): ?>
-            <div class="competencia-item selected" 
-                 data-id="<?= (int)$c['id'] ?>"
-                 data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-ciclo="<?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>"
-                 onclick="deselectClaseItem(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo">Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?></span>
-              <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectClaseItem(this.parentElement)">×</button>
-            </div>
-          <?php endif; endforeach; ?>
-        </div>
-        <small class="hint" style="margin-top: 10px; display: block;">Haz clic para quitar. Orden superior define el principal.</small>
-      </div>
-      <!-- Hidden inputs para enviar clases seleccionadas -->
-      <div id="clases-hidden"></div>
-    </div>
-  </div>
   <div class="form-group">
     <label for="nombre">Nombre del Kit</label>
     <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>" required />
@@ -362,6 +309,60 @@ include '../header.php';
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
   console.log('🔍 [KitsEdit] Items disponibles:', <?= count($items) ?>);
 </script>
+<!-- Clases vinculadas al Kit (Transfer List) -->
+<div class="card" style="margin-top:2rem;">
+  <h3>Clases vinculadas al Kit</h3>
+  <small class="hint" style="display:block; margin-bottom:6px;">Selecciona una o varias clases. La primera será la principal.</small>
+  <div class="dual-listbox-container">
+    <div class="listbox-panel">
+      <div class="listbox-header">
+        <strong>Disponibles</strong>
+        <span id="clases-available-count" class="counter">(<?= count($clases) ?>)</span>
+      </div>
+      <input type="text" id="search-clases" class="listbox-search" placeholder="🔍 Buscar clases...">
+      <div class="listbox-content" id="available-clases">
+        <?php foreach ($clases as $c): 
+          $isSelected = in_array($c['id'], $existing_clase_ids);
+        ?>
+          <div class="competencia-item <?= $isSelected ? 'hidden' : '' ?>" 
+               data-id="<?= (int)$c['id'] ?>"
+               data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+               data-ciclo="<?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>"
+               onclick="selectClaseItem(this)">
+            <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="comp-codigo">Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?></span>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <div class="listbox-buttons">
+      <button type="button" onclick="moveAllClases(true)" title="Agregar todas">➡️</button>
+      <button type="button" onclick="moveAllClases(false)" title="Quitar todas">⬅️</button>
+    </div>
+    <div class="listbox-panel">
+      <div class="listbox-header">
+        <strong>Seleccionadas</strong>
+        <span id="clases-selected-count" class="counter">(<?= count($existing_clase_ids) ?>)</span>
+      </div>
+      <div class="listbox-content" id="selected-clases">
+        <?php foreach ($clases as $c): if (in_array($c['id'], $existing_clase_ids)): ?>
+          <div class="competencia-item selected" 
+               data-id="<?= (int)$c['id'] ?>"
+               data-nombre="<?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?>"
+               data-ciclo="<?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?>"
+               onclick="deselectClaseItem(this)">
+            <span class="comp-nombre"><?= htmlspecialchars($c['nombre'], ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="comp-codigo">Ciclo <?= htmlspecialchars($c['ciclo'], ENT_QUOTES, 'UTF-8') ?></span>
+            <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectClaseItem(this.parentElement)">×</button>
+          </div>
+        <?php endif; endforeach; ?>
+      </div>
+      <small class="hint" style="margin-top: 10px; display: block;">Haz clic para quitar. Orden superior define el principal.</small>
+    </div>
+    <!-- Hidden inputs (outside form) must target kit-form -->
+    <div id="clases-hidden"></div>
+  </div>
+</div>
 <?php if ($is_edit): ?>
 <!-- Modales para editar y agregar componentes -->
 <style>
@@ -544,85 +545,7 @@ include '../header.php';
     formAdd.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando add_item...'));
   }
 
-  // --- Dual Listbox: Clases vinculadas al kit ---
-  (function initClasesTransfer(){
-    const available = document.getElementById('available-clases');
-    const selected = document.getElementById('selected-clases');
-    const search = document.getElementById('search-clases');
-    const hidden = document.getElementById('clases-hidden');
-    const availableCount = document.getElementById('clases-available-count');
-    const selectedCount = document.getElementById('clases-selected-count');
-    if (!available || !selected || !hidden) { console.log('⚠️ [KitsEdit] Transfer de clases no inicializado'); return; }
-
-    function updateHidden(){
-      hidden.innerHTML = '';
-      const ids = Array.from(selected.querySelectorAll('.competencia-item')).map(el => parseInt(el.dataset.id, 10)).filter(Boolean);
-      ids.forEach((id, idx) => {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'clases[]';
-        input.value = id;
-        hidden.appendChild(input);
-      });
-      if (selectedCount) selectedCount.textContent = '(' + ids.length + ')';
-      const availVisible = available.querySelectorAll('.competencia-item:not(.hidden)').length;
-      if (availableCount) availableCount.textContent = '(' + availVisible + ')';
-      console.log('🔍 [KitsEdit] Clases seleccionadas:', ids);
-    }
-
-    window.selectClaseItem = function(el){
-      el.classList.add('hidden');
-      const id = el.dataset.id;
-      const nombre = el.dataset.nombre;
-      const ciclo = el.dataset.ciclo;
-      const node = document.createElement('div');
-      node.className = 'competencia-item selected';
-      node.dataset.id = id;
-      node.dataset.nombre = nombre;
-      node.dataset.ciclo = ciclo;
-      node.innerHTML = `<span class="comp-nombre">${nombre}</span><span class="comp-codigo">Ciclo ${ciclo}</span><button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectClaseItem(this.parentElement)">×</button>`;
-      node.onclick = function(){ window.deselectClaseItem(node); };
-      selected.appendChild(node);
-      updateHidden();
-    };
-
-    window.deselectClaseItem = function(el){
-      const id = el.dataset.id;
-      el.remove();
-      const avail = available.querySelector(`.competencia-item[data-id="${id}"]`);
-      if (avail) avail.classList.remove('hidden');
-      updateHidden();
-    };
-
-    window.moveAllClases = function(add){
-      if (add) {
-        const vis = Array.from(available.querySelectorAll('.competencia-item:not(.hidden)'));
-        vis.forEach(el => selectClaseItem(el));
-      } else {
-        const sel = Array.from(selected.querySelectorAll('.competencia-item'));
-        sel.forEach(el => deselectClaseItem(el));
-      }
-      updateHidden();
-    };
-
-    if (search) {
-      search.addEventListener('input', () => {
-        const q = (search.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-        available.querySelectorAll('.competencia-item').forEach(el => {
-          const n = (el.dataset.nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          const c = (el.dataset.ciclo || '').toString();
-          const match = n.includes(q) || c.includes(q);
-          el.style.display = match ? '' : 'none';
-        });
-        const visibleCount = Array.from(available.querySelectorAll('.competencia-item')).filter(el => el.style.display !== 'none' && !el.classList.contains('hidden')).length;
-        if (availableCount) availableCount.textContent = '(' + visibleCount + ')';
-        console.log('🔍 [KitsEdit] Buscar clases:', search.value, '→', visibleCount);
-      });
-    }
-
-    // Inicializar inputs ocultos con selección actual
-    updateHidden();
-  })();
+  
   // Combo Box para seleccionar componente (input + lista)
   (function initComboBox(){
     const combo = document.getElementById('combo_item');
@@ -703,4 +626,86 @@ include '../header.php';
   })();
 </script>
 <?php endif; ?>
+<script>
+  // Dual Listbox: Clases vinculadas al kit (siempre activo)
+  (function initClasesTransfer(){
+    const available = document.getElementById('available-clases');
+    const selected = document.getElementById('selected-clases');
+    const search = document.getElementById('search-clases');
+    const hidden = document.getElementById('clases-hidden');
+    const availableCount = document.getElementById('clases-available-count');
+    const selectedCount = document.getElementById('clases-selected-count');
+    if (!available || !selected || !hidden) { console.log('⚠️ [KitsEdit] Transfer de clases no inicializado'); return; }
+
+    function updateHidden(){
+      hidden.innerHTML = '';
+      const ids = Array.from(selected.querySelectorAll('.competencia-item')).map(el => parseInt(el.dataset.id, 10)).filter(Boolean);
+      ids.forEach((id, idx) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'clases[]';
+        input.value = id;
+        input.setAttribute('form', 'kit-form'); // ensure submit with main form
+        hidden.appendChild(input);
+      });
+      if (selectedCount) selectedCount.textContent = '(' + ids.length + ')';
+      const availVisible = Array.from(available.querySelectorAll('.competencia-item')).filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
+      if (availableCount) availableCount.textContent = '(' + availVisible + ')';
+      console.log('🔍 [KitsEdit] Clases seleccionadas:', ids);
+    }
+
+    window.selectClaseItem = function(el){
+      el.classList.add('hidden');
+      const id = el.dataset.id;
+      const nombre = el.dataset.nombre;
+      const ciclo = el.dataset.ciclo;
+      const node = document.createElement('div');
+      node.className = 'competencia-item selected';
+      node.dataset.id = id;
+      node.dataset.nombre = nombre;
+      node.dataset.ciclo = ciclo;
+      node.innerHTML = `<span class="comp-nombre">${nombre}</span><span class="comp-codigo">Ciclo ${ciclo}</span><button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectClaseItem(this.parentElement)">×</button>`;
+      node.onclick = function(){ window.deselectClaseItem(node); };
+      selected.appendChild(node);
+      updateHidden();
+    };
+
+    window.deselectClaseItem = function(el){
+      const id = el.dataset.id;
+      el.remove();
+      const avail = available.querySelector(`.competencia-item[data-id="${id}"]`);
+      if (avail) avail.classList.remove('hidden');
+      updateHidden();
+    };
+
+    window.moveAllClases = function(add){
+      if (add) {
+        const vis = Array.from(available.querySelectorAll('.competencia-item:not(.hidden)')).filter(el => el.style.display !== 'none');
+        vis.forEach(el => selectClaseItem(el));
+      } else {
+        const sel = Array.from(selected.querySelectorAll('.competencia-item'));
+        sel.forEach(el => deselectClaseItem(el));
+      }
+      updateHidden();
+    };
+
+    if (search) {
+      search.addEventListener('input', () => {
+        const q = (search.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        available.querySelectorAll('.competencia-item').forEach(el => {
+          const n = (el.dataset.nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          const c = (el.dataset.ciclo || '').toString();
+          const match = n.includes(q) || c.includes(q);
+          el.style.display = match ? '' : 'none';
+        });
+        const visibleCount = Array.from(available.querySelectorAll('.competencia-item')).filter(el => el.style.display !== 'none' && !el.classList.contains('hidden')).length;
+        if (availableCount) availableCount.textContent = '(' + visibleCount + ')';
+        console.log('🔍 [KitsEdit] Buscar clases:', search.value, '→', visibleCount);
+      });
+    }
+
+    // Inicializar inputs ocultos con selección actual
+    updateHidden();
+  })();
+</script>
 <?php include '../footer.php'; ?>
