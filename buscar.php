@@ -135,8 +135,14 @@ include 'includes/header.php';
         echo '<section class="search-section">';
         echo '<div class="search-section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">';
         echo '<h2 style="margin:0;">' . h($titulo) . ' (' . count($items) . ')</h2>';
-        $btnText = $type === 'clase' ? 'Ver en Clases' : ($type === 'kit' ? 'Ver en Kits' : 'Ver en Componentes');
-        echo '<button type="button" class="btn btn-secondary" onclick="window.cdcSearchRedirect(\'' . h($type) . '\')">' . h($btnText) . '</button>';
+        $btnLabel = 'Ver relacionados';
+        echo '<button type="button" class="btn btn-secondary related-btn" onclick="window.cdcSearchRedirect(\'' . h($type) . '\')" title="' . h($btnLabel) . '" style="display:inline-flex; align-items:center; gap:8px;">'
+            . '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
+            . '<circle cx="11" cy="11" r="8"></circle>'
+            . '<path d="m21 21-4.35-4.35"></path>'
+            . '</svg>'
+            . h($btnLabel)
+            . '</button>';
         echo '</div>';
         echo '<div class="articles-grid">';
         foreach ($items as $it) {
