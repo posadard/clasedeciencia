@@ -1239,44 +1239,24 @@ include '../header.php';
     }
   })();
 
-  // Oculta avisos de CKEditor sobre versión insegura (igual a article-edit)
-  function removeCKEditorWarnings() {
+  // Oculta avisos de CKEditor sobre versión insegura usando CSS (sin remover nodos)
+  (function hideCkeWarningsCss(){
     try {
-      // Remueve únicamente notificaciones específicas, no contenedores
-      const selectors = [
-        '.cke_notification.cke_notification_warning',
-        '.cke_upgrade_notice',
-        '.cke_browser_warning',
-        '.cke_panel_warning',
-        '.cke_warning'
-      ];
-      selectors.forEach(sel => {
-        document.querySelectorAll(sel).forEach(el => el.remove());
-      });
-      console.log('🔍 [ClasesEdit] CKEditor warnings revisados');
-    } catch (e) {
-      console.log('⚠️ [ClasesEdit] removeCKEditorWarnings error:', e.message);
+      const style = document.createElement('style');
+      style.setAttribute('data-cke-warn-hide','1');
+      style.textContent = `
+        .cke_notification.cke_notification_warning,
+        .cke_upgrade_notice,
+        .cke_browser_warning,
+        .cke_panel_warning,
+        .cke_warning { display: none !important; }
+      `;
+      document.head.appendChild(style);
+      console.log('✅ [ClasesEdit] CKEditor warnings ocultos por CSS');
+    } catch(e) {
+      console.log('⚠️ [ClasesEdit] No se pudo inyectar CSS para warnings:', e.message);
     }
-  }
-  setTimeout(removeCKEditorWarnings, 800);
-  const ckeObserver = new MutationObserver((mutations, obs) => {
-    let removed = false;
-    for (const m of mutations) {
-      for (const node of m.addedNodes) {
-        if (node instanceof HTMLElement) {
-          if (node.matches && node.matches('.cke_notification.cke_notification_warning')) {
-            node.remove();
-            removed = true;
-          } else {
-            const found = node.querySelector && node.querySelector('.cke_notification.cke_notification_warning');
-            if (found) { found.remove(); removed = true; }
-          }
-        }
-      }
-    }
-    if (removed) { obs.disconnect(); console.log('✅ [ClasesEdit] CKEditor warning ocultado'); }
-  });
-  ckeObserver.observe(document.documentElement || document.body, { childList: true, subtree: true });
+  })();
 
   // Asegurar sincronización del editor antes de enviar
   const formEl = document.querySelector('form');

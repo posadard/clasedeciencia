@@ -1575,6 +1575,24 @@ include '../header.php';
       console.log('❌ [KitsEdit] Error iniciando CKEditor:', e && e.message);
     }
   })();
+  // Oculta avisos de CKEditor sobre versión insegura usando CSS (sin remover nodos)
+  (function hideCkeWarningsCss(){
+    try {
+      const style = document.createElement('style');
+      style.setAttribute('data-cke-warn-hide','1');
+      style.textContent = `
+        .cke_notification.cke_notification_warning,
+        .cke_upgrade_notice,
+        .cke_browser_warning,
+        .cke_panel_warning,
+        .cke_warning { display: none !important; }
+      `;
+      document.head.appendChild(style);
+      console.log('✅ [KitsEdit] CKEditor warnings ocultos por CSS');
+    } catch(e) {
+      console.log('⚠️ [KitsEdit] No se pudo inyectar CSS para warnings:', e && e.message);
+    }
+  })();
 </script>
 <script>
   // Dual Listbox: Clases vinculadas al kit (siempre activo)
