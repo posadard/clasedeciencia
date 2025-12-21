@@ -33,6 +33,7 @@
     --color-leaf-light: #e8f5e9;     /* Verde hoja muy claro */
     --color-leaf: #c8e6c9;           /* Verde hoja claro */
     --color-leaf-mid: #a5d6a7;       /* Verde hoja medio (para bordes/acentos) */
+    --color-leaf-text: #4a7c59;      /* Verde legible para textos en hero */
     
     /* Estados y Utilidades */
     --color-success: #2e7d32;        /* Verde - confirmación */
@@ -294,22 +295,28 @@ strong, b {
     width: 100%;
     padding: 1rem 1.5rem 1rem 3.25rem;
     font-size: 1rem;
-    border: 2px solid rgba(31, 60, 136, 0.15);
+    border: 2px solid rgba(249, 168, 37, 0.40); /* borde amarillo suave */
     border-radius: 50px;
     background: white;
     transition: all 0.3s ease;
     font-family: inherit;
     color: var(--color-text);
+    box-shadow: 0 0 0 3px rgba(249, 168, 37, 0.10); /* resplandor solar tenue */
 }
 
 .search-input:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 4px rgba(31, 60, 136, 0.08);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 5px rgba(249, 168, 37, 0.25), 0 8px 24px rgba(249, 168, 37, 0.15);
 }
 
 .search-input::placeholder {
     color: var(--color-text-light);
+}
+
+.search-input:hover {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 4px rgba(249, 168, 37, 0.16);
 }
 
 @media (max-width: 768px) {
@@ -343,14 +350,14 @@ strong, b {
 .hero h2 {
     font-size: 3rem;
     margin-bottom: var(--spacing-md);
-    color: var(--color-primary);
+    color: var(--color-secondary);
     text-align: center;
 }
 
 .hero p,
 .hero-subtitle {
     font-size: 1.25rem;
-    color: var(--color-text-light);
+    color: var(--color-leaf-text);
     max-width: 700px;
     margin: 0 auto var(--spacing-md);
 }
