@@ -875,14 +875,15 @@ strong, b {
     /* Mobile: make primary apply button larger and full width */
     .filters-sidebar .filter-actions .btn-primary {
         width: 100%;
-        padding: 0.7rem 0.9rem;
-        font-size: 1rem;
+        padding: 1rem 1rem; /* roughly 2x vertical padding */
+        min-height: 56px;   /* comfortable mobile touch target */
+        font-size: 1.05rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 10px;
     }
-    .filters-sidebar .filter-actions .btn-primary svg { width: 18px; height: 18px; margin: 0; }
+    .filters-sidebar .filter-actions .btn-primary svg { width: 20px; height: 20px; margin: 0; }
     .filters-sidebar .filter-actions { gap: 0.5rem; }
 }
 
