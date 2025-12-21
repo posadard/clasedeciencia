@@ -65,7 +65,7 @@ include 'includes/header.php';
             </div>
             <div class="product-image">
                 <?php $comp_img = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg'; ?>
-                <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; p.textContent='📦 ' + <?= json_encode($material['category_name'] ?? '') ?>; this.replaceWith(p);" />
+                <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" data-category="<?= h($material['category_name'] ?? '') ?>" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; var t=this.dataset.category||''; p.textContent='📦 ' + t; this.replaceWith(p);" />
             </div>
         </aside>
     </div>
