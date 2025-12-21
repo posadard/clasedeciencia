@@ -28,6 +28,11 @@
     --color-grass: #2e7d32;          /* Verde césped */
     --color-grass-dark: #1b5e20;     /* Verde césped oscuro */
     --color-grass-darker: #0f3d1b;   /* Verde césped muy oscuro */
+
+    /* Tonos de hoja para secciones superiores (hero) */
+    --color-leaf-light: #e8f5e9;     /* Verde hoja muy claro */
+    --color-leaf: #c8e6c9;           /* Verde hoja claro */
+    --color-leaf-mid: #a5d6a7;       /* Verde hoja medio (para bordes/acentos) */
     
     /* Estados y Utilidades */
     --color-success: #2e7d32;        /* Verde - confirmación */
@@ -179,8 +184,8 @@ strong, b {
 
 .site-title {
     font-size: 2rem;
-    /* Amarillo curiosidad para destacar el título */
-    color: var(--color-accent);
+    /* Logo/título en blanco para contraste sobre cielo */
+    color: #ffffff;
     text-decoration: none;
     font-weight: 500;
     letter-spacing: -0.02em;
@@ -192,23 +197,23 @@ strong, b {
 }
 
 .site-title:hover {
-    color: var(--color-accent-light);
+    color: #ffffff;
     border: none;
 }
 
 /* Ensure the anchor inside the site title uses the intended color (overrides global a{} rule) */
 .site-title a {
-    color: var(--color-accent);
+    color: inherit; /* blanco desde .site-title */
     text-decoration: none;
     border: none;
 }
 
 .site-title:hover a {
-    color: var(--color-accent-light);
+    color: inherit; /* mantener blanco al hover */
 }
 
 .site-title a:focus {
-    outline: 2px solid rgba(74,124,89,0.18);
+    outline: 2px solid rgba(255,255,255,0.35);
     outline-offset: 3px;
 }
 
@@ -248,11 +253,12 @@ strong, b {
 
 /* === Hero Section === */
 .hero {
-    background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-bg-alt) 100%);
+    /* Fondo tipo hoja (canopia superior del árbol) */
+    background: linear-gradient(135deg, var(--color-leaf-light) 0%, var(--color-leaf) 100%);
     padding: var(--spacing-lg) 0.5rem;
     margin-bottom: var(--spacing-md);
     border-radius: 4px;
-    border: 1px solid var(--color-border-light);
+    border: 1px solid var(--color-leaf-mid);
     text-align: center; /* ensure hero title and content are centered */
 }
 
