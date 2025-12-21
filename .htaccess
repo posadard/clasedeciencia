@@ -6,6 +6,10 @@ RewriteEngine On
 # ============================================================
 # URLs AMIGABLES PARA CLASES
 # ============================================================
+# Redirigir legacy a la ruta unificada
+RewriteRule ^catalogo\.php$ /clases [R=301,L]
+RewriteRule ^search\.php$ /clases [R=301,L]
+
 # Redirect antiguo formato a nuevo (SEO 301)
 RewriteCond %{QUERY_STRING} ^slug=([a-z0-9-]+)$
 RewriteRule ^proyecto\.php$ /%1? [R=301,L]
