@@ -27,10 +27,8 @@ if (isset($_GET['slug_dinamico']) && !empty($_GET['slug_dinamico'])) {
                 $_GET['area'] = $area['slug'];
                 unset($_GET['slug_dinamico']);
             } else {
-                // Proyecto
-                $_GET['slug'] = $slug_dinamico;
-                unset($_GET['slug_dinamico']);
-                include 'proyecto.php';
+                // Proyecto: redirigir a la página de detalle en lugar de incluir archivo
+                header('Location: /proyecto.php?slug=' . rawurlencode($slug_dinamico), true, 302);
                 exit;
             }
         }
