@@ -123,24 +123,21 @@ include 'includes/header.php';
         <div class="search-active-banner">
             <span class="search-term">🔍 Búsqueda: <strong><?= h($q) ?></strong></span>
         </div>
-        <div class="results-row" style="display:flex; align-items:center; justify-content: space-between; gap:12px; flex-wrap: wrap; margin-top:8px;">
-            <p class="results-count" style="margin:0;">
-                <?= count($resultados['clases']) + count($resultados['kits']) + count($resultados['componentes']) ?> resultados totales
-                (Clases: <?= count($resultados['clases']) ?> · Kits: <?= count($resultados['kits']) ?> · Componentes: <?= count($resultados['componentes']) ?>)
-            </p>
-            <div class="related-search-actions" style="display:flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-primary" id="btn-buscar-clases">Ver en Clases</button>
-                <button type="button" class="btn btn-secondary" id="btn-buscar-kits">Ver en Kits</button>
-                <button type="button" class="btn" id="btn-buscar-componentes">Ver en Componentes</button>
-            </div>
-        </div>
+        <p class="results-count">
+            <?= count($resultados['clases']) + count($resultados['kits']) + count($resultados['componentes']) ?> resultados totales
+            (Clases: <?= count($resultados['clases']) ?> · Kits: <?= count($resultados['kits']) ?> · Componentes: <?= count($resultados['componentes']) ?>)
+        </p>
     </div>
 
     <?php
     $renderSection = function ($titulo, $items, $type) {
         if (empty($items)) return;
         echo '<section class="search-section">';
-        echo '<h2>' . h($titulo) . ' (' . count($items) . ')</h2>';
+        echo '<div class="search-section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">';
+        echo '<h2 style="margin:0;">' . h($titulo) . ' (' . count($items) . ')</h2>';
+        $btnText = $type === 'clase' ? 'Ver en Clases' : ($type === 'kit' ? 'Ver en Kits' : 'Ver en Componentes');
+        echo '<button type="button" class="btn btn-secondary" onclick="window.cdcSearchRedirect(\'' . h($type) . '\')">' . h($btnText) . '</button>';
+        echo '</div>';
         echo '<div class="articles-grid">';
         foreach ($items as $it) {
             echo '<article class="article-card" data-href="' . h($it['url']) . '">';
@@ -225,41 +222,35 @@ console.log('✅ [buscar] conteos:', {
         return qs ? `${base}?${qs}` : base;
     };
 
-    // Clases button
-    const btnClases = document.getElementById('btn-buscar-clases');
-    if (btnClases){ btnClases.addEventListener('click', ()=>{
-        const params = { busqueda: query };
-        if (intent.grado) params.grado = intent.grado;
-        if (intent.ciclo) params.ciclo = intent.ciclo;
-        if (intent.dificultad) params.dificultad = intent.dificultad;
-        if (intent.area) params.area = intent.area;
-        const url = buildUrl('/clases', params);
-        console.log('✅ [buscar] Redirigiendo a Clases:', url);
-        window.location.href = url;
-    }); }
+    // Redirección global usada por botones en cada sección
+    window.cdcSearchRedirect = function(type) {
+        if (type === 'clase') {
+            const params = { busqueda: query };
+            if (intent.grado) params.grado = intent.grado;
+            if (intent.ciclo) params.ciclo = intent.ciclo;
+            if (intent.dificultad) params.dificultad = intent.dificultad;
+            if (intent.area) params.area = intent.area;
+            const url = buildUrl('/clases', params);
+            console.log('✅ [buscar] Redirigiendo a Clases:', url);
+            window.location.href = url;
+            return;
+        }
+        if (type === 'kit') {
+            const url = buildUrl('/kits', { q: query });
+            console.log('✅ [buscar] Redirigiendo a Kits:', url);
+            window.location.href = url;
+            return;
+        }
+        if (type === 'componente') {
+            const params = { q: query };
+            const url = buildUrl('/componentes', params);
+            console.log('✅ [buscar] Redirigiendo a Componentes:', url);
+            window.location.href = url;
+            return;
+        }
+    };
 
-    // Kits button
-    const btnKits = document.getElementById('btn-buscar-kits');
-    if (btnKits){ btnKits.addEventListener('click', ()=>{
-        const url = buildUrl('/kits', { q: query });
-        console.log('✅ [buscar] Redirigiendo a Kits:', url);
-        window.location.href = url;
-    }); }
-
-    // Componentes button
-    const btnComp = document.getElementById('btn-buscar-componentes');
-    if (btnComp){ btnComp.addEventListener('click', ()=>{
-        // Intento de categoría si coincide con token (opcional)
-        const categoriaTokens = ['quimicos','electricos','mecanicos','plasticos','vidrio']; // ajustar si corresponde
-        const tokens = normalize(query).split(' ').filter(Boolean);
-        let category = '';
-        for (const t of tokens){ if (categoriaTokens.includes(t)) { category = t; break; } }
-        const params = { q: query };
-        if (category) params.category = category;
-        const url = buildUrl('/componentes', params);
-        console.log('✅ [buscar] Redirigiendo a Componentes:', url);
-        window.location.href = url;
-    }); }
+    // Los botones superiores se han eliminado y ahora se ubican en cada sección mediante cdcSearchRedirect()
 })();
 </script>
 <?php include 'includes/footer.php'; ?>
