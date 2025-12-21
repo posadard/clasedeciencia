@@ -161,7 +161,9 @@ if ($guia && !empty($guia['pasos'])) {
         ];
     }, array_keys($pasos), $pasos);
 }
-$schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+$schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE);
+// Prevent </script> early-termination in JSON-LD
+$schema_json = str_replace('</script>', '<\/script>', $schema_json);
 
 include 'includes/header.php';
 ?>
@@ -405,7 +407,7 @@ include 'includes/header.php';
                 <?php foreach ($recursos as $r): ?>
                     <?php if ($r['tipo'] === 'imagen'): ?>
                         <div class="media-item">
-                            <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" />
+                            <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" onerror="this.onerror=null; console.log('❌ [Clase] Recurso imagen falló'); var p=document.createElement('div'); p.className='gallery-placeholder error'; p.innerHTML='\u003Cspan class=\"placeholder-icon\"\u003E🔬\u003C/span\u003E'; this.replaceWith(p);" />
                             <?php if (!empty($r['titulo'])): ?>
                                 <p class="media-caption"><?= h($r['titulo']) ?></p>
                             <?php endif; ?>
@@ -493,7 +495,7 @@ include 'includes/header.php';
                 <?php foreach ($clases_relacionadas as $rel): ?>
                     <a href="/<?= h($rel['slug']) ?>" class="related-card">
                         <?php if (!empty($rel['imagen_portada'])): ?>
-                            <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" />
+                            <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura relacionada falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; p.innerHTML='\u003Cspan class=\"placeholder-icon\"\u003E🔬\u003C/span\u003E'; this.replaceWith(p);" />
                         <?php endif; ?>
                         <div class="related-info">
                             <h4><?= h($rel['nombre']) ?></h4>
@@ -582,7 +584,7 @@ function toggleCompetencia(index) {
     }
 }
 
-console.log('🔍 [Clase] Slug:', '<?= h($slug) ?>');
+console.log('🔍 [Clase] Slug:', <?= json_encode($slug, JSON_UNESCAPED_UNICODE) ?>);
 console.log('✅ [Clase] Cargada:', <?= json_encode(['id'=>$proyecto['id'],'nombre'=>$proyecto['nombre']]) ?>);
 console.log('📚 [Clase] Áreas:', <?= count($areas) ?>);
 console.log('🎓 [Clase] Competencias:', <?= count($competencias) ?>);
