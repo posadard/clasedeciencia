@@ -3523,9 +3523,54 @@ strong, b {
     color: white;
 }
 
-/* Admin modals use h4 in headers; ensure white text for consistency */
+/* Admin modals use h4 in headers; ensure consistent styling */
 .modal-header h4 {
+    margin: 0;
+    font-size: 1.4rem;
     color: white;
+}
+
+/* Footer for generic modals (applies to admin modals too) */
+.modal-footer {
+    padding: var(--spacing-xl);
+    border-top: 1px solid var(--color-border-light);
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: flex-end;
+    background: #fff;
+}
+
+/* Form layout within modals */
+.modal-content .form-group { margin-bottom: var(--spacing-md); }
+.modal-content label { font-weight: 600; color: var(--color-primary); }
+.modal-content input[type="text"],
+.modal-content input[type="number"],
+.modal-content select,
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+    font: inherit;
+    color: var(--color-text);
+}
+.modal-content textarea { resize: vertical; min-height: 90px; }
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(249, 168, 37, 0.18);
+}
+
+/* Close button consistency over gradient headers */
+.modal-header .modal-close { color: white; }
+.modal-close:hover { background: var(--color-bg-light); color: var(--color-error); }
+
+@media (max-width: 480px) {
+    .modal-footer { flex-wrap: wrap; }
+    .modal-footer .btn { width: 100%; }
 }
 
 .modal-body {
