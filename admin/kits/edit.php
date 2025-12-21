@@ -5,128 +5,135 @@ require_once '../auth.php';
 $is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
 $id = $is_edit ? (int)$_GET['id'] : null;
 
-$page_title = $is_edit ? 'Editar Kit' : 'Nuevo Kit';
+  <script>
+    // Dual-list para atributos de Kit (sin dropdown)
+    (function initAttrDualList(){
+      const available = document.getElementById('available-attrs');
+      const selected = document.getElementById('selected-attrs-dl');
+      const search = document.getElementById('search-attrs');
+      const availCount = document.getElementById('attrs-available-count');
+      const selCount = document.getElementById('attrs-selected-count');
+      if (!available || !selected) { console.log('⚠️ [KitsEdit] Dual-list atributos no inicializada'); return; }
 
-if (!isset($_SESSION['csrf_token'])) {
-  try { $_SESSION['csrf_token'] = bin2hex(random_bytes(16)); } catch (Exception $e) { $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(16)); }
-}
+      function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+      function updateCounts(){
+        const availVisible = Array.from(available.querySelectorAll('.competencia-item'))
+          .filter(el => !el.classList.contains('hidden') && el.style.display !== 'none').length;
+        const selTotal = selected.querySelectorAll('.competencia-item').length;
+        if (availCount) availCount.textContent = `(${availVisible})`;
+        if (selCount) selCount.textContent = `(${selTotal})`;
+      }
+      if (search) {
+        search.addEventListener('input', function(){
+          const q = normalize(this.value.trim());
+          available.querySelectorAll('.competencia-item').forEach(it => {
+            if (it.classList.contains('hidden')) return;
+            const label = normalize(it.getAttribute('data-label')||'');
+            const tipo = normalize(it.getAttribute('data-tipo')||'');
+            const show = !q || label.includes(q) || tipo.includes(q);
+            it.style.display = show ? 'flex' : 'none';
+          });
+          updateCounts();
+          console.log('🔍 [KitsEdit] Filtro atributos:', this.value);
+        });
+      }
 
-$kit = [
-  'clase_id' => '',
-  'nombre' => '',
-  'slug' => '',
-  'codigo' => '',
-  'version' => '1',
-  'activo' => 1,
-];
-
-try {
-  // Clases para el selector
-  $clases_stmt = $pdo->query('SELECT id, nombre, ciclo FROM clases ORDER BY nombre ASC');
-  $clases = $clases_stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-  $clases = [];
-}
-
-if ($is_edit) {
-  try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, activo FROM kits WHERE id = ?');
-    $stmt->execute([$id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
-  } catch (PDOException $e) {}
-}
-
-// Relaciones existentes: clases asignadas a este kit (via clase_kits)
-$existing_clase_ids = [];
-if ($is_edit) {
-  try {
-    $stmt = $pdo->prepare('SELECT clase_id FROM clase_kits WHERE kit_id = ? ORDER BY es_principal DESC, sort_order ASC');
-    $stmt->execute([$id]);
-    $existing_clase_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
-    if (empty($existing_clase_ids) && !empty($kit['clase_id'])) {
-      $existing_clase_ids = [(int)$kit['clase_id']];
-    }
-  } catch (PDOException $e) {}
-}
-
-$error_msg = '';
-$action_msg = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
-    $error_msg = 'Token CSRF inválido.';
-    echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>';
-  } else {
-    $action = isset($_POST['action']) ? $_POST['action'] : 'save';
-
-    if ($action === 'save_attrs' && $is_edit) {
-      // Guardar atributos técnicos (atributos_contenidos)
-      try {
-        $defs_stmt = $pdo->prepare('SELECT d.*, m.orden, m.ui_hint FROM atributos_definiciones d JOIN atributos_mapeo m ON m.atributo_id = d.id WHERE m.tipo_entidad = ? AND m.visible = 1 ORDER BY m.orden ASC, d.id ASC');
-        $defs_stmt->execute(['kit']);
-        $defs = $defs_stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        $pdo->beginTransaction();
-        foreach ($defs as $def) {
-          $attr_id = (int)$def['id'];
-          $tipo = $def['tipo_dato'];
-          $card = $def['cardinalidad'];
-          $perm_units = [];
-          if (!empty($def['unidades_permitidas_json'])) {
-            $decoded = json_decode($def['unidades_permitidas_json'], true);
-            if (is_array($decoded)) { $perm_units = $decoded; }
-          }
-
-          // Obtener valores del POST
-          $values = [];
-          $units = [];
-          if ($card === 'many') {
-            $raw = isset($_POST['attr_' . $attr_id]) ? $_POST['attr_' . $attr_id] : '';
-            if (is_array($raw)) {
-              $values = $raw;
-            } else {
-              $values = array_filter(array_map('trim', preg_split('/[\n,]+/', (string)$raw)));
-            }
-            $units = isset($_POST['unit_' . $attr_id]) ? (array)$_POST['unit_' . $attr_id] : [];
+      window.selectAttrKit = function(item){
+        try {
+          const defId = item.getAttribute('data-id');
+          const label = item.getAttribute('data-label');
+          const unitsJson = item.getAttribute('data-units') || '[]';
+          const unitDef = item.getAttribute('data-unidad_def') || '';
+          document.getElementById('add_def_id').value = String(defId);
+          document.getElementById('addAttrInfo').textContent = label;
+          const sel = document.getElementById('add_unidad');
+          const selGroup = document.getElementById('add_unidad_group');
+          sel.innerHTML = '';
+          let units = [];
+          try { const u = JSON.parse(unitsJson); if (Array.isArray(u)) units = u; } catch(_e){}
+          const hasUnits = Array.isArray(units) && units.length > 0;
+          const hasDefault = !!unitDef;
+          if (hasUnits || hasDefault) {
+            const opt0 = document.createElement('option');
+            opt0.value = ''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
+            if (selGroup) selGroup.style.display = '';
+            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
           } else {
-            $v = isset($_POST['attr_' . $attr_id]) ? trim((string)$_POST['attr_' . $attr_id]) : '';
-            if ($v !== '') { $values = [$v]; }
-            $u = isset($_POST['unit_' . $attr_id]) ? trim((string)$_POST['unit_' . $attr_id]) : '';
-            if ($u !== '') { $units = [$u]; }
+            if (selGroup) selGroup.style.display = 'none';
+            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
           }
+          openModal('#modalAddAttr');
+          setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
+        } catch(e){ console.log('❌ [KitsEdit] Error selectAttrKit:', e && e.message); }
+      }
 
-          // Borrar existentes
-          $del = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
-          $del->execute(['kit', $id, $attr_id]);
+      window.editAttrKitItem = function(item){
+        try {
+          const defId = item.getAttribute('data-id');
+          const label = item.getAttribute('data-label');
+          const tipo = item.getAttribute('data-tipo');
+          const unitsJson = item.getAttribute('data-units');
+          const unitDef = item.getAttribute('data-unidad_def') || '';
+          const vals = JSON.parse(item.getAttribute('data-values') || '[]');
+          document.getElementById('edit_def_id').value = defId;
+          document.getElementById('editAttrInfo').textContent = label;
+          const inputEl = document.getElementById('edit_valor');
+          const unitSel = document.getElementById('edit_unidad');
+          const unitGroup = document.getElementById('edit_unidad_group');
+          inputEl.value = '';
+          unitSel.innerHTML = '';
+          if (Array.isArray(vals) && vals.length) {
+            const parts = vals.map(v => {
+              if (tipo === 'number') return v.valor_numero;
+              if (tipo === 'integer') return v.valor_entero;
+              if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
+              if (tipo === 'date') return v.valor_fecha;
+              if (tipo === 'datetime') return v.valor_datetime;
+              if (tipo === 'json') return v.valor_json;
+              return v.valor_string;
+            }).filter(Boolean);
+            inputEl.value = parts.join(', ');
+          }
+          let units = [];
+          try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
+          const hasUnits = Array.isArray(units) && units.length > 0;
+          const hasDefault = !!unitDef;
+          if (hasUnits || hasDefault) {
+            const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
+            if (unitGroup) unitGroup.style.display = '';
+            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+          } else {
+            if (unitGroup) unitGroup.style.display = 'none';
+            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
+          openModal('#modalEditAttr');
+        } catch(e){ console.log('❌ [KitsEdit] Error editAttrKitItem:', e && e.message); }
+      }
 
-          // Insertar nuevos
-          $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
-          $orden = 1;
-          foreach ($values as $idx => $valRaw) {
-            if ($valRaw === '' || $valRaw === null) { continue; }
-            $unidad_codigo = null;
-            if (!empty($perm_units) || !empty($def['unidad_defecto'])) {
-              $unidad_sel = $card === 'many' ? ($units[$idx] ?? '') : ($units[0] ?? '');
-              if ($unidad_sel === '' && !empty($def['unidad_defecto'])) { $unidad_sel = $def['unidad_defecto']; }
-              if ($unidad_sel !== '') { $unidad_codigo = $unidad_sel; }
-            }
+      const btnCreate = document.getElementById('btn_create_attr');
+      if (btnCreate) {
+        btnCreate.addEventListener('click', () => {
+          try {
+            const q = (search && search.value ? search.value.trim() : '');
+            document.getElementById('create_etiqueta').value = q;
+            document.getElementById('create_clave').value = '';
+            document.getElementById('create_tipo').value = 'string';
+            document.getElementById('create_card').value = 'one';
+            document.getElementById('create_unidad').value = '';
+            document.getElementById('create_unidades').value = '';
+            openModal('#modalCreateAttr');
+            setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
+            console.log('🔍 [KitsEdit] Abrir crear atributo (botón)', q);
+          } catch(e) { console.log('❌ [KitsEdit] Error abrir crear atributo (botón):', e && e.message); }
+        });
+      }
 
-            $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
-            try {
-              switch ($tipo) {
-                case 'number':
-                  $num = is_numeric(str_replace(',', '.', $valRaw)) ? (float)str_replace(',', '.', $valRaw) : null;
-                  if ($num === null) { continue 2; }
-                  $val_numero = $num;
-                  break;
-                case 'integer':
-                  $int = is_numeric($valRaw) ? (int)$valRaw : null;
-                  if ($int === null) { continue 2; }
-                  $val_entero = $int;
-                  break;
-                case 'boolean':
-                  $val_bool = ($valRaw === '1' || strtolower($valRaw) === 'true' || strtolower($valRaw) === 'sí' || strtolower($valRaw) === 'si') ? 1 : 0;
+      updateCounts();
+      console.log('✅ [KitsEdit] Dual-list atributos inicializado');
+    })();
+  </script>
                   break;
                 case 'date':
                   $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $valRaw) ? $valRaw : null;
