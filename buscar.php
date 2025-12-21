@@ -303,15 +303,21 @@ window.cdcRelated = {
     // Redirección global usada por botones en cada sección
     window.cdcSearchRedirect = function(type) {
         if (type === 'clase') {
-            const params = { busqueda: query };
-            const relatedArea = (window.cdcRelated && window.cdcRelated.clase_area) ? window.cdcRelated.clase_area : '';
-            const chosenArea = relatedArea || intent.area;
-            if (intent.grado) params.grado = intent.grado;
-            if (intent.ciclo) params.ciclo = intent.ciclo;
-            if (intent.dificultad) params.dificultad = intent.dificultad;
-            if (chosenArea) params.area = chosenArea;
-            const url = buildUrl('/clases', params);
-            console.log('✅ [buscar] Redirigiendo a Clases:', url);
+            // Construir URL a /clases usando múltiples áreas como filtros (area[])
+            const usp = new URLSearchParams();
+            if (query) usp.set('busqueda', query);
+            if (intent.grado) usp.set('grado', String(intent.grado));
+            if (intent.ciclo) usp.set('ciclo', String(intent.ciclo));
+            if (intent.dificultad) usp.set('dificultad', String(intent.dificultad));
+
+            const topAreas = (window.cdcRelated && Array.isArray(window.cdcRelated.clase_areas_top)) ? window.cdcRelated.clase_areas_top : [];
+            const fallbackArea = (window.cdcRelated && window.cdcRelated.clase_area) ? window.cdcRelated.clase_area : '';
+            const areasToUse = topAreas.length ? topAreas : (intent.area ? [intent.area] : (fallbackArea ? [fallbackArea] : []));
+
+            areasToUse.forEach(a => { if (a) usp.append('area[]', a); });
+            const url = '/clases' + (usp.toString() ? ('?' + usp.toString()) : '');
+            console.log('✅ [buscar] Redirigiendo a Clases con áreas:', areasToUse);
+            console.log('📡 [buscar] URL:', url);
             window.location.href = url;
             return;
         }
