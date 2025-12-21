@@ -31,10 +31,11 @@ try {
     if (!isset($pdo)) { throw new Exception('Conexión no disponible'); }
 
     // CLASES (similar a api/clases-data.php)
-    $stmtC = $pdo->query("\n        SELECT \n            c.id, c.nombre, c.slug, c.ciclo, c.grados, c.dificultad, c.duracion_minutos,\n            c.resumen, c.objetivo_aprendizaje, c.imagen_portada, c.destacado,\n            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas,\n            GROUP_CONCAT(DISTINCT comp.nombre ORDER BY comp.nombre SEPARATOR ' | ') AS competencias,\n            GROUP_CONCAT(DISTINCT ct.tag ORDER BY ct.tag SEPARATOR ', ') AS tags\n        FROM clases c\n        LEFT JOIN clase_areas ca ON ca.clase_id = c.id\n        LEFT JOIN areas a ON a.id = ca.area_id\n        LEFT JOIN clase_competencias cc ON cc.clase_id = c.id\n        LEFT JOIN competencias comp ON comp.id = cc.competencia_id\n        LEFT JOIN clase_tags ct ON ct.clase_id = c.id\n        WHERE c.activo = 1\n        GROUP BY c.id\n        ORDER BY c.destacado DESC, c.orden_popularidad DESC\n    ");
+    $stmtC = $pdo->query("\n        SELECT \n            c.id, c.nombre, c.slug, c.ciclo, c.grados, c.dificultad, c.duracion_minutos,\n            c.resumen, c.objetivo_aprendizaje, c.imagen_portada, c.destacado,\n            GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas,\n            GROUP_CONCAT(DISTINCT a.slug ORDER BY a.slug SEPARATOR ',') AS areas_slugs,\n            GROUP_CONCAT(DISTINCT comp.nombre ORDER BY comp.nombre SEPARATOR ' | ') AS competencias,\n            GROUP_CONCAT(DISTINCT ct.tag ORDER BY ct.tag SEPARATOR ', ') AS tags\n        FROM clases c\n        LEFT JOIN clase_areas ca ON ca.clase_id = c.id\n        LEFT JOIN areas a ON a.id = ca.area_id\n        LEFT JOIN clase_competencias cc ON cc.clase_id = c.id\n        LEFT JOIN competencias comp ON comp.id = cc.competencia_id\n        LEFT JOIN clase_tags ct ON ct.clase_id = c.id\n        WHERE c.activo = 1\n        GROUP BY c.id\n        ORDER BY c.destacado DESC, c.orden_popularidad DESC\n    ");
     $clases = $stmtC->fetchAll(PDO::FETCH_ASSOC) ?: [];
     $ciclos_nombres = [1=>'Ciclo 1: Exploración',2=>'Ciclo 2: Experimentación',3=>'Ciclo 3: Análisis'];
     $dmap = ['facil'=>'Fácil','media'=>'Media','dificil'=>'Difícil'];
+    $area_counts = [];
     foreach ($clases as $cl) {
         $grados_array = json_decode($cl['grados'] ?? '[]', true) ?: [];
         $grados_texto = $grados_array ? (implode('°, ', $grados_array) . '°') : '';
@@ -65,6 +66,13 @@ try {
         ];
         $st = $normalize(implode(' ', $search_parts));
         if ($qn === '' || ($st !== '' && strpos($st, $qn) !== false)) {
+            // acumular areas slug
+            $areas_slugs_tokens = isset($cl['areas_slugs']) && $cl['areas_slugs'] !== '' ? explode(',', $cl['areas_slugs']) : [];
+            foreach ($areas_slugs_tokens as $as) {
+                $as = trim($as);
+                if ($as === '') continue;
+                $area_counts[$as] = ($area_counts[$as] ?? 0) + 1;
+            }
             $resultados['clases'][] = [
                 'type' => 'clase',
                 'title' => $cl['nombre'] ?? '',
@@ -75,6 +83,12 @@ try {
                 'difficulty' => $dificultad
             ];
         }
+    }
+    // área más frecuente entre resultados de clases
+    $top_area_slug = '';
+    if (!empty($area_counts)) {
+        arsort($area_counts);
+        $top_area_slug = (string) array_key_first($area_counts);
     }
 
     // KITS (similar a api/kits-data.php)
@@ -93,11 +107,16 @@ try {
     }
 
     // COMPONENTES (similar a api/componentes-data.php)
-    $stmtM = $pdo->query("\n        SELECT m.id, m.slug, m.nombre_comun, m.advertencias_seguridad,\n               c.nombre AS categoria_nombre\n        FROM kit_items m\n        LEFT JOIN categorias_items c ON c.id = m.categoria_id\n        ORDER BY c.nombre ASC, m.nombre_comun ASC\n    ");
+    $stmtM = $pdo->query("\n        SELECT m.id, m.slug, m.nombre_comun, m.advertencias_seguridad,\n               c.nombre AS categoria_nombre, c.slug AS categoria_slug\n        FROM kit_items m\n        LEFT JOIN categorias_items c ON c.id = m.categoria_id\n        ORDER BY c.nombre ASC, m.nombre_comun ASC\n    ");
     $items = $stmtM->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $cat_counts = [];
     foreach ($items as $it) {
         $st = $normalize(($it['nombre_comun'] ?? '') . ' ' . ($it['categoria_nombre'] ?? '') . ' ' . ($it['advertencias_seguridad'] ?? '') . ' componente');
         if ($qn === '' || ($st !== '' && strpos($st, $qn) !== false)) {
+            if (!empty($it['categoria_slug'])) {
+                $cat = trim((string)$it['categoria_slug']);
+                if ($cat !== '') { $cat_counts[$cat] = ($cat_counts[$cat] ?? 0) + 1; }
+            }
             $resultados['componentes'][] = [
                 'type' => 'componente',
                 'title' => $it['nombre_comun'] ?? '',
@@ -106,6 +125,11 @@ try {
                 'categoria' => $it['categoria_nombre'] ?? ''
             ];
         }
+    }
+    $top_cat_slug = '';
+    if (!empty($cat_counts)) {
+        arsort($cat_counts);
+        $top_cat_slug = (string) array_key_first($cat_counts);
     }
 } catch (Throwable $e) {
     error_log('buscar.php error: ' . $e->getMessage());
@@ -177,6 +201,12 @@ console.log('✅ [buscar] conteos:', {
   componentes: <?= (int)count($resultados['componentes']) ?>
 });
 
+// Sugerencias de filtros relacionados calculadas en servidor
+window.cdcRelated = {
+    clase_area: <?= json_encode($top_area_slug ?? '') ?>,
+    componente_categoria: <?= json_encode($top_cat_slug ?? '') ?>
+};
+
 // Botones de búsqueda relacionada por tipo con parseo inteligente del query
 (function(){
     const query = <?= json_encode($q) ?> || '';
@@ -232,10 +262,12 @@ console.log('✅ [buscar] conteos:', {
     window.cdcSearchRedirect = function(type) {
         if (type === 'clase') {
             const params = { busqueda: query };
+            const relatedArea = (window.cdcRelated && window.cdcRelated.clase_area) ? window.cdcRelated.clase_area : '';
+            const chosenArea = relatedArea || intent.area;
             if (intent.grado) params.grado = intent.grado;
             if (intent.ciclo) params.ciclo = intent.ciclo;
             if (intent.dificultad) params.dificultad = intent.dificultad;
-            if (intent.area) params.area = intent.area;
+            if (chosenArea) params.area = chosenArea;
             const url = buildUrl('/clases', params);
             console.log('✅ [buscar] Redirigiendo a Clases:', url);
             window.location.href = url;
@@ -249,6 +281,8 @@ console.log('✅ [buscar] conteos:', {
         }
         if (type === 'componente') {
             const params = { q: query };
+            const relatedCat = (window.cdcRelated && window.cdcRelated.componente_categoria) ? window.cdcRelated.componente_categoria : '';
+            if (relatedCat) params.category = relatedCat;
             const url = buildUrl('/componentes', params);
             console.log('✅ [buscar] Redirigiendo a Componentes:', url);
             window.location.href = url;
