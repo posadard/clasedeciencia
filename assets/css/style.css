@@ -2899,21 +2899,29 @@ strong, b {
 /* === Checkbox Grid === */
 .checkbox-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: var(--spacing-sm);
     margin-top: var(--spacing-sm);
 }
 
-.checkbox-grid label {
+.checkbox-grid .checkbox-label {
     display: flex;
     align-items: center;
-    font-size: 0.9rem;
+    gap: 8px;
+    font-size: 0.95rem;
     cursor: pointer;
-    padding: var(--spacing-xs);
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    transition: border-color 0.2s, background-color 0.2s;
 }
 
+.checkbox-grid .checkbox-label:hover { border-color: var(--color-primary); background: #f3f4f6; }
+
 .checkbox-grid input[type="checkbox"] {
-    margin-right: var(--spacing-xs);
+    margin: 0;
+    accent-color: var(--color-primary);
     cursor: pointer;
 }
 
