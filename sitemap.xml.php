@@ -27,9 +27,9 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
         <priority>0.9</priority>
     </url>
     
-    <!-- Materiales (listado) -->
+    <!-- Componentes (listado) -->
     <url>
-        <loc><?= h(SITE_URL) ?>/materials.php</loc>
+        <loc><?= h(SITE_URL) ?>/componentes</loc>
         <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
@@ -55,7 +55,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     </url>
     <?php endforeach; ?>
     
-    <!-- Materiales -->
+    <!-- Componentes -->
     <?php
     try {
             $stmtM = $pdo->query("SELECT slug, created_at FROM kit_items ORDER BY created_at DESC");
@@ -67,9 +67,36 @@ echo '<?xml version="1.0" encoding="UTF-8"?>';
     foreach ($materiales as $m):
     ?>
     <url>
-        <loc><?= h(SITE_URL) ?>/material.php?slug=<?= h($m['slug']) ?></loc>
+        <loc><?= h(SITE_URL) ?>/componente.php?slug=<?= h($m['slug']) ?></loc>
         <?php if (!empty($m['created_at'])): ?>
         <lastmod><?= h(date('Y-m-d', strtotime($m['created_at']))) ?></lastmod>
+        <?php endif; ?>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <?php endforeach; ?>
+
+    <!-- Kits (listado) -->
+    <url>
+        <loc><?= h(SITE_URL) ?>/kits</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- Kits individuales -->
+    <?php
+    try {
+        $stmtK = $pdo->query("SELECT slug, updated_at FROM kits WHERE activo = 1 ORDER BY updated_at DESC, id DESC");
+        $kits = $stmtK->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('Error sitemap kits: ' . $e->getMessage());
+        $kits = [];
+    }
+    foreach ($kits as $k): ?>
+    <url>
+        <loc><?= h(SITE_URL) ?>/kit.php?slug=<?= h($k['slug']) ?></loc>
+        <?php if (!empty($k['updated_at'])): ?>
+        <lastmod><?= h(date('Y-m-d', strtotime($k['updated_at']))) ?></lastmod>
         <?php endif; ?>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
