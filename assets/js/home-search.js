@@ -751,9 +751,9 @@ class ClaseDeCienciaSearch {
     console.log('✅ [ClaseDeCienciaSearch] Redirigiendo a resultados de búsqueda');
 
     this.hideSearchResults();
-    // Enviar a página exclusiva de resultados
+    // Enviar a página global de resultados
     const term = encodeURIComponent(query.trim());
-    window.location.href = `/clases/buscar/${term}`;
+    window.location.href = `/buscar.php?q=${term}`;
   }
 }
 
