@@ -281,11 +281,12 @@ include '../header.php';
 <!-- Modales para editar y agregar componentes -->
 <style>
   .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+  /* Mostrar el modal cuando el backdrop tiene la clase show */
+  .modal-backdrop.show { display: flex; }
   .modal { background: #fff; border-radius: 8px; max-width: 520px; width: 95%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
   .modal-header { padding: 12px 16px; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content: space-between; }
   .modal-body { padding: 16px; }
   .modal-footer { padding: 12px 16px; border-top: 1px solid #eee; display:flex; gap: 8px; justify-content: flex-end; }
-  .modal.show { display: flex; }
   .modal .form-group { margin-bottom: 12px; }
   .btn-plain { background: transparent; border: none; font-size: 18px; cursor: pointer; }
   .muted { color: #666; font-size: 0.9rem; }
