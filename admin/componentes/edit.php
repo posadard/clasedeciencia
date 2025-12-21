@@ -506,50 +506,6 @@ if ($is_edit) {
         </div>
       </div>
 
-        <!-- Modal Crear Definición de Atributo (Componente) -->
-        <div class="modal-backdrop" id="modalCreateAttrCmp">
-          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrCmpTitle">
-            <div class="modal-header">
-              <h4 id="modalCreateAttrCmpTitle">Crear nuevo atributo</h4>
-              <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttrCmp">✖</button>
-            </div>
-            <form method="POST" id="formCreateAttrCmp">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="create_attr_def" />
-              <div class="modal-body">
-                <div class="form-group"><label for="create_etiqueta_cmp">Etiqueta</label><input type="text" id="create_etiqueta_cmp" name="etiqueta" required /></div>
-                <div class="form-group"><label for="create_clave_cmp">Clave</label><input type="text" id="create_clave_cmp" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
-                <div class="field-inline">
-                  <div class="form-group"><label for="create_tipo_cmp">Tipo</label>
-                    <select id="create_tipo_cmp" name="tipo_dato">
-                      <option value="string">string</option>
-                      <option value="number">number</option>
-                      <option value="integer">integer</option>
-                      <option value="boolean">boolean</option>
-                      <option value="date">date</option>
-                      <option value="datetime">datetime</option>
-                      <option value="json">json</option>
-                    </select>
-                  </div>
-                  <div class="form-group"><label for="create_card_cmp">Cardinalidad</label>
-                    <select id="create_card_cmp" name="cardinalidad">
-                      <option value="one">one</option>
-                      <option value="many">many</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="field-inline">
-                  <div class="form-group"><label for="create_unidad_cmp">Unidad por defecto</label><input type="text" id="create_unidad_cmp" name="unidad_defecto" placeholder="opcional" /></div>
-                  <div class="form-group"><label for="create_unidades_cmp">Unidades permitidas</label><input type="text" id="create_unidades_cmp" name="unidades_permitidas" placeholder="separa por comas" /></div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttrCmp">Cancelar</button>
-                <button type="submit" class="btn">Crear</button>
-              </div>
-            </form>
-          </div>
-         </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalAddAttrCmp">Cancelar</button>
         <button type="submit" class="btn">Agregar</button>
@@ -557,6 +513,51 @@ if ($is_edit) {
     </form>
   </div>
  </div>
+
+<!-- Modal Crear Definición de Atributo (Componente) -->
+<div class="modal-backdrop" id="modalCreateAttrCmp">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalCreateAttrCmpTitle">
+    <div class="modal-header">
+      <h4 id="modalCreateAttrCmpTitle">Crear nuevo atributo</h4>
+      <button type="button" class="btn-plain js-close-modal" data-target="#modalCreateAttrCmp">✖</button>
+    </div>
+    <form method="POST" id="formCreateAttrCmp">
+      <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+      <input type="hidden" name="action" value="create_attr_def" />
+      <div class="modal-body">
+        <div class="form-group"><label for="create_etiqueta_cmp">Etiqueta</label><input type="text" id="create_etiqueta_cmp" name="etiqueta" required /></div>
+        <div class="form-group"><label for="create_clave_cmp">Clave</label><input type="text" id="create_clave_cmp" name="clave" placeholder="auto desde etiqueta si se deja vacío" /></div>
+        <div class="field-inline">
+          <div class="form-group"><label for="create_tipo_cmp">Tipo</label>
+            <select id="create_tipo_cmp" name="tipo_dato">
+              <option value="string">string</option>
+              <option value="number">number</option>
+              <option value="integer">integer</option>
+              <option value="boolean">boolean</option>
+              <option value="date">date</option>
+              <option value="datetime">datetime</option>
+              <option value="json">json</option>
+            </select>
+          </div>
+          <div class="form-group"><label for="create_card_cmp">Cardinalidad</label>
+            <select id="create_card_cmp" name="cardinalidad">
+              <option value="one">one</option>
+              <option value="many">many</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-inline">
+          <div class="form-group"><label for="create_unidad_cmp">Unidad por defecto</label><input type="text" id="create_unidad_cmp" name="unidad_defecto" placeholder="opcional" /></div>
+          <div class="form-group"><label for="create_unidades_cmp">Unidades permitidas</label><input type="text" id="create_unidades_cmp" name="unidades_permitidas" placeholder="separa por comas" /></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary js-close-modal" data-target="#modalCreateAttrCmp">Cancelar</button>
+        <button type="submit" class="btn">Crear</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
   // Utilidades de modal (compartidas)
