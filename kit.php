@@ -278,34 +278,36 @@ include 'includes/header.php';
     <?php endif; ?>
 
     <?php if (!empty($componentes)): ?>
-    <section class="kit-components">
-      <h2>📦 Componentes del Kit</h2>
-      <ul class="materials-list">
-        <?php foreach ($componentes as $m): ?>
-          <li>
-            <span class="material-name"><?= h($m['nombre_comun']) ?></span>
-            <?php if (!empty($m['slug'])): ?>
-              <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
-            <?php endif; ?>
-            <?php if (!empty($m['advertencias_seguridad'])): ?>
-              <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
-            <?php endif; ?>
-            <?php if (!empty($m['cantidad'])): ?>
-              <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
-            <?php endif; ?>
-            <?php if (isset($m['es_incluido_kit'])): ?>
-              <?php if ((int)$m['es_incluido_kit'] === 1): ?>
-                <span class="badge badge-success">✓ Incluido</span>
-              <?php else: ?>
-                <span class="badge badge-danger">No incluido</span>
+    <section class="kits-section">
+      <div class="kit-card">
+        <h4>Componentes incluidos:</h4>
+        <ul class="materials-list">
+          <?php foreach ($componentes as $m): ?>
+            <li>
+              <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+              <?php if (!empty($m['slug'])): ?>
+                <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
               <?php endif; ?>
-            <?php endif; ?>
-            <?php if (!empty($m['notas'])): ?>
-              <small class="material-notes"><?= h($m['notas']) ?></small>
-            <?php endif; ?>
-          </li>
-        <?php endforeach; ?>
-      </ul>
+              <?php if (!empty($m['advertencias_seguridad'])): ?>
+                <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
+              <?php endif; ?>
+              <?php if (!empty($m['cantidad'])): ?>
+                <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+              <?php endif; ?>
+              <?php if (isset($m['es_incluido_kit'])): ?>
+                <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+                  <span class="badge badge-success">✓ Incluido</span>
+                <?php else: ?>
+                  <span class="badge badge-danger">No incluido</span>
+                <?php endif; ?>
+              <?php endif; ?>
+              <?php if (!empty($m['notas'])): ?>
+                <small class="material-notes"><?= h($m['notas']) ?></small>
+              <?php endif; ?>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
     </section>
     <?php endif; ?>
 
@@ -380,6 +382,7 @@ console.log('🔍 [Kit] Slug:', '<?= h($slug) ?>');
 console.log('✅ [Kit] Cargado:', <?= json_encode(['id'=>$kit['id'],'nombre'=>$kit['nombre'],'codigo'=>$kit['codigo']]) ?>);
 console.log('📦 [Kit] Componentes:', <?= count($componentes) ?>);
 console.log('⚙️ [Kit] Orden: componentes antes de contenido_html');
+console.log('✅ [Kit] Componentes estilo clase.php aplicados');
 console.log('📚 [Kit] Clases vinculadas:', <?= count($clases) ?>);
 console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 </script>
