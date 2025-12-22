@@ -392,7 +392,7 @@ function get_issues($pdo) {
 
 function cdc_get_kit_by_slug($pdo, $slug) {
     try {
-        $stmt = $pdo->prepare("SELECT id, nombre, slug, codigo, version, activo, updated_at FROM kits WHERE slug = ? AND activo = 1 LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at FROM kits WHERE slug = ? AND activo = 1 LIMIT 1");
         $stmt->execute([$slug]);
         return $stmt->fetch();
     } catch (Exception $e) {
@@ -403,7 +403,7 @@ function cdc_get_kit_by_slug($pdo, $slug) {
 
 function cdc_get_kit_componentes($pdo, $kit_id) {
     try {
-        $stmt = $pdo->prepare("SELECT kc.item_id, kc.cantidad, kc.sort_order AS orden, kc.notas,
+        $stmt = $pdo->prepare("SELECT kc.item_id, kc.cantidad, kc.es_incluido_kit, kc.sort_order AS orden, kc.notas,
                                       i.nombre_comun, i.slug, i.sku, i.unidad, i.advertencias_seguridad
                                FROM kit_componentes kc
                                JOIN kit_items i ON i.id = kc.item_id

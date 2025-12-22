@@ -27,24 +27,244 @@ $componentes = cdc_get_kit_componentes($pdo, (int)$kit['id']);
 $clases = cdc_get_kit_clases($pdo, (int)$kit['id']);
 $manuales = cdc_get_kit_manuals($pdo, (int)$kit['id'], true);
 
-$page_title = h(($kit['nombre'] ?? 'Kit') . ' - Clase de Ciencia');
-$page_description = 'Componentes, clases relacionadas y manuales del kit ' . h($kit['nombre'] ?? '');
+$page_title = !empty($kit['seo_title']) ? h($kit['seo_title']) : h(($kit['nombre'] ?? 'Kit') . ' - Clase de Ciencia');
+$page_description = !empty($kit['seo_description']) ? h($kit['seo_description']) : ( !empty($kit['resumen']) ? h($kit['resumen']) : ('Componentes, clases relacionadas y manuales del kit ' . h($kit['nombre'] ?? '')) );
 $canonical_url = SITE_URL . '/' . urlencode($kit['slug']);
 
 include 'includes/header.php';
 ?>
-<div class="container">
+<div class="container article-page">
   <div class="breadcrumb">
-    <a href="/">Inicio</a> / <strong><?= h($kit['nombre']) ?></strong>
+    <a href="/">Inicio</a> / <a href="/kits">Kits</a> / <strong><?= h($kit['nombre']) ?></strong>
   </div>
 
-  <div class="kit-summary-card">
-    <div class="summary-header">
-      <h1><?= h($kit['nombre']) ?></h1>
-      <span class="badge">Versión <?= h($kit['version']) ?></span>
-      <span class="badge">Código <?= h($kit['codigo']) ?></span>
+    <?php 
+    // Preparar flags de seguridad y video
+    $has_seguridad = false;
+    $seguridad = null;
+    if (!empty($kit['seguridad'])) {
+      $seguridad = json_decode($kit['seguridad'], true);
+      $has_seguridad = is_array($seguridad) && (!empty($seguridad['edad_min']) || !empty($seguridad['notas']) || !empty($seguridad['edad_max']));
+    }
+    $has_video = !empty($kit['video_portada']);
+
+    // Recolectar advertencias de seguridad de materiales (kit_items)
+    $kit_warnings = [];
+    if (!empty($componentes) && is_array($componentes)) {
+      foreach ($componentes as $m) {
+        if (!empty($m['advertencias_seguridad'])) {
+          $kit_warnings[] = [
+            'nombre' => $m['nombre_comun'] ?? 'Material',
+            'advertencia' => $m['advertencias_seguridad'],
+            'slug' => $m['slug'] ?? ''
+          ];
+        }
+      }
+    }
+    $has_kit_warnings = count($kit_warnings) > 0;
+    ?>
+
+    <?php if ($has_seguridad && $has_video): ?>
+    <div class="intro-row">
+    <section class="video-portada-section">
+      <h2>🎥 Video Introductorio</h2>
+      <div class="video-wrapper">
+      <iframe src="<?= h($kit['video_portada']) ?>" title="Video de <?= h($kit['nombre']) ?>" allowfullscreen></iframe>
+      </div>
+    </section>
+    <section class="safety-info">
+      <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+      <div class="safety-content">
+      <?php if (!empty($seguridad['edad_min']) && !empty($seguridad['edad_max'])): ?>
+        <p class="edad-recomendada"><strong>👥 Edad recomendada:</strong> <?= (int)$seguridad['edad_min'] ?> a <?= (int)$seguridad['edad_max'] ?> años</p>
+      <?php endif; ?>
+      <?php if (!empty($seguridad['notas'])): ?>
+        <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
+      <?php endif; ?>
+      <?php if ($has_kit_warnings): ?>
+        <div class="safety-kits-inline">
+          <h3 class="safety-subtitle">🧪 Advertencias de materiales</h3>
+          <ul class="safety-kit-list">
+            <?php foreach ($kit_warnings as $kw): ?>
+              <li>
+                <?php if (!empty($kw['slug'])): ?>
+                  <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
+                <?php else: ?>
+                  <strong><?= h($kw['nombre']) ?></strong>
+                <?php endif; ?>
+                <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      <?php endif; ?>
+      </div>
+    </section>
     </div>
-    <p class="muted">Explora los componentes incluidos, clases relacionadas y manuales de ensamble/uso.</p>
+    <?php else: ?>
+    <?php if ($has_seguridad): ?>
+    <section class="safety-info">
+      <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+      <div class="safety-content">
+      <?php if (!empty($seguridad['edad_min']) && !empty($seguridad['edad_max'])): ?>
+        <p class="edad-recomendada"><strong>👥 Edad recomendada:</strong> <?= (int)$seguridad['edad_min'] ?> a <?= (int)$seguridad['edad_max'] ?> años</p>
+      <?php endif; ?>
+      <?php if (!empty($seguridad['notas'])): ?>
+        <div class="safety-notes"><?= nl2br(h($seguridad['notas'])) ?></div>
+      <?php endif; ?>
+      <?php if ($has_kit_warnings): ?>
+        <div class="safety-kits-inline">
+          <h3 class="safety-subtitle">🧪 Advertencias de materiales</h3>
+          <ul class="safety-kit-list">
+            <?php foreach ($kit_warnings as $kw): ?>
+              <li>
+                <?php if (!empty($kw['slug'])): ?>
+                  <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
+                <?php else: ?>
+                  <strong><?= h($kw['nombre']) ?></strong>
+                <?php endif; ?>
+                <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      <?php endif; ?>
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <?php if ($has_video): ?>
+    <div class="video-portada-section">
+      <h2>🎥 Video Introductorio</h2>
+      <div class="video-wrapper">
+      <iframe src="<?= h($kit['video_portada']) ?>" title="Video de <?= h($kit['nombre']) ?>" allowfullscreen></iframe>
+      </div>
+    </div>
+    <?php endif; ?>
+    <?php endif; ?>
+
+    <section class="article-content">
+    <?php if (!empty($kit['contenido_html'])): ?>
+      <div class="article-body">
+      <?= $kit['contenido_html'] ?>
+      </div>
+    <?php endif; ?>
+    </section>
+
+    <?php
+    // Ficha técnica del kit (resumen compacto similar a clase)
+    $ficha_rows = [];
+    try {
+      $stmt = $pdo->prepare("SELECT c.atributo_id, c.valor_string, c.valor_numero, c.valor_entero, c.valor_booleano, c.valor_fecha, c.valor_datetime, c.valor_json, c.unidad_codigo, c.orden,
+                     d.etiqueta, d.tipo_dato, d.unidad_defecto,
+                     COALESCE(m.orden, 9999) AS map_orden
+                  FROM atributos_contenidos c
+                  JOIN atributos_definiciones d ON d.id = c.atributo_id
+                  LEFT JOIN atributos_mapeo m ON m.atributo_id = c.atributo_id AND m.tipo_entidad = 'kit'
+                   WHERE c.tipo_entidad = 'kit' AND c.entidad_id = ?
+                   ORDER BY map_orden ASC, c.atributo_id ASC, c.orden ASC, c.id ASC");
+      $stmt->execute([(int)$kit['id']]);
+      $ficha_rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $e) {
+      error_log('Error ficha tecnica kit: ' . $e->getMessage());
+      $ficha_rows = [];
+    }
+
+    $ficha_attrs = [];
+    foreach ($ficha_rows as $r) {
+      $aid = (int)$r['atributo_id'];
+      if (!isset($ficha_attrs[$aid])) {
+        $ficha_attrs[$aid] = [
+          'label' => $r['etiqueta'],
+          'tipo' => $r['tipo_dato'],
+          'unidad_def' => $r['unidad_defecto'] ?? '',
+          'values' => []
+        ];
+      }
+      $tipo = $r['tipo_dato'];
+      $unit = $r['unidad_codigo'] ?: '';
+      $val = '';
+      if ($tipo === 'number') { $val = $r['valor_numero'] !== null ? rtrim(rtrim((string)$r['valor_numero'], '0'), '.') : ''; }
+      elseif ($tipo === 'integer') { $val = $r['valor_entero'] !== null ? (string)$r['valor_entero'] : ''; }
+      elseif ($tipo === 'boolean') { $val = ((int)$r['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+      elseif ($tipo === 'date') { $val = $r['valor_fecha'] ?: ''; }
+      elseif ($tipo === 'datetime') { $val = $r['valor_datetime'] ?: ''; }
+      elseif ($tipo === 'json') { $val = $r['valor_json'] ?: ''; }
+      else { $val = $r['valor_string'] ?: ''; }
+      if ($val === '' || $val === null) continue;
+      $ficha_attrs[$aid]['values'][] = [ 'text' => (string)$val, 'unit' => $unit ];
+    }
+
+    // Construir ficha inline
+    $ficha_inline = '';
+    if (!empty($ficha_attrs)) {
+      $parts = [];
+      $count = 0; $max = 5;
+      foreach ($ficha_attrs as $attr) {
+        if ($count >= $max) { break; }
+        $vals = $attr['values'];
+        $units = array_values(array_unique(array_filter(array_map(function($v){ return $v['unit'] ?? ''; }, $vals))));
+        $singleUnit = count($units) === 1 ? $units[0] : '';
+        $texts = array_map(function($v) use ($singleUnit){
+          $t = (string)$v['text'];
+          if ($singleUnit === '' && !empty($v['unit'])) $t .= ' ' . $v['unit'];
+          return $t;
+        }, $vals);
+        $display = implode(', ', $texts);
+        if ($singleUnit) { $display .= ' ' . $singleUnit; }
+        $parts[] = ($attr['label'] . ': ' . $display);
+        $count++;
+      }
+      if (!empty($parts)) {
+        $ficha_inline = implode(' · ', $parts);
+        if (count($ficha_attrs) > $max) { $ficha_inline .= '…'; }
+      }
+    }
+    ?>
+    <?php if ($ficha_inline !== '' || !empty($kit['updated_at'])): ?>
+    <div class="article-byline">
+      <?php if (!empty($kit['updated_at'])): ?>
+        <span class="updated">🔄 Actualizado: <?= date('d/m/Y', strtotime($kit['updated_at'])) ?></span>
+      <?php endif; ?>
+      <?php if ($ficha_inline !== ''): ?>
+        <span class="ficha">🧪 <?= h($ficha_inline) ?></span>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+  <!-- Card de Resumen del Kit (mismo layout que clase) -->
+  <div class="clase-summary-card">
+    <div class="summary-content">
+      <div class="summary-left">
+        <?php if (!empty($kit['imagen_portada'])): ?>
+          <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Kit] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+        <?php else: ?>
+          <div class="summary-placeholder">
+            <span class="placeholder-icon">📦</span>
+          </div>
+        <?php endif; ?>
+      </div>
+      <div class="summary-right">
+        <div class="summary-header">
+          <h1 class="summary-title"><?= h($kit['nombre']) ?></h1>
+        </div>
+        <div class="summary-specs">
+          <div class="spec-item">
+            <span class="spec-label">🏷️ Código</span>
+            <span class="spec-value"><?= h($kit['codigo'] ?? '') ?></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">🔢 Versión</span>
+            <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
+          </div>
+        </div>
+        <?php if (!empty($kit['resumen'])): ?>
+        <div class="summary-objetivo">
+          <p class="objetivo-content lead"><?= h($kit['resumen']) ?></p>
+        </div>
+        <?php endif; ?>
+      </div>
+    </div>
   </div>
 
   <?php if (!empty($componentes)): ?>
@@ -62,6 +282,13 @@ include 'includes/header.php';
           <?php endif; ?>
           <?php if (!empty($m['cantidad'])): ?>
             <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+          <?php endif; ?>
+          <?php if (isset($m['es_incluido_kit'])): ?>
+            <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+              <span class="badge badge-success">✓ Incluido</span>
+            <?php else: ?>
+              <span class="badge badge-danger">No incluido</span>
+            <?php endif; ?>
           <?php endif; ?>
           <?php if (!empty($m['notas'])): ?>
             <small class="material-notes"><?= h($m['notas']) ?></small>
