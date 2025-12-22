@@ -478,7 +478,7 @@ include 'includes/header.php';
                             <circle cx="11" cy="11" r="8"></circle>
                             <path d="m21 21-4.35-4.35"></path>
                         </svg>
-                        Aplicar Filtros
+                        Filtrar
                     </button>
                     <a href="/clases" class="btn btn-secondary">Limpiar</a>
                 </div>

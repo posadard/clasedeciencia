@@ -54,7 +54,13 @@ include 'includes/header.php';
                     <input type="search" id="q" name="q" value="<?= h($q) ?>" placeholder="Nombre o advertencias..." />
                 </div>
                 <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">Aplicar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        Filtrar
+                    </button>
                     <a href="/componentes" class="btn btn-secondary">Limpiar</a>
                 </div>
             </form>
