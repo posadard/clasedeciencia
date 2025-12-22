@@ -24,6 +24,11 @@ RewriteRule ^clases$ /clases.php [L,QSA]
 RewriteRule ^kits$ /kits.php [L,QSA]
 RewriteRule ^componentes$ /componentes.php [L,QSA]
 
+# Ruta amigable para resultados de búsqueda
+RewriteRule ^resultados_de_busqueda$ /buscar.php [L,QSA]
+# Redirección 301 desde buscar.php a la ruta amigable
+RewriteRule ^buscar\.php$ /resultados_de_busqueda [R=301,L]
+
 # URL amigable para detalle de componente (opcional)
 RewriteRule ^componente$ /componente.php [L,QSA]
 

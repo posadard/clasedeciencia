@@ -6,7 +6,7 @@ require_once 'includes/functions.php';
 $q = trim($_GET['q'] ?? '');
 $page_title = $q !== '' ? ('Resultados: ' . $q) : 'Resultados de búsqueda';
 $page_description = 'Resultados de búsqueda de clases, kits y componentes en Clase de Ciencia.';
-$canonical_url = SITE_URL . '/buscar.php' . ($q !== '' ? ('?q=' . urlencode($q)) : '');
+$canonical_url = SITE_URL . '/resultados_de_busqueda' . ($q !== '' ? ('?q=' . urlencode($q)) : '');
 
 // Normalizador sin acentos
 $normalize = function ($text) {
