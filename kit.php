@@ -26,6 +26,8 @@ if (!$kit) {
 $componentes = cdc_get_kit_componentes($pdo, (int)$kit['id']);
 $clases = cdc_get_kit_clases($pdo, (int)$kit['id']);
 $manuales = cdc_get_kit_manuals($pdo, (int)$kit['id'], true);
+// Áreas del kit (múltiples)
+$kit_areas = cdc_get_kit_areas($pdo, (int)$kit['id']);
 
 // Ficha técnica del kit (precompute inline summary for reuse)
 $ficha_inline = '';
@@ -158,6 +160,16 @@ include 'includes/header.php';
               if (mb_strlen($ficha_short) > 100) { $ficha_short = mb_substr($ficha_short, 0, 100) . '…'; }
             ?>
             <span class="spec-value"><?= h($ficha_short) ?></span>
+          </div>
+          <?php endif; ?>
+          <?php if (!empty($kit_areas)): ?>
+          <div class="spec-item spec-item-full">
+            <span class="spec-label">🔬 Áreas</span>
+            <span class="spec-value">
+              <?php foreach ($kit_areas as $idx => $area): ?>
+                <a href="/kits?area=<?= h($area['slug']) ?>" class="area-link"><?= h($area['nombre']) ?></a><?= $idx < count($kit_areas) - 1 ? ', ' : '' ?>
+              <?php endforeach; ?>
+            </span>
           </div>
           <?php endif; ?>
         </div>

@@ -401,6 +401,21 @@ function cdc_get_kit_by_slug($pdo, $slug) {
     }
 }
 
+function cdc_get_kit_areas($pdo, $kit_id) {
+    try {
+        $stmt = $pdo->prepare("SELECT a.id, a.nombre, a.slug
+                               FROM areas a
+                               JOIN kits_areas ka ON ka.area_id = a.id
+                               WHERE ka.kit_id = ?
+                               ORDER BY a.nombre ASC");
+        $stmt->execute([(int)$kit_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('Error cdc_get_kit_areas: ' . $e->getMessage());
+        return [];
+    }
+}
+
 function cdc_get_kit_componentes($pdo, $kit_id) {
     try {
         $stmt = $pdo->prepare("SELECT kc.item_id, kc.cantidad, kc.es_incluido_kit, kc.sort_order AS orden, kc.notas,
