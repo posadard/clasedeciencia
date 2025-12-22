@@ -855,10 +855,6 @@ include '../header.php';
     </div>
     <div id="seo-manual"></div>
   </div>
-  <div class="form-actions">
-    <button type="submit" class="btn">Guardar</button>
-    <a href="/admin/kits/index.php" class="btn btn-secondary">Cancelar</a>
-  </div>
 </form>
 
 <?php if ($is_edit): ?>
@@ -1873,4 +1869,11 @@ include '../header.php';
   })();
 </script>
 <?php endif; ?>
+<div class="form-actions" style="margin-top:2rem;">
+  <button type="submit" class="btn" form="kit-form">Guardar</button>
+  <a href="/admin/kits/index.php" class="btn btn-secondary">Cancelar</a>
+  <?php if ($is_edit && !empty($kit['slug'])): ?>
+    <a href="/<?= htmlspecialchars($kit['slug'], ENT_QUOTES, 'UTF-8') ?>" target="_blank" class="btn">Ver público</a>
+  <?php endif; ?>
+</div>
 <?php include '../footer.php'; ?>
