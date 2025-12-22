@@ -13,11 +13,11 @@ if ($activo === '1' || $activo === '0') { $where[] = 'k.activo = ?'; $params[] =
 if ($search !== '') { $where[] = '(k.nombre LIKE ? OR k.codigo LIKE ?)'; $params[] = "%$search%"; $params[] = "%$search%"; }
 
 try {
-  $sql = "SELECT k.id, k.nombre, k.codigo, k.version, k.activo, k.updated_at, k.seo_title, k.seo_description, c.id as clase_id, c.nombre as clase_nombre, c.ciclo
-      FROM kits k
-      LEFT JOIN clases c ON c.id = k.clase_id
-      WHERE " . implode(' AND ', $where) . "
-      ORDER BY k.updated_at DESC";
+    $sql = "SELECT k.id, k.nombre, k.codigo, k.version, k.activo, k.updated_at, c.id as clase_id, c.nombre as clase_nombre, c.ciclo
+            FROM kits k
+            LEFT JOIN clases c ON c.id = k.clase_id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY k.updated_at DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $kits = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -89,7 +89,6 @@ include '../header.php';
         <th>Versión</th>
         <th>Clase</th>
         <th>Ciclo</th>
-        <th>SEO</th>
         <th>Estado</th>
         <th>Actualizado</th>
         <th>Acciones</th>
@@ -104,20 +103,6 @@ include '../header.php';
         <td><?= htmlspecialchars($k['version'], ENT_QUOTES, 'UTF-8') ?></td>
         <td><?= htmlspecialchars(($k['clase_nombre'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
         <td><?= htmlspecialchars(($k['ciclo'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
-        <td>
-          <?php 
-            $seoT = isset($k['seo_title']) ? (string)$k['seo_title'] : '';
-            $seoD = isset($k['seo_description']) ? (string)$k['seo_description'] : '';
-            $hasSeo = ($seoT !== '' || $seoD !== '');
-            $tShort = $seoT !== '' ? (mb_strlen($seoT,'UTF-8')>60 ? mb_substr($seoT,0,57,'UTF-8').'…' : $seoT) : '—';
-            $dShort = $seoD !== '' ? (mb_strlen($seoD,'UTF-8')>80 ? mb_substr($seoD,0,77,'UTF-8').'…' : $seoD) : '—';
-          ?>
-          <div class="seo-cell">
-            <div class="seo-title"><?= htmlspecialchars($tShort, ENT_QUOTES, 'UTF-8') ?></div>
-            <div class="seo-desc"><?= htmlspecialchars($dShort, ENT_QUOTES, 'UTF-8') ?></div>
-            <?php if (!$hasSeo): ?><small class="hint">Sin SEO definido</small><?php endif; ?>
-          </div>
-        </td>
         <td>
           <span style="padding:0.25rem 0.5rem;background:<?= ((int)$k['activo']) ? '#4caf50' : '#ff9800' ?>;color:#fff;font-size:0.75rem;font-weight:600;">
             <?= ((int)$k['activo']) ? 'ACTIVO' : 'INACTIVO' ?>
@@ -142,9 +127,6 @@ include '../header.php';
 .search-group { flex-direction: row; align-items: center; flex: 1; }
 .search-group input { flex: 1; }
 .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.875rem; }
-.seo-cell { max-width: 320px; }
-.seo-title { font-weight: 600; font-size: 0.85rem; }
-.seo-desc { color:#666; font-size:0.8rem; }
 </style>
 
 <?php include '../footer.php'; ?>

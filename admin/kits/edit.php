@@ -387,9 +387,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ], JSON_UNESCAPED_UNICODE);
       }
 
+      // Generación automática de SEO si vienen vacíos
+      // Title: "Kit de Ciencia - [Área]: [Nombre]" o fallback sin área
+      if ($seo_title === '') {
+        $area_nombre = '';
+        if (!empty($areas_sel) && !empty($areas)) {
+          foreach ($areas as $area) {
+            if (in_array($area['id'], $areas_sel)) { $area_nombre = $area['nombre']; break; }
+          }
+        }
+        $base = 'Kit de Ciencia - ';
+        if ($area_nombre !== '') {
+          $formato1 = $base . $area_nombre . ': ' . $nombre;
+          if (mb_strlen($formato1, 'UTF-8') <= 60) {
+            $seo_title = $formato1;
+          } else {
+            $separador = ' | ' . $area_nombre;
+            $max_nombre = 60 - mb_strlen($base, 'UTF-8') - mb_strlen($separador, 'UTF-8');
+            $nombre_corto = mb_strlen($nombre, 'UTF-8') > $max_nombre ? mb_substr($nombre, 0, max(0, $max_nombre-3), 'UTF-8') . '...' : $nombre;
+            $seo_title = $base . $nombre_corto . $separador;
+          }
+        } else {
+          $max_nombre = 60 - mb_strlen($base, 'UTF-8');
+          $nombre_corto = mb_strlen($nombre, 'UTF-8') > $max_nombre ? mb_substr($nombre, 0, max(0, $max_nombre-3), 'UTF-8') . '...' : $nombre;
+          $seo_title = $base . $nombre_corto;
+        }
+      }
+
+      // Description: tomar resumen o texto del contenido HTML, truncado a 160
+      if ($seo_description === '') {
+        $desc_source = $resumen !== '' ? $resumen : strip_tags($contenido_html);
+        $desc_source = preg_replace('/\s+/', ' ', $desc_source);
+        $max_desc = 160;
+        $seo_description = (mb_strlen($desc_source, 'UTF-8') > $max_desc)
+          ? preg_replace('/\s+\S*$/u', '', mb_substr($desc_source, 0, $max_desc, 'UTF-8'))
+          : $desc_source;
+      }
+      echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ');</script>';
+
       // Normalizar longitudes razonables
       if ($seo_title !== '') { $seo_title = mb_substr($seo_title, 0, 160, 'UTF-8'); }
-      if ($seo_description !== '') { $seo_description = mb_substr($seo_description, 0, 300, 'UTF-8'); }
+      if ($seo_description !== '') { $seo_description = mb_substr($seo_description, 0, 255, 'UTF-8'); }
       if ($imagen_portada === '') { $imagen_portada = null; }
       if ($video_portada === '') { $video_portada = null; }
 
@@ -790,16 +828,32 @@ include '../header.php';
     </div>
     <small class="hint">Selecciona las áreas temáticas del kit.</small>
   </div>
-  <div class="form-group">
-    <h4>SEO</h4>
-    <div class="form-group">
-      <label for="seo_title">SEO Title</label>
-      <input type="text" id="seo_title" name="seo_title" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" maxlength="160" />
+  <!-- SEO -->
+  <div class="form-section">
+    <h2>SEO</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="seo_title">SEO Title (≤60)</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="seo_title" name="seo_title" maxlength="160" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="flex: 1;" />
+          <button type="button" id="btn_generar_seo" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar SEO</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="seo_description">SEO Description (≤160)</label>
+        <input type="text" id="seo_description" name="seo_description" maxlength="255" value="<?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+      </div>
     </div>
-    <div class="form-group">
-      <label for="seo_description">SEO Description</label>
-      <textarea id="seo_description" name="seo_description" rows="3" maxlength="300"><?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <!-- SEO Auto Preview + Override Toggle -->
+    <div class="form-section">
+      <label><input type="checkbox" id="seo_override_toggle"> Editar SEO manualmente</label>
+      <div class="seo-preview">
+        <p><strong>Preview Title:</strong> <span id="seo_preview_title"></span></p>
+        <p><strong>Preview Description:</strong> <span id="seo_preview_desc"></span></p>
+        <small class="help-text">Si no defines SEO manualmente, se usarán estos valores.</small>
+      </div>
     </div>
+    <div id="seo-manual"></div>
   </div>
   <div class="actions" style="margin-top:1rem;">
     <button type="submit" class="btn">Guardar</button>
@@ -1632,6 +1686,108 @@ include '../header.php';
     } catch(e) {
       console.log('⚠️ [KitsEdit] No se pudo inyectar CSS para warnings:', e && e.message);
     }
+  })();
+</script>
+<script>
+  // SEO auto y preview (similar a Clases)
+  (function initKitSeo(){
+    const nombreInput = document.getElementById('nombre');
+    const resumenInput = document.getElementById('resumen');
+    const seoTitleInput = document.getElementById('seo_title');
+    const seoDescInput = document.getElementById('seo_description');
+    const seoPrevTitle = document.getElementById('seo_preview_title');
+    const seoPrevDesc = document.getElementById('seo_preview_desc');
+    const seoToggle = document.getElementById('seo_override_toggle');
+    const btnGenerarSeo = document.getElementById('btn_generar_seo');
+
+    function textFromHtml(html){
+      const tmp = document.createElement('div'); tmp.innerHTML = html || ''; const txt = (tmp.textContent || tmp.innerText || '').replace(/\s+/g,' ').trim(); return txt;
+    }
+    function shortenAtWord(str, maxLen){ if (!str) return ''; if (str.length <= maxLen) return str; const cut = str.slice(0, maxLen); return cut.replace(/\s+\S*$/, '').trim(); }
+
+    function computeSeo(force=false){
+      // Área: primera seleccionada
+      let areaNombre = '';
+      const areasChecked = document.querySelectorAll('input[name="areas[]"]:checked');
+      if (areasChecked.length > 0) {
+        const label = areasChecked[0].closest('label');
+        if (label) areaNombre = label.textContent.trim();
+      }
+      const base = 'Kit de Ciencia - ';
+      const nombreVal = (nombreInput && nombreInput.value ? nombreInput.value.trim() : '');
+      let autoTitle = '';
+      if (areaNombre) {
+        const formato1 = base + areaNombre + ': ' + nombreVal;
+        if (formato1.length <= 60) autoTitle = formato1; else {
+          const sep = ' | ' + areaNombre;
+          const maxNombre = 60 - base.length - sep.length;
+          const nombreCorto = nombreVal.length > maxNombre ? (nombreVal.substring(0, Math.max(0, maxNombre-3)) + '...') : nombreVal;
+          autoTitle = base + nombreCorto + sep;
+        }
+      } else {
+        const maxNombre = 60 - base.length;
+        const nombreCorto = nombreVal.length > maxNombre ? (nombreVal.substring(0, Math.max(0, maxNombre-3)) + '...') : nombreVal;
+        autoTitle = base + nombreCorto;
+      }
+
+      // Descripción desde resumen o contenido_html
+      let descSrc = (resumenInput && resumenInput.value.trim()) ? resumenInput.value.trim() : '';
+      if (!descSrc) {
+        try {
+          if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+            descSrc = textFromHtml(CKEDITOR.instances.contenido_html.getData() || '');
+          } else {
+            const ta = document.getElementById('contenido_html');
+            descSrc = textFromHtml(ta ? ta.value : '');
+          }
+        } catch(e) { descSrc = ''; }
+      }
+      const autoDesc = shortenAtWord(descSrc, 160);
+
+      if (seoPrevTitle) seoPrevTitle.textContent = autoTitle;
+      if (seoPrevDesc) seoPrevDesc.textContent = autoDesc;
+
+      // Autorrellenar si no override
+      if (!seoToggle?.checked || force) {
+        if (seoTitleInput && (!seoTitleInput.value || force)) seoTitleInput.value = autoTitle;
+        if (seoDescInput && (!seoDescInput.value || force)) seoDescInput.value = autoDesc;
+        console.log('🔍 [SEO] autogenerados (kit):', { area: areaNombre, title: autoTitle.substring(0,50)+'...', forced: force });
+      }
+    }
+
+    if (seoToggle) {
+      seoToggle.addEventListener('change', () => {
+        const manual = document.getElementById('seo-manual');
+        if (manual) manual.style.display = seoToggle.checked ? 'block' : 'none';
+        console.log(seoToggle.checked ? '✅ [SEO] override manual activado (kit)' : '🔍 [SEO] usando auto (kit)');
+      });
+    }
+    if (btnGenerarSeo) {
+      btnGenerarSeo.addEventListener('click', () => {
+        if (!nombreInput?.value.trim()) { alert('Por favor ingresa el nombre del kit primero'); nombreInput?.focus(); return; }
+        computeSeo(true);
+        // feedback visual
+        if (seoTitleInput) seoTitleInput.style.background = '#e6f7ff';
+        if (seoDescInput) seoDescInput.style.background = '#e6f7ff';
+        setTimeout(()=>{ if (seoTitleInput) seoTitleInput.style.background=''; if (seoDescInput) seoDescInput.style.background=''; }, 1000);
+        console.log('⚡ [KitsEdit] SEO regenerado manualmente');
+      });
+    }
+
+    // Recalcular al editar nombre/resumen/áreas
+    nombreInput?.addEventListener('input', computeSeo);
+    resumenInput?.addEventListener('input', computeSeo);
+    document.querySelectorAll('input[name="areas[]"]').forEach(cb => cb.addEventListener('change', () => { console.log('🔍 [SEO] Área cambiada (kit)'); computeSeo(); }));
+
+    // Inicializa preview
+    computeSeo();
+  })();
+  // Validación simple de límites
+  (function bindSeoLenChecks(){
+    const seoTitle = document.getElementById('seo_title');
+    const seoDesc = document.getElementById('seo_description');
+    if (seoTitle) seoTitle.addEventListener('input', ()=>{ if (seoTitle.value.length>160) console.log('⚠️ [KitsEdit] SEO title >160'); });
+    if (seoDesc) seoDesc.addEventListener('input', ()=>{ if (seoDesc.value.length>255) console.log('⚠️ [KitsEdit] SEO description >255'); });
   })();
 </script>
 <script>
