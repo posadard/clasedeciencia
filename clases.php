@@ -276,15 +276,44 @@ if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
 $page_title = 'Clases';
 $page_description = 'Explora o busca clases científicas por ciclo, grado y área.';
-$canonical_url = SITE_URL . (
-    $q ? ('/clases/buscar/' . rawurlencode($q)) : (
-        (!empty($filters['areas']) && is_array($filters['areas']))
-            ? ('/clases/areas/' . rawurlencode(implode(',', array_map('strval', $filters['areas']))))
-            : (!empty($filters['area'])
-                ? ('/clases/areas/' . rawurlencode((string)$filters['area']))
-                : '/clases')
-    )
-);
+// Canonical: prefer friendly segments for filters and search
+if (!empty($q) && empty($filters)) {
+    $canonical_url = SITE_URL . ('/clases/buscar/' . rawurlencode($q));
+} else {
+    $segments = [];
+    // Áreas
+    if (!empty($filters['areas']) && is_array($filters['areas'])) {
+        $segments[] = 'areas/' . rawurlencode(implode(',', array_map('strval', $filters['areas'])));
+    } elseif (!empty($filters['area'])) {
+        $segments[] = 'areas/' . rawurlencode((string)$filters['area']);
+    }
+    // Ciclos
+    if (!empty($filters['ciclos']) && is_array($filters['ciclos'])) {
+        $segments[] = 'ciclos/' . rawurlencode(implode(',', array_map('strval', $filters['ciclos'])));
+    } elseif (!empty($filters['ciclo'])) {
+        $segments[] = 'ciclos/' . rawurlencode((string)$filters['ciclo']);
+    }
+    // Grado
+    if (!empty($filters['grado'])) {
+        $segments[] = 'grado/' . rawurlencode((string)$filters['grado']);
+    }
+    // Dificultad
+    if (!empty($filters['dificultades']) && is_array($filters['dificultades'])) {
+        $segments[] = 'dificultad/' . rawurlencode(implode(',', array_map('strval', $filters['dificultades'])));
+    } elseif (!empty($filters['dificultad'])) {
+        $segments[] = 'dificultad/' . rawurlencode((string)$filters['dificultad']);
+    }
+    // Competencia
+    if (!empty($filters['competencia'])) {
+        $segments[] = 'competencia/' . rawurlencode((string)$filters['competencia']);
+    }
+    // Sort
+    $sortVal = (!empty($filters['sort']) && is_string($filters['sort'])) ? trim($filters['sort']) : '';
+    if ($sortVal !== '') {
+        $segments[] = 'orden/' . rawurlencode($sortVal);
+    }
+    $canonical_url = SITE_URL . (empty($segments) ? '/clases' : ('/clases/' . implode('/', $segments)));
+}
 
 $areas = cdc_get_areas($pdo);
 $competencias = cdc_get_competencias($pdo);

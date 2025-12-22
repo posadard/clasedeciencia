@@ -216,11 +216,11 @@ include 'includes/header.php';
                     . h($label) . '</a>';
             }
         }
-        // Chips de áreas para Kits
+        // Chips de áreas para Kits (ruta amigable)
         if ($type === 'kit' && !empty($kit_top_area_slugs)) {
             foreach ($kit_top_area_slugs as $aslug) {
                 $label = $areas_map[$aslug] ?? (ucfirst(str_replace('-', ' ', $aslug)));
-                $href = '/kits?area=' . urlencode($aslug);
+                $href = '/kits/areas/' . urlencode($aslug);
                 echo '<a href="' . h($href) . '" class="btn btn-light" style="padding:6px 10px; font-size:12px;">'
                     . h($label) . '</a>';
             }
@@ -358,11 +358,17 @@ window.cdcRelated = {
             return;
         }
         if (type === 'componente') {
-            const params = { q: query };
+            // Redirigir a /componentes con rutas amigables: categoria y/o buscar
             const relatedCat = (window.cdcRelated && window.cdcRelated.componente_categoria) ? window.cdcRelated.componente_categoria : '';
-            if (relatedCat) params.category = relatedCat;
-            const url = buildUrl('/componentes', params);
-            console.log('✅ [buscar] Redirigiendo a Componentes:', url);
+            let url = '/componentes';
+            if (relatedCat && query) {
+                url = `/componentes/categoria/${encodeURIComponent(relatedCat)}/buscar/${encodeURIComponent(query)}`;
+            } else if (relatedCat) {
+                url = `/componentes/categoria/${encodeURIComponent(relatedCat)}`;
+            } else if (query) {
+                url = `/componentes/buscar/${encodeURIComponent(query)}`;
+            }
+            console.log('✅ [buscar] Redirigiendo a Componentes (amigable):', url);
             window.location.href = url;
             return;
         }

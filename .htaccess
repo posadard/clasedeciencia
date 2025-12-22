@@ -23,9 +23,45 @@ RewriteRule ^clases$ /clases.php [L,QSA]
 # /clases/areas/ambiental,fisica,tecnologia -> clases.php?area=ambiental,fisica,tecnologia
 RewriteRule ^clases/areas/(.*)$ /clases.php?area=$1 [L,QSA]
 
+## Rutas amigables para otros filtros de clases
+# Ciclos múltiples: /clases/ciclos/1,2,3 -> clases.php?ciclo=1,2,3
+RewriteRule ^clases/ciclos/(.*)$ /clases.php?ciclo=$1 [L,QSA]
+
+# Grado único: /clases/grado/9 -> clases.php?grado=9
+RewriteRule ^clases/grado/([0-9]{1,2})$ /clases.php?grado=$1 [L,QSA]
+
+# Dificultad: /clases/dificultad/facil,medio -> clases.php?dificultad=facil,medio
+RewriteRule ^clases/dificultad/(.*)$ /clases.php?dificultad=$1 [L,QSA]
+
+# Competencia: /clases/competencia/12 -> clases.php?competencia=12
+RewriteRule ^clases/competencia/([0-9]+)$ /clases.php?competencia=$1 [L,QSA]
+
+# Orden: /clases/orden/recomendados -> clases.php?sort=recomendados
+RewriteRule ^clases/orden/([a-z]+)$ /clases.php?sort=$1 [L,QSA]
+
+# Combinación común: /clases/areas/{csv}/ciclos/{csv}
+RewriteRule ^clases/areas/([^/]+)/ciclos/([^/]+)$ /clases.php?area=$1&ciclo=$2 [L,QSA]
+
 # URLs amigables para listados públicos de kits y componentes
 RewriteRule ^kits$ /kits.php [L,QSA]
 RewriteRule ^componentes$ /componentes.php [L,QSA]
+# Rutas amigables para filtros de Kits
+# Áreas múltiples: /kits/areas/ambiental,fisica -> kits.php?area=ambiental,fisica
+RewriteRule ^kits/areas/(.*)$ /kits.php?area=$1 [L,QSA]
+# Edad única: /kits/edad/12 -> kits.php?edad=12
+RewriteRule ^kits/edad/([0-9]{1,2})$ /kits.php?edad=$1 [L,QSA]
+# Orden: /kits/orden/recientes -> kits.php?sort=recientes
+RewriteRule ^kits/orden/([a-z]+)$ /kits.php?sort=$1 [L,QSA]
+# Combinación común: /kits/areas/{csv}/orden/{key}
+RewriteRule ^kits/areas/([^/]+)/orden/([^/]+)$ /kits.php?area=$1&sort=$2 [L,QSA]
+
+# Rutas amigables para filtros de Componentes
+# Categoría: /componentes/categoria/quimicos -> componentes.php?category=quimicos
+RewriteRule ^componentes/categoria/([^/]+)$ /componentes.php?category=$1 [L,QSA]
+# Búsqueda: /componentes/buscar/agua -> componentes.php?q=$1
+RewriteRule ^componentes/buscar/(.*)$ /componentes.php?q=$1 [L,QSA]
+# Combinada: /componentes/categoria/{slug}/buscar/{q}
+RewriteRule ^componentes/categoria/([^/]+)/buscar/(.*)$ /componentes.php?category=$1&q=$2 [L,QSA]
 
 # Ruta amigable para resultados de búsqueda
 # Redirección 301: convertir query (?q=termino) a ruta SEO /resultados_de_busqueda/termino

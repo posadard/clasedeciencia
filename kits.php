@@ -141,7 +141,33 @@ $offset = get_offset($current_page);
 
 $page_title = 'Kits';
 $page_description = 'Explora los kits de Clase de Ciencia con sus componentes y clases relacionadas.';
-$canonical_url = SITE_URL . '/kits';
+// Canonical: friendly segments when filters are active
+{
+    $segments = [];
+    // Áreas (multi or single via CSV)
+    if (!empty($filters['areas']) && is_array($filters['areas'])) {
+        $segments[] = 'areas/' . rawurlencode(implode(',', array_map('strval', $filters['areas'])));
+    } elseif (!empty($filters['area'])) {
+        $segments[] = 'areas/' . rawurlencode((string)$filters['area']);
+    }
+    // Edad
+    if (!empty($filters['edad'])) {
+        $segments[] = 'edad/' . rawurlencode((string)$filters['edad']);
+    }
+    // Medios (video/imagen)
+    $medios = [];
+    if (!empty($filters['con_video'])) $medios[] = 'video';
+    if (!empty($filters['con_imagen'])) $medios[] = 'imagen';
+    if (!empty($medios)) {
+        // Nota: No hay rewrite específico para medios, pero canonical puede reflejarlo en path si se decide añadirlo más adelante
+        // Por ahora lo omitimos del path para evitar rutas sin rewrite; mantener query interna
+    }
+    // Orden
+    if (!empty($sort) && is_string($sort)) {
+        $segments[] = 'orden/' . rawurlencode($sort);
+    }
+    $canonical_url = SITE_URL . (empty($segments) ? '/kits' : ('/kits/' . implode('/', $segments)));
+}
 
 $kits = cdc_get_kits($pdo, $q, POSTS_PER_PAGE, $offset, $filters, $sort);
 $total = cdc_count_kits($pdo, $q, $filters);

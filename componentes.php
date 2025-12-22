@@ -12,7 +12,13 @@ $offset = get_offset($current_page);
 
 $page_title = 'Componentes';
 $page_description = 'Explora los componentes de los kits por categoría o búsqueda.';
-$canonical_url = SITE_URL . '/componentes';
+$canonical_url = SITE_URL . (
+    $q !== '' && $category === ''
+        ? ('/componentes/buscar/' . rawurlencode($q))
+        : ($category !== ''
+            ? ('/componentes/categoria/' . rawurlencode($category) . ($q!=='' ? ('/buscar/' . rawurlencode($q)) : ''))
+            : '/componentes')
+);
 
 $categories = get_material_categories($pdo);
 $filters = [];
