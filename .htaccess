@@ -25,9 +25,18 @@ RewriteRule ^kits$ /kits.php [L,QSA]
 RewriteRule ^componentes$ /componentes.php [L,QSA]
 
 # Ruta amigable para resultados de búsqueda
-RewriteRule ^resultados_de_busqueda$ /buscar.php [L,QSA]
-# Redirección 301 desde buscar.php a la ruta amigable
+# Redirección 301: convertir query (?q=termino) a ruta SEO /resultados_de_busqueda/termino
+RewriteCond %{THE_REQUEST} \s/resultados_de_busqueda\?q=([^\s&]+) [NC]
+RewriteRule ^resultados_de_busqueda$ /resultados_de_busqueda/%1? [R=301,L]
+
+# Redirección 301 desde buscar.php (con o sin q) a la ruta amigable con segmento
+RewriteCond %{THE_REQUEST} \s/buscar\.php\?q=([^\s&]+) [NC]
+RewriteRule ^buscar\.php$ /resultados_de_busqueda/%1? [R=301,L]
 RewriteRule ^buscar\.php$ /resultados_de_busqueda [R=301,L]
+
+# Ruta amigable que resuelve el segmento a query para PHP
+RewriteRule ^resultados_de_busqueda/(.*)$ /buscar.php?q=$1 [L,QSA]
+RewriteRule ^resultados_de_busqueda$ /buscar.php [L,QSA]
 
 # URL amigable para detalle de componente (opcional)
 RewriteRule ^componente$ /componente.php [L,QSA]
