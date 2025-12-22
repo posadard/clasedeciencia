@@ -38,6 +38,43 @@ include 'includes/header.php';
     <a href="/">Inicio</a> / <a href="/kits">Kits</a> / <strong><?= h($kit['nombre']) ?></strong>
   </div>
 
+  <!-- Card de Resumen del Kit (mismo layout que clase) -->
+  <div class="clase-summary-card">
+    <div class="summary-content">
+      <div class="summary-left">
+        <?php if (!empty($kit['imagen_portada'])): ?>
+          <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Kit] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+        <?php else: ?>
+          <div class="summary-placeholder">
+            <span class="placeholder-icon">📦</span>
+          </div>
+        <?php endif; ?>
+      </div>
+      <div class="summary-right">
+        <div class="summary-header">
+          <h1 class="summary-title"><?= h($kit['nombre']) ?></h1>
+        </div>
+        <div class="summary-specs">
+          <div class="spec-item">
+            <span class="spec-label">🏷️ Código</span>
+            <span class="spec-value"><?= h($kit['codigo'] ?? '') ?></span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">🔢 Versión</span>
+            <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <article>
+    <?php if (!empty($kit['resumen'])): ?>
+    <div class="resumen-section">
+      <p class="lead"><?= h($kit['resumen']) ?></p>
+    </div>
+    <?php endif; ?>
+
     <?php 
     // Preparar flags de seguridad y video
     $has_seguridad = false;
@@ -232,40 +269,7 @@ include 'includes/header.php';
     </div>
     <?php endif; ?>
 
-  <!-- Card de Resumen del Kit (mismo layout que clase) -->
-  <div class="clase-summary-card">
-    <div class="summary-content">
-      <div class="summary-left">
-        <?php if (!empty($kit['imagen_portada'])): ?>
-          <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Kit] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
-        <?php else: ?>
-          <div class="summary-placeholder">
-            <span class="placeholder-icon">📦</span>
-          </div>
-        <?php endif; ?>
-      </div>
-      <div class="summary-right">
-        <div class="summary-header">
-          <h1 class="summary-title"><?= h($kit['nombre']) ?></h1>
-        </div>
-        <div class="summary-specs">
-          <div class="spec-item">
-            <span class="spec-label">🏷️ Código</span>
-            <span class="spec-value"><?= h($kit['codigo'] ?? '') ?></span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">🔢 Versión</span>
-            <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
-          </div>
-        </div>
-        <?php if (!empty($kit['resumen'])): ?>
-        <div class="summary-objetivo">
-          <p class="objetivo-content lead"><?= h($kit['resumen']) ?></p>
-        </div>
-        <?php endif; ?>
-      </div>
-    </div>
-  </div>
+  
 
   <?php if (!empty($componentes)): ?>
   <section class="kit-components">
@@ -299,32 +303,32 @@ include 'includes/header.php';
   </section>
   <?php endif; ?>
 
-  <?php if (!empty($clases)): ?>
-  <section class="kit-classes">
-    <h2>📚 Clases Relacionadas</h2>
-    <div class="related-grid">
-      <?php foreach ($clases as $c): ?>
-        <a href="/<?= h($c['slug']) ?>" class="related-card">
-          <?php if (!empty($c['imagen_portada'])): ?>
-            <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" />
-          <?php endif; ?>
-          <div class="related-info">
-            <h4><?= h($c['nombre']) ?></h4>
-            <div class="related-meta">
-              <span class="badge">Ciclo <?= h($c['ciclo']) ?></span>
-              <span class="badge"><?= h(ucfirst($c['dificultad'] ?? '')) ?></span>
-            </div>
-            <?php if (!empty($c['resumen'])): ?>
-              <p class="related-excerpt"><?= h(mb_substr($c['resumen'], 0, 100)) ?>...</p>
+    <?php if (!empty($clases)): ?>
+    <section class="kit-classes">
+      <h2>📚 Clases Relacionadas</h2>
+      <div class="related-grid">
+        <?php foreach ($clases as $c): ?>
+          <a href="/<?= h($c['slug']) ?>" class="related-card">
+            <?php if (!empty($c['imagen_portada'])): ?>
+              <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" />
             <?php endif; ?>
-          </div>
-        </a>
-      <?php endforeach; ?>
-    </div>
-  </section>
-  <?php endif; ?>
+            <div class="related-info">
+              <h4><?= h($c['nombre']) ?></h4>
+              <div class="related-meta">
+                <span class="badge">Ciclo <?= h($c['ciclo']) ?></span>
+                <span class="badge"><?= h(ucfirst($c['dificultad'] ?? '')) ?></span>
+              </div>
+              <?php if (!empty($c['resumen'])): ?>
+                <p class="related-excerpt"><?= h(mb_substr($c['resumen'], 0, 100)) ?>...</p>
+              <?php endif; ?>
+            </div>
+          </a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+    <?php endif; ?>
 
-  <section class="kit-manuals">
+    <section class="kit-manuals">
     <h2>🛠️ Manuales Disponibles</h2>
     <?php if (!empty($manuales)): ?>
       <ul>
@@ -340,7 +344,8 @@ include 'includes/header.php';
     <?php else: ?>
       <p class="muted">Aún no hay manuales publicados para este kit.</p>
     <?php endif; ?>
-  </section>
+    </section>
+  </article>
 </div>
 <script>
 console.log('🔍 [Kit] Slug:', '<?= h($slug) ?>');
