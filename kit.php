@@ -63,6 +63,23 @@ include 'includes/header.php';
             <span class="spec-label">🔢 Versión</span>
             <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
           </div>
+          <?php 
+          // Edad recomendada resumida desde seguridad JSON
+          $seg_summary = null;
+          if (!empty($kit['seguridad'])) {
+            try {
+              $seg_obj = json_decode($kit['seguridad'], true);
+              if (is_array($seg_obj) && !empty($seg_obj['edad_min']) && !empty($seg_obj['edad_max'])) {
+                $seg_summary = [(int)$seg_obj['edad_min'], (int)$seg_obj['edad_max']];
+              }
+            } catch(Exception $e) { /* no-op */ }
+          }
+          if ($seg_summary): ?>
+          <div class="spec-item">
+            <span class="spec-label">👥 Edad</span>
+            <span class="spec-value"><?= (int)$seg_summary[0] ?>–<?= (int)$seg_summary[1] ?> años</span>
+          </div>
+          <?php endif; ?>
         </div>
       </div>
     </div>
