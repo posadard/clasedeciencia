@@ -319,6 +319,24 @@ include 'includes/header.php';
     <?php endif; ?>
     </section>
 
+    <section class="kit-manuals">
+    <h2>🛠️ Manuales Disponibles</h2>
+    <?php if (!empty($manuales)): ?>
+      <ul>
+        <?php foreach ($manuales as $man): ?>
+          <li>
+            <a href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($man['slug']) ?>">
+              <?= h($man['slug']) ?> (v<?= h($man['version']) ?>)
+            </a>
+            <small class="muted">Idioma: <?= h($man['idioma']) ?><?= $man['time_minutes'] ? ' · ' . (int)$man['time_minutes'] . ' min' : '' ?></small>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php else: ?>
+      <p class="muted">Aún no hay manuales publicados para este kit.</p>
+    <?php endif; ?>
+    </section>
+
     <?php // Ficha técnica ya precomputada como $ficha_inline arriba ?>
     <?php if ($ficha_inline !== '' || !empty($kit['updated_at'])): ?>
     <div class="article-byline">
@@ -357,24 +375,6 @@ include 'includes/header.php';
       </div>
     </section>
     <?php endif; ?>
-
-    <section class="kit-manuals">
-    <h2>🛠️ Manuales Disponibles</h2>
-    <?php if (!empty($manuales)): ?>
-      <ul>
-        <?php foreach ($manuales as $man): ?>
-          <li>
-            <a href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($man['slug']) ?>">
-              <?= h($man['slug']) ?> (v<?= h($man['version']) ?>)
-            </a>
-            <small class="muted">Idioma: <?= h($man['idioma']) ?><?= $man['time_minutes'] ? ' · ' . (int)$man['time_minutes'] . ' min' : '' ?></small>
-          </li>
-        <?php endforeach; ?>
-      </ul>
-    <?php else: ?>
-      <p class="muted">Aún no hay manuales publicados para este kit.</p>
-    <?php endif; ?>
-    </section>
   </article>
 </div>
 <script>
@@ -383,6 +383,7 @@ console.log('✅ [Kit] Cargado:', <?= json_encode(['id'=>$kit['id'],'nombre'=>$k
 console.log('📦 [Kit] Componentes:', <?= count($componentes) ?>);
 console.log('⚙️ [Kit] Orden: componentes antes de contenido_html');
 console.log('✅ [Kit] Componentes estilo clase.php aplicados');
+console.log('🛠️ [Kit] Manuales movidos después de contenido_html');
 console.log('📚 [Kit] Clases vinculadas:', <?= count($clases) ?>);
 console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 </script>
