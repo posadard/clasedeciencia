@@ -97,10 +97,25 @@ $canonical_url = SITE_URL . '/' . urlencode($kit['slug']);
 
 include 'includes/header.php';
 ?>
-<div class="container article-page">
+<div class="container article-page kit-page">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / <a href="/kits">Kits</a> / <strong><?= h($kit['nombre']) ?></strong>
   </div>
+
+  <style>
+    /* Compact spacing for kit page only */
+    .kit-page .clase-summary-card { margin: 12px 0; }
+    .kit-page .summary-content { gap: 12px; }
+    .kit-page .summary-right .summary-specs { margin-top: 6px; }
+    .kit-page .summary-image { max-height: 180px; object-fit: cover; }
+    .kit-page .resumen-section .lead { margin: 10px 0 16px; }
+    .kit-page .intro-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .kit-page .video-portada-section .video-wrapper { aspect-ratio: 16 / 9; }
+    .kit-page .materials-list { margin: 8px 0; padding: 0; }
+    .kit-page .materials-list li { margin: 0; padding: 6px 0; border-bottom: 1px solid #eee; }
+    .kit-page .materials-list li:last-child { border-bottom: 0; }
+    .kit-page .related-card { padding: 8px; }
+  </style>
 
   <!-- Card de Resumen del Kit (mismo layout que clase) -->
   <div class="clase-summary-card">
@@ -277,6 +292,38 @@ include 'includes/header.php';
     <?php endif; ?>
     <?php endif; ?>
 
+    <?php if (!empty($componentes)): ?>
+    <section class="kit-components">
+      <h2>📦 Componentes del Kit</h2>
+      <ul class="materials-list">
+        <?php foreach ($componentes as $m): ?>
+          <li>
+            <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+            <?php if (!empty($m['slug'])): ?>
+              <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
+            <?php endif; ?>
+            <?php if (!empty($m['advertencias_seguridad'])): ?>
+              <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
+            <?php endif; ?>
+            <?php if (!empty($m['cantidad'])): ?>
+              <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+            <?php endif; ?>
+            <?php if (isset($m['es_incluido_kit'])): ?>
+              <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+                <span class="badge badge-success">✓ Incluido</span>
+              <?php else: ?>
+                <span class="badge badge-danger">No incluido</span>
+              <?php endif; ?>
+            <?php endif; ?>
+            <?php if (!empty($m['notas'])): ?>
+              <small class="material-notes"><?= h($m['notas']) ?></small>
+            <?php endif; ?>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </section>
+    <?php endif; ?>
+
     <section class="article-content">
     <?php if (!empty($kit['contenido_html'])): ?>
       <div class="article-body">
@@ -298,38 +345,6 @@ include 'includes/header.php';
     <?php endif; ?>
 
   
-
-  <?php if (!empty($componentes)): ?>
-  <section class="kit-components">
-    <h2>📦 Componentes del Kit</h2>
-    <ul class="materials-list">
-      <?php foreach ($componentes as $m): ?>
-        <li>
-          <span class="material-name"><?= h($m['nombre_comun']) ?></span>
-          <?php if (!empty($m['slug'])): ?>
-            <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
-          <?php endif; ?>
-          <?php if (!empty($m['advertencias_seguridad'])): ?>
-            <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
-          <?php endif; ?>
-          <?php if (!empty($m['cantidad'])): ?>
-            <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
-          <?php endif; ?>
-          <?php if (isset($m['es_incluido_kit'])): ?>
-            <?php if ((int)$m['es_incluido_kit'] === 1): ?>
-              <span class="badge badge-success">✓ Incluido</span>
-            <?php else: ?>
-              <span class="badge badge-danger">No incluido</span>
-            <?php endif; ?>
-          <?php endif; ?>
-          <?php if (!empty($m['notas'])): ?>
-            <small class="material-notes"><?= h($m['notas']) ?></small>
-          <?php endif; ?>
-        </li>
-      <?php endforeach; ?>
-    </ul>
-  </section>
-  <?php endif; ?>
 
     <?php if (!empty($clases)): ?>
     <section class="kit-classes">
