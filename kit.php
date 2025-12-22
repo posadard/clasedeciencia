@@ -232,6 +232,7 @@ include 'includes/header.php';
           </ul>
         </div>
       <?php endif; ?>
+      <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
       </div>
     </section>
     </div>
@@ -263,6 +264,7 @@ include 'includes/header.php';
           </ul>
         </div>
       <?php endif; ?>
+      <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
       </div>
     </section>
     <?php endif; ?>
@@ -390,6 +392,7 @@ console.log('⚙️ [Kit] Orden: componentes antes de contenido_html');
 console.log('✅ [Kit] Componentes estilo clase.php aplicados');
 console.log('🧩 [Kit] Componentes: título "Componentes necesarios"');
 console.log('🛠️ [Kit] Manuales movidos después de contenido_html');
+console.log('🛡️ [Kit] Nota de seguridad aplicada por defecto');
 console.log('📚 [Kit] Clases vinculadas:', <?= count($clases) ?>);
 console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 </script>

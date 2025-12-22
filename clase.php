@@ -315,6 +315,7 @@ include 'includes/header.php';
                             </ul>
                         </div>
                     <?php endif; ?>
+                    <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
                 </div>
             </section>
         </div>
@@ -346,6 +347,7 @@ include 'includes/header.php';
                             </ul>
                         </div>
                     <?php endif; ?>
+                    <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
                 </div>
             </section>
             <?php endif; ?>
@@ -688,6 +690,7 @@ console.log('🎓 [Clase] Competencias:', <?= count($competencias) ?>);
 console.log('📦 [Clase] Kits:', <?= count($kits) ?>);
 console.log('🧩 [Clase] Componentes: título "Componentes necesarios"');
 console.log('🎞️ [Clase] Recursos:', <?= count($recursos) ?>);
+console.log('🛡️ [Clase] Nota de seguridad aplicada por defecto');
 console.log('🏷️ [Clase] Tags:', <?= count($tags) ?>);
 console.log('🔗 [Clase] Relacionadas:', <?= count($clases_relacionadas) ?>);
 </script>
