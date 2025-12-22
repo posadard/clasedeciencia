@@ -566,6 +566,7 @@ include '../header.php';
     console.log('✅ [Admin] Kits edit cargado');
     console.log('🔍 [Admin] Edit mode:', <?= $is_edit ? 'true' : 'false' ?>);
     console.log('🔍 [Admin] Kit ID:', <?= $is_edit ? (int)$id : 'null' ?>);
+    console.log('🔍 [KitsEdit] Estado activo inicial:', <?= ((int)$kit['activo']) ? 'true' : 'false' ?>);
   </script>
   <script>
     // Fallback binder to ensure the create-attribute button opens the modal
@@ -606,6 +607,13 @@ include '../header.php';
 <form method="POST" id="kit-form">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
   <input type="hidden" name="action" value="save" />
+  <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+    <label class="switch-label">
+      <input type="checkbox" name="activo" class="switch-input" <?= ((int)$kit['activo']) ? 'checked' : '' ?> />
+      <span class="switch-slider"></span>
+      <span class="switch-text">✓ Activo</span>
+    </label>
+  </div>
   <div class="form-group">
     <label for="nombre">Nombre del Kit</label>
     <input type="text" id="nombre" name="nombre" value="<?= htmlspecialchars($kit['nombre'], ENT_QUOTES, 'UTF-8') ?>" required />
@@ -630,9 +638,7 @@ include '../header.php';
     <label for="version">Versión</label>
     <input type="text" id="version" name="version" value="<?= htmlspecialchars($kit['version'], ENT_QUOTES, 'UTF-8') ?>" />
   </div>
-  <div class="form-group">
-    <label><input type="checkbox" name="activo" <?= ((int)$kit['activo']) ? 'checked' : '' ?> /> Activo</label>
-  </div>
+  
   <?php
     $seg_arr = null;
     if (!empty($kit['seguridad'])) {
