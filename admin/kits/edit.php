@@ -855,7 +855,7 @@ include '../header.php';
     </div>
     <div id="seo-manual"></div>
   </div>
-  <div class="actions" style="margin-top:1rem;">
+  <div class="form-actions">
     <button type="submit" class="btn">Guardar</button>
     <a href="/admin/kits/index.php" class="btn btn-secondary">Cancelar</a>
   </div>
