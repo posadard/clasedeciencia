@@ -211,7 +211,7 @@ include 'includes/header.php';
         if ($type === 'clase' && !empty($top_area_slugs)) {
             foreach ($top_area_slugs as $aslug) {
                 $label = $areas_map[$aslug] ?? (ucfirst(str_replace('-', ' ', $aslug)));
-                $href = '/clases?area=' . urlencode($aslug);
+                $href = '/clases/areas/' . urlencode($aslug);
                 echo '<a href="' . h($href) . '" class="btn btn-light" style="padding:6px 10px; font-size:12px;">'
                     . h($label) . '</a>';
             }
@@ -332,15 +332,13 @@ window.cdcRelated = {
     // Redirección global usada por botones en cada sección
     window.cdcSearchRedirect = function(type) {
         if (type === 'clase') {
-            // Redirigir a /clases usando únicamente áreas como filtros (area[]). Sin 'busqueda' ni otros filtros.
-            const usp = new URLSearchParams();
+            // Redirigir a /clases/areas/{csv} usando únicamente áreas
             const topAreas = (window.cdcRelated && Array.isArray(window.cdcRelated.clase_areas_top)) ? window.cdcRelated.clase_areas_top : [];
             const fallbackArea = (window.cdcRelated && window.cdcRelated.clase_area) ? window.cdcRelated.clase_area : '';
             const areasToUse = topAreas.length ? topAreas : (intent.area ? [intent.area] : (fallbackArea ? [fallbackArea] : []));
-
-            areasToUse.forEach(a => { if (a) usp.append('area[]', a); });
-            const url = '/clases' + (usp.toString() ? ('?' + usp.toString()) : '');
-            console.log('✅ [buscar] Redirigiendo a Clases solo con áreas:', areasToUse);
+            const csv = areasToUse.filter(Boolean).join(',');
+            const url = csv ? ('/clases/areas/' + encodeURIComponent(csv)) : '/clases';
+            console.log('✅ [buscar] Redirigiendo a Clases por áreas:', areasToUse);
             console.log('📡 [buscar] URL:', url);
             window.location.href = url;
             return;

@@ -19,6 +19,9 @@ RewriteRule ^clase\.php$ /%1? [R=301,L]
 
 # URL amigable para catálogo unificado: /clases -> /clases.php
 RewriteRule ^clases$ /clases.php [L,QSA]
+## Ruta amigable para filtros de áreas en clases
+# /clases/areas/ambiental,fisica,tecnologia -> clases.php?area=ambiental,fisica,tecnologia
+RewriteRule ^clases/areas/(.*)$ /clases.php?area=$1 [L,QSA]
 
 # URLs amigables para listados públicos de kits y componentes
 RewriteRule ^kits$ /kits.php [L,QSA]

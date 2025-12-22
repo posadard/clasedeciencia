@@ -276,7 +276,15 @@ if (isset($_GET['sort'])) $filters['sort'] = $_GET['sort'];
 
 $page_title = 'Clases';
 $page_description = 'Explora o busca clases científicas por ciclo, grado y área.';
-$canonical_url = SITE_URL . ($q ? ('/clases/buscar/' . rawurlencode($q)) : '/clases');
+$canonical_url = SITE_URL . (
+    $q ? ('/clases/buscar/' . rawurlencode($q)) : (
+        (!empty($filters['areas']) && is_array($filters['areas']))
+            ? ('/clases/areas/' . rawurlencode(implode(',', array_map('strval', $filters['areas']))))
+            : (!empty($filters['area'])
+                ? ('/clases/areas/' . rawurlencode((string)$filters['area']))
+                : '/clases')
+    )
+);
 
 $areas = cdc_get_areas($pdo);
 $competencias = cdc_get_competencias($pdo);
