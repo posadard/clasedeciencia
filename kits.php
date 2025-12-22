@@ -31,6 +31,7 @@ function cdc_get_kits($pdo, $search = '', $limit = 12, $offset = 0, $filters = [
     $con_video = !empty($filters['con_video']);
     $con_imagen = !empty($filters['con_imagen']);
     $area_slug = isset($filters['area']) ? trim((string)$filters['area']) : '';
+    $areas_multi = (isset($filters['areas']) && is_array($filters['areas'])) ? array_values(array_filter(array_map('strval', $filters['areas']), fn($v)=>$v!=='')) : [];
     // version/date are handled via sort, not filters
 
     if ($edad !== null && $edad > 0) {
@@ -40,7 +41,13 @@ function cdc_get_kits($pdo, $search = '', $limit = 12, $offset = 0, $filters = [
     }
     if ($con_video) { $where[] = "k.video_portada IS NOT NULL AND k.video_portada <> ''"; }
     if ($con_imagen) { $where[] = "k.imagen_portada IS NOT NULL AND k.imagen_portada <> ''"; }
-    if ($area_slug !== '') { $where[] = "a.slug = ?"; $params[] = $area_slug; }
+    if (!empty($areas_multi)) {
+        $placeholders = implode(',', array_fill(0, count($areas_multi), '?'));
+        $where[] = "a.slug IN (" . $placeholders . ")";
+        $params = array_merge($params, $areas_multi);
+    } elseif ($area_slug !== '') {
+        $where[] = "a.slug = ?"; $params[] = $area_slug;
+    }
     // Determine ORDER BY
     $orderBy = "ORDER BY k.updated_at DESC, k.id DESC";
     if ($sort === 'version') {
@@ -84,6 +91,7 @@ function cdc_count_kits($pdo, $search = '', $filters = []) {
     $con_video = !empty($filters['con_video']);
     $con_imagen = !empty($filters['con_imagen']);
     $area_slug = isset($filters['area']) ? trim((string)$filters['area']) : '';
+    $areas_multi = (isset($filters['areas']) && is_array($filters['areas'])) ? array_values(array_filter(array_map('strval', $filters['areas']), fn($v)=>$v!=='')) : [];
     // version/date are not filters in count
 
     if ($edad !== null && $edad > 0) {
@@ -93,7 +101,13 @@ function cdc_count_kits($pdo, $search = '', $filters = []) {
     }
     if ($con_video) { $where[] = "video_portada IS NOT NULL AND video_portada <> ''"; }
     if ($con_imagen) { $where[] = "imagen_portada IS NOT NULL AND imagen_portada <> ''"; }
-    if ($area_slug !== '') { $where[] = "a.slug = ?"; $params[] = $area_slug; }
+    if (!empty($areas_multi)) {
+        $placeholders = implode(',', array_fill(0, count($areas_multi), '?'));
+        $where[] = "a.slug IN (" . $placeholders . ")";
+        $params = array_merge($params, $areas_multi);
+    } elseif ($area_slug !== '') {
+        $where[] = "a.slug = ?"; $params[] = $area_slug;
+    }
     // no-op for version/date
     $sql = "SELECT COUNT(DISTINCT k.id) AS total FROM kits k " . implode(' ', array_unique($joins)) . " WHERE " . implode(' AND ', $where);
     $stmt = $pdo->prepare($sql);
@@ -109,8 +123,18 @@ $filters = [
     'edad' => (isset($_GET['edad']) && trim((string)$_GET['edad']) !== '') ? (int)$_GET['edad'] : null,
     'con_video' => isset($_GET['con_video']) && $_GET['con_video'] === '1',
     'con_imagen' => isset($_GET['con_imagen']) && $_GET['con_imagen'] === '1',
-    'area' => isset($_GET['area']) ? trim((string)$_GET['area']) : '',
 ];
+// Soporta áreas múltiples: area[]=slug o area=a,b
+$parse_multi = function($key) {
+    if (!isset($_GET[$key])) return [];
+    $raw = $_GET[$key];
+    if (is_array($raw)) return array_values(array_filter(array_map('strval', $raw), fn($v)=>$v!==''));
+    $str = (string)$raw; if ($str==='') return [];
+    return array_values(array_filter(array_map('trim', explode(',', $str)), fn($v)=>$v!==''));
+};
+$areas_in = $parse_multi('area');
+if (!empty($areas_in)) { $filters['areas'] = $areas_in; }
+elseif (isset($_GET['area']) && $_GET['area'] !== '') { $filters['area'] = trim((string)$_GET['area']); }
 $sort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'recientes';
 $current_page = get_current_page();
 $offset = get_offset($current_page);
@@ -151,13 +175,9 @@ include 'includes/header.php';
                     </div>
                 </div>
                 <div class="filter-group">
-                    <label for="area">Área</label>
-                    <select id="area" name="area">
-                        <option value="">Todas las áreas</option>
-                        <?php foreach ($areas as $ar): ?>
-                            <option value="<?= h($ar['slug']) ?>" <?= ($filters['area'] === $ar['slug']) ? 'selected' : '' ?>><?= h($ar['nombre']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label class="filter-title" style="display:block; margin-bottom:6px;">Área</label>
+                    <div id="cdc-area-taginput" class="tag-input" data-name="area[]"></div>
+                    <small class="help-text" style="color: var(--color-text-muted);">Escribe para buscar áreas y presiona Enter.</small>
                 </div>
                 <div class="filter-group">
                     <label for="sort">Ordenar por</label>
@@ -261,5 +281,105 @@ console.log('✅ [kits] Kits cargados:', <?= count($kits) ?>, 'de', <?= (int)$to
 console.log('🔍 [kits] Filtros:', <?= json_encode($filters) ?>);
 console.log('🔀 [kits] Sort:', <?= json_encode($sort) ?>);
 if (<?= json_encode($filters['edad'] === null) ?>) { console.log('⚠️ [kits] Filtro edad vacío, no aplicado'); }
+
+// Tag Input for Áreas (multi-select autocomplete + chips)
+(function(){
+    const container = document.getElementById('cdc-area-taginput');
+    if (!container) return;
+    const nameAttr = container.getAttribute('data-name') || 'area[]';
+    const OPTIONS = <?= json_encode(array_map(function($a){ return ['slug'=>$a['slug'], 'nombre'=>$a['nombre']]; }, $areas)) ?>;
+    const SELECTED = <?= json_encode($filters['areas'] ?? (isset($filters['area'])?[(string)$filters['area']]:[])) ?>;
+
+    console.log('🔍 [kits area-taginput] Opciones:', OPTIONS.length);
+    console.log('🔍 [kits area-taginput] Seleccionadas iniciales:', SELECTED);
+
+    const normalize = (s) => (s||'').toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,' ').trim();
+
+    container.classList.add('ti');
+    container.innerHTML = '<div class="ti-chips"></div><input type="text" class="ti-input" placeholder="Escribe un área..." autocomplete="off" /><div class="ti-suggestions" style="display:none;"></div>';
+    const chipsEl = container.querySelector('.ti-chips');
+    const inputEl = container.querySelector('.ti-input');
+    const suggEl = container.querySelector('.ti-suggestions');
+
+    const hiddenInputs = new Map(); // slug -> input
+    const selectedSet = new Set();
+
+    function renderChip(slug, label){
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = label;
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'chip-remove';
+        close.setAttribute('aria-label','Quitar área');
+        close.textContent = '×';
+        close.addEventListener('click', () => removeValue(slug));
+        chip.appendChild(close);
+        chipsEl.appendChild(chip);
+    }
+
+    function addValue(slug){
+        if (selectedSet.has(slug)) return;
+        const opt = OPTIONS.find(o=>o.slug===slug);
+        if (!opt) return;
+        selectedSet.add(slug);
+        const hi = document.createElement('input');
+        hi.type = 'hidden'; hi.name = nameAttr; hi.value = slug;
+        container.appendChild(hi);
+        hiddenInputs.set(slug, hi);
+        renderChip(slug, opt.nombre);
+        console.log('✅ [kits area-taginput] Añadida:', slug);
+    }
+
+    function removeValue(slug){
+        if (!selectedSet.has(slug)) return;
+        selectedSet.delete(slug);
+        const hi = hiddenInputs.get(slug); if (hi) { hi.remove(); hiddenInputs.delete(slug); }
+        chipsEl.querySelectorAll('.chip').forEach(ch=>{
+            if (ch.firstChild && ch.firstChild.nodeType===3 && normalize(ch.firstChild.textContent) === normalize(OPTIONS.find(o=>o.slug===slug)?.nombre||'')) ch.remove();
+        });
+        console.log('⚠️ [kits area-taginput] Removida:', slug);
+    }
+
+    function showSuggestions(list){
+        if (!list.length){ suggEl.style.display='none'; suggEl.innerHTML=''; return; }
+        suggEl.innerHTML = list.map(o=>`<div class="ti-item" data-slug="${o.slug}">${o.nombre}</div>`).join('');
+        suggEl.style.display='block';
+    }
+
+    function filterOptions(q){
+        const qn = normalize(q);
+        if (!qn) return OPTIONS.filter(o=>!selectedSet.has(o.slug)).slice(0,8);
+        return OPTIONS.filter(o=>!selectedSet.has(o.slug) && normalize(o.nombre).includes(qn)).slice(0,8);
+    }
+
+    suggEl.addEventListener('click', (e)=>{
+        const item = e.target.closest('.ti-item');
+        if (!item) return;
+        addValue(item.getAttribute('data-slug'));
+        inputEl.value=''; suggEl.style.display='none';
+        inputEl.focus();
+    });
+
+    inputEl.addEventListener('input', ()=>{
+        const list = filterOptions(inputEl.value);
+        console.log('🔍 [kits area-taginput] Sugerencias:', list.length);
+        showSuggestions(list);
+    });
+    inputEl.addEventListener('keydown', (e)=>{
+        if (e.key==='Enter'){
+            e.preventDefault();
+            const list = filterOptions(inputEl.value);
+            if (list.length){ addValue(list[0].slug); inputEl.value=''; showSuggestions([]); }
+        } else if (e.key==='Backspace' && !inputEl.value) {
+            const last = Array.from(selectedSet).pop();
+            if (last) removeValue(last);
+        }
+    });
+
+    (SELECTED||[]).forEach(s=> addValue(String(s)));
+})();
 </script>
 <?php include 'includes/footer.php'; ?>
