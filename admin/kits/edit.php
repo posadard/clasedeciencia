@@ -35,6 +35,15 @@ try {
   $clases = [];
 }
 
+// Áreas para asignación (similar a admin/clases/edit.php)
+$areas = [];
+$existing_area_ids = [];
+try {
+  $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
+  echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:",' . count($areas) . ' , ")</script>';
+} catch (PDOException $e) { $areas = []; }
+
+
 if ($is_edit) {
   try {
     $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
@@ -54,6 +63,12 @@ if ($is_edit) {
     if (empty($existing_clase_ids) && !empty($kit['clase_id'])) {
       $existing_clase_ids = [(int)$kit['clase_id']];
     }
+  } catch (PDOException $e) {}
+  // Áreas existentes del kit
+  try {
+    $st = $pdo->prepare('SELECT area_id FROM kits_areas WHERE kit_id = ?');
+    $st->execute([$id]);
+    $existing_area_ids = $st->fetchAll(PDO::FETCH_COLUMN);
   } catch (PDOException $e) {}
 }
 
@@ -360,6 +375,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $seg_notas = isset($_POST['seg_notas']) ? trim((string)$_POST['seg_notas']) : '';
       if ($seg_notas === '') { $seg_notas = null; }
       $seguridad_json = null;
+        // Áreas seleccionadas
+        $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
+        echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:",' . json_encode($areas_sel) . ' , ")</script>';
+
       if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
         $seguridad_json = json_encode([
           'edad_min' => $seg_edad_min,
@@ -426,7 +445,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               $is_edit = true;
             }
 
-            // Actualizar relaciones en clase_kits
+            // Actualizar relaciones en clase_kits y kits_areas
             try {
               $pdo->prepare('DELETE FROM clase_kits WHERE kit_id = ?')->execute([$id]);
               if (!empty($clases_sel)) {
@@ -441,8 +460,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('INSERT INTO clase_kits (clase_id, kit_id, sort_order, es_principal) VALUES (?,?,?,1)')
                     ->execute([$principal_clase_id, $id, 1]);
               }
+              // Guardar áreas del kit (many-to-many)
+              $pdo->prepare('DELETE FROM kits_areas WHERE kit_id = ?')->execute([$id]);
+              if (!empty($areas_sel)) {
+                $insA = $pdo->prepare('INSERT INTO kits_areas (kit_id, area_id) VALUES (?, ?)');
+                foreach ($areas_sel as $aid) { if ($aid > 0) { $insA->execute([$id, (int)$aid]); } }
+              }
               $pdo->commit();
-              echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits guardados");</script>';
+              echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>';
             } catch (PDOException $e) {
               if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
               throw $e;
@@ -669,6 +694,17 @@ include '../header.php';
     <label for="contenido_html">Contenido HTML</label>
     <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
+  </div>
+  <!-- Taxonomías -->
+  <div class="form-section">
+    <h2>Taxonomías</h2>
+    <h3 style="margin-top:.5rem">Áreas</h3>
+    <div class="checkbox-grid">
+      <?php foreach ($areas as $a): ?>
+        <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
+      <?php endforeach; ?>
+    </div>
+    <small class="hint">Selecciona las áreas temáticas del kit.</small>
   </div>
   <div class="actions" style="margin-top:1rem;">
     <button type="submit" class="btn">Guardar</button>
