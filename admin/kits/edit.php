@@ -40,7 +40,7 @@ $areas = [];
 $existing_area_ids = [];
 try {
   $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
-  echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:",' . count($areas) . ' , ")</script>';
+  echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:", ' . (int)count($areas) . ');</script>';
 } catch (PDOException $e) { $areas = []; }
 
 
@@ -377,7 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $seguridad_json = null;
         // Áreas seleccionadas
         $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
-        echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:",' . json_encode($areas_sel) . ' , ")</script>';
+        echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>';
 
       if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
         $seguridad_json = json_encode([
@@ -1107,7 +1107,7 @@ include '../header.php';
       });
     })();
   </script>
-  <?php endif; ?>
+  
 <script>
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
   console.log('🔍 [KitsEdit] Items disponibles:', <?= count($items) ?>);
@@ -1594,8 +1594,6 @@ include '../header.php';
     });
   })();
 </script>
-<?php endif; ?>
-<?php /* Grid-based ficha técnica removed in favor of chips UI */ ?>
 <!-- Editor: CKEditor 4 for Kit contenido_html (match Clases) -->
 <script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
 <script>
@@ -1718,4 +1716,5 @@ include '../header.php';
     updateHidden();
   })();
 </script>
+<?php endif; ?>
 <?php include '../footer.php'; ?>
