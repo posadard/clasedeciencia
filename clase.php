@@ -424,7 +424,7 @@ include 'includes/header.php';
                         <!-- Código eliminado por no ser necesario en la vista pública -->
                     </div>
                     <?php if (!empty($materiales_por_kit[$kit['id']])): ?>
-                        <h4>Componentes incluidos:</h4>
+                        <h4>Componentes necesarios</h4>
                         <ul class="materials-list">
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
                                 <li>
@@ -674,6 +674,7 @@ console.log('✅ [Clase] Cargada:', <?= json_encode(['id'=>$proyecto['id'],'nomb
 console.log('📚 [Clase] Áreas:', <?= count($areas) ?>);
 console.log('🎓 [Clase] Competencias:', <?= count($competencias) ?>);
 console.log('📦 [Clase] Kits:', <?= count($kits) ?>);
+console.log('🧩 [Clase] Componentes: título "Componentes necesarios"');
 console.log('🎞️ [Clase] Recursos:', <?= count($recursos) ?>);
 console.log('🏷️ [Clase] Tags:', <?= count($tags) ?>);
 console.log('🔗 [Clase] Relacionadas:', <?= count($clases_relacionadas) ?>);
