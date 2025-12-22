@@ -159,6 +159,12 @@ include 'includes/header.php';
             <h2>Búsqueda</h2>
             <?php $areas = cdc_get_areas($pdo); ?>
             <form method="get" action="/kits" class="filters-form">
+                <!-- Área primero (como en clases.php) -->
+                <div class="filter-group">
+                    <label class="filter-title" style="display:block; margin-bottom:6px;">Área</label>
+                    <div id="cdc-area-taginput" class="tag-input" data-name="area[]"></div>
+                    <small class="help-text" style="color: var(--color-text-muted);">Escribe para buscar áreas y presiona Enter.</small>
+                </div>
                 <div class="filter-group">
                     <label for="q">Nombre o código</label>
                     <input type="search" id="q" name="q" value="<?= h($q) ?>" placeholder="Buscar kits..." />
@@ -174,20 +180,7 @@ include 'includes/header.php';
                         <label><input type="checkbox" name="con_imagen" value="1" <?= !empty($filters['con_imagen'])?'checked':'' ?> /> Con imagen</label>
                     </div>
                 </div>
-                <div class="filter-group">
-                    <label class="filter-title" style="display:block; margin-bottom:6px;">Área</label>
-                    <div id="cdc-area-taginput" class="tag-input" data-name="area[]"></div>
-                    <small class="help-text" style="color: var(--color-text-muted);">Escribe para buscar áreas y presiona Enter.</small>
-                </div>
-                <div class="filter-group">
-                    <label for="sort">Ordenar por</label>
-                    <select id="sort" name="sort">
-                        <option value="recientes" <?= $sort==='recientes'?'selected':'' ?>>Recientes (fecha)</option>
-                        <option value="version" <?= $sort==='version'?'selected':'' ?>>Versión (mayor primero)</option>
-                        <option value="clases" <?= $sort==='clases'?'selected':'' ?>>Más clases vinculadas</option>
-                        <option value="componentes" <?= $sort==='componentes'?'selected':'' ?>>Más componentes</option>
-                    </select>
-                </div>
+                
                 <div class="filter-actions">
                     <button type="submit" class="btn btn-primary">Buscar</button>
                     <a href="/kits" class="btn btn-secondary">Limpiar</a>
@@ -208,6 +201,17 @@ include 'includes/header.php';
                         (Página <?= get_current_page() ?> de <?= ceil($total / POSTS_PER_PAGE) ?>)
                     <?php endif; ?>
                 </p>
+                <!-- Sort en cabecera (como clases.php) -->
+                <div class="sort-selector">
+                    <label for="sort">Ordenar por:</label>
+                    <select name="sort" id="sort" onchange="updateSort(this.value)">
+                        <option value="recomendados" <?= (!isset($_GET['sort']) || $_GET['sort'] === 'recomendados') ? 'selected' : '' ?>>📌 Recomendados primero</option>
+                        <option value="recientes" <?= (isset($_GET['sort']) && $_GET['sort'] === 'recientes') ? 'selected' : '' ?>>🕐 Más recientes</option>
+                        <option value="version" <?= (isset($_GET['sort']) && $_GET['sort'] === 'version') ? 'selected' : '' ?>>🔢 Versión (mayor primero)</option>
+                        <option value="clases" <?= (isset($_GET['sort']) && $_GET['sort'] === 'clases') ? 'selected' : '' ?>>👩‍🏫 Más clases vinculadas</option>
+                        <option value="componentes" <?= (isset($_GET['sort']) && $_GET['sort'] === 'componentes') ? 'selected' : '' ?>>🧪 Más componentes</option>
+                    </select>
+                </div>
             </div>
 
             <?php if (empty($kits)): ?>
@@ -281,6 +285,12 @@ console.log('✅ [kits] Kits cargados:', <?= count($kits) ?>, 'de', <?= (int)$to
 console.log('🔍 [kits] Filtros:', <?= json_encode($filters) ?>);
 console.log('🔀 [kits] Sort:', <?= json_encode($sort) ?>);
 if (<?= json_encode($filters['edad'] === null) ?>) { console.log('⚠️ [kits] Filtro edad vacío, no aplicado'); }
+
+function updateSort(sortValue) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', sortValue);
+    window.location.href = url.toString();
+}
 
 // Tag Input for Áreas (multi-select autocomplete + chips)
 (function(){
