@@ -280,7 +280,7 @@ include 'includes/header.php';
     <?php if (!empty($componentes)): ?>
     <section class="kits-section">
       <div class="kit-card">
-        <h4>Componentes incluidos:</h4>
+        <h4>Componentes necesarios</h4>
         <ul class="materials-list">
           <?php foreach ($componentes as $m): ?>
             <li>
@@ -383,6 +383,7 @@ console.log('✅ [Kit] Cargado:', <?= json_encode(['id'=>$kit['id'],'nombre'=>$k
 console.log('📦 [Kit] Componentes:', <?= count($componentes) ?>);
 console.log('⚙️ [Kit] Orden: componentes antes de contenido_html');
 console.log('✅ [Kit] Componentes estilo clase.php aplicados');
+console.log('🧩 [Kit] Componentes: título "Componentes necesarios"');
 console.log('🛠️ [Kit] Manuales movidos después de contenido_html');
 console.log('📚 [Kit] Clases vinculadas:', <?= count($clases) ?>);
 console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
