@@ -194,17 +194,19 @@ include 'includes/header.php';
     $renderSection = function ($titulo, $items, $type) {
         if (empty($items)) return;
         echo '<section class="search-section">';
-        echo '<div class="search-section-header" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">';
+        echo '<div class="search-section-header">';
+        echo '<div class="search-section-top" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">';
         echo '<h2 style="margin:0;">' . h($titulo) . ' (' . count($items) . ')</h2>';
         $btnLabel = 'Ver relacionados';
-        echo '<div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">';
-        echo '<button type="button" class="btn btn-secondary related-btn" onclick="window.cdcSearchRedirect(\'' . h($type) . '\')" title="' . h($btnLabel) . '" style="display:inline-flex; align-items:center; gap:8px;">'
+        echo '<button type="button" class="btn btn-primary related-btn" onclick="window.cdcSearchRedirect(\'' . h($type) . '\')" title="' . h($btnLabel) . '" style="display:inline-flex; align-items:center; gap:8px;">'
             . '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'
             . '<circle cx="11" cy="11" r="8"></circle>'
             . '<path d="m21 21-4.35-4.35"></path>'
             . '</svg>'
             . h($btnLabel)
             . '</button>';
+        echo '</div>';
+        echo '<div class="search-section-chips" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:6px;">';
         // Chips de filtro por áreas/categorías si hay múltiples
         if ($type === 'clase' && !empty($top_area_slugs)) {
             foreach ($top_area_slugs as $aslug) {
