@@ -359,6 +359,11 @@ include 'includes/header.php';
           <a href="/<?= h($c['slug']) ?>" class="related-card">
             <?php if (!empty($c['imagen_portada'])): ?>
               <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Kit] Miniatura relacionada falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+            <?php else: ?>
+              <div class="thumbnail-placeholder">
+                <span class="placeholder-icon">🔬</span>
+              </div>
+              <script>console.log('⚠️ [Kit] Miniatura relacionada sin imagen, usando placeholder');</script>
             <?php endif; ?>
             <div class="related-info">
               <h4><?= h($c['nombre']) ?></h4>

@@ -492,7 +492,14 @@ include 'includes/header.php';
                 <?php foreach ($recursos as $r): ?>
                     <?php if ($r['tipo'] === 'imagen'): ?>
                         <div class="media-item">
-                            <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" onerror="this.onerror=null; console.log('❌ [Clase] Recurso imagen falló'); var p=document.createElement('div'); p.className='gallery-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+                            <?php if (!empty($r['url'])): ?>
+                                <img src="<?= h($r['url']) ?>" alt="<?= h($r['titulo'] ?? 'Imagen') ?>" onerror="this.onerror=null; console.log('❌ [Clase] Recurso imagen falló'); var p=document.createElement('div'); p.className='gallery-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+                            <?php else: ?>
+                                <div class="gallery-placeholder">
+                                    <span class="placeholder-icon">🔬</span>
+                                </div>
+                                <script>console.log('⚠️ [Clase] Recurso imagen sin URL, usando placeholder');</script>
+                            <?php endif; ?>
                             <?php if (!empty($r['titulo'])): ?>
                                 <p class="media-caption"><?= h($r['titulo']) ?></p>
                             <?php endif; ?>
@@ -581,6 +588,11 @@ include 'includes/header.php';
                     <a href="/<?= h($rel['slug']) ?>" class="related-card">
                         <?php if (!empty($rel['imagen_portada'])): ?>
                             <img src="<?= h($rel['imagen_portada']) ?>" alt="<?= h($rel['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura relacionada falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+                        <?php else: ?>
+                            <div class="thumbnail-placeholder">
+                                <span class="placeholder-icon">🔬</span>
+                            </div>
+                            <script>console.log('⚠️ [Clase] Miniatura relacionada sin imagen, usando placeholder');</script>
                         <?php endif; ?>
                         <div class="related-info">
                             <h4><?= h($rel['nombre']) ?></h4>
