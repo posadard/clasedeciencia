@@ -106,12 +106,20 @@ try {
         $top_area_slugs = array_slice(array_keys($area_counts), 0, 3);
     }
 
-    // KITS (similar a api/kits-data.php)
-    $stmtK = $pdo->query("SELECT k.id, k.nombre, k.slug, k.codigo FROM kits k WHERE k.activo = 1 ORDER BY k.updated_at DESC, k.id DESC");
+    // KITS (similar a api/kits-data.php) + áreas para relacionados
+    $stmtK = $pdo->query("\n        SELECT k.id, k.nombre, k.slug, k.codigo,\n               GROUP_CONCAT(DISTINCT a.slug ORDER BY a.slug SEPARATOR ',') AS areas_slugs,\n               GROUP_CONCAT(DISTINCT a.nombre ORDER BY a.nombre SEPARATOR ', ') AS areas\n        FROM kits k\n        LEFT JOIN kits_areas ka ON ka.kit_id = k.id\n        LEFT JOIN areas a ON a.id = ka.area_id\n        WHERE k.activo = 1\n        GROUP BY k.id\n        ORDER BY k.updated_at DESC, k.id DESC\n    ");
     $kits = $stmtK->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $kit_area_counts = [];
     foreach ($kits as $k) {
-        $st = $normalize(($k['nombre'] ?? '') . ' ' . ($k['codigo'] ?? '') . ' kit');
+        $st = $normalize(($k['nombre'] ?? '') . ' ' . ($k['codigo'] ?? '') . ' kit ' . ($k['areas'] ?? ''));
         if ($qn === '' || ($st !== '' && strpos($st, $qn) !== false)) {
+            // acumular áreas de kits
+            $kareas = isset($k['areas_slugs']) && $k['areas_slugs'] !== '' ? explode(',', $k['areas_slugs']) : [];
+            foreach ($kareas as $as) {
+                $as = trim($as);
+                if ($as === '') continue;
+                $kit_area_counts[$as] = ($kit_area_counts[$as] ?? 0) + 1;
+            }
             $resultados['kits'][] = [
                 'type' => 'kit',
                 'title' => $k['nombre'] ?? '',
@@ -119,6 +127,14 @@ try {
                 'description' => !empty($k['codigo']) ? ('Código: ' . $k['codigo']) : ''
             ];
         }
+    }
+    // áreas más frecuentes entre resultados de kits (top 3)
+    $kit_top_area_slug = '';
+    $kit_top_area_slugs = [];
+    if (!empty($kit_area_counts)) {
+        arsort($kit_area_counts);
+        $kit_top_area_slug = (string) array_key_first($kit_area_counts);
+        $kit_top_area_slugs = array_slice(array_keys($kit_area_counts), 0, 3);
     }
 
     // COMPONENTES (similar a api/componentes-data.php)
@@ -198,6 +214,15 @@ include 'includes/header.php';
                     . h($label) . '</a>';
             }
         }
+        // Chips de áreas para Kits
+        if ($type === 'kit' && !empty($kit_top_area_slugs)) {
+            foreach ($kit_top_area_slugs as $aslug) {
+                $label = $areas_map[$aslug] ?? (ucfirst(str_replace('-', ' ', $aslug)));
+                $href = '/kits?area=' . urlencode($aslug);
+                echo '<a href="' . h($href) . '" class="btn btn-light" style="padding:6px 10px; font-size:12px;">'
+                    . h($label) . '</a>';
+            }
+        }
         if ($type === 'componente' && !empty($top_cat_slugs)) {
             foreach ($top_cat_slugs as $cslug) {
                 $label = $cat_names[$cslug] ?? (ucfirst(str_replace('-', ' ', $cslug)));
@@ -246,7 +271,9 @@ window.cdcRelated = {
     clase_area: <?= json_encode($top_area_slug ?? '') ?>,
     componente_categoria: <?= json_encode($top_cat_slug ?? '') ?>,
     clase_areas_top: <?= json_encode($top_area_slugs ?? []) ?>,
-    comp_categorias_top: <?= json_encode($top_cat_slugs ?? []) ?>
+    comp_categorias_top: <?= json_encode($top_cat_slugs ?? []) ?>,
+    kit_area: <?= json_encode($kit_top_area_slug ?? '') ?>,
+    kit_areas_top: <?= json_encode($kit_top_area_slugs ?? []) ?>
 };
 
 // Botones de búsqueda relacionada por tipo con parseo inteligente del query
@@ -317,8 +344,16 @@ window.cdcRelated = {
             return;
         }
         if (type === 'kit') {
-            const url = buildUrl('/kits', { q: query });
-            console.log('✅ [buscar] Redirigiendo a Kits:', url);
+            // Redirigir a /kits usando únicamente áreas como filtros (area[])
+            const usp = new URLSearchParams();
+            const topAreasK = (window.cdcRelated && Array.isArray(window.cdcRelated.kit_areas_top)) ? window.cdcRelated.kit_areas_top : [];
+            const fallbackAreaK = (window.cdcRelated && window.cdcRelated.kit_area) ? window.cdcRelated.kit_area : '';
+            const areasToUse = topAreasK.length ? topAreasK : (intent.area ? [intent.area] : (fallbackAreaK ? [fallbackAreaK] : []));
+
+            areasToUse.forEach(a => { if (a) usp.append('area[]', a); });
+            const url = '/kits' + (usp.toString() ? ('?' + usp.toString()) : '');
+            console.log('✅ [buscar] Redirigiendo a Kits solo con áreas:', areasToUse);
+            console.log('📡 [buscar] URL:', url);
             window.location.href = url;
             return;
         }
