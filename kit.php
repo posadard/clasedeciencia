@@ -97,25 +97,10 @@ $canonical_url = SITE_URL . '/' . urlencode($kit['slug']);
 
 include 'includes/header.php';
 ?>
-<div class="container article-page kit-page">
+<div class="container article-page">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / <a href="/kits">Kits</a> / <strong><?= h($kit['nombre']) ?></strong>
   </div>
-
-  <style>
-    /* Compact spacing for kit page only */
-    .kit-page .clase-summary-card { margin: 12px 0; }
-    .kit-page .summary-content { gap: 12px; }
-    .kit-page .summary-right .summary-specs { margin-top: 6px; }
-    .kit-page .summary-image { max-height: 180px; object-fit: cover; }
-    .kit-page .resumen-section .lead { margin: 10px 0 16px; }
-    .kit-page .intro-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .kit-page .video-portada-section .video-wrapper { aspect-ratio: 16 / 9; }
-    .kit-page .materials-list { margin: 8px 0; padding: 0; }
-    .kit-page .materials-list li { margin: 0; padding: 6px 0; border-bottom: 1px solid #eee; }
-    .kit-page .materials-list li:last-child { border-bottom: 0; }
-    .kit-page .related-card { padding: 8px; }
-  </style>
 
   <!-- Card de Resumen del Kit (mismo layout que clase) -->
   <div class="clase-summary-card">
@@ -394,6 +379,7 @@ include 'includes/header.php';
 console.log('🔍 [Kit] Slug:', '<?= h($slug) ?>');
 console.log('✅ [Kit] Cargado:', <?= json_encode(['id'=>$kit['id'],'nombre'=>$kit['nombre'],'codigo'=>$kit['codigo']]) ?>);
 console.log('📦 [Kit] Componentes:', <?= count($componentes) ?>);
+console.log('⚙️ [Kit] Orden: componentes antes de contenido_html');
 console.log('📚 [Kit] Clases vinculadas:', <?= count($clases) ?>);
 console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 </script>
