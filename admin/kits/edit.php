@@ -1014,7 +1014,7 @@ include '../header.php';
               data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
               data-values="<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>"
             >✏️</button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
+            <form method="POST" style="display:inline;">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
               <input type="hidden" name="action" value="delete_attr" />
               <input type="hidden" name="def_id" value="<?= $aid ?>" />
