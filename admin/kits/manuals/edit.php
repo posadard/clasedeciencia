@@ -182,8 +182,17 @@ if (!$kit) {
     </div>
 
     <div class="form-group">
-      <label>Pasos (JSON)</label>
-      <textarea name="pasos_json" rows="8" placeholder='[ {"orden":1, "titulo":"Paso 1", "descripcion":"..."} ]'><?= htmlspecialchars($manual['pasos_json'] ?? '') ?></textarea>
+      <label>Pasos</label>
+      <div id="steps-builder">
+        <div class="steps-toolbar">
+          <button type="button" class="btn btn-primary" id="add-step-btn">+ Añadir Paso</button>
+          <button type="button" class="btn" id="expand-all-btn">Expandir todo</button>
+          <button type="button" class="btn" id="collapse-all-btn">Colapsar todo</button>
+        </div>
+        <ul id="steps-list" class="steps-list"></ul>
+        <p class="help-note">Los pasos se guardan como bloques HTML ordenados. Se serializan a JSON antes de enviar.</p>
+      </div>
+      <textarea name="pasos_json" id="pasos_json" rows="8" style="display:none;" placeholder='[ {"orden":1, "titulo":"Paso 1", "html":"<p>...</p>"} ]'><?= htmlspecialchars($manual['pasos_json'] ?? '') ?></textarea>
     </div>
     <div class="form-group">
       <label>Herramientas (JSON)</label>
@@ -211,4 +220,203 @@ if (!$kit) {
 <?php require_once __DIR__ . '/../../footer.php'; ?>
 <script>
 console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', <?= (int)$kit_id ?>);
+
+// --- Step Builder (CKEditor via CDN, no installs) ---
+(function() {
+  const pasosTextarea = document.getElementById('pasos_json');
+  const stepsList = document.getElementById('steps-list');
+  const addBtn = document.getElementById('add-step-btn');
+  const expandBtn = document.getElementById('expand-all-btn');
+  const collapseBtn = document.getElementById('collapse-all-btn');
+
+  let steps = [];
+  let editorInstance = null;
+  let modalState = { mode: 'create', index: -1 };
+
+  function safeParseJSON(raw) {
+    try { return raw ? JSON.parse(raw) : []; } catch (e) { console.log('⚠️ [ManualsEdit] JSON pasos inválido, se reinicia:', e.message); return []; }
+  }
+
+  function normalizeStep(step, idx) {
+    const orden = (typeof step.orden === 'number' ? step.orden : (idx + 1));
+    const titulo = (step.titulo && String(step.titulo).trim()) || ('Paso ' + orden);
+    // Map posible "descripcion" a "html"
+    let html = step.html || '';
+    if (!html && step.descripcion) {
+      html = '<p>' + String(step.descripcion).replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>';
+    }
+    return { orden, titulo, html };
+  }
+
+  function sortByOrden(a, b) { return (a.orden || 0) - (b.orden || 0); }
+
+  function renumber() {
+    steps.forEach((s, i) => { s.orden = i + 1; });
+  }
+
+  function renderSteps() {
+    steps.sort(sortByOrden);
+    stepsList.innerHTML = '';
+    steps.forEach((s, i) => {
+      const li = document.createElement('li');
+      li.className = 'step-item';
+      li.setAttribute('data-index', String(i));
+
+      const header = document.createElement('div');
+      header.className = 'step-header';
+      header.innerHTML = `
+        <span class="step-order">#${s.orden}</span>
+        <span class="step-title">${escapeHTML(s.titulo)}</span>
+        <div class="step-actions">
+          <button type="button" class="btn btn-sm" data-action="up">↑</button>
+          <button type="button" class="btn btn-sm" data-action="down">↓</button>
+          <button type="button" class="btn btn-sm" data-action="edit">Editar</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete">Eliminar</button>
+          <button type="button" class="btn btn-sm" data-action="toggle">Mostrar/Ocultar</button>
+        </div>
+      `;
+
+      const body = document.createElement('div');
+      body.className = 'step-body';
+      body.innerHTML = s.html || '<p class="muted">(Sin contenido)</p>';
+
+      li.appendChild(header);
+      li.appendChild(body);
+      stepsList.appendChild(li);
+    });
+    console.log('✅ [ManualsEdit] Renderizados', steps.length, 'pasos');
+  }
+
+  function escapeHTML(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function openEditorModal(initialTitle, initialHTML, mode, index) {
+    modalState = { mode, index };
+    ensureModal();
+    document.getElementById('modal-step-title').value = initialTitle || '';
+    const ta = document.getElementById('modal-step-html');
+    ta.value = initialHTML || '';
+    if (editorInstance) { try { editorInstance.destroy(); } catch(e) {} editorInstance = null; }
+    if (window.CKEDITOR) {
+      editorInstance = CKEDITOR.replace('modal-step-html');
+      console.log('🔍 [ManualsEdit] CKEditor inicializado (modo:', mode, ', idx:', index, ')');
+    } else {
+      console.log('⚠️ [ManualsEdit] CKEditor no cargado aún');
+    }
+    document.getElementById('step-modal').style.display = 'block';
+  }
+
+  function closeEditorModal() {
+    document.getElementById('step-modal').style.display = 'none';
+    if (editorInstance) { try { editorInstance.destroy(); } catch(e) {} editorInstance = null; }
+  }
+
+  function saveEditorModal() {
+    const title = document.getElementById('modal-step-title').value.trim() || 'Paso';
+    let html = document.getElementById('modal-step-html').value;
+    if (editorInstance && editorInstance.getData) {
+      html = editorInstance.getData();
+    }
+    if (modalState.mode === 'create') {
+      steps.push({ orden: steps.length + 1, titulo: title, html });
+      console.log('✅ [ManualsEdit] Paso creado');
+    } else if (modalState.mode === 'edit' && modalState.index >= 0) {
+      steps[modalState.index].titulo = title;
+      steps[modalState.index].html = html;
+      console.log('✅ [ManualsEdit] Paso actualizado idx', modalState.index);
+    }
+    renumber();
+    renderSteps();
+    closeEditorModal();
+  }
+
+  stepsList.addEventListener('click', function(ev) {
+    const btn = ev.target.closest('button');
+    if (!btn) return;
+    const li = ev.target.closest('.step-item');
+    const idx = parseInt(li.getAttribute('data-index'), 10);
+    const action = btn.getAttribute('data-action');
+    if (action === 'up' && idx > 0) {
+      const tmp = steps[idx-1]; steps[idx-1] = steps[idx]; steps[idx] = tmp; renumber(); renderSteps();
+      console.log('🔍 [ManualsEdit] Paso movido arriba idx', idx);
+    } else if (action === 'down' && idx < steps.length - 1) {
+      const tmp = steps[idx+1]; steps[idx+1] = steps[idx]; steps[idx] = tmp; renumber(); renderSteps();
+      console.log('🔍 [ManualsEdit] Paso movido abajo idx', idx);
+    } else if (action === 'delete') {
+      if (confirm('¿Eliminar este paso?')) { steps.splice(idx, 1); renumber(); renderSteps(); console.log('✅ [ManualsEdit] Paso eliminado idx', idx); }
+    } else if (action === 'edit') {
+      openEditorModal(steps[idx].titulo, steps[idx].html, 'edit', idx);
+    } else if (action === 'toggle') {
+      const body = li.querySelector('.step-body');
+      body.style.display = (body.style.display === 'none') ? '' : 'none';
+    }
+  });
+
+  addBtn.addEventListener('click', function() { openEditorModal('', '', 'create', -1); });
+  expandBtn.addEventListener('click', function(){ document.querySelectorAll('.step-body').forEach(el => el.style.display = ''); });
+  collapseBtn.addEventListener('click', function(){ document.querySelectorAll('.step-body').forEach(el => el.style.display = 'none'); });
+
+  // Before submit: serialize steps -> textarea
+  const form = document.querySelector('form');
+  form.addEventListener('submit', function() {
+    const payload = steps.map((s, i) => ({ orden: i+1, titulo: s.titulo, html: s.html }));
+    pasosTextarea.value = JSON.stringify(payload);
+    console.log('📦 [ManualsEdit] Serializado pasos_json bytes:', pasosTextarea.value.length);
+  });
+
+  // Initialize from existing JSON
+  steps = safeParseJSON(pasosTextarea.value).map(normalizeStep);
+  renumber();
+  renderSteps();
+})();
+
+// --- Modal markup ---
+(function(){
+  const modal = document.createElement('div');
+  modal.id = 'step-modal';
+  modal.style.display = 'none';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3>Editar Paso</h3>
+      <label>Título</label>
+      <input type="text" id="modal-step-title" />
+      <label>Contenido (HTML enriquecido)</label>
+      <textarea id="modal-step-html" rows="10"></textarea>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="modal-save-btn">Guardar Paso</button>
+        <button type="button" class="btn" id="modal-cancel-btn">Cancelar</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('modal-save-btn').addEventListener('click', function(){ saveEditorModal(); });
+  document.getElementById('modal-cancel-btn').addEventListener('click', function(){ closeEditorModal(); });
+})();
+
+// CKEditor CDN
+(function(){
+  const s = document.createElement('script');
+  s.src = 'https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js';
+  s.onload = function(){ console.log('✅ [ManualsEdit] CKEditor cargado'); };
+  s.onerror = function(){ console.log('❌ [ManualsEdit] Error cargando CKEditor CDN'); };
+  document.head.appendChild(s);
+})();
+</script>
+
+<style>
+/* Step Builder styles - compact, admin-friendly */
+.steps-toolbar { display:flex; gap:8px; margin-bottom:8px; }
+.steps-list { list-style:none; padding:0; margin:0; }
+.step-item { border:1px solid #ddd; margin-bottom:8px; border-radius:6px; overflow:hidden; }
+.step-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:6px 8px; }
+.step-order { font-weight:bold; margin-right:8px; }
+.step-title { flex:1; }
+.step-actions { display:flex; gap:6px; }
+.step-body { padding:8px; background:#fff; }
+.help-note { color:#666; font-size:12px; margin-top:6px; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:9999; }
+.modal-content { background:#fff; width:min(900px, 92vw); max-height:90vh; overflow:auto; padding:16px; border-radius:8px; }
+.modal-actions { display:flex; gap:8px; margin-top:8px; }
+</style>
 </script>

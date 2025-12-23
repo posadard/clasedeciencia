@@ -82,11 +82,35 @@ include 'includes/header.php';
       <?php if (!empty($seg)): ?>
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
-          <ul>
-            <?php foreach ($seg as $s): ?>
-              <li><?= h(is_array($s) ? json_encode($s, JSON_UNESCAPED_UNICODE) : $s) ?></li>
-            <?php endforeach; ?>
-          </ul>
+          <?php
+            // Formatos soportados:
+            // 1) ["Usa gafas", "Evita fuego"] -> lista simple
+            // 2) { edad: {min,max}, notas: [..] } o [ {edad:{..}, notas:[..]} ] -> render estructurado
+            $rendered = false;
+            $segIsAssoc = is_array($seg) && array_keys($seg) !== range(0, count($seg)-1);
+            $segObj = null;
+            if ($segIsAssoc) { $segObj = $seg; }
+            elseif (is_array($seg) && isset($seg[0]) && is_array($seg[0]) && (isset($seg[0]['edad']) || isset($seg[0]['notas']))) { $segObj = $seg[0]; }
+            if ($segObj && (isset($segObj['edad']) || isset($segObj['notas']))):
+              $edadMin = isset($segObj['edad']['min']) ? (int)$segObj['edad']['min'] : null;
+              $edadMax = isset($segObj['edad']['max']) ? (int)$segObj['edad']['max'] : null;
+          ?>
+              <div class="kit-security-chip">Edad segura: <?= ($edadMin !== null ? $edadMin : '?') ?>–<?= ($edadMax !== null ? $edadMax : '?') ?> años</div>
+              <?php if (!empty($segObj['notas']) && is_array($segObj['notas'])): ?>
+                <ul>
+                  <?php foreach ($segObj['notas'] as $nota): ?>
+                    <li><?= h($nota) ?></li>
+                  <?php endforeach; ?>
+                </ul>
+              <?php endif; ?>
+              <?php $rendered = true; endif; ?>
+          <?php if (!$rendered): ?>
+            <ul>
+              <?php foreach ($seg as $s): ?>
+                <li><?= h(is_array($s) ? json_encode($s, JSON_UNESCAPED_UNICODE) : $s) ?></li>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
         </section>
       <?php endif; ?>
 
@@ -104,15 +128,21 @@ include 'includes/header.php';
       <?php if (!empty($pasos)): ?>
         <section>
           <h2>📋 Pasos</h2>
-          <ol>
+          <ol class="manual-steps">
             <?php foreach ($pasos as $idx => $p): ?>
-              <li>
-                <strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong>
-                <?php if (!empty($p['descripcion'])): ?>
-                  <p><?= h($p['descripcion']) ?></p>
-                <?php elseif (!empty($p['texto'])): ?>
-                  <p><?= h($p['texto']) ?></p>
-                <?php endif; ?>
+              <li class="manual-step">
+                <div class="step-head"><strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong></div>
+                <div class="step-body">
+                  <?php if (!empty($p['html'])): ?>
+                    <?= $p['html'] ?>
+                  <?php elseif (!empty($p['descripcion'])): ?>
+                    <p><?= h($p['descripcion']) ?></p>
+                  <?php elseif (!empty($p['texto'])): ?>
+                    <p><?= h($p['texto']) ?></p>
+                  <?php else: ?>
+                    <p class="muted">(Sin contenido)</p>
+                  <?php endif; ?>
+                </div>
               </li>
             <?php endforeach; ?>
           </ol>
@@ -128,4 +158,15 @@ console.log('🔍 [KitManual] Kit:', <?= json_encode(['id'=>$kit['id'],'slug'=>$
 console.log('🔍 [KitManual] Slug manual:', '<?= h($manual_slug) ?>');
 console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'version'=>$manual['version'],'idioma'=>$manual['idioma'],'status'=>$manual['status']]) ?>);
 </script>
+<style>
+/* Print-friendly tweaks for manual steps */
+.manual-steps { padding-left: 18px; }
+.manual-step { margin-bottom: 12px; }
+.manual-step .step-head { margin-bottom: 6px; }
+.kit-security-chip { display:inline-block; background:#fffbe6; border:1px solid #ffe58f; color:#8c6d1f; padding:4px 8px; border-radius:6px; margin:4px 0; }
+@media print {
+  .manual-step { page-break-inside: avoid; }
+  .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }
+}
+</style>
 <?php include 'includes/footer.php'; ?>
