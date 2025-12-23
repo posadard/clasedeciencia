@@ -231,8 +231,17 @@ if (!$kit) {
     </div>
 
     <div class="form-group">
+      <label>Modo de Manual</label>
+      <div class="mode-toggle">
+        <label><input type="radio" name="ui_mode" value="legacy" checked /> Estructurado (Seguridad/Herramientas/Pasos)</label>
+        <label><input type="radio" name="ui_mode" value="fullhtml" /> HTML Completo (reemplaza bloques)</label>
+      </div>
+      <div id="mode-warning" class="help-note"></div>
+    </div>
+
+    <div class="form-group" id="html-group">
       <label>Contenido HTML</label>
-      <textarea name="html" rows="10" placeholder="Contenido enriquecido del manual (opcional)"><?= htmlspecialchars($manual['html'] ?? '') ?></textarea>
+      <textarea name="html" id="html-textarea" rows="10" placeholder="Contenido enriquecido del manual (opcional)"><?= htmlspecialchars($manual['html'] ?? '') ?></textarea>
     </div>
 
     <div style="margin-top:12px;">
@@ -250,6 +259,33 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function() {
+  // Mode toggle logic
+  const modeRadios = Array.from(document.querySelectorAll('input[name="ui_mode"]'));
+  const htmlGroup = document.getElementById('html-group');
+  const htmlTextarea = document.getElementById('html-textarea');
+  const modeWarning = document.getElementById('mode-warning');
+  const blocks = [document.getElementById('steps-builder'), document.getElementById('tools-builder'), document.getElementById('security-builder')];
+
+  function applyMode(mode) {
+    if (mode === 'fullhtml') {
+      modeWarning.textContent = '⚠️ Modo HTML completo activo: se reemplazarán Seguridad, Herramientas y Pasos.';
+      blocks.forEach(b => { if (b) b.classList.add('disabled-block'); });
+      htmlGroup.classList.remove('disabled-block');
+      console.log('⚠️ [ManualsEdit] Modo: fullhtml');
+    } else {
+      modeWarning.textContent = 'ℹ️ Modo estructurado: el campo HTML será ignorado al renderizar.';
+      blocks.forEach(b => { if (b) b.classList.remove('disabled-block'); });
+      htmlGroup.classList.add('disabled-block');
+      console.log('ℹ️ [ManualsEdit] Modo: legacy');
+    }
+  }
+
+  modeRadios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
+  // Initial mode: if HTML has content, default to fullhtml
+  const initialMode = (htmlTextarea && htmlTextarea.value.trim().length > 0) ? 'fullhtml' : 'legacy';
+  modeRadios.forEach(r => { r.checked = (r.value === initialMode); });
+  applyMode(initialMode);
+
   const pasosTextarea = document.getElementById('pasos_json');
   const stepsList = document.getElementById('steps-list');
   const addBtn = document.getElementById('add-step-btn');
@@ -799,5 +835,7 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 .tool-title { flex:1; }
 .tool-actions { display:flex; gap:6px; }
 .tool-body { padding:8px; background:#fff; color:#444; }
+.mode-toggle { display:flex; gap:16px; align-items:center; }
+.disabled-block { opacity:0.5; pointer-events:none; }
 </style>
 </script>
