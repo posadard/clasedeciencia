@@ -392,8 +392,7 @@ function get_issues($pdo) {
 
 function cdc_get_kit_by_slug($pdo, $slug) {
     try {
-        // Select all columns to be resilient to schema additions (e.g., time_minutes, dificultad_ensamble)
-        $stmt = $pdo->prepare("SELECT * FROM kits WHERE slug = ? AND activo = 1 LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at FROM kits WHERE slug = ? AND activo = 1 LIMIT 1");
         $stmt->execute([$slug]);
         return $stmt->fetch();
     } catch (Exception $e) {
