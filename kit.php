@@ -129,6 +129,18 @@ include 'includes/header.php';
             <span class="spec-label">🔢 Versión</span>
             <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
           </div>
+          <?php if (!empty($kit['time_minutes'])): ?>
+          <div class="spec-item">
+            <span class="spec-label">⏱️ Tiempo</span>
+            <span class="spec-value"><?= (int)$kit['time_minutes'] ?> min</span>
+          </div>
+          <?php endif; ?>
+          <?php if (!empty($kit['dificultad_ensamble'])): ?>
+          <div class="spec-item">
+            <span class="spec-label">🛠️ Dificultad</span>
+            <span class="spec-value"><?= h(ucfirst($kit['dificultad_ensamble'])) ?></span>
+          </div>
+          <?php endif; ?>
           <?php 
           // Edad recomendada resumida desde seguridad JSON
           $seg_summary = null;
@@ -398,6 +410,10 @@ include 'includes/header.php';
 </div>
 <script>
 console.log('🔍 [Kit] Slug:', '<?= h($slug) ?>');
+console.log('🔍 [Kit] Tiempo y dificultad:', {
+  time_minutes: <?= isset($kit['time_minutes']) && $kit['time_minutes'] !== null ? (int)$kit['time_minutes'] : 'null' ?>,
+  dificultad_ensamble: '<?= h($kit['dificultad_ensamble'] ?? '') ?>'
+});
 console.log('✅ [Kit] Cargado:', <?= json_encode(['id'=>$kit['id'],'nombre'=>$kit['nombre'],'codigo'=>$kit['codigo']]) ?>);
 console.log('📦 [Kit] Componentes:', <?= count($componentes) ?>);
 console.log('⚙️ [Kit] Orden: componentes antes de contenido_html');
