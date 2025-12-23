@@ -125,10 +125,25 @@ include 'includes/header.php';
             <span class="spec-label">🏷️ Código</span>
             <span class="spec-value"><?= h($kit['codigo'] ?? '') ?></span>
           </div>
-          <div class="spec-item">
-            <span class="spec-label">🔢 Versión</span>
-            <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
+          <?php 
+          $has_version = !empty($kit['version']);
+          $has_updated = !empty($kit['updated_at']);
+          if ($has_version || $has_updated): ?>
+          <div class="spec-item spec-item-full spec-duo">
+            <?php if ($has_version): ?>
+            <div class="spec-cell">
+              <span class="spec-label">🔢 Versión</span>
+              <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if ($has_updated): ?>
+            <div class="spec-cell">
+              <span class="spec-label">🔄 Actualizado</span>
+              <span class="spec-value"><?= date('d/m/Y', strtotime($kit['updated_at'])) ?></span>
+            </div>
+            <?php endif; ?>
           </div>
+          <?php endif; ?>
           <?php 
           // Compact Trio: Edad, Tiempo, Dificultad (3 columnas)
           $seg_summary = null;
@@ -170,12 +185,6 @@ include 'includes/header.php';
               <span class="spec-value <?= h($diff_class) ?>"><?= h(ucfirst($diff_val)) ?></span>
             </div>
             <?php endif; ?>
-          </div>
-          <?php endif; ?>
-          <?php if (!empty($kit['updated_at'])): ?>
-          <div class="spec-item">
-            <span class="spec-label">🔄 Actualizado</span>
-            <span class="spec-value"><?= date('d/m/Y', strtotime($kit['updated_at'])) ?></span>
           </div>
           <?php endif; ?>
           <?php if (!empty($ficha_inline)): ?>

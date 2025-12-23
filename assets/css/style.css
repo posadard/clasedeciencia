@@ -3536,6 +3536,21 @@ strong, b {
     border-radius: var(--border-radius-sm);
 }
 
+/* Compact duo for small specs (Versión, Actualizado) */
+.spec-duo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+.spec-duo .spec-cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--color-bg-light);
+    border-radius: var(--border-radius-sm);
+}
+
 .spec-label {
     font-size: 0.85rem;
     font-weight: 600;
@@ -3917,6 +3932,9 @@ strong, b {
     .spec-trio {
         grid-template-columns: repeat(2, 1fr);
     }
+    .spec-duo {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 576px) {
@@ -3933,6 +3951,9 @@ strong, b {
         height: 200px;
     }
     .spec-trio {
+        grid-template-columns: 1fr;
+    }
+    .spec-duo {
         grid-template-columns: 1fr;
     }
 }
