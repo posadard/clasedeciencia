@@ -1,193 +1,366 @@
 <?php
 require_once '../auth.php';
 /** @var \PDO $pdo */
-?>
-<?php if ($is_edit): ?>
-  <div class="card" style="margin-top:2rem;">
-    <h3>Ficha técnica</h3>
-    <small class="hint" style="display:block; margin-bottom:6px;">Selecciona atributos y define sus valores. Usa el buscador para filtrar.</small>
-    <div class="dual-listbox-container">
-      <div class="listbox-panel">
-        <div class="listbox-header">
-          <strong>Disponibles</strong>
-          <span id="attrs-available-count" class="counter"></span>
-        </div>
-        <input type="text" id="search-attrs" class="listbox-search" placeholder="🔍 Buscar atributos...">
-        <div class="listbox-content" id="available-attrs">
-          <?php foreach ($attr_defs as $def): 
-            $aid = (int)$def['id'];
-            $values = $attr_vals[$aid] ?? [];
-            if (!empty($values)) { continue; } // sólo disponibles sin valor
-            $label = $def['etiqueta'];
-            $tipo = $def['tipo_dato'];
-            $unitDef = $def['unidad_defecto'] ?? '';
-            $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
-          ?>
-            <div class="competencia-item" 
-                 data-id="<?= $aid ?>"
-                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                 data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
-                 data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
-                 data-units='<?= htmlspecialchars($unitsJson, ENT_QUOTES, 'UTF-8') ?>'
-                 onclick="selectAttrItem(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo">Tipo: <?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?><?= $unitDef ? ' · Unidad: ' . htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') : '' ?></span>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-      <div class="listbox-buttons">
-        <button type="button" onclick="moveAllAttrs(true)" title="Agregar todas">➡️</button>
-        <button type="button" onclick="moveAllAttrs(false)" title="Quitar todas">⬅️</button>
-      </div>
-      <div class="listbox-panel">
-        <div class="listbox-header">
-          <strong>Seleccionadas</strong>
-          <span id="attrs-selected-count" class="counter"></span>
-        </div>
-        <div class="listbox-content" id="selected-attrs">
-          <?php foreach ($attr_defs as $def): 
-            $aid = (int)$def['id'];
-            $values = $attr_vals[$aid] ?? [];
-            if (empty($values)) { continue; }
-            $label = $def['etiqueta'];
-            $tipo = $def['tipo_dato'];
-            $unitDef = $def['unidad_defecto'] ?? '';
-            $unitsJson = $def['unidades_permitidas_json'] ? $def['unidades_permitidas_json'] : '[]';
-            $unit = $values[0]['unidad_codigo'] ?? '';
-            $display = [];
-            foreach ($values as $v) {
-              if ($tipo === 'number') {
-                if ($v['valor_numero'] !== null) { $s = (string)$v['valor_numero']; $display[] = (strpos($s, '.') !== false) ? rtrim(rtrim($s, '0'), '.') : $s; }
-              }
-              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
-              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
-              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
-              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
-              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
-              else { $display[] = $v['valor_string']; }
-            }
-            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
-          ?>
-            <div class="competencia-item selected" 
-                 data-id="<?= $aid ?>"
-                 data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                 data-tipo="<?= htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8') ?>"
-                 data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
-                 data-unidad_def="<?= htmlspecialchars($unitDef, ENT_QUOTES, 'UTF-8') ?>"
-                 data-units='<?= htmlspecialchars($unitsJson, ENT_QUOTES, 'UTF-8') ?>'
-                 onclick="deselectAttrItem(this)">
-              <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="comp-codigo">Valor: <?= $text ?><?= $unit ? ' · ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
-              <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectAttrItem(this.parentElement)">×</button>
-              <button type="button" class="edit-component js-edit-attr" title="Editar"
-                data-attr-id="<?= $aid ?>"
-                data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
-                data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
-                data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
-                data-units='<?= htmlspecialchars($def['unidades_permitidas_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?>'
-                data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
-                data-values='<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>'
-              >✏️</button>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-    (function initAttrsTransfer(){
-      const available = document.getElementById('available-attrs');
-      const selected = document.getElementById('selected-attrs');
-      const search = document.getElementById('search-attrs');
-      const availableCount = document.getElementById('attrs-available-count');
-      const selectedCount = document.getElementById('attrs-selected-count');
-      if (!available || !selected) { console.log('⚠️ [KitsEdit] Transfer de atributos no inicializado'); return; }
 
-      function updateCounts(){
-        const availVisible = Array.from(available.querySelectorAll('.competencia-item')).filter(el => el.style.display !== 'none').length;
-        const selCount = Array.from(selected.querySelectorAll('.competencia-item')).length;
-        if (availableCount) availableCount.textContent = '(' + availVisible + ')';
-        if (selectedCount) selectedCount.textContent = '(' + selCount + ')';
-        console.log('🔍 [KitsEdit] Atributos: disponibles', availVisible, 'seleccionados', selCount);
-      }
+$is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
+$id = $is_edit ? (int)$_GET['id'] : null;
 
-      window.selectAttrItem = function(el){
-        try {
-          const defId = el.dataset.id;
-          const label = el.dataset.label;
-          const tipo = el.dataset.tipo;
-          const unitDef = el.dataset.unidad_def || '';
-          const unitsJson = el.dataset.units || '[]';
-          document.getElementById('add_def_id').value = String(defId);
-          document.getElementById('addAttrInfo').textContent = label;
-          const sel = document.getElementById('add_unidad');
-          const selGroup = document.getElementById('add_unidad_group');
-          const addVal = document.getElementById('add_valor');
-          sel.innerHTML = '';
-          let units = [];
-          try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
-          const hasUnits = Array.isArray(units) && units.length > 0;
-          const hasDefault = !!unitDef;
-          if (hasUnits || hasDefault) {
-            const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
-            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
-            if (selGroup) selGroup.style.display = '';
-          } else { if (selGroup) selGroup.style.display = 'none'; }
-          if (addVal) {
-            const card = el.dataset.card;
-            if (card === 'many' && (tipo === 'number' || tipo === 'integer')) { addVal.placeholder = 'Para múltiples, separa por saltos de línea'; }
-            else { addVal.placeholder = 'Para múltiples, separa por comas'; }
+$page_title = $is_edit ? 'Editar Kit' : 'Nuevo Kit';
+
+if (!isset($_SESSION['csrf_token'])) {
+  try { $_SESSION['csrf_token'] = bin2hex(random_bytes(16)); } catch (Exception $e) { $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(16)); }
+}
+
+$kit = [
+  'clase_id' => '',
+  'nombre' => '',
+  'slug' => '',
+  'codigo' => '',
+  'version' => '1',
+  'resumen' => '',
+  'contenido_html' => '',
+  'imagen_portada' => '',
+  'video_portada' => '',
+  'seguridad' => null,
+  'seo_title' => '',
+  'seo_description' => '',
+  'activo' => 1,
+];
+
+try {
+  // Clases para el selector
+  $clases_stmt = $pdo->query('SELECT id, nombre, ciclo FROM clases ORDER BY nombre ASC');
+  $clases = $clases_stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+  $clases = [];
+}
+
+// Áreas para asignación (similar a admin/clases/edit.php)
+$areas = [];
+$existing_area_ids = [];
+try {
+  $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
+  echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:", ' . (int)count($areas) . ');</script>';
+} catch (PDOException $e) { $areas = []; }
+
+
+if ($is_edit) {
+  try {
+    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
+  } catch (PDOException $e) {}
+}
+
+// Relaciones existentes: clases asignadas a este kit (via clase_kits)
+$existing_clase_ids = [];
+if ($is_edit) {
+  try {
+    $stmt = $pdo->prepare('SELECT clase_id FROM clase_kits WHERE kit_id = ? ORDER BY es_principal DESC, sort_order ASC');
+    $stmt->execute([$id]);
+    $existing_clase_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($existing_clase_ids) && !empty($kit['clase_id'])) {
+      $existing_clase_ids = [(int)$kit['clase_id']];
+    }
+  } catch (PDOException $e) {}
+  // Áreas existentes del kit
+  try {
+    $st = $pdo->prepare('SELECT area_id FROM kits_areas WHERE kit_id = ?');
+    $st->execute([$id]);
+    $existing_area_ids = $st->fetchAll(PDO::FETCH_COLUMN);
+  } catch (PDOException $e) {}
+}
+
+$error_msg = '';
+$action_msg = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+    $error_msg = 'Token CSRF inválido.';
+    echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>';
+  } else {
+    $action = isset($_POST['action']) ? $_POST['action'] : 'save';
+
+    if ($action === 'save_attrs' && $is_edit) {
+      // Guardar atributos técnicos (atributos_contenidos)
+      try {
+        $defs_stmt = $pdo->prepare('SELECT d.*, m.orden, m.ui_hint FROM atributos_definiciones d JOIN atributos_mapeo m ON m.atributo_id = d.id WHERE m.tipo_entidad = ? AND m.visible = 1 ORDER BY m.orden ASC, d.id ASC');
+        $defs_stmt->execute(['kit']);
+        $defs = $defs_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $pdo->beginTransaction();
+        foreach ($defs as $def) {
+          $attr_id = (int)$def['id'];
+          $tipo = $def['tipo_dato'];
+          $card = $def['cardinalidad'];
+          $perm_units = [];
+          if (!empty($def['unidades_permitidas_json'])) {
+            $decoded = json_decode($def['unidades_permitidas_json'], true);
+            if (is_array($decoded)) { $perm_units = $decoded; }
           }
-          openModal('#modalAddAttr');
-        } catch(e){ console.log('❌ [KitsEdit] Error selectAttrItem:', e && e.message); }
-      };
 
-      window.deselectAttrItem = function(el){
-        try {
-          const defId = el.dataset.id;
-          const f = new FormData(); f.append('csrf_token','<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>'); f.append('action','delete_attr'); f.append('def_id', String(defId)); f.append('ajax','1');
-          fetch(window.location.href, { method: 'POST', body: f, headers: { 'Accept': 'application/json' }})
-            .then(r => r.json())
-            .then(data => {
-              if (!data || data.ok !== true) throw new Error(data && data.error ? data.error : 'Error desconocido');
-              el.remove();
-              // Restaurar item en disponibles
-              const node = document.createElement('div');
-              node.className = 'competencia-item';
-              node.dataset.id = defId;
-              node.dataset.label = el.dataset.label || '';
-              node.dataset.tipo = el.dataset.tipo || 'string';
-              node.dataset.card = el.dataset.card || 'one';
-              node.dataset.unidad_def = el.dataset.unidad_def || '';
-              node.dataset.units = el.dataset.units || '[]';
-              node.innerHTML = `<span class="comp-nombre">${el.dataset.label || ''}</span><span class="comp-codigo">Tipo: ${el.dataset.tipo || ''}${(el.dataset.unidad_def ? ' · Unidad: '+el.dataset.unidad_def : '')}</span>`;
-              // Restaurar comportamiento: reactivar selección y actualizar conteos
-              node.setAttribute('onclick','selectAttrItem(this)');
-              available.appendChild(node);
-              updateCounts();
-            })
-            .catch(err => {
-              console.log('❌ [KitsEdit] Error al eliminar atributo:', err && err.message);
-            });
-        } catch(e){ console.log('❌ [KitsEdit] Error deselectAttrItem:', e && e.message); }
-      };
-      
-      // Actualizar conteos iniciales y binder de búsqueda
-      updateCounts();
-      if (search) {
-        search.addEventListener('input', function(){
-          const q = (this.value || '').trim().toLowerCase();
-          Array.from(available.querySelectorAll('.competencia-item')).forEach(el => {
-            const label = (el.dataset.label || '').toLowerCase();
-            el.style.display = (!q || label.includes(q)) ? '' : 'none';
-          });
-          updateCounts();
-        });
+          // Obtener valores del POST
+          $values = [];
+          $units = [];
+          if ($card === 'many') {
+            $raw = isset($_POST['attr_' . $attr_id]) ? $_POST['attr_' . $attr_id] : '';
+            if (is_array($raw)) {
+              $values = $raw;
+            } else {
+              $values = array_filter(array_map('trim', preg_split('/[\n,]+/', (string)$raw)));
+            }
+            $units = isset($_POST['unit_' . $attr_id]) ? (array)$_POST['unit_' . $attr_id] : [];
+          } else {
+            $v = isset($_POST['attr_' . $attr_id]) ? trim((string)$_POST['attr_' . $attr_id]) : '';
+            if ($v !== '') { $values = [$v]; }
+            $u = isset($_POST['unit_' . $attr_id]) ? trim((string)$_POST['unit_' . $attr_id]) : '';
+            if ($u !== '') { $units = [$u]; }
+          }
+
+          // Borrar existentes
+          $del = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
+          $del->execute(['kit', $id, $attr_id]);
+
+          // Insertar nuevos
+          $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+          $orden = 1;
+          foreach ($values as $idx => $valRaw) {
+            if ($valRaw === '' || $valRaw === null) { continue; }
+            $unidad_codigo = null;
+            if (!empty($perm_units) || !empty($def['unidad_defecto'])) {
+              $unidad_sel = $card === 'many' ? ($units[$idx] ?? '') : ($units[0] ?? '');
+              if ($unidad_sel === '' && !empty($def['unidad_defecto'])) { $unidad_sel = $def['unidad_defecto']; }
+              if ($unidad_sel !== '') { $unidad_codigo = $unidad_sel; }
+            }
+
+            $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+            try {
+              switch ($tipo) {
+                case 'number':
+                  $num = is_numeric(str_replace(',', '.', $valRaw)) ? (float)str_replace(',', '.', $valRaw) : null;
+                  if ($num === null) { continue 2; }
+                  $val_numero = $num;
+                  break;
+                case 'integer':
+                  $int = is_numeric($valRaw) ? (int)$valRaw : null;
+                  if ($int === null) { continue 2; }
+                  $val_entero = $int;
+                  break;
+                case 'boolean':
+                  $val_bool = ($valRaw === '1' || strtolower($valRaw) === 'true' || strtolower($valRaw) === 'sí' || strtolower($valRaw) === 'si') ? 1 : 0;
+                  break;
+                case 'date':
+                  $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $valRaw) ? $valRaw : null;
+                  if ($val_fecha === null) { continue 2; }
+                  break;
+                case 'datetime':
+                  $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $valRaw) ? str_replace('T', ' ', $valRaw) . ':00' : null;
+                  if ($val_dt === null) { continue 2; }
+                  break;
+                case 'json':
+                  $decoded = json_decode($valRaw, true);
+                  if ($decoded === null && strtolower(trim($valRaw)) !== 'null') { continue 2; }
+                  $val_json = json_encode($decoded);
+                  break;
+                case 'string':
+                default:
+                  $val_string = mb_substr((string)$valRaw, 0, 2000, 'UTF-8');
+                  break;
+              }
+            } catch (Exception $e) {
+              continue;
+            }
+
+            $ins->execute([
+              'kit', $id, $attr_id,
+              $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json,
+              $unidad_codigo, 'es-CO', $orden++, 'manual'
+            ]);
+          }
+        }
+        $pdo->commit();
+        $action_msg = 'Ficha técnica guardada.';
+        echo '<script>console.log("✅ [KitsEdit] Ficha técnica guardada para kit ' . (int)$id . '");</script>';
+      } catch (PDOException $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
-    })();
-  </script>
+    } else if ($action === 'add_attr' && $is_edit) {
+      try {
+        $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+        $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
+        $unidad = isset($_POST['unidad']) ? trim((string)$_POST['unidad']) : '';
+        if ($def_id <= 0 || $valor === '') { throw new Exception('Datos inválidos'); }
+        $defS = $pdo->prepare('SELECT * FROM atributos_definiciones WHERE id = ?');
+        $defS->execute([$def_id]);
+        $def = $defS->fetch(PDO::FETCH_ASSOC);
+        if (!$def) { throw new Exception('Atributo no existe'); }
+        $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?')->execute(['kit', $id, $def_id]);
+        $pdo->beginTransaction();
+        $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+        $card = $def['cardinalidad'];
+        $tipo = $def['tipo_dato'];
+        $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+        $orden = 1;
+        foreach ($vals as $v) {
+          $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+          switch ($tipo) {
+            case 'number':
+              $num = is_numeric(str_replace(',', '.', $v)) ? (float)str_replace(',', '.', $v) : null; if ($num === null) continue 2; $val_numero = $num; break;
+            case 'integer':
+              $int = is_numeric($v) ? (int)$v : null; if ($int === null) continue 2; $val_entero = $int; break;
+            case 'boolean':
+              $val_bool = ($v === '1' || strtolower($v) === 'true' || strtolower($v) === 'sí' || strtolower($v) === 'si') ? 1 : 0; break;
+            case 'date':
+              $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null; if ($val_fecha === null) continue 2; break;
+            case 'datetime':
+              $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $v) ? (str_replace('T', ' ', $v) . ':00') : null; if ($val_dt === null) continue 2; break;
+            case 'json':
+              $decoded = json_decode($v, true); if ($decoded === null && strtolower(trim($v)) !== 'null') continue 2; $val_json = json_encode($decoded); break;
+            case 'string':
+            default:
+              $val_string = mb_substr((string)$v, 0, 2000, 'UTF-8'); break;
+          }
+          $ins->execute(['kit', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
+        }
+        $pdo->commit();
+        $action_msg = 'Atributo agregado.';
+        echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>';
+      } catch (Exception $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error agregando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+    } else if ($action === 'update_attr' && $is_edit) {
+      try {
+        $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+        $valor = isset($_POST['valor']) ? (string)$_POST['valor'] : '';
+        $unidad = isset($_POST['unidad']) ? trim((string)$_POST['unidad']) : '';
+        if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+        $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?')->execute(['kit', $id, $def_id]);
+        // reusar add_attr
+        $defS = $pdo->prepare('SELECT * FROM atributos_definiciones WHERE id = ?');
+        $defS->execute([$def_id]);
+        $def = $defS->fetch(PDO::FETCH_ASSOC);
+        if (!$def) { throw new Exception('Atributo no existe'); }
+        $pdo->beginTransaction();
+        $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
+        $card = $def['cardinalidad'];
+        $tipo = $def['tipo_dato'];
+        $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+        $orden = 1;
+        foreach ($vals as $v) {
+          $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
+          switch ($tipo) {
+            case 'number':
+              $num = is_numeric(str_replace(',', '.', $v)) ? (float)str_replace(',', '.', $v) : null; if ($num === null) continue 2; $val_numero = $num; break;
+            case 'integer':
+              $int = is_numeric($v) ? (int)$v : null; if ($int === null) continue 2; $val_entero = $int; break;
+            case 'boolean':
+              $val_bool = ($v === '1' || strtolower($v) === 'true' || strtolower($v) === 'sí' || strtolower($v) === 'si') ? 1 : 0; break;
+            case 'date':
+              $val_fecha = preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null; if ($val_fecha === null) continue 2; break;
+            case 'datetime':
+              $val_dt = preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $v) ? (str_replace('T', ' ', $v) . ':00') : null; if ($val_dt === null) continue 2; break;
+            case 'json':
+              $decoded = json_decode($v, true); if ($decoded === null && strtolower(trim($v)) !== 'null') continue 2; $val_json = json_encode($decoded); break;
+            case 'string':
+            default:
+              $val_string = mb_substr((string)$v, 0, 2000, 'UTF-8'); break;
+          }
+          $ins->execute(['kit', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
+        }
+        $pdo->commit();
+        $action_msg = 'Atributo actualizado.';
+        echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>';
+      } catch (Exception $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error actualizando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+    } else if ($action === 'delete_attr' && $is_edit) {
+      try {
+        $def_id = isset($_POST['def_id']) && ctype_digit($_POST['def_id']) ? (int)$_POST['def_id'] : 0;
+        if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
+        $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
+        $stmt->execute(['kit', $id, $def_id]);
+        $action_msg = 'Atributo eliminado.';
+        echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>';
+      } catch (PDOException $e) {
+        $error_msg = 'Error eliminando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+    } else if ($action === 'create_attr_def' && $is_edit) {
+      // Crear nueva definición de atributo y mapearla al tipo Kit
+      try {
+        $etiqueta = isset($_POST['etiqueta']) ? trim((string)$_POST['etiqueta']) : '';
+        $clave = isset($_POST['clave']) ? trim((string)$_POST['clave']) : '';
+        $tipo = isset($_POST['tipo_dato']) ? trim((string)$_POST['tipo_dato']) : 'string';
+        $card = isset($_POST['cardinalidad']) ? trim((string)$_POST['cardinalidad']) : 'one';
+        $unidad_def = isset($_POST['unidad_defecto']) ? trim((string)$_POST['unidad_defecto']) : '';
+        $unidades_raw = isset($_POST['unidades_permitidas']) ? (string)$_POST['unidades_permitidas'] : '';
+
+        if ($etiqueta === '') { throw new Exception('Etiqueta requerida'); }
+        if ($clave === '') {
+          $clave = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $etiqueta));
+          $clave = trim($clave, '_');
+        } else {
+          $clave = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $clave));
+          $clave = trim($clave, '_');
+        }
+        $tipos_validos = ['string','number','integer','boolean','date','datetime','json'];
+        $cards_validas = ['one','many'];
+        if (!in_array($tipo, $tipos_validos, true)) { $tipo = 'string'; }
+        if (!in_array($card, $cards_validas, true)) { $card = 'one'; }
+
+        // Parse unidades permitidas: separadas por comas a JSON array
+        $unidades = array_filter(array_map(function($v){ return trim($v); }, preg_split('/[,\n]+/', $unidades_raw)));
+        $unidades_json = !empty($unidades) ? json_encode(array_values($unidades)) : null;
+
+        // Verificar si existe definición por clave
+        $pdo->beginTransaction();
+        $def_id = null;
+        $st = $pdo->prepare('SELECT id FROM atributos_definiciones WHERE clave = ?');
+        $st->execute([$clave]);
+        $def_id = (int)$st->fetchColumn();
+        if ($def_id <= 0) {
+          $ins = $pdo->prepare('INSERT INTO atributos_definiciones (clave, etiqueta, tipo_dato, cardinalidad, unidad_defecto, unidades_permitidas_json, aplica_a_json) VALUES (?,?,?,?,?,?,?)');
+          $aplica = json_encode(['kit']);
+          $ins->execute([$clave, $etiqueta, $tipo, $card, ($unidad_def !== '' ? $unidad_def : null), $unidades_json, $aplica]);
+          $def_id = (int)$pdo->lastInsertId();
+        }
+        // Mapear al tipo kit si no existe
+        $chk = $pdo->prepare('SELECT COUNT(*) FROM atributos_mapeo WHERE atributo_id = ? AND tipo_entidad = ?');
+        $chk->execute([$def_id, 'kit']);
+        if ((int)$chk->fetchColumn() === 0) {
+          $nextOrdStmt = $pdo->prepare('SELECT COALESCE(MAX(orden),0)+1 AS nextOrd FROM atributos_mapeo WHERE tipo_entidad = ?');
+          $nextOrdStmt->execute(['kit']);
+          $next = (int)$nextOrdStmt->fetchColumn();
+          $mp = $pdo->prepare('INSERT INTO atributos_mapeo (atributo_id, tipo_entidad, visible, orden) VALUES (?,?,?,?)');
+          $mp->execute([$def_id, 'kit', 1, $next]);
+        }
+        $pdo->commit();
+        $action_msg = 'Atributo creado y mapeado.';
+        echo '<script>console.log("✅ [KitsEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
+      } catch (Exception $e) {
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error creando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+      }
+    } else if ($action === 'save') {
+      // Clases seleccionadas (transfer list)
+      $clases_sel = isset($_POST['clases']) && is_array($_POST['clases']) ? array_map('intval', $_POST['clases']) : [];
+      $principal_clase_id = !empty($clases_sel) ? (int)$clases_sel[0] : 0;
+      // Mantener compatibilidad si vienen datos legacy de clase_id
+      $legacy_clase_id = isset($_POST['clase_id']) && ctype_digit($_POST['clase_id']) ? (int)$_POST['clase_id'] : 0;
+      if ($principal_clase_id === 0 && $legacy_clase_id > 0) { $principal_clase_id = $legacy_clase_id; }
+      $nombre = isset($_POST['nombre']) ? trim($_POST['nombre']) : '';
+      $slug = isset($_POST['slug']) ? trim($_POST['slug']) : '';
+      $codigo = isset($_POST['codigo']) ? trim($_POST['codigo']) : '';
+      $version = isset($_POST['version']) ? trim($_POST['version']) : '1';
+      $activo = isset($_POST['activo']) ? 1 : 0;
 
       // Campos landing/SEO
       $resumen = isset($_POST['resumen']) ? trim((string)$_POST['resumen']) : '';
@@ -204,13 +377,7 @@ require_once '../auth.php';
       $seguridad_json = null;
         // Áreas seleccionadas
         $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
-        if (!$__is_ajax_request) { echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>'; }
-
-      // Tiempo y dificultad por defecto (kit)
-      $time_minutes = (isset($_POST['time_minutes']) && $_POST['time_minutes'] !== '') ? (int)$_POST['time_minutes'] : null;
-      $dificultad_ensamble = isset($_POST['dificultad_ensamble']) ? trim((string)$_POST['dificultad_ensamble']) : '';
-      if ($dificultad_ensamble === '') { $dificultad_ensamble = null; }
-      if (!$__is_ajax_request) { echo '<script>console.log("🔍 [KitsEdit] Defaults tiempo/dificultad:", ' . json_encode(['time'=>$time_minutes,'dif'=>$dificultad_ensamble]) . ');</script>'; }
+        echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>';
 
       if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
         $seguridad_json = json_encode([
@@ -256,7 +423,7 @@ require_once '../auth.php';
           ? preg_replace('/\s+\S*$/u', '', mb_substr($desc_source, 0, $max_desc, 'UTF-8'))
           : $desc_source;
       }
-      if (!$__is_ajax_request) { echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ');</script>'; }
+      echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ');</script>';
 
       // Normalizar longitudes razonables
       if ($seo_title !== '') { $seo_title = mb_substr($seo_title, 0, 160, 'UTF-8'); }
@@ -307,11 +474,11 @@ require_once '../auth.php';
             } else {
             $pdo->beginTransaction();
             if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, time_minutes=?, dificultad_ensamble=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $time_minutes, $dificultad_ensamble, $seo_title, $seo_description, $activo, $id]);
+              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
             } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, time_minutes, dificultad_ensamble, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $time_minutes, $dificultad_ensamble, $seo_title, $seo_description, $activo]);
+              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
             }
@@ -338,7 +505,7 @@ require_once '../auth.php';
                 foreach ($areas_sel as $aid) { if ($aid > 0) { $insA->execute([$id, (int)$aid]); } }
               }
               $pdo->commit();
-              if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>'; }
+              echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>';
             } catch (PDOException $e) {
               if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
               throw $e;
@@ -556,37 +723,6 @@ include '../header.php';
       <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
     </div>
   </div>
-  <div class="form-section">
-    <h2>Predeterminados de ensamblaje</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="time_minutes">Tiempo de armado (minutos)</label>
-        <input type="number" id="time_minutes" name="time_minutes" min="0" step="1" value="<?= htmlspecialchars($kit['time_minutes'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
-        <small class="hint">Usado como valor por defecto en el manual si no está definido allí.</small>
-      </div>
-      <div class="form-group">
-        <label for="dificultad_ensamble">Dificultad de ensamble</label>
-        <select id="dificultad_ensamble" name="dificultad_ensamble">
-          <?php
-            $dif_val = $kit['dificultad_ensamble'] ?? '';
-            $dif_opts = ['Muy fácil','Fácil','Media','Difícil'];
-            echo '<option value="">(sin definir)</option>';
-            foreach ($dif_opts as $opt) {
-              $sel = ($dif_val === $opt) ? 'selected' : '';
-              echo '<option value="' . htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') . '" ' . $sel . '>' . htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') . '</option>';
-            }
-          ?>
-        </select>
-        <small class="hint">Referencia general del nivel de dificultad.</small>
-      </div>
-    </div>
-    <script>
-      console.log('🔍 [KitsEdit] Defaults iniciales tiempo/dif:', {
-        time: <?= json_encode($kit['time_minutes'] ?? null) ?>,
-        dif: <?= json_encode($kit['dificultad_ensamble'] ?? null) ?>
-      });
-    </script>
-  </div>
   <div class="form-group">
     <label for="contenido_html">Contenido HTML</label>
     <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
@@ -614,7 +750,73 @@ include '../header.php';
     } catch (PDOException $e) {}
   }
   ?>
-  <?php /* chips moved out of main form below */ ?>
+  <?php if ($is_edit): ?>
+  <div class="form-section" style="margin-top:2rem;">
+    <div class="section-header">
+      <h2>Ficha técnica</h2>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" id="btn_create_attr">➕ Crear atributo</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="attr_search">Agregar atributo</label>
+      <div class="component-selector-container">
+        <div class="selected-components" id="selected-attrs">
+          <?php foreach ($attr_defs as $def):
+            $aid = (int)$def['id'];
+            $values = $attr_vals[$aid] ?? [];
+            if (empty($values)) continue;
+            // Render resumen
+            $label = $def['etiqueta'];
+            $tipo = $def['tipo_dato'];
+            $unit = $values[0]['unidad_codigo'] ?? '';
+            $display = [];
+            foreach ($values as $v) {
+              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+              else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
+              else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+              else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
+              else if ($tipo === 'datetime') { $display[] = $v['valor_datetime']; }
+              else if ($tipo === 'json') { $display[] = $v['valor_json']; }
+              else { $display[] = $v['valor_string']; }
+            }
+            $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
+          ?>
+          <div class="component-chip" data-attr-id="<?= $aid ?>">
+            <span class="name"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="meta">· <strong><?= $text ?></strong><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
+            <button type="button" class="edit-component js-edit-attr" title="Editar"
+              data-attr-id="<?= $aid ?>"
+              data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>"
+              data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>"
+              data-card="<?= htmlspecialchars($def['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>"
+              data-units="<?= htmlspecialchars($def['unidades_permitidas_json'] ?? '[]', ENT_QUOTES, 'UTF-8') ?>"
+              data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+              data-values="<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>"
+            >✏️</button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+              <input type="hidden" name="action" value="delete_attr" />
+              <input type="hidden" name="def_id" value="<?= $aid ?>" />
+              <button type="submit" class="remove-component" title="Remover">×</button>
+            </form>
+          </div>
+          <?php endforeach; ?>
+        </div>
+        <input type="text" id="attr_search" placeholder="Escribir para buscar atributo..." autocomplete="off" />
+        <datalist id="attrs_list">
+          <?php foreach ($attr_defs as $def): ?>
+            <option value="<?= (int)$def['id'] ?>" data-name="<?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?>" data-clave="<?= htmlspecialchars($def['clave'], ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($def['etiqueta'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($def['grupo'] ?? 'ficha', ENT_QUOTES, 'UTF-8') ?>)
+            </option>
+          <?php endforeach; ?>
+        </datalist>
+        <div class="autocomplete-dropdown" id="attr_autocomplete_dropdown"></div>
+      </div>
+      <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
+    </div>
+  </div>
+  <?php endif; ?>
   <!-- Taxonomías -->
   <div class="form-section">
     <h2>Taxonomías</h2>
@@ -654,8 +856,6 @@ include '../header.php';
     <div id="seo-manual"></div>
   </div>
 </form>
-
-  <?php /* Antiguo UI de chips removido; reemplazado por dual listbox de atributos */ ?>
 
 <?php if ($is_edit): ?>
 <div class="form-group" style="margin-top:2rem;">
@@ -814,7 +1014,149 @@ include '../header.php';
       </div>
      </div>
 
-  <?php /* Legacy autocomplete UI removido en favor del dual listbox */ ?>
+  <script>
+    // Autocomplete + modal para atributos (similar a componentes)
+    (function initAttrUI(){
+      const dropdown = document.getElementById('attr_autocomplete_dropdown');
+      const input = document.getElementById('attr_search');
+      const selectedWrap = document.getElementById('selected-attrs');
+      if (!dropdown || !input || !selectedWrap) { console.log('⚠️ [KitsEdit] UI atributos no inicializada'); return; }
+
+      const defs = [
+        <?php foreach ($attr_defs as $d): ?>
+        { id: <?= (int)$d['id'] ?>, label: '<?= htmlspecialchars($d['etiqueta'], ENT_QUOTES, 'UTF-8') ?>', tipo: '<?= htmlspecialchars($d['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>', card: '<?= htmlspecialchars($d['cardinalidad'], ENT_QUOTES, 'UTF-8') ?>', units: <?= $d['unidades_permitidas_json'] ? $d['unidades_permitidas_json'] : '[]' ?>, unitDef: '<?= htmlspecialchars($d['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>' },
+        <?php endforeach; ?>
+      ];
+
+      function normalize(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+      function render(list){
+        if (!list.length){ dropdown.innerHTML = '<div class="autocomplete-item"><span class="cmp-code">Sin resultados</span></div><div class="autocomplete-item create-item" id="attr_create_item"><strong>➕ Crear nuevo atributo</strong></div>'; dropdown.style.display='block'; const ci=document.getElementById('attr_create_item'); if(ci){ ci.addEventListener('click', onCreateNew); } return; }
+        dropdown.innerHTML = '';
+        list.slice(0, 20).forEach(def => {
+          const div = document.createElement('div');
+          div.className = 'autocomplete-item';
+          div.innerHTML = `<strong>${def.label}</strong><span class="cmp-code">${def.tipo}${def.unitDef? ' · '+def.unitDef:''}</span>`;
+          div.addEventListener('click', () => onChoose(def));
+          dropdown.appendChild(div);
+        });
+        dropdown.style.display = 'block';
+      }
+      function filter(q){
+        const nq = normalize(q);
+        const out = defs.filter(d => normalize(d.label).includes(nq));
+        console.log('🔍 [KitsEdit] Buscar atributo:', q, '→', out.length);
+        render(out);
+      }
+      function onChoose(def){
+        try {
+          document.getElementById('add_def_id').value = String(def.id);
+          document.getElementById('addAttrInfo').textContent = def.label;
+          const sel = document.getElementById('add_unidad');
+          const selGroup = document.getElementById('add_unidad_group');
+          sel.innerHTML = '';
+          const hasUnits = Array.isArray(def.units) && def.units.length > 0;
+          const hasDefault = !!def.unitDef;
+          if (hasUnits || hasDefault) {
+            const opt0 = document.createElement('option');
+            opt0.value = ''; opt0.textContent = def.unitDef ? `(por defecto: ${def.unitDef})` : '(sin unidad)'; sel.appendChild(opt0);
+            if (hasUnits) { def.units.forEach(u => { const o = document.createElement('option'); o.value = u; o.textContent = u; sel.appendChild(o); }); }
+            if (selGroup) selGroup.style.display = '';
+            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+          } else {
+            if (selGroup) selGroup.style.display = 'none';
+            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
+          openModal('#modalAddAttr');
+          setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
+        } catch (e) {
+          console.log('❌ [KitsEdit] Error preparar modal atributo:', e && e.message);
+        }
+        dropdown.style.display = 'none';
+      }
+      function onCreateNew(){
+        try {
+          const val = (input.value || '').trim();
+          document.getElementById('create_etiqueta').value = val;
+          document.getElementById('create_clave').value = '';
+          document.getElementById('create_tipo').value = 'string';
+          document.getElementById('create_card').value = 'one';
+          document.getElementById('create_unidad').value = '';
+          document.getElementById('create_unidades').value = '';
+          openModal('#modalCreateAttr');
+          setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
+          console.log('🔍 [KitsEdit] Crear atributo desde búsqueda:', val);
+        } catch(e){ console.log('❌ [KitsEdit] Error preparar crear atributo:', e && e.message); }
+        dropdown.style.display='none';
+      }
+      input.addEventListener('focus', () => filter(input.value));
+      input.addEventListener('input', () => filter(input.value));
+      document.addEventListener('click', (e) => { if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none'; });
+
+      // Botón para crear atributo directamente
+      const btnCreate = document.getElementById('btn_create_attr');
+      if (btnCreate) {
+        btnCreate.addEventListener('click', () => {
+          try {
+            const val = (input && input.value ? input.value.trim() : '');
+            document.getElementById('create_etiqueta').value = val;
+            document.getElementById('create_clave').value = '';
+            document.getElementById('create_tipo').value = 'string';
+            document.getElementById('create_card').value = 'one';
+            document.getElementById('create_unidad').value = '';
+            document.getElementById('create_unidades').value = '';
+            openModal('#modalCreateAttr');
+            setTimeout(() => { try { document.getElementById('create_etiqueta')?.focus(); } catch(_e){} }, 50);
+            console.log('🔍 [KitsEdit] Abrir crear atributo (botón)', val);
+          } catch(e) { console.log('❌ [KitsEdit] Error abrir crear atributo (botón):', e && e.message); }
+        });
+      }
+
+      // Editar chip
+      document.querySelectorAll('.js-edit-attr').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const defId = btn.getAttribute('data-attr-id');
+          const label = btn.getAttribute('data-label');
+          const tipo = btn.getAttribute('data-tipo');
+          const unitsJson = btn.getAttribute('data-units');
+          const unitDef = btn.getAttribute('data-unidad_def') || '';
+          const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
+          document.getElementById('edit_def_id').value = defId;
+          document.getElementById('editAttrInfo').textContent = label;
+          const inputEl = document.getElementById('edit_valor');
+          const unitSel = document.getElementById('edit_unidad');
+          const unitGroup = document.getElementById('edit_unidad_group');
+          inputEl.value = '';
+          unitSel.innerHTML = '';
+          if (Array.isArray(vals) && vals.length) {
+            const parts = vals.map(v => {
+              if (tipo === 'number') return v.valor_numero;
+              if (tipo === 'integer') return v.valor_entero;
+              if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
+              if (tipo === 'date') return v.valor_fecha;
+              if (tipo === 'datetime') return v.valor_datetime;
+              if (tipo === 'json') return v.valor_json;
+              return v.valor_string;
+            }).filter(Boolean);
+            inputEl.value = parts.join(', ');
+          }
+          let units = [];
+          try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
+          const hasUnits = Array.isArray(units) && units.length > 0;
+          const hasDefault = !!unitDef;
+          if (hasUnits || hasDefault) {
+            const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+            if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
+            if (unitGroup) unitGroup.style.display = '';
+            console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+          } else {
+            if (unitGroup) unitGroup.style.display = 'none';
+            console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
+          openModal('#modalEditAttr');
+        });
+      });
+    })();
+  </script>
   
 <script>
   console.log('🔍 [KitsEdit] Clases cargadas:', <?= count($clases) ?>);
@@ -915,246 +1257,6 @@ include '../header.php';
     }
   })();
 </script>
-
-<?php if ($is_edit): ?>
-<script>
-  // AJAX helper for kit attribute actions (mirrors Clases editor)
-  function postAjaxKit(formEl, successCb){
-    const fd = new FormData(formEl);
-    fd.append('ajax','1');
-    console.log('📡 [KitsEdit] AJAX', fd.get('action'));
-    fetch(window.location.href, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' }})
-      .then(r => r.json())
-      .then(data => {
-        if (!data || data.ok !== true) throw new Error(data && data.error ? data.error : 'Error desconocido');
-        console.log('✅ [KitsEdit] AJAX ok:', data.action);
-        successCb(data);
-      })
-      .catch(err => {
-        console.log('❌ [KitsEdit] AJAX error:', err && err.message);
-        alert('Error: ' + (err && err.message ? err.message : 'operación fallida'));
-      });
-  }
-
-  function displayFromKit(tipo, values){
-    if (!Array.isArray(values)) return '';
-    const parts = values.map(v => {
-      switch (tipo){
-        case 'number': {
-          let s = (typeof v === 'string' ? v : String(v)).replace(/,/g,'.');
-          if (s.includes('.')) {
-            s = s.replace(/0+$/,'').replace(/\.$/,'');
-          }
-          return s;
-        }
-        case 'integer': return String(parseInt(v,10));
-        case 'boolean': return (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 'Sí' : 'No';
-        default: return String(v);
-      }
-    }).filter(Boolean);
-    return parts.join(', ');
-  }
-
-  const formEditAttr = document.getElementById('formEditAttr');
-  const formAddAttr = document.getElementById('formAddAttr');
-  function upsertAttrChipKit(def, display, unidad, rawValues){
-    const wrap = document.getElementById('selected-attrs');
-    if (!wrap) return;
-    let chip = wrap.querySelector('.component-chip[data-attr-id="' + def.id + '"]');
-    const unitText = unidad ? (' ' + unidad) : '';
-    if (!chip){
-      chip = document.createElement('div');
-      chip.className = 'component-chip';
-      chip.setAttribute('data-attr-id', String(def.id));
-      chip.innerHTML = `
-        <span class="name"></span>
-        <span class="meta">· <strong class="meta-val"></strong><span class="meta-unit"></span></span>
-        <button type="button" class="edit-component js-edit-attr" title="Editar"
-          data-attr-id="${def.id}"
-          data-label="${def.etiqueta}"
-          data-tipo="${def.tipo_dato}"
-          data-card="${def.cardinalidad}"
-          data-units='${JSON.stringify(def.unidades_permitidas || [])}'
-          data-unidad_def="${def.unidad_defecto || ''}"
-          data-values='${JSON.stringify((rawValues||[]).map(v=>{
-            const s = String(v).replace(/,/g,'.');
-            switch(def.tipo_dato){
-              case "number":
-                return { valor_string: String(v), valor_numero: (isNaN(parseFloat(s)) ? s : parseFloat(s)) };
-              case "integer":
-                return { valor_string: String(v), valor_entero: (isNaN(parseInt(s,10)) ? s : parseInt(s,10)) };
-              case "boolean": {
-                const b = (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 1 : 0;
-                return { valor_string: String(v), valor_booleano: b };
-              }
-              case "date":
-                return { valor_string: String(v), valor_fecha: String(v) };
-              case "datetime":
-                return { valor_string: String(v), valor_datetime: String(v) };
-              case "json":
-                return { valor_string: String(v), valor_json: String(v) };
-              case "string":
-              default:
-                return { valor_string: String(v) };
-            }
-          }))}'
-        >✏️</button>
-        <form method="POST" style="display:inline;">
-          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-          <input type="hidden" name="action" value="delete_attr" />
-          <input type="hidden" name="def_id" value="${def.id}" />
-          <button type="submit" class="remove-component" title="Remover">×</button>
-        </form>`;
-      wrap.appendChild(chip);
-    }
-    // Actualiza nombre y meta con seguridad, soportando chips existentes (sin .meta-val)
-    const nameEl = chip.querySelector('.name');
-    if (nameEl) nameEl.textContent = def.etiqueta;
-    const metaEl = chip.querySelector('.meta');
-    if (metaEl) {
-      while (metaEl.firstChild) metaEl.removeChild(metaEl.firstChild);
-      metaEl.appendChild(document.createTextNode('· '));
-      const strong = document.createElement('strong');
-      strong.textContent = display;
-      metaEl.appendChild(strong);
-      if (unidad) metaEl.appendChild(document.createTextNode(' ' + unidad));
-    }
-    // Actualiza datos en el botón de edición para reflejar nuevos valores
-    try {
-      const editBtnForData = chip.querySelector('.js-edit-attr');
-      if (editBtnForData) {
-        const valuesForAttr = Array.isArray(rawValues) ? rawValues.map(v=>{
-          const s = String(v).replace(/,/g,'.');
-          switch(def.tipo_dato){
-            case 'number':
-              return { valor_string: String(v), valor_numero: (isNaN(parseFloat(s)) ? s : parseFloat(s)) };
-            case 'integer':
-              return { valor_string: String(v), valor_entero: (isNaN(parseInt(s,10)) ? s : parseInt(s,10)) };
-            case 'boolean': {
-              const b = (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 1 : 0;
-              return { valor_string: String(v), valor_booleano: b };
-            }
-            case 'date':
-              return { valor_string: String(v), valor_fecha: String(v) };
-            case 'datetime':
-              return { valor_string: String(v), valor_datetime: String(v) };
-            case 'json':
-              return { valor_string: String(v), valor_json: String(v) };
-            case 'string':
-            default:
-              return { valor_string: String(v) };
-          }
-        }) : [];
-        editBtnForData.setAttribute('data-values', JSON.stringify(valuesForAttr));
-      }
-    } catch(_e){}
-    // Rebind edit-open behavior
-    try {
-      const editBtn = chip.querySelector('.js-edit-attr');
-      if (editBtn && !editBtn.dataset.bound) {
-        editBtn.dataset.bound = '1';
-        editBtn.addEventListener('click', () => {
-          try {
-            const defId = editBtn.getAttribute('data-attr-id');
-            const label = editBtn.getAttribute('data-label');
-            const tipo = editBtn.getAttribute('data-tipo');
-            const unitsJson = editBtn.getAttribute('data-units');
-            const unitDef = editBtn.getAttribute('data-unidad_def') || '';
-            const vals = JSON.parse(editBtn.getAttribute('data-values') || '[]');
-            document.getElementById('edit_def_id').value = defId;
-            document.getElementById('editAttrInfo').textContent = label;
-            const inputEl = document.getElementById('edit_valor');
-            const unitSel = document.getElementById('edit_unidad');
-            const unitGroup = document.getElementById('edit_unidad_group');
-            inputEl.value = '';
-            unitSel.innerHTML = '';
-            if (Array.isArray(vals) && vals.length) {
-              const parts = vals.map(v => {
-                if (tipo === 'number') return (v.valor_string ?? v.valor_numero);
-                if (tipo === 'integer') return (v.valor_string ?? v.valor_entero);
-                if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
-                if (tipo === 'date') return v.valor_fecha;
-                if (tipo === 'datetime') return v.valor_datetime;
-                if (tipo === 'json') return v.valor_json;
-                return v.valor_string;
-              }).filter(Boolean);
-              inputEl.value = parts.join(', ');
-            }
-            let units = [];
-            try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
-            const hasUnits = Array.isArray(units) && units.length > 0;
-            const hasDefault = !!unitDef;
-            if (hasUnits || hasDefault) {
-              const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
-              if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
-              if (unitGroup) unitGroup.style.display = '';
-              console.log('🔍 [KitsEdit] Unidad visible (aplica)');
-            } else {
-              if (unitGroup) unitGroup.style.display = 'none';
-              console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
-            }
-            openModal('#modalEditAttr');
-          } catch(e) { console.log('❌ [KitsEdit] Error abrir modal editar (chip nuevo):', e && e.message); }
-        });
-      }
-    } catch(_e){}
-    // Intercept delete form submit to use AJAX
-    try {
-      const delForm = chip.querySelector('form');
-      if (delForm && !delForm.dataset.bound){
-        delForm.dataset.bound = '1';
-        delForm.addEventListener('submit', (e) => {
-          e.preventDefault();
-          if (!confirm('¿Eliminar este atributo del kit?')) return;
-          postAjaxKit(delForm, () => { chip.remove(); });
-        });
-      }
-    } catch(_e){}
-  }
-
-  if (formEditAttr){
-    formEditAttr.addEventListener('submit', (e) => {
-      e.preventDefault();
-      postAjaxKit(formEditAttr, (resp) => {
-        const valuesRaw = Array.isArray(resp.raw_values) ? resp.raw_values : [];
-        const display = resp.display || displayFromKit(resp.def.tipo_dato || 'string', valuesRaw);
-        upsertAttrChipKit(resp.def, display, resp.unidad || '', valuesRaw);
-        // close modal
-        try { document.querySelector('[data-target="#modalEditAttr"]').click(); } catch(_e){}
-        try { document.querySelector('#modalEditAttr')?.classList.remove('active'); } catch(_e){}
-      });
-    });
-  }
-  if (formAddAttr){
-    formAddAttr.addEventListener('submit', (e) => {
-      e.preventDefault();
-      postAjaxKit(formAddAttr, (resp) => {
-        const valuesRaw = Array.isArray(resp.raw_values) ? resp.raw_values : [];
-        const display = resp.display || displayFromKit(resp.def.tipo_dato || 'string', valuesRaw);
-        upsertAttrChipKit(resp.def, display, resp.unidad || '', valuesRaw);
-        document.getElementById('attr_search').value = '';
-        try { document.querySelector('[data-target="#modalAddAttr"]').click(); } catch(_e){}
-        try { document.querySelector('#modalAddAttr')?.classList.remove('active'); } catch(_e){}
-      });
-    });
-  }
-
-  // Intercept existing delete forms inside chips to avoid page reload
-  (function bindChipDeleteForms(){
-    const wrap = document.getElementById('selected-attrs');
-    if (!wrap) return;
-    wrap.querySelectorAll('form').forEach(f => {
-      if (f.dataset.bound === '1') return;
-      f.dataset.bound = '1';
-      f.addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (!confirm('¿Eliminar este atributo del kit?')) return;
-        postAjaxKit(f, () => { try { f.closest('.component-chip')?.remove(); } catch(_e){} });
-      });
-    });
-  })();
-</script>
-<?php endif; ?>
 <!-- Clases vinculadas al Kit (Transfer List) -->
 <div class="card" style="margin-top:2rem;">
   <h3>Clases vinculadas al Kit</h3>
