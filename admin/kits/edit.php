@@ -812,7 +812,7 @@ include '../header.php';
             }
             $text = htmlspecialchars(implode(', ', array_filter($display)), ENT_QUOTES, 'UTF-8');
           ?>
-          <div class="competencia-item selected" data-id="<?= $aid ?>" data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>" onclick="editAttrItem(this)">
+          <div class="competencia-item selected" data-id="<?= $aid ?>" data-label="<?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>" data-tipo="<?= htmlspecialchars($def['tipo_dato'], ENT_QUOTES, 'UTF-8') ?>" data-units='<?= $def['unidades_permitidas_json'] ? htmlspecialchars($def['unidades_permitidas_json'], ENT_QUOTES, 'UTF-8') : '[]' ?>' data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>" onclick="editAttrItem(this)">
             <span class="comp-nombre"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></span>
             <span class="comp-codigo"><?= $text ?><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
             <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectAttrItem(this.parentElement)">×</button>
@@ -1097,12 +1097,38 @@ include '../header.php';
         } catch(e){ console.log('❌ [KitsEdit] Error al editar atributo:', e && e.message); }
       };
 
-      window.deselectAttrItem = function(el){
+      window.deselectAttrItem = async function(el){
         try {
           if (!confirm('¿Eliminar este atributo del kit?')) return;
-          const form = el.querySelector('.attr-delete-form');
-          if (form) { form.submit(); console.log('📤 [KitsEdit] Enviado eliminación de atributo'); }
-          else { console.log('⚠️ [KitsEdit] No se encontró formulario de eliminación'); }
+          const defId = el.getAttribute('data-id');
+          const label = el.getAttribute('data-label');
+          const tipo = el.getAttribute('data-tipo');
+          const unitsJson = el.getAttribute('data-units') || '[]';
+          const unitDef = el.getAttribute('data-unidad_def') || '';
+          const csrf = document.querySelector('#kit-form input[name="csrf_token"]')?.value || el.querySelector('input[name="csrf_token"]')?.value || '';
+          const fd = new URLSearchParams();
+          fd.set('csrf_token', csrf);
+          fd.set('action', 'delete_attr');
+          fd.set('def_id', String(defId));
+          const url = window.location.pathname + window.location.search;
+          const resp = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd.toString() });
+          console.log('📡 [KitsEdit] delete_attr status:', resp.status);
+          if (!resp.ok) { console.log('⚠️ [KitsEdit] Falló eliminación en servidor'); return; }
+          // Quitar del seleccionado
+          el.remove();
+          // Crear item disponible y añadir
+          const div = document.createElement('div');
+          div.className = 'competencia-item';
+          div.setAttribute('data-id', String(defId));
+          div.setAttribute('data-label', label);
+          div.setAttribute('data-tipo', tipo);
+          div.setAttribute('data-units', unitsJson);
+          div.setAttribute('data-unidad_def', unitDef);
+          div.onclick = function(){ selectAttrItem(div); };
+          div.innerHTML = `<span class="comp-nombre">${label}</span><span class="comp-codigo">${tipo}${unitDef? ' · '+unitDef:''}</span>`;
+          availableWrap.appendChild(div);
+          updateAttrCounts();
+          console.log('✅ [KitsEdit] Atributo eliminado y movido a disponibles:', label);
         } catch(e){ console.log('❌ [KitsEdit] Error al eliminar atributo:', e && e.message); }
       };
 
