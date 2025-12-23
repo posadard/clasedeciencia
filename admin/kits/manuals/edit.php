@@ -237,6 +237,35 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
     try { return raw ? JSON.parse(raw) : []; } catch (e) { console.log('⚠️ [ManualsEdit] JSON pasos inválido, se reinicia:', e.message); return []; }
   }
 
+  function ensureModal() {
+    let modal = document.getElementById('step-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'step-modal';
+      modal.style.display = 'none';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>Editar Paso</h3>
+          <label>Título</label>
+          <input type="text" id="modal-step-title" />
+          <label>Contenido (HTML enriquecido)</label>
+          <textarea id="modal-step-html" rows="10"></textarea>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" id="modal-save-btn">Guardar Paso</button>
+            <button type="button" class="btn" id="modal-cancel-btn">Cancelar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      const saveBtn = document.getElementById('modal-save-btn');
+      const cancelBtn = document.getElementById('modal-cancel-btn');
+      saveBtn.addEventListener('click', function(){ saveEditorModal(); });
+      cancelBtn.addEventListener('click', function(){ closeEditorModal(); });
+      console.log('✅ [ManualsEdit] Modal creado');
+    }
+    return modal;
+  }
+
   function normalizeStep(step, idx) {
     const orden = (typeof step.orden === 'number' ? step.orden : (idx + 1));
     const titulo = (step.titulo && String(step.titulo).trim()) || ('Paso ' + orden);
@@ -371,28 +400,7 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   renderSteps();
 })();
 
-// --- Modal markup ---
-(function(){
-  const modal = document.createElement('div');
-  modal.id = 'step-modal';
-  modal.style.display = 'none';
-  modal.className = 'modal-overlay';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <h3>Editar Paso</h3>
-      <label>Título</label>
-      <input type="text" id="modal-step-title" />
-      <label>Contenido (HTML enriquecido)</label>
-      <textarea id="modal-step-html" rows="10"></textarea>
-      <div class="modal-actions">
-        <button type="button" class="btn btn-primary" id="modal-save-btn">Guardar Paso</button>
-        <button type="button" class="btn" id="modal-cancel-btn">Cancelar</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  document.getElementById('modal-save-btn').addEventListener('click', function(){ saveEditorModal(); });
-  document.getElementById('modal-cancel-btn').addEventListener('click', function(){ closeEditorModal(); });
-})();
+// Modal se crea bajo demanda por ensureModal()
 
 // CKEditor CDN
 (function(){
