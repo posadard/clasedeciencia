@@ -759,14 +759,50 @@ include '../header.php';
     } catch (PDOException $e) {}
   }
   ?>
-  <?php if ($is_edit): ?>
-  <div class="form-section" style="margin-top:2rem;">
-    <div class="section-header">
-      <h2>Ficha técnica</h2>
-      <div class="actions">
-        <button type="button" class="btn btn-secondary" id="btn_create_attr">➕ Crear atributo</button>
+  <?php /* chips moved out of main form below */ ?>
+  <!-- Taxonomías -->
+  <div class="form-section">
+    <h2>Taxonomías</h2>
+    <h3 style="margin-top:.5rem">Áreas</h3>
+    <div class="checkbox-grid">
+      <?php foreach ($areas as $a): ?>
+        <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
+      <?php endforeach; ?>
+    </div>
+    <small class="hint">Selecciona las áreas temáticas del kit.</small>
+  </div>
+  <!-- SEO -->
+  <div class="form-section">
+    <h2>SEO</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="seo_title">SEO Title (≤60)</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="text" id="seo_title" name="seo_title" maxlength="160" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="flex: 1;" />
+          <button type="button" id="btn_generar_seo" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar SEO</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="seo_description">SEO Description (≤160)</label>
+        <input type="text" id="seo_description" name="seo_description" maxlength="255" value="<?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
       </div>
     </div>
+    <!-- SEO Auto Preview + Override Toggle -->
+    <div class="form-section">
+      <label><input type="checkbox" id="seo_override_toggle"> Editar SEO manualmente</label>
+      <div class="seo-preview">
+        <p><strong>Preview Title:</strong> <span id="seo_preview_title"></span></p>
+        <p><strong>Preview Description:</strong> <span id="seo_preview_desc"></span></p>
+        <small class="help-text">Si no defines SEO manualmente, se usarán estos valores.</small>
+      </div>
+    </div>
+    <div id="seo-manual"></div>
+  </div>
+</form>
+
+  <?php if ($is_edit): ?>
+  <div class="card" style="margin-top:2rem;">
+    <h3>Ficha técnica (chips)</h3>
     <div class="form-group">
       <label for="attr_search">Agregar atributo</label>
       <div class="component-selector-container">
@@ -775,7 +811,6 @@ include '../header.php';
             $aid = (int)$def['id'];
             $values = $attr_vals[$aid] ?? [];
             if (empty($values)) continue;
-            // Render resumen
             $label = $def['etiqueta'];
             $tipo = $def['tipo_dato'];
             $unit = $values[0]['unidad_codigo'] ?? '';
@@ -825,46 +860,8 @@ include '../header.php';
       <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
     </div>
   </div>
+  <script>console.log('🔍 [KitsEdit] Chips moved outside main form ✅');</script>
   <?php endif; ?>
-  <!-- Taxonomías -->
-  <div class="form-section">
-    <h2>Taxonomías</h2>
-    <h3 style="margin-top:.5rem">Áreas</h3>
-    <div class="checkbox-grid">
-      <?php foreach ($areas as $a): ?>
-        <label class="checkbox-label"><input type="checkbox" name="areas[]" value="<?= (int)$a['id'] ?>" <?= in_array($a['id'], $existing_area_ids) ? 'checked' : '' ?>> <?= htmlspecialchars($a['nombre'], ENT_QUOTES, 'UTF-8') ?></label>
-      <?php endforeach; ?>
-    </div>
-    <small class="hint">Selecciona las áreas temáticas del kit.</small>
-  </div>
-  <!-- SEO -->
-  <div class="form-section">
-    <h2>SEO</h2>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="seo_title">SEO Title (≤60)</label>
-        <div style="display: flex; gap: 8px; align-items: center;">
-          <input type="text" id="seo_title" name="seo_title" maxlength="160" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="flex: 1;" />
-          <button type="button" id="btn_generar_seo" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar SEO</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="seo_description">SEO Description (≤160)</label>
-        <input type="text" id="seo_description" name="seo_description" maxlength="255" value="<?= htmlspecialchars($kit['seo_description'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-    </div>
-    <!-- SEO Auto Preview + Override Toggle -->
-    <div class="form-section">
-      <label><input type="checkbox" id="seo_override_toggle"> Editar SEO manualmente</label>
-      <div class="seo-preview">
-        <p><strong>Preview Title:</strong> <span id="seo_preview_title"></span></p>
-        <p><strong>Preview Description:</strong> <span id="seo_preview_desc"></span></p>
-        <small class="help-text">Si no defines SEO manualmente, se usarán estos valores.</small>
-      </div>
-    </div>
-    <div id="seo-manual"></div>
-  </div>
-</form>
 
 <?php if ($is_edit): ?>
 <div class="form-group" style="margin-top:2rem;">
