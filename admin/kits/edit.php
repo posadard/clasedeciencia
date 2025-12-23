@@ -103,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           // Obtener valores del POST
           $values = [];
           $units = [];
+          $hasAttrPost = array_key_exists('attr_' . $attr_id, $_POST) || array_key_exists('unit_' . $attr_id, $_POST);
           if ($card === 'many') {
             $raw = isset($_POST['attr_' . $attr_id]) ? $_POST['attr_' . $attr_id] : '';
             if (is_array($raw)) {
@@ -118,7 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($u !== '') { $units = [$u]; }
           }
 
-          // Borrar existentes
+          // Si no hay POST para este atributo, no borrar ni modificar
+          if (!$hasAttrPost) {
+            echo '<script>console.log("⚠️ [KitsEdit] save_attrs sin POST para atributo ' . (int)$attr_id . ', se conserva");</script>';
+            continue;
+          }
+
+          // Borrar existentes (actualización explícita)
           $del = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
           $del->execute(['kit', $id, $attr_id]);
 
@@ -178,6 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               $unidad_codigo, 'es-CO', $orden++, 'manual'
             ]);
           }
+          $insertedCount = max(0, (int)$orden - 1);
+          echo '<script>console.log("✅ [KitsEdit] save_attrs atributo ' . (int)$attr_id . ' actualizado con ' . $insertedCount . ' valores");</script>';
         }
         $pdo->commit();
         $action_msg = 'Ficha técnica guardada.';
