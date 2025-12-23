@@ -533,6 +533,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
   const kitSelect = document.querySelector('select[name="kit_id"]');
+  const securityAgeWrap = document.querySelector('.security-age');
 
   function toSafetyObj(raw){
     try {
@@ -572,6 +573,30 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       kitSafetyNotes.innerHTML = notas ? notas.replace(/\n/g,'<br>') : '<span class="muted">(El kit no tiene notas de seguridad textuales)</span>';
     }
     console.log('✅ [ManualsEdit] Panel seguridad kit actualizado');
+    updateAgeVisibility();
+  }
+
+  function hasKitAge(){
+    if (!KIT_SAFETY) return false;
+    const hasMin = typeof KIT_SAFETY.edad_min !== 'undefined' && KIT_SAFETY.edad_min !== null && String(KIT_SAFETY.edad_min) !== '';
+    const hasMax = typeof KIT_SAFETY.edad_max !== 'undefined' && KIT_SAFETY.edad_max !== null && String(KIT_SAFETY.edad_max) !== '';
+    return !!(hasMin || hasMax);
+  }
+
+  function updateAgeVisibility(){
+    const inherit = !!(useKitSafety && useKitSafety.checked);
+    const kitHas = hasKitAge();
+    if (inherit && kitHas) {
+      if (securityAgeWrap) securityAgeWrap.classList.add('hidden-block');
+      if (ageMinInput) ageMinInput.disabled = true;
+      if (ageMaxInput) ageMaxInput.disabled = true;
+      console.log('ℹ️ [ManualsEdit] Usando edad del kit: ocultando campos de edad propia');
+    } else {
+      if (securityAgeWrap) securityAgeWrap.classList.remove('hidden-block');
+      if (ageMinInput) ageMinInput.disabled = false;
+      if (ageMaxInput) ageMaxInput.disabled = false;
+      console.log('ℹ️ [ManualsEdit] Editar edad propia: campos visibles');
+    }
   }
 
   async function fetchKitSafetyById(id){
@@ -599,6 +624,12 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       renderKitSafetyPanel(seg);
     });
     console.log('🔍 [ManualsEdit] Observando cambios de kit_id');
+  }
+
+  if (useKitSafety) {
+    useKitSafety.addEventListener('change', function(){
+      updateAgeVisibility();
+    });
   }
 
   let notes = [];
@@ -704,7 +735,15 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     let payload = null;
     if (useKitSafety && useKitSafety.checked) {
       payload = { usar_seguridad_kit: true };
-      if (min !== null || max !== null) { payload.edad = {}; if (min !== null) payload.edad.min = min; if (max !== null) payload.edad.max = max; }
+      const kitHas = hasKitAge();
+      if (!kitHas && (min !== null || max !== null)) {
+        payload.edad = {};
+        if (min !== null) payload.edad.min = min;
+        if (max !== null) payload.edad.max = max;
+        console.log('ℹ️ [ManualsEdit] Merge: kit sin edad, usando edad propia');
+      } else if (kitHas) {
+        console.log('ℹ️ [ManualsEdit] Merge: edad del kit presente, no se serializa edad propia');
+      }
       if (extras.length) { payload.notas_extra = extras; }
       console.log('ℹ️ [ManualsEdit] Merge: incluir seguridad del kit');
     } else {
@@ -740,6 +779,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       notes = arr.map(normalizeNote);
     }
     render();
+    updateAgeVisibility();
   })();
 
   function ensureSecModal(){
