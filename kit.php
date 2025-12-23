@@ -129,20 +129,8 @@ include 'includes/header.php';
             <span class="spec-label">🔢 Versión</span>
             <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
           </div>
-          <?php if (!empty($kit['time_minutes'])): ?>
-          <div class="spec-item">
-            <span class="spec-label">⏱️ Tiempo</span>
-            <span class="spec-value"><?= (int)$kit['time_minutes'] ?> min</span>
-          </div>
-          <?php endif; ?>
-          <?php if (!empty($kit['dificultad_ensamble'])): ?>
-          <div class="spec-item">
-            <span class="spec-label">🛠️ Dificultad</span>
-            <span class="spec-value"><?= h(ucfirst($kit['dificultad_ensamble'])) ?></span>
-          </div>
-          <?php endif; ?>
           <?php 
-          // Edad recomendada resumida desde seguridad JSON
+          // Compact Trio: Edad, Tiempo, Dificultad (3 columnas)
           $seg_summary = null;
           if (!empty($kit['seguridad'])) {
             try {
@@ -152,10 +140,36 @@ include 'includes/header.php';
               }
             } catch(Exception $e) { /* no-op */ }
           }
-          if ($seg_summary): ?>
-          <div class="spec-item">
-            <span class="spec-label">👥 Edad</span>
-            <span class="spec-value"><?= (int)$seg_summary[0] ?>–<?= (int)$seg_summary[1] ?> años</span>
+          $has_time = !empty($kit['time_minutes']);
+          $has_diff = !empty($kit['dificultad_ensamble']);
+          if ($seg_summary || $has_time || $has_diff):
+            // Map dificultad to color classes
+            $diff_val = isset($kit['dificultad_ensamble']) ? trim((string)$kit['dificultad_ensamble']) : '';
+            $diff_key = strtolower($diff_val);
+            if ($diff_key === 'fácil' || $diff_key === 'facil') { $diff_class = 'difficulty-facil'; }
+            elseif ($diff_key === 'media' || $diff_key === 'medio') { $diff_class = 'difficulty-media'; }
+            elseif ($diff_key === 'difícil' || $diff_key === 'dificil') { $diff_class = 'difficulty-dificil'; }
+            else { $diff_class = ''; }
+          ?>
+          <div class="spec-item spec-item-full spec-trio">
+            <?php if ($seg_summary): ?>
+            <div class="spec-cell">
+              <span class="spec-label">👥 Edad</span>
+              <span class="spec-value"><?= (int)$seg_summary[0] ?>–<?= (int)$seg_summary[1] ?> años</span>
+            </div>
+            <?php endif; ?>
+            <?php if ($has_time): ?>
+            <div class="spec-cell">
+              <span class="spec-label">⏱️ Tiempo</span>
+              <span class="spec-value"><?= (int)$kit['time_minutes'] ?> min</span>
+            </div>
+            <?php endif; ?>
+            <?php if ($has_diff): ?>
+            <div class="spec-cell">
+              <span class="spec-label">🛠️ Dificultad</span>
+              <span class="spec-value <?= h($diff_class) ?>"><?= h(ucfirst($diff_val)) ?></span>
+            </div>
+            <?php endif; ?>
           </div>
           <?php endif; ?>
           <?php if (!empty($kit['updated_at'])): ?>

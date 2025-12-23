@@ -3521,6 +3521,21 @@ strong, b {
     grid-column: 1 / -1;
 }
 
+/* Compact trio for small specs (Edad, Tiempo, Dificultad) */
+.spec-trio {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+.spec-trio .spec-cell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background: var(--color-bg-light);
+    border-radius: var(--border-radius-sm);
+}
+
 .spec-label {
     font-size: 0.85rem;
     font-weight: 600;
@@ -3899,6 +3914,9 @@ strong, b {
     .summary-specs {
         grid-template-columns: 1fr;
     }
+    .spec-trio {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 576px) {
@@ -3913,6 +3931,9 @@ strong, b {
     .summary-image,
     .summary-placeholder {
         height: 200px;
+    }
+    .spec-trio {
+        grid-template-columns: 1fr;
     }
 }
 
