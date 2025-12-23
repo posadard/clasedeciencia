@@ -1321,8 +1321,8 @@ include '../header.php';
           unitSel.innerHTML = '';
           if (Array.isArray(vals) && vals.length) {
             const parts = vals.map(v => {
-              if (tipo === 'number') return v.valor_numero;
-              if (tipo === 'integer') return v.valor_entero;
+              if (tipo === 'number') return (v.valor_string ?? v.valor_numero);
+              if (tipo === 'integer') return (v.valor_string ?? v.valor_entero);
               if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
               if (tipo === 'date') return v.valor_fecha;
               if (tipo === 'datetime') return v.valor_datetime;
@@ -1519,7 +1519,28 @@ include '../header.php';
           data-card="${def.cardinalidad}"
           data-units='${JSON.stringify(def.unidades_permitidas || [])}'
           data-unidad_def="${def.unidad_defecto || ''}"
-          data-values='${JSON.stringify((rawValues||[]).map(v=>({valor_string:String(v)})))}'
+          data-values='${JSON.stringify((rawValues||[]).map(v=>{
+            const s = String(v).replace(/,/g,'.');
+            switch(def.tipo_dato){
+              case "number":
+                return { valor_string: String(v), valor_numero: (isNaN(parseFloat(s)) ? s : parseFloat(s)) };
+              case "integer":
+                return { valor_string: String(v), valor_entero: (isNaN(parseInt(s,10)) ? s : parseInt(s,10)) };
+              case "boolean": {
+                const b = (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 1 : 0;
+                return { valor_string: String(v), valor_booleano: b };
+              }
+              case "date":
+                return { valor_string: String(v), valor_fecha: String(v) };
+              case "datetime":
+                return { valor_string: String(v), valor_datetime: String(v) };
+              case "json":
+                return { valor_string: String(v), valor_json: String(v) };
+              case "string":
+              default:
+                return { valor_string: String(v) };
+            }
+          }))}'
         >✏️</button>
         <form method="POST" style="display:inline;">
           <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -1545,7 +1566,28 @@ include '../header.php';
     try {
       const editBtnForData = chip.querySelector('.js-edit-attr');
       if (editBtnForData) {
-        const valuesForAttr = Array.isArray(rawValues) ? rawValues.map(v=>({valor_string:String(v)})) : [];
+        const valuesForAttr = Array.isArray(rawValues) ? rawValues.map(v=>{
+          const s = String(v).replace(/,/g,'.');
+          switch(def.tipo_dato){
+            case 'number':
+              return { valor_string: String(v), valor_numero: (isNaN(parseFloat(s)) ? s : parseFloat(s)) };
+            case 'integer':
+              return { valor_string: String(v), valor_entero: (isNaN(parseInt(s,10)) ? s : parseInt(s,10)) };
+            case 'boolean': {
+              const b = (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 1 : 0;
+              return { valor_string: String(v), valor_booleano: b };
+            }
+            case 'date':
+              return { valor_string: String(v), valor_fecha: String(v) };
+            case 'datetime':
+              return { valor_string: String(v), valor_datetime: String(v) };
+            case 'json':
+              return { valor_string: String(v), valor_json: String(v) };
+            case 'string':
+            default:
+              return { valor_string: String(v) };
+          }
+        }) : [];
         editBtnForData.setAttribute('data-values', JSON.stringify(valuesForAttr));
       }
     } catch(_e){}
@@ -1571,8 +1613,8 @@ include '../header.php';
             unitSel.innerHTML = '';
             if (Array.isArray(vals) && vals.length) {
               const parts = vals.map(v => {
-                if (tipo === 'number') return v.valor_numero;
-                if (tipo === 'integer') return v.valor_entero;
+                if (tipo === 'number') return (v.valor_string ?? v.valor_numero);
+                if (tipo === 'integer') return (v.valor_string ?? v.valor_entero);
                 if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
                 if (tipo === 'date') return v.valor_fecha;
                 if (tipo === 'datetime') return v.valor_datetime;
