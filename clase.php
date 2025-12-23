@@ -243,6 +243,98 @@ include 'includes/header.php';
         </div>
     </div>
 
+    <?php
+    // Card compacto de Kit relacionado justo después del summary-content
+    // Seleccionar el primer kit (prioriza es_principal por orden de consulta)
+    $kit_inline = null;
+    if (!empty($kits) && is_array($kits)) {
+            $kit_inline = $kits[0];
+    }
+    $kit_manuals = [];
+    $kit_areas = [];
+    $kit_comp_count = 0;
+    if (!empty($kit_inline)) {
+            $kid = (int)$kit_inline['id'];
+            // Contador de componentes ya cargados
+            $kit_comp_count = isset($materiales_por_kit[$kid]) && is_array($materiales_por_kit[$kid]) ? count($materiales_por_kit[$kid]) : 0;
+            // Manuales publicados (máx 5 para UI compacta)
+            try {
+                    $stM = $pdo->prepare("SELECT slug, idioma, time_minutes, dificultad_ensamble FROM kit_manuals WHERE kit_id = ? AND status = 'published' ORDER BY idioma, version DESC, id DESC LIMIT 5");
+                    $stM->execute([$kid]);
+                    $kit_manuals = $stM->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            } catch (PDOException $e) { $kit_manuals = []; }
+            // Áreas del kit como tags
+            try {
+                    $stA = $pdo->prepare("SELECT a.nombre, a.slug FROM areas a JOIN kits_areas ka ON ka.area_id = a.id WHERE ka.kit_id = ? ORDER BY a.nombre ASC");
+                    $stA->execute([$kid]);
+                    $kit_areas = $stA->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            } catch (PDOException $e) { $kit_areas = []; }
+    }
+    ?>
+    <?php if (!empty($kit_inline)): ?>
+    <section class="kit-inline-card" aria-label="Kit relacionado">
+        <div class="kit-inline-wrap">
+            <div class="kit-inline-left">
+                <?php if (!empty($kit_inline['imagen_portada'])): ?>
+                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit">
+                        <img src="<?= h($kit_inline['imagen_portada']) ?>" alt="<?= h($kit_inline['nombre']) ?>" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura kit falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+                    </a>
+                <?php else: ?>
+                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit">
+                        <div class="summary-placeholder"><span class="placeholder-icon">📦</span></div>
+                    </a>
+                <?php endif; ?>
+            </div>
+            <div class="kit-inline-right">
+                <div class="kit-inline-header">
+                    <span class="kit-inline-label">📦 Kit relacionado</span>
+                    <?php if (!empty($kit_inline['es_principal'])): ?><span class="badge badge-primary" style="margin-left:6px;">Principal</span><?php endif; ?>
+                </div>
+                <h3 class="kit-inline-title">
+                    <a href="/<?= h($kit_inline['slug']) ?>" title="Ver kit" style="text-decoration:none;">
+                        <?= h($kit_inline['nombre']) ?>
+                    </a>
+                </h3>
+                <?php if (!empty($kit_inline['resumen'])): ?>
+                    <?php $kit_resumen_short = mb_strlen($kit_inline['resumen']) > 160 ? (mb_substr($kit_inline['resumen'], 0, 157) . '…') : $kit_inline['resumen']; ?>
+                    <p class="kit-inline-excerpt"><?= h($kit_resumen_short) ?></p>
+                <?php endif; ?>
+                <div class="kit-inline-meta">
+                    <span class="badge">🧩 <?= (int)$kit_comp_count ?> componentes</span>
+                    <span class="badge">📘 <?= count($kit_manuals) ?> manuales</span>
+                    <?php if (!empty($kit_inline['version'])): ?><span class="badge">🔢 v<?= h($kit_inline['version']) ?></span><?php endif; ?>
+                </div>
+                <?php if (!empty($kit_manuals)): ?>
+                <div class="kit-inline-manuales">
+                    <span class="man-label">Manuales:</span>
+                    <div class="man-pills">
+                        <?php foreach ($kit_manuals as $m): ?>
+                            <a class="tag-pill" href="/kit-manual.php?kit=<?= urlencode($kit_inline['slug']) ?>&slug=<?= urlencode($m['slug']) ?>" title="Manual <?= h($m['slug']) ?>">
+                                <?= h($m['slug']) ?><?php if (!empty($m['idioma'])): ?> · <?= h($m['idioma']) ?><?php endif; ?><?php if (!empty($m['time_minutes'])): ?> · ⏱️ <?= (int)$m['time_minutes'] ?>m<?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                <?php if (!empty($kit_areas)): ?>
+                <div class="kit-inline-areas">
+                    <?php foreach ($kit_areas as $a): ?>
+                        <a class="tag-pill" href="/kits?area=<?= h($a['slug']) ?>" title="Ver kits de <?= h($a['nombre']) ?>">#<?= h($a['nombre']) ?></a>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <div class="kit-inline-actions">
+                    <a href="/<?= h($kit_inline['slug']) ?>" class="btn btn-secondary" title="Ver Kit">Ver Kit</a>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        console.log('🔍 [Clase] Kit inline:', <?= json_encode(['id'=>$kit_inline['id'],'slug'=>$kit_inline['slug'],'nombre'=>$kit_inline['nombre']]) ?>);
+        console.log('🔍 [Clase] Kit inline componentes:', <?= (int)$kit_comp_count ?>, 'manuales:', <?= count($kit_manuals) ?>);
+    </script>
+    <?php endif; ?>
+
     <article>
         <?php if (!empty($proyecto['resumen'])): ?>
         <div class="resumen-section">
