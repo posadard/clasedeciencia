@@ -472,7 +472,24 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   function openModal(initial, mode, index){
     ensureSecModal();
     document.getElementById('sec-note-text').value = initial?.nota || '';
-    document.getElementById('sec-note-cat').value = initial?.categoria || '';
+    const catSelect = document.getElementById('sec-note-cat-select');
+    const customWrap = document.getElementById('sec-note-cat-custom-wrap');
+    const catInput = document.getElementById('sec-note-cat');
+    const catVal = (initial?.categoria || '').toLowerCase();
+    const options = Array.from(catSelect.options).map(o => o.value);
+    if (options.includes(catVal)) {
+      catSelect.value = catVal;
+      customWrap.style.display = (catVal === 'otro') ? '' : 'none';
+      if (catVal !== 'otro') catInput.value = '';
+    } else if (catVal) {
+      catSelect.value = 'otro';
+      customWrap.style.display = '';
+      catInput.value = initial?.categoria || '';
+    } else {
+      catSelect.value = '';
+      customWrap.style.display = 'none';
+      catInput.value = '';
+    }
     const modal = document.getElementById('sec-modal');
     modal.dataset.mode = mode;
     modal.dataset.index = String(index);
@@ -481,7 +498,14 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   function closeModal(){ document.getElementById('sec-modal').style.display = 'none'; }
   function saveModal(){
     const text = document.getElementById('sec-note-text').value.trim();
-    const cat = document.getElementById('sec-note-cat').value.trim();
+    const catSelect = document.getElementById('sec-note-cat-select');
+    const catInput = document.getElementById('sec-note-cat');
+    let cat = '';
+    if (catSelect.value === 'otro') {
+      cat = catInput.value.trim();
+    } else {
+      cat = catSelect.value.trim();
+    }
     if (!text) { alert('Texto de nota requerido'); return; }
     const modal = document.getElementById('sec-modal');
     const mode = modal.dataset.mode;
@@ -551,8 +575,25 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
           <h3>Nota de Seguridad</h3>
           <label>Texto</label>
           <input type="text" id="sec-note-text" />
-          <label>Categoría (opcional)</label>
-          <input type="text" id="sec-note-cat" />
+          <label>Tipo de riesgo</label>
+          <select id="sec-note-cat-select">
+            <option value="">-- Seleccionar --</option>
+            <option value="protección personal">Protección personal</option>
+            <option value="corte">Corte</option>
+            <option value="químico">Químico</option>
+            <option value="eléctrico">Eléctrico</option>
+            <option value="calor/fuego">Calor/Fuego</option>
+            <option value="biológico">Biológico</option>
+            <option value="presión/golpe">Presión/Golpe</option>
+            <option value="entorno/ventilación">Entorno/Ventilación</option>
+            <option value="supervisión adulta">Supervisión adulta</option>
+            <option value="residuos/reciclaje">Residuos/Reciclaje</option>
+            <option value="otro">Otro…</option>
+          </select>
+          <div id="sec-note-cat-custom-wrap" style="display:none;">
+            <label>Otro (especifica)</label>
+            <input type="text" id="sec-note-cat" />
+          </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-primary" id="sec-save-btn">Guardar</button>
             <button type="button" class="btn" id="sec-cancel-btn">Cancelar</button>
@@ -561,6 +602,11 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
       document.body.appendChild(modal);
       document.getElementById('sec-save-btn').addEventListener('click', saveModal);
       document.getElementById('sec-cancel-btn').addEventListener('click', closeModal);
+      const catSelect = document.getElementById('sec-note-cat-select');
+      const customWrap = document.getElementById('sec-note-cat-custom-wrap');
+      catSelect.addEventListener('change', function(){
+        customWrap.style.display = (catSelect.value === 'otro') ? '' : 'none';
+      });
       console.log('✅ [ManualsEdit] Security modal creado');
     }
     return modal;

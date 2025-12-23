@@ -96,11 +96,29 @@ include 'includes/header.php';
               <?php if (!empty($segObj['notas']) && is_array($segObj['notas'])): ?>
                 <ul class="security-list">
                   <?php foreach ($segObj['notas'] as $nota): ?>
-                    <?php if (is_array($nota)): ?>
-                      <li><span class="sec-note"><?= h($nota['nota'] ?? '') ?></span><?php if (!empty($nota['categoria'])): ?> <span class="muted">(<?= h($nota['categoria']) ?>)</span><?php endif; ?></li>
-                    <?php else: ?>
-                      <li><span class="sec-note"><?= h($nota) ?></span></li>
-                    <?php endif; ?>
+                    <?php
+                      $cat = is_array($nota) ? ($nota['categoria'] ?? '') : '';
+                      $catLower = mb_strtolower($cat);
+                      $icon = '⚠️';
+                      switch ($catLower) {
+                        case 'protección personal': $icon = '🥽'; break;
+                        case 'corte': $icon = '✂️'; break;
+                        case 'químico': $icon = '⚗️'; break;
+                        case 'eléctrico': $icon = '⚡'; break;
+                        case 'calor/fuego': $icon = '🔥'; break;
+                        case 'biológico': $icon = '🧪'; break;
+                        case 'presión/golpe': $icon = '💥'; break;
+                        case 'entorno/ventilación': $icon = '🌬️'; break;
+                        case 'supervisión adulta': $icon = '👨‍🏫'; break;
+                        case 'residuos/reciclaje': $icon = '♻️'; break;
+                      }
+                    ?>
+                    <li>
+                      <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
+                      <?php if (!empty($cat)): ?>
+                        <span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span>
+                      <?php endif; ?>
+                    </li>
                   <?php endforeach; ?>
                 </ul>
               <?php endif; ?>
@@ -108,11 +126,30 @@ include 'includes/header.php';
           <?php if (!$rendered): ?>
             <ul class="security-list">
               <?php foreach ($seg as $s): ?>
-                <?php if (is_array($s) && (isset($s['nota']) || isset($s['categoria']))): ?>
-                  <li><span class="sec-note"><?= h($s['nota'] ?? '') ?></span><?php if (!empty($s['categoria'])): ?> <span class="muted">(<?= h($s['categoria']) ?>)</span><?php endif; ?></li>
-                <?php else: ?>
-                  <li><span class="sec-note"><?= h(is_array($s) ? json_encode($s, JSON_UNESCAPED_UNICODE) : $s) ?></span></li>
-                <?php endif; ?>
+                <?php
+                  $text = is_array($s) ? ($s['nota'] ?? '') : $s;
+                  $cat = is_array($s) ? ($s['categoria'] ?? '') : '';
+                  $catLower = mb_strtolower($cat);
+                  $icon = '⚠️';
+                  switch ($catLower) {
+                    case 'protección personal': $icon = '🥽'; break;
+                    case 'corte': $icon = '✂️'; break;
+                    case 'químico': $icon = '⚗️'; break;
+                    case 'eléctrico': $icon = '⚡'; break;
+                    case 'calor/fuego': $icon = '🔥'; break;
+                    case 'biológico': $icon = '🧪'; break;
+                    case 'presión/golpe': $icon = '💥'; break;
+                    case 'entorno/ventilación': $icon = '🌬️'; break;
+                    case 'supervisión adulta': $icon = '👨‍🏫'; break;
+                    case 'residuos/reciclaje': $icon = '♻️'; break;
+                  }
+                ?>
+                <li>
+                  <span class="sec-note"><?= h(is_array($text) ? json_encode($text, JSON_UNESCAPED_UNICODE) : $text) ?></span>
+                  <?php if (!empty($cat)): ?>
+                    <span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span>
+                  <?php endif; ?>
+                </li>
               <?php endforeach; ?>
             </ul>
           <?php endif; ?>
