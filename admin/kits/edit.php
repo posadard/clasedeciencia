@@ -1466,16 +1466,75 @@ include '../header.php';
         </form>`;
       wrap.appendChild(chip);
     }
-    chip.querySelector('.name').textContent = def.etiqueta;
-    chip.querySelector('.meta-val').textContent = display;
-    const unitEl = chip.querySelector('.meta-unit');
-    unitEl.textContent = unidad ? (' ' + unidad) : '';
+    // Actualiza nombre y meta con seguridad, soportando chips existentes (sin .meta-val)
+    const nameEl = chip.querySelector('.name');
+    if (nameEl) nameEl.textContent = def.etiqueta;
+    const metaEl = chip.querySelector('.meta');
+    if (metaEl) {
+      while (metaEl.firstChild) metaEl.removeChild(metaEl.firstChild);
+      metaEl.appendChild(document.createTextNode('· '));
+      const strong = document.createElement('strong');
+      strong.textContent = display;
+      metaEl.appendChild(strong);
+      if (unidad) metaEl.appendChild(document.createTextNode(' ' + unidad));
+    }
+    // Actualiza datos en el botón de edición para reflejar nuevos valores
+    try {
+      const editBtnForData = chip.querySelector('.js-edit-attr');
+      if (editBtnForData) {
+        const valuesForAttr = Array.isArray(rawValues) ? rawValues.map(v=>({valor_string:String(v)})) : [];
+        editBtnForData.setAttribute('data-values', JSON.stringify(valuesForAttr));
+      }
+    } catch(_e){}
     // Rebind edit-open behavior
     try {
-      chip.querySelector('.js-edit-attr').addEventListener('click', () => {
-        const btn = chip.querySelector('.js-edit-attr');
-        btn.dispatchEvent(new Event('click'));
-      });
+      const editBtn = chip.querySelector('.js-edit-attr');
+      if (editBtn && !editBtn.dataset.bound) {
+        editBtn.dataset.bound = '1';
+        editBtn.addEventListener('click', () => {
+          try {
+            const defId = editBtn.getAttribute('data-attr-id');
+            const label = editBtn.getAttribute('data-label');
+            const tipo = editBtn.getAttribute('data-tipo');
+            const unitsJson = editBtn.getAttribute('data-units');
+            const unitDef = editBtn.getAttribute('data-unidad_def') || '';
+            const vals = JSON.parse(editBtn.getAttribute('data-values') || '[]');
+            document.getElementById('edit_def_id').value = defId;
+            document.getElementById('editAttrInfo').textContent = label;
+            const inputEl = document.getElementById('edit_valor');
+            const unitSel = document.getElementById('edit_unidad');
+            const unitGroup = document.getElementById('edit_unidad_group');
+            inputEl.value = '';
+            unitSel.innerHTML = '';
+            if (Array.isArray(vals) && vals.length) {
+              const parts = vals.map(v => {
+                if (tipo === 'number') return v.valor_numero;
+                if (tipo === 'integer') return v.valor_entero;
+                if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
+                if (tipo === 'date') return v.valor_fecha;
+                if (tipo === 'datetime') return v.valor_datetime;
+                if (tipo === 'json') return v.valor_json;
+                return v.valor_string;
+              }).filter(Boolean);
+              inputEl.value = parts.join(', ');
+            }
+            let units = [];
+            try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
+            const hasUnits = Array.isArray(units) && units.length > 0;
+            const hasDefault = !!unitDef;
+            if (hasUnits || hasDefault) {
+              const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+              if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
+              if (unitGroup) unitGroup.style.display = '';
+              console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+            } else {
+              if (unitGroup) unitGroup.style.display = 'none';
+              console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+            }
+            openModal('#modalEditAttr');
+          } catch(e) { console.log('❌ [KitsEdit] Error abrir modal editar (chip nuevo):', e && e.message); }
+        });
+      }
     } catch(_e){}
     // Intercept delete form submit to use AJAX
     try {
