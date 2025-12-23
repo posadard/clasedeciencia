@@ -321,25 +321,28 @@ include 'includes/header.php';
         <ul class="materials-list">
           <?php foreach ($componentes as $m): ?>
             <li>
-              <span class="material-name"><?= h($m['nombre_comun']) ?></span>
               <?php if (!empty($m['slug'])): ?>
-                <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
+                <a href="/<?= h($m['slug']) ?>" class="material-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="display:block; text-decoration:none; color:inherit;">
               <?php endif; ?>
-              <?php if (!empty($m['advertencias_seguridad'])): ?>
-                <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
-              <?php endif; ?>
-              <?php if (!empty($m['cantidad'])): ?>
-                <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
-              <?php endif; ?>
-              <?php if (isset($m['es_incluido_kit'])): ?>
-                <?php if ((int)$m['es_incluido_kit'] === 1): ?>
-                  <span class="badge badge-success">✓ Incluido</span>
-                <?php else: ?>
-                  <span class="badge badge-danger">No incluido</span>
-                <?php endif; ?>
-              <?php endif; ?>
-              <?php if (!empty($m['notas'])): ?>
-                <small class="material-notes"><?= h($m['notas']) ?></small>
+                  <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+                  <?php if (!empty($m['advertencias_seguridad'])): ?>
+                    <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
+                  <?php endif; ?>
+                  <?php if (!empty($m['cantidad'])): ?>
+                    <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+                  <?php endif; ?>
+                  <?php if (isset($m['es_incluido_kit'])): ?>
+                    <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+                      <span class="badge badge-success">✓ Incluido</span>
+                    <?php else: ?>
+                      <span class="badge badge-danger">No incluido</span>
+                    <?php endif; ?>
+                  <?php endif; ?>
+                  <?php if (!empty($m['notas'])): ?>
+                    <small class="material-notes"><?= h($m['notas']) ?></small>
+                  <?php endif; ?>
+              <?php if (!empty($m['slug'])): ?>
+                </a>
               <?php endif; ?>
             </li>
           <?php endforeach; ?>
