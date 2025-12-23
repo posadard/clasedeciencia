@@ -634,8 +634,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $stmt = $pdo->prepare('INSERT INTO kit_componentes (kit_id, item_id, cantidad, es_incluido_kit, notas, sort_order) VALUES (?,?,?,?,?,?)');
           $stmt->execute([$id, $item_id, $cantidad, 1, $notas, $orden]);
           $action_msg = 'Componente agregado.';
+          if ($is_ajax) {
+            // Obtener datos del item para construir chip
+            $itS = $pdo->prepare('SELECT id, nombre_comun, sku, unidad FROM kit_items WHERE id = ?');
+            $itS->execute([$item_id]);
+            $it = $itS->fetch(PDO::FETCH_ASSOC);
+            header('Content-Type: application/json');
+            echo json_encode([
+              'ok'=>true,
+              'action'=>'add_item',
+              'item'=>[
+                'item_id'=>$item_id,
+                'cantidad'=>$cantidad,
+                'orden'=>$orden,
+                'notas'=>$notas,
+                'es_incluido_kit'=>1,
+                'nombre_comun'=>$it['nombre_comun'] ?? '',
+                'sku'=>$it['sku'] ?? '',
+                'unidad'=>$it['unidad'] ?? ''
+              ]
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+          }
         } catch (PDOException $e) {
           $error_msg = 'Error al agregar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
         }
       }
     } else if ($action === 'delete_item' && $is_edit) {
@@ -648,8 +671,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $stmt = $pdo->prepare('DELETE FROM kit_componentes WHERE kit_id = ? AND item_id = ?');
           $stmt->execute([$id, $kc_item_id]);
           $action_msg = 'Componente eliminado.';
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>true,'action'=>'delete_item','kc_item_id'=>$kc_item_id]); exit; }
         } catch (PDOException $e) {
           $error_msg = 'Error al eliminar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
         }
       }
     } else if ($action === 'update_item' && $is_edit) {
@@ -661,17 +686,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $incluido = isset($_POST['es_incluido_kit']) ? 1 : 0;
       if ($kc_item_id <= 0 || $cantidad <= 0) {
         $error_msg = 'Selecciona un componente válido y cantidad positiva.';
-        echo '<script>console.log("❌ [KitsEdit] update_item inválido");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] update_item inválido");</script>'; }
       } else {
         try {
           if ($notas !== '') { $notas = mb_substr($notas, 0, 255, 'UTF-8'); } else { $notas = null; }
           $stmt = $pdo->prepare('UPDATE kit_componentes SET cantidad = ?, notas = ?, sort_order = ?, es_incluido_kit = ? WHERE kit_id = ? AND item_id = ?');
           $stmt->execute([$cantidad, $notas, $orden, $incluido, $id, $kc_item_id]);
           $action_msg = 'Componente actualizado.';
-          echo '<script>console.log("✅ [KitsEdit] update_item guardado; incluido=' . ($incluido? '1':'0') . '");</script>';
+          if ($is_ajax) {
+            $itS = $pdo->prepare('SELECT id, nombre_comun, sku, unidad FROM kit_items WHERE id = ?');
+            $itS->execute([$kc_item_id]);
+            $it = $itS->fetch(PDO::FETCH_ASSOC);
+            header('Content-Type: application/json');
+            echo json_encode([
+              'ok'=>true,
+              'action'=>'update_item',
+              'item'=>[
+                'item_id'=>$kc_item_id,
+                'cantidad'=>$cantidad,
+                'orden'=>$orden,
+                'notas'=>$notas,
+                'es_incluido_kit'=>$incluido,
+                'nombre_comun'=>$it['nombre_comun'] ?? '',
+                'sku'=>$it['sku'] ?? '',
+                'unidad'=>$it['unidad'] ?? ''
+              ]
+            ], JSON_UNESCAPED_UNICODE);
+            exit;
+          }
+          if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] update_item guardado; incluido=' . ($incluido? '1':'0') . '");</script>'; }
         } catch (PDOException $e) {
           $error_msg = 'Error al actualizar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-          echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
+          if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
         }
       }
     }
@@ -1879,6 +1926,142 @@ include '../header.php';
 
     document.addEventListener('click', (e) => {
       if (!dropdown.contains(e.target) && e.target !== input) dropdown.style.display = 'none';
+    });
+  })();
+
+  // AJAX para componentes del kit (add/update/delete) y actualización de chips inline
+  (function initComponentsAjax(){
+    const wrap = document.getElementById('selected-components');
+    const formEditCmp = document.getElementById('formEditCmp');
+    const formAddCmp = document.getElementById('formAddCmp');
+    if (!wrap) { console.log('⚠️ [KitsEdit] Contenedor de componentes no encontrado'); return; }
+
+    function upsertComponentChip(item){
+      if (!item || !item.item_id) return;
+      let chip = wrap.querySelector('.component-chip[data-item-id="' + item.item_id + '"]');
+      const unidad = item.unidad || '';
+      const incluido = (parseInt(item.es_incluido_kit,10) === 1);
+      if (!chip){
+        chip = document.createElement('div');
+        chip.className = 'component-chip';
+        chip.setAttribute('data-item-id', String(item.item_id));
+        chip.setAttribute('data-orden', String(item.orden || 0));
+        chip.innerHTML = `
+          <span class="name"></span>
+          <span class="meta">· <strong class="cmp-cantidad"></strong> <span class="cmp-unidad"></span></span>
+          <span class="chip-pill chip-danger cmp-noincl" title="No incluido" style="display:none;">No incluido</span>
+          <button type="button" class="edit-component js-edit-item" title="Editar"
+            data-item-id="${item.item_id}"
+            data-cantidad="${item.cantidad}"
+            data-notas="${item.notas || ''}"
+            data-orden="${item.orden || 0}"
+            data-nombre="${item.nombre_comun || ''}"
+            data-sku="${item.sku || ''}"
+            data-unidad="${unidad || '-'}"
+            data-incluido="${incluido ? 1 : 0}"
+          >✏️</button>
+          <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+            <input type="hidden" name="action" value="delete_item" />
+            <input type="hidden" name="kc_item_id" value="${item.item_id}" />
+            <button type="submit" class="remove-component" title="Remover">×</button>
+          </form>`;
+        wrap.appendChild(chip);
+      }
+      chip.querySelector('.name').textContent = item.nombre_comun || '';
+      chip.querySelector('.cmp-cantidad').textContent = String(item.cantidad);
+      const uEl = chip.querySelector('.cmp-unidad');
+      if (uEl) uEl.textContent = unidad || '';
+      chip.setAttribute('data-orden', String(item.orden || 0));
+
+      const pill = chip.querySelector('.cmp-noincl');
+      if (pill) pill.style.display = incluido ? 'none' : '';
+
+      // Actualizar dataset del botón editar
+      const btn = chip.querySelector('.js-edit-item');
+      if (btn){
+        btn.setAttribute('data-item-id', String(item.item_id));
+        btn.setAttribute('data-cantidad', String(item.cantidad));
+        btn.setAttribute('data-notas', item.notas || '');
+        btn.setAttribute('data-orden', String(item.orden || 0));
+        btn.setAttribute('data-nombre', item.nombre_comun || '');
+        btn.setAttribute('data-sku', item.sku || '');
+        btn.setAttribute('data-unidad', unidad || '-');
+        btn.setAttribute('data-incluido', incluido ? '1' : '0');
+        if (!btn.dataset.bound){
+          btn.dataset.bound = '1';
+          btn.addEventListener('click', () => {
+            const itemId = btn.getAttribute('data-item-id');
+            const cantidad = btn.getAttribute('data-cantidad');
+            const notas = btn.getAttribute('data-notas') || '';
+            const orden = btn.getAttribute('data-orden') || '0';
+            const nombre = btn.getAttribute('data-nombre') || '';
+            const sku = btn.getAttribute('data-sku') || '';
+            const unit = btn.getAttribute('data-unidad') || '';
+            const incl = btn.getAttribute('data-incluido') || '1';
+            document.getElementById('edit_kc_item_id').value = itemId;
+            document.getElementById('edit_cantidad').value = cantidad;
+            document.getElementById('edit_notas').value = notas;
+            document.getElementById('edit_orden').value = orden;
+            document.getElementById('editCmpInfo').textContent = `${nombre} (SKU ${sku}) · Unidad: ${unit}`;
+            const chk = document.getElementById('edit_incluido');
+            if (chk) chk.checked = (incl === '1');
+            openModal('#modalEditCmp');
+          });
+        }
+      }
+
+      // Interceptar eliminación vía AJAX
+      const delForm = chip.querySelector('form');
+      if (delForm && !delForm.dataset.bound){
+        delForm.dataset.bound = '1';
+        delForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!confirm('¿Eliminar componente del kit?')) return;
+          postAjaxKit(delForm, (resp) => {
+            console.log('✅ [KitsEdit] Componente eliminado', resp);
+            chip.remove();
+          });
+        });
+      }
+    }
+
+    if (formEditCmp){
+      formEditCmp.addEventListener('submit', (e) => {
+        e.preventDefault();
+        postAjaxKit(formEditCmp, (resp) => {
+          if (resp && resp.item){ upsertComponentChip(resp.item); }
+          try { document.querySelector('[data-target="#modalEditCmp"]').click(); } catch(_e){}
+          try { document.querySelector('#modalEditCmp')?.classList.remove('active'); } catch(_e){}
+          console.log('✅ [KitsEdit] Componente actualizado (AJAX)');
+        });
+      });
+    }
+
+    if (formAddCmp){
+      formAddCmp.addEventListener('submit', (e) => {
+        e.preventDefault();
+        postAjaxKit(formAddCmp, (resp) => {
+          if (resp && resp.item){ upsertComponentChip(resp.item); }
+          document.getElementById('component_search')?.value = '';
+          document.getElementById('combo_item_input')?.value = '';
+          document.getElementById('add_item_id')?.value = '';
+          try { document.querySelector('[data-target="#modalAddCmp"]').click(); } catch(_e){}
+          try { document.querySelector('#modalAddCmp')?.classList.remove('active'); } catch(_e){}
+          console.log('✅ [KitsEdit] Componente agregado (AJAX)');
+        });
+      });
+    }
+
+    // Interceptar deletes existentes para evitar reload
+    wrap.querySelectorAll('form').forEach(f => {
+      if (f.dataset.bound === '1') return;
+      f.dataset.bound = '1';
+      f.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!confirm('¿Eliminar componente del kit?')) return;
+        postAjaxKit(f, () => { try { f.closest('.component-chip')?.remove(); } catch(_e){} });
+      });
     });
   })();
 </script>
