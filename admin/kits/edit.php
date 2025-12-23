@@ -226,8 +226,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $ins->execute(['kit', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
         }
         $pdo->commit();
-        $action_msg = 'Atributo agregado.';
-        echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode([
@@ -242,15 +240,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $action_msg = 'Atributo agregado.';
+        echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>';
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-        $error_msg = 'Error agregando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-        echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $error_msg = 'Error agregando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'update_attr' && $is_edit) {
       try {
@@ -292,8 +292,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $ins->execute(['kit', $id, $def_id, $val_string, $val_numero, $val_entero, $val_bool, $val_fecha, $val_dt, $val_json, ($unidad ?: ($def['unidad_defecto'] ?? null)), 'es-CO', $orden++, 'manual']);
         }
         $pdo->commit();
-        $action_msg = 'Atributo actualizado.';
-        echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode([
@@ -308,15 +306,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $action_msg = 'Atributo actualizado.';
+        echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>';
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-        $error_msg = 'Error actualizando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-        echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $error_msg = 'Error actualizando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'delete_attr' && $is_edit) {
       try {
@@ -324,21 +324,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($def_id <= 0) { throw new Exception('Atributo inválido'); }
         $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
         $stmt->execute(['kit', $id, $def_id]);
-        $action_msg = 'Atributo eliminado.';
-        echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode(['ok' => true, 'def_id' => $def_id], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $action_msg = 'Atributo eliminado.';
+        echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>';
       } catch (PDOException $e) {
-        $error_msg = 'Error eliminando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-        echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $error_msg = 'Error eliminando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'create_attr_def' && $is_edit) {
       // Crear nueva definición de atributo y mapearla al tipo Kit
@@ -390,8 +390,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $mp->execute([$def_id, 'kit', 1, $next]);
         }
         $pdo->commit();
-        $action_msg = 'Atributo creado y mapeado.';
-        echo '<script>console.log("✅ [KitsEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode([
@@ -406,15 +404,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        $action_msg = 'Atributo creado y mapeado.';
+        echo '<script>console.log("✅ [KitsEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
       } catch (Exception $e) {
-        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
-        $error_msg = 'Error creando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-        echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
           header('Content-Type: application/json; charset=utf-8');
           echo json_encode(['ok' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
           exit;
         }
+        if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
+        $error_msg = 'Error creando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'save') {
       // Clases seleccionadas (transfer list)
@@ -884,11 +884,6 @@ include '../header.php';
             <span class="comp-codigo"><?= $text ?><?= $unit ? ' ' . htmlspecialchars($unit, ENT_QUOTES, 'UTF-8') : '' ?></span>
             <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectAttrItem(this.parentElement)">×</button>
             <button type="button" class="edit-component" title="Editar" onclick="event.stopPropagation(); editAttrItem(this.parentElement)">✏️</button>
-            <form method="POST" class="attr-delete-form" style="display:none;">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="delete_attr" />
-              <input type="hidden" name="def_id" value="<?= $aid ?>" />
-            </form>
           </div>
           <?php endforeach; ?>
         </div>
@@ -1261,8 +1256,8 @@ include '../header.php';
     // Interceptar envíos de modales para evitar refresh y actualizar UI
     (function initAttrAjax(){
       const currentUrl = window.location.pathname + window.location.search;
-      function getCsrf(){
-        return document.querySelector('#kit-form input[name="csrf_token"]')?.value || '';
+      function getCsrfFrom(form){
+        return form?.querySelector('input[name="csrf_token"]')?.value || document.querySelector('#kit-form input[name="csrf_token"]')?.value || '';
       }
       // Add Attr
       const formAdd = document.getElementById('formAddAttr');
@@ -1274,7 +1269,7 @@ include '../header.php';
             const valor = document.getElementById('add_valor').value;
             const unidad = document.getElementById('add_unidad')?.value || '';
             const fd = new URLSearchParams();
-            fd.set('csrf_token', getCsrf());
+            fd.set('csrf_token', getCsrfFrom(formAdd));
             fd.set('action', 'add_attr');
             fd.set('def_id', defId);
             fd.set('valor', valor);
@@ -1298,8 +1293,7 @@ include '../header.php';
               div.innerHTML = `<span class="comp-nombre">${data.label}</span><span class="comp-codigo">${data.display}${data.unidad? ' ' + data.unidad : ''}</span>`;
               const btnX = document.createElement('button'); btnX.type='button'; btnX.className='remove-btn'; btnX.textContent='×'; btnX.onclick = (ev)=>{ ev.stopPropagation(); deselectAttrItem(div); };
               const btnEdit = document.createElement('button'); btnEdit.type='button'; btnEdit.className='edit-component'; btnEdit.title='Editar'; btnEdit.textContent='✏️'; btnEdit.onclick = (ev)=>{ ev.stopPropagation(); editAttrItem(div); };
-              const delForm = document.createElement('form'); delForm.method='POST'; delForm.className='attr-delete-form'; delForm.style.display='none'; delForm.innerHTML = `<input type="hidden" name="csrf_token" value="${getCsrf()}"><input type="hidden" name="action" value="delete_attr"><input type="hidden" name="def_id" value="${data.def_id}">`;
-              div.appendChild(btnX); div.appendChild(btnEdit); div.appendChild(delForm);
+              div.appendChild(btnX); div.appendChild(btnEdit);
               div.onclick = function(){ editAttrItem(div); };
               selWrap.appendChild(div);
               try { document.querySelector('#modalAddAttr .js-close-modal')?.click(); } catch(_e){}
@@ -1324,7 +1318,7 @@ include '../header.php';
             const valor = document.getElementById('edit_valor').value;
             const unidad = document.getElementById('edit_unidad')?.value || '';
             const fd = new URLSearchParams();
-            fd.set('csrf_token', getCsrf());
+            fd.set('csrf_token', getCsrfFrom(formEdit));
             fd.set('action', 'update_attr');
             fd.set('def_id', defId);
             fd.set('valor', valor);
@@ -1356,7 +1350,7 @@ include '../header.php';
           e.preventDefault();
           try {
             const fd = new URLSearchParams(new FormData(formCreate));
-            fd.set('csrf_token', getCsrf());
+            fd.set('csrf_token', getCsrfFrom(formCreate));
             fd.set('action', 'create_attr_def');
             fd.set('ajax', '1');
             const resp = await fetch(currentUrl, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: fd.toString() });
