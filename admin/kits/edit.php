@@ -217,9 +217,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
         $card = $def['cardinalidad'];
         $tipo = $def['tipo_dato'];
-        $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+        // Para tipos numéricos, evitar separar por coma para no confundir decimales; usar saltos de línea
+        if ($card === 'many') {
+          if ($tipo === 'number' || $tipo === 'integer') {
+            $vals = array_filter(array_map('trim', preg_split('/\n+/', $valor)));
+          } else {
+            $vals = array_filter(array_map('trim', preg_split('/[\n,]+/', $valor)));
+          }
+        } else {
+          $vals = [$valor];
+        }
         $orden = 1;
-        foreach ($vals as $v) {
+          foreach ($vals as $v) {
           $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
           switch ($tipo) {
             case 'number':
@@ -247,7 +256,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $display_vals = [];
           foreach ($vals as $v) {
             switch ($tipo) {
-              case 'number': $display_vals[] = is_numeric(str_replace(',', '.', $v)) ? rtrim(rtrim((string)str_replace(',', '.', $v), '0'), '.') : (string)$v; break;
+              case 'number':
+                if (is_numeric(str_replace(',', '.', $v))) {
+                  $s = (string)str_replace(',', '.', $v);
+                  $display_vals[] = (strpos($s, '.') !== false) ? rtrim(rtrim($s, '0'), '.') : $s;
+                } else {
+                  $display_vals[] = (string)$v;
+                }
+                break;
               case 'integer': $display_vals[] = (string)((int)$v); break;
               case 'boolean': $display_vals[] = (in_array(strtolower((string)$v), ['1','true','sí','si'], true) ? 'Sí' : 'No'); break;
               case 'date':
@@ -299,7 +315,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ins = $pdo->prepare('INSERT INTO atributos_contenidos (tipo_entidad, entidad_id, atributo_id, valor_string, valor_numero, valor_entero, valor_booleano, valor_fecha, valor_datetime, valor_json, unidad_codigo, lang, orden, fuente, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())');
         $card = $def['cardinalidad'];
         $tipo = $def['tipo_dato'];
-        $vals = $card === 'many' ? array_filter(array_map('trim', preg_split('/[\n,]+/', $valor))) : [$valor];
+        if ($card === 'many') {
+          if ($tipo === 'number' || $tipo === 'integer') {
+            $vals = array_filter(array_map('trim', preg_split('/\n+/', $valor)));
+          } else {
+            $vals = array_filter(array_map('trim', preg_split('/[\n,]+/', $valor)));
+          }
+        } else {
+          $vals = [$valor];
+        }
         $orden = 1;
         foreach ($vals as $v) {
           $val_string = $val_numero = $val_entero = $val_bool = $val_fecha = $val_dt = $val_json = null;
@@ -328,7 +352,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $display_vals = [];
           foreach ($vals as $v) {
             switch ($tipo) {
-              case 'number': $display_vals[] = is_numeric(str_replace(',', '.', $v)) ? rtrim(rtrim((string)str_replace(',', '.', $v), '0'), '.') : (string)$v; break;
+              case 'number':
+                if (is_numeric(str_replace(',', '.', $v))) {
+                  $s = (string)str_replace(',', '.', $v);
+                  $display_vals[] = (strpos($s, '.') !== false) ? rtrim(rtrim($s, '0'), '.') : $s;
+                } else {
+                  $display_vals[] = (string)$v;
+                }
+                break;
               case 'integer': $display_vals[] = (string)((int)$v); break;
               case 'boolean': $display_vals[] = (in_array(strtolower((string)$v), ['1','true','sí','si'], true) ? 'Sí' : 'No'); break;
               case 'date':
@@ -954,7 +985,14 @@ include '../header.php';
             $unit = $values[0]['unidad_codigo'] ?? '';
             $display = [];
             foreach ($values as $v) {
-              if ($tipo === 'number') { $display[] = ($v['valor_numero'] !== null ? rtrim(rtrim((string)$v['valor_numero'], '0'), '.') : ''); }
+              if ($tipo === 'number') {
+                if ($v['valor_numero'] !== null) {
+                  $s = (string)$v['valor_numero'];
+                  $display[] = (strpos($s, '.') !== false) ? rtrim(rtrim($s, '0'), '.') : $s;
+                } else {
+                  $display[] = '';
+                }
+              }
               else if ($tipo === 'integer') { $display[] = (string)$v['valor_entero']; }
               else if ($tipo === 'boolean') { $display[] = ((int)$v['valor_booleano'] === 1 ? 'Sí' : 'No'); }
               else if ($tipo === 'date') { $display[] = $v['valor_fecha']; }
@@ -1197,6 +1235,7 @@ include '../header.php';
           document.getElementById('addAttrInfo').textContent = def.label;
           const sel = document.getElementById('add_unidad');
           const selGroup = document.getElementById('add_unidad_group');
+          const addVal = document.getElementById('add_valor');
           sel.innerHTML = '';
           const hasUnits = Array.isArray(def.units) && def.units.length > 0;
           const hasDefault = !!def.unitDef;
@@ -1209,6 +1248,14 @@ include '../header.php';
           } else {
             if (selGroup) selGroup.style.display = 'none';
             console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
+          // Ajustar placeholder para múltiples según tipo
+          if (addVal) {
+            if (def.card === 'many' && (def.tipo === 'number' || def.tipo === 'integer')) {
+              addVal.placeholder = 'Para múltiples, separa por saltos de línea';
+            } else {
+              addVal.placeholder = 'Para múltiples, separa por comas';
+            }
           }
           openModal('#modalAddAttr');
           setTimeout(() => { try { document.getElementById('add_valor')?.focus(); } catch(_e){} }, 50);
@@ -1264,6 +1311,7 @@ include '../header.php';
           const unitsJson = btn.getAttribute('data-units');
           const unitDef = btn.getAttribute('data-unidad_def') || '';
           const vals = JSON.parse(btn.getAttribute('data-values') || '[]');
+          const editVal = document.getElementById('edit_valor');
           document.getElementById('edit_def_id').value = defId;
           document.getElementById('editAttrInfo').textContent = label;
           const inputEl = document.getElementById('edit_valor');
@@ -1295,6 +1343,15 @@ include '../header.php';
           } else {
             if (unitGroup) unitGroup.style.display = 'none';
             console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+          }
+          // Ajustar placeholder para múltiples según tipo
+          if (editVal) {
+            const card = btn.getAttribute('data-card');
+            if (card === 'many' && (tipo === 'number' || tipo === 'integer')) {
+              editVal.placeholder = 'Para múltiples, separa por saltos de línea';
+            } else {
+              editVal.placeholder = 'Para múltiples, separa por comas';
+            }
           }
           openModal('#modalEditAttr');
         });
@@ -1426,7 +1483,13 @@ include '../header.php';
     if (!Array.isArray(values)) return '';
     const parts = values.map(v => {
       switch (tipo){
-        case 'number': return (typeof v === 'string' ? v : String(v)).replace(/,/g,'.').replace(/\.$/, '');
+        case 'number': {
+          let s = (typeof v === 'string' ? v : String(v)).replace(/,/g,'.');
+          if (s.includes('.')) {
+            s = s.replace(/0+$/,'').replace(/\.$/,'');
+          }
+          return s;
+        }
         case 'integer': return String(parseInt(v,10));
         case 'boolean': return (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 'Sí' : 'No';
         default: return String(v);
