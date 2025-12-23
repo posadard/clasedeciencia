@@ -4476,24 +4476,25 @@ strong, b {
 
 /* === Kit Inline Card (compact, shown after summary-content in clase.php) === */
 .kit-inline-card {
-    background: #ffffff;
+    background: var(--color-bg-alt);
     border: 1px solid var(--color-border-light);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-sm);
-    padding: var(--spacing-md);
-    margin: var(--spacing-lg) 0;
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--border-radius-sm);
+    box-shadow: none;
+    padding: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
 }
 
 .kit-inline-wrap {
     display: grid;
-    grid-template-columns: 140px 1fr;
-    gap: var(--spacing-md);
+    grid-template-columns: 80px 1fr;
+    gap: var(--spacing-sm);
     align-items: center;
 }
 
 .kit-inline-left {
-    background: var(--color-bg-alt);
-    border-radius: var(--border-radius);
+    background: #ffffff;
+    border-radius: var(--border-radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4503,7 +4504,7 @@ strong, b {
 .kit-inline-thumb { display: block; width: 100%; }
 .kit-inline-thumb img {
     width: 100%;
-    height: 96px;
+    height: 60px;
     object-fit: cover;
     display: block;
 }
@@ -4511,21 +4512,25 @@ strong, b {
 .kit-inline-right { display: flex; flex-direction: column; gap: 6px; }
 .kit-inline-header { display: flex; align-items: center; gap: 8px; }
 .kit-inline-label {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: var(--color-primary);
     text-transform: uppercase;
     letter-spacing: 0.04em;
 }
-.kit-inline-title { margin: 0; font-size: 1.1rem; }
+.kit-inline-title { margin: 0; font-size: 1rem; line-height: 1.3; }
 .kit-inline-title a { color: var(--color-primary); border: none; }
 .kit-inline-title a:hover { color: var(--color-primary-light); }
 
 .kit-inline-excerpt {
     color: var(--color-text-light);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin: 2px 0 6px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    margin: 2px 0 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .kit-inline-meta { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -4534,24 +4539,26 @@ strong, b {
     color: var(--color-primary);
     border: 1px solid rgba(31,60,136,0.18);
     border-radius: 999px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    padding: 0.15rem 0.5rem;
+    padding: 0.1rem 0.4rem;
 }
 
 .kit-inline-manuales { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .kit-inline-manuales .man-label { font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600; }
 .kit-inline-manuales .man-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.kit-inline-manuales .tag-pill { font-size: 0.8rem; padding: 2px 8px; }
+.kit-inline-manuales .tag-pill { font-size: 0.78rem; padding: 2px 8px; }
+.kit-inline-manuales .man-pills .tag-pill:nth-child(n+4) { display: none; }
 
 .kit-inline-areas { display: flex; gap: 6px; flex-wrap: wrap; }
-.kit-inline-areas .tag-pill { font-size: 0.8rem; padding: 2px 8px; }
+.kit-inline-areas .tag-pill { font-size: 0.78rem; padding: 2px 8px; }
+.kit-inline-areas .tag-pill:nth-child(n+4) { display: none; }
 
 .kit-inline-actions { margin-top: 6px; }
-.kit-inline-actions .btn { padding: 0.35rem 0.75rem; font-size: 0.9rem; }
+.kit-inline-actions .btn { padding: 0.3rem 0.6rem; font-size: 0.875rem; }
 
 @media (max-width: 768px) {
     .kit-inline-wrap { grid-template-columns: 1fr; }
-    .kit-inline-thumb img { height: 140px; }
+    .kit-inline-thumb img { height: 100px; }
 }
 
