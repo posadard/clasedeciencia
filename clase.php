@@ -586,33 +586,7 @@ include 'includes/header.php';
         </section>
         <?php endif; ?>
 
-        <?php if (!empty($competencias)): ?>
-        <section class="competencias-section">
-            <h2>📚 Competencias Desarrolladas</h2>
-            <p class="competencias-intro">Esta clase desarrolla las siguientes competencias educativas:</p>
-            <div class="competencias-accordion">
-                <?php foreach ($competencias as $idx => $comp): ?>
-                    <div class="competencia-item">
-                        <button class="competencia-header" onclick="toggleCompetencia(<?= $idx ?>)" type="button">
-                            <span class="competencia-title">
-                                <strong class="competencia-codigo"><?= h($comp['codigo']) ?></strong>
-                                <span class="competencia-nombre"><?= h($comp['nombre']) ?></span>
-                            </span>
-                            <span class="toggle-icon" id="icon-<?= $idx ?>">▼</span>
-                        </button>
-                        <div class="competencia-content" id="content-<?= $idx ?>" style="display: none;">
-                            <?php if (!empty($comp['subcategoria'])): ?>
-                                <p class="competencia-subcategoria"><strong>Categoría:</strong> <?= h($comp['subcategoria']) ?></p>
-                            <?php endif; ?>
-                            <?php if (!empty($comp['explicacion'])): ?>
-                                <p class="competencia-explicacion"><?= h($comp['explicacion']) ?></p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </section>
-        <?php endif; ?>
+        
 
         <?php if (!empty($recursos)): ?>
         <section class="multimedia">
@@ -698,6 +672,34 @@ include 'includes/header.php';
         </div>
         <?php endif; ?>
 
+        <?php if (!empty($competencias)): ?>
+        <section class="competencias-section">
+            <h2>📚 Competencias Desarrolladas</h2>
+            <p class="competencias-intro">Esta clase desarrolla las siguientes competencias educativas:</p>
+            <div class="competencias-accordion">
+                <?php foreach ($competencias as $idx => $comp): ?>
+                    <div class="competencia-item">
+                        <button class="competencia-header" onclick="toggleCompetencia(<?= $idx ?>)" type="button">
+                            <span class="competencia-title">
+                                <strong class="competencia-codigo"><?= h($comp['codigo']) ?></strong>
+                                <span class="competencia-nombre"><?= h($comp['nombre']) ?></span>
+                            </span>
+                            <span class="toggle-icon" id="icon-<?= $idx ?>">▼</span>
+                        </button>
+                        <div class="competencia-content" id="content-<?= $idx ?>" style="display: none;">
+                            <?php if (!empty($comp['subcategoria'])): ?>
+                                <p class="competencia-subcategoria"><strong>Categoría:</strong> <?= h($comp['subcategoria']) ?></p>
+                            <?php endif; ?>
+                            <?php if (!empty($comp['explicacion'])): ?>
+                                <p class="competencia-explicacion"><?= h($comp['explicacion']) ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
+        
         <?php if (!empty($tags)): ?>
         <section class="tags-section">
             <h3>🏷️ Tags</h3>
