@@ -59,7 +59,10 @@ include 'includes/header.php';
   </header>
 
   <article class="manual-content">
-    <?php if (!empty($manual['html'])): ?>
+    <?php
+      $mode = isset($manual['render_mode']) ? $manual['render_mode'] : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy');
+    ?>
+    <?php if ($mode === 'fullhtml' && !empty($manual['html'])): ?>
       <?= $manual['html'] ?>
     <?php else: ?>
       <?php

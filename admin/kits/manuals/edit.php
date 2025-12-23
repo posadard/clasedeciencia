@@ -28,6 +28,16 @@ if ($kit_id > 0) {
   $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
 }
 
+// Detect optional column 'render_mode' in kit_manuals
+$has_render_mode_column = false;
+try {
+  $pdo->query('SELECT render_mode FROM kit_manuals LIMIT 1');
+  $has_render_mode_column = true;
+  echo '<script>console.log("🔍 [ManualsEdit] Column render_mode: presente");</script>';
+} catch (PDOException $e) {
+  echo '<script>console.log("⚠️ [ManualsEdit] Column render_mode: ausente");</script>';
+}
+
 // Handle form submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
@@ -45,6 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $herr_json = trim($_POST['herramientas_json'] ?? '');
     $seg_json = trim($_POST['seguridad_json'] ?? '');
     $html = $_POST['html'] ?? null;
+    $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
 
     // Basic validations
     if ($kit_id <= 0) {
@@ -78,13 +89,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$error_msg) {
       try {
         if ($manual_id > 0) {
-          $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ? WHERE id = ?');
-          $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
+          if ($has_render_mode_column) {
+            $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ? WHERE id = ?');
+            $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $ui_mode, $manual_id]);
+          } else {
+            $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ? WHERE id = ?');
+            $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
+          }
           $success_msg = 'Manual actualizado.';
           echo '<script>console.log("✅ [ManualsEdit] Actualizado ID=' . $manual_id . '");</script>';
         } else {
-          $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-          $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html]);
+          if ($has_render_mode_column) {
+            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, render_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmtI->execute([$kit_id, $slug, $status === 'published' ? $version : $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $ui_mode]);
+          } else {
+            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html]);
+          }
           $manual_id = intval($pdo->lastInsertId());
           $success_msg = 'Manual creado.';
           echo '<script>console.log("✅ [ManualsEdit] Creado ID=' . $manual_id . '");</script>';
@@ -182,6 +203,15 @@ if (!$kit) {
     </div>
 
     <div class="form-group">
+      <label>Modo de Manual</label>
+      <div class="mode-toggle">
+        <label><input type="radio" name="ui_mode" value="legacy" checked /> Estructurado (Seguridad/Herramientas/Pasos)</label>
+        <label><input type="radio" name="ui_mode" value="fullhtml" /> HTML Completo (reemplaza bloques)</label>
+      </div>
+      <div id="mode-warning" class="help-note"></div>
+    </div>
+
+    <div class="form-group">
       <label>Pasos</label>
       <div id="steps-builder">
         <div class="steps-toolbar">
@@ -230,14 +260,6 @@ if (!$kit) {
       <textarea name="seguridad_json" id="seguridad_json" rows="4" style="display:none;" placeholder='{"edad":{"min":10,"max":14},"notas":[{"nota":"Usar gafas","categoria":"protección"}]}' ><?= htmlspecialchars($manual['seguridad_json'] ?? '') ?></textarea>
     </div>
 
-    <div class="form-group">
-      <label>Modo de Manual</label>
-      <div class="mode-toggle">
-        <label><input type="radio" name="ui_mode" value="legacy" checked /> Estructurado (Seguridad/Herramientas/Pasos)</label>
-        <label><input type="radio" name="ui_mode" value="fullhtml" /> HTML Completo (reemplaza bloques)</label>
-      </div>
-      <div id="mode-warning" class="help-note"></div>
-    </div>
 
     <div class="form-group" id="html-group">
       <label>Contenido HTML</label>
@@ -269,20 +291,20 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   function applyMode(mode) {
     if (mode === 'fullhtml') {
       modeWarning.textContent = '⚠️ Modo HTML completo activo: se reemplazarán Seguridad, Herramientas y Pasos.';
-      blocks.forEach(b => { if (b) b.classList.add('disabled-block'); });
-      htmlGroup.classList.remove('disabled-block');
+      blocks.forEach(b => { if (b) b.classList.add('hidden-block'); });
+      htmlGroup.classList.remove('hidden-block');
       console.log('⚠️ [ManualsEdit] Modo: fullhtml');
     } else {
       modeWarning.textContent = 'ℹ️ Modo estructurado: el campo HTML será ignorado al renderizar.';
-      blocks.forEach(b => { if (b) b.classList.remove('disabled-block'); });
-      htmlGroup.classList.add('disabled-block');
+      blocks.forEach(b => { if (b) b.classList.remove('hidden-block'); });
+      htmlGroup.classList.add('hidden-block');
       console.log('ℹ️ [ManualsEdit] Modo: legacy');
     }
   }
 
   modeRadios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
   // Initial mode: if HTML has content, default to fullhtml
-  const initialMode = (htmlTextarea && htmlTextarea.value.trim().length > 0) ? 'fullhtml' : 'legacy';
+  const initialMode = <?= json_encode(isset($manual['render_mode']) ? ($manual['render_mode'] === 'fullhtml' ? 'fullhtml' : 'legacy') : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy')) ?>;
   modeRadios.forEach(r => { r.checked = (r.value === initialMode); });
   applyMode(initialMode);
 
@@ -837,5 +859,6 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 .tool-body { padding:8px; background:#fff; color:#444; }
 .mode-toggle { display:flex; gap:16px; align-items:center; }
 .disabled-block { opacity:0.5; pointer-events:none; }
+.hidden-block { display:none; }
 </style>
 </script>
