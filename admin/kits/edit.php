@@ -23,6 +23,8 @@ $kit = [
   'contenido_html' => '',
   'imagen_portada' => '',
   'video_portada' => '',
+  'time_minutes' => null,
+  'dificultad_ensamble' => '',
   'seguridad' => null,
   'seo_title' => '',
   'seo_description' => '',
@@ -48,7 +50,7 @@ try {
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
@@ -440,6 +442,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $video_portada = isset($_POST['video_portada']) ? trim((string)$_POST['video_portada']) : '';
       $seo_title = isset($_POST['seo_title']) ? trim((string)$_POST['seo_title']) : '';
       $seo_description = isset($_POST['seo_description']) ? trim((string)$_POST['seo_description']) : '';
+      // Tiempo y Dificultad (por defecto del kit)
+      $time_minutes = (isset($_POST['time_minutes']) && $_POST['time_minutes'] !== '') ? (int)$_POST['time_minutes'] : null;
+      $dificultad_ensamble = isset($_POST['dificultad_ensamble']) ? trim((string)$_POST['dificultad_ensamble']) : '';
+      if ($dificultad_ensamble === '') { $dificultad_ensamble = null; }
       // Seguridad estructurada → JSON
       $seg_edad_min = (isset($_POST['seg_edad_min']) && $_POST['seg_edad_min'] !== '') ? (int)$_POST['seg_edad_min'] : null;
       $seg_edad_max = (isset($_POST['seg_edad_max']) && $_POST['seg_edad_max'] !== '') ? (int)$_POST['seg_edad_max'] : null;
@@ -545,11 +551,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
             $pdo->beginTransaction();
             if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
+              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, time_minutes=?, dificultad_ensamble=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $time_minutes, $dificultad_ensamble, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
             } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo]);
+              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $time_minutes, $dificultad_ensamble, $seguridad_json, $seo_title, $seo_description, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
             }
@@ -831,6 +837,29 @@ include '../header.php';
     </div>
   </div>
   <div class="form-group">
+    <h4>Tiempo y dificultad</h4>
+    <div class="field-inline">
+      <div class="form-group">
+        <label for="time_minutes">Tiempo armado (minutos)</label>
+        <input type="number" id="time_minutes" name="time_minutes" min="0" step="1" value="<?= htmlspecialchars($kit['time_minutes'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+      </div>
+      <div class="form-group">
+        <label for="dificultad_ensamble">Dificultad</label>
+        <select id="dificultad_ensamble" name="dificultad_ensamble">
+          <?php
+            $dif_actual = isset($kit['dificultad_ensamble']) ? (string)$kit['dificultad_ensamble'] : '';
+            $opciones = ['', 'Fácil', 'Media', 'Difícil'];
+            foreach ($opciones as $opt) {
+              $sel = ($dif_actual === $opt) ? 'selected' : '';
+              echo '<option value="' . htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') . '" ' . $sel . '>' . ($opt === '' ? '—' : htmlspecialchars($opt, ENT_QUOTES, 'UTF-8')) . '</option>';
+            }
+          ?>
+        </select>
+      </div>
+    </div>
+    <small class="hint">Valores por defecto del kit; se pueden ajustar en el manual.</small>
+  </div>
+  <div class="form-group">
     <h4>Seguridad</h4>
     <div class="field-inline">
       <div class="form-group">
@@ -949,6 +978,56 @@ include '../header.php';
     </div>
   </div>
   <?php endif; ?>
+  <?php if ($is_edit): ?>
+  <div class="form-group" style="margin-top:2rem;">
+    <h3>Componentes del Kit</h3>
+
+    <!-- estilos de chips y autocompletado se mueven a assets/css/style.css -->
+
+    <div class="form-group">
+      <label for="component_search">Buscar Componentes</label>
+      <div class="component-selector-container">
+        <div class="selected-components" id="selected-components">
+          <?php if (!empty($componentes)): foreach ($componentes as $kc): ?>
+            <div class="component-chip" data-item-id="<?= (int)$kc['item_id'] ?>" data-orden="<?= (int)$kc['orden'] ?>">
+              <span class="name"><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="meta">· <strong><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></strong> <?= htmlspecialchars(($kc['unidad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+              <?php if (isset($kc['es_incluido_kit']) && (int)$kc['es_incluido_kit'] === 0): ?>
+                <span class="chip-pill chip-danger" title="No incluido">No incluido</span>
+              <?php endif; ?>
+              <button type="button" class="edit-component js-edit-item" title="Editar"
+                data-item-id="<?= (int)$kc['item_id'] ?>"
+                data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
+                data-notas="<?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                data-orden="<?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?>"
+                data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
+                data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
+                data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
+                data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
+              >✏️</button>
+              <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+                <input type="hidden" name="action" value="delete_item" />
+                <input type="hidden" name="kc_item_id" value="<?= (int)$kc['item_id'] ?>" />
+                <button type="submit" class="remove-component" title="Remover">×</button>
+              </form>
+            </div>
+          <?php endforeach; endif; ?>
+        </div>
+        <input type="text" id="component_search" placeholder="Escribir para buscar componente..." autocomplete="off" />
+        <datalist id="components_list">
+          <?php foreach ($items as $it): ?>
+            <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
+            </option>
+          <?php endforeach; ?>
+        </datalist>
+        <div class="autocomplete-dropdown" id="cmp_autocomplete_dropdown"></div>
+      </div>
+      <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
+    </div>
+  </div>
+  <?php endif; ?>
   <!-- Taxonomías -->
   <div class="form-section">
     <h2>Taxonomías</h2>
@@ -988,57 +1067,6 @@ include '../header.php';
     <div id="seo-manual"></div>
   </div>
 </form>
-
-<?php if ($is_edit): ?>
-<div class="form-group" style="margin-top:2rem;">
-  <h3>Componentes del Kit</h3>
-
-  <!-- estilos de chips y autocompletado se mueven a assets/css/style.css -->
-
-  <div class="form-group">
-    <label for="component_search">Buscar Componentes</label>
-    <div class="component-selector-container">
-      <div class="selected-components" id="selected-components">
-        <?php if (!empty($componentes)): foreach ($componentes as $kc): ?>
-          <div class="component-chip" data-item-id="<?= (int)$kc['item_id'] ?>" data-orden="<?= (int)$kc['orden'] ?>">
-            <span class="name"><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
-            <span class="meta">· <strong><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></strong> <?= htmlspecialchars(($kc['unidad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
-            <?php if (isset($kc['es_incluido_kit']) && (int)$kc['es_incluido_kit'] === 0): ?>
-              <span class="chip-pill chip-danger" title="No incluido">No incluido</span>
-            <?php endif; ?>
-            <button type="button" class="edit-component js-edit-item" title="Editar"
-              data-item-id="<?= (int)$kc['item_id'] ?>"
-              data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
-              data-notas="<?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-              data-orden="<?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?>"
-              data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
-              data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
-              data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
-              data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
-            >✏️</button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="delete_item" />
-              <input type="hidden" name="kc_item_id" value="<?= (int)$kc['item_id'] ?>" />
-              <button type="submit" class="remove-component" title="Remover">×</button>
-            </form>
-          </div>
-        <?php endforeach; endif; ?>
-      </div>
-      <input type="text" id="component_search" placeholder="Escribir para buscar componente..." autocomplete="off" />
-      <datalist id="components_list">
-        <?php foreach ($items as $it): ?>
-          <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
-            <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
-          </option>
-        <?php endforeach; ?>
-      </datalist>
-      <div class="autocomplete-dropdown" id="cmp_autocomplete_dropdown"></div>
-    </div>
-    <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
-  </div>
-</div>
-<?php endif; ?>
 
   <!-- Modal Editar Atributo -->
   <div class="modal-overlay" id="modalEditAttr">
