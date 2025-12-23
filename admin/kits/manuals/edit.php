@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $herr_json = trim($_POST['herramientas_json'] ?? '');
     $seg_json = trim($_POST['seguridad_json'] ?? '');
     $html = $_POST['html'] ?? null;
-    $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
+    $ui_mode = (($_POST['render_mode'] ?? $_POST['ui_mode'] ?? '') === 'fullhtml') ? 'fullhtml' : 'legacy';
 
     // Basic validations
     if ($kit_id <= 0) {
@@ -204,10 +204,10 @@ if (!$kit) {
 
     <div class="form-group">
       <label>Modo de Manual</label>
-      <div class="mode-toggle">
-        <label><input type="radio" name="ui_mode" value="legacy" checked /> Estructurado (Seguridad/Herramientas/Pasos)</label>
-        <label><input type="radio" name="ui_mode" value="fullhtml" /> HTML Completo (reemplaza bloques)</label>
-      </div>
+      <select name="render_mode" id="render-mode-select">
+        <option value="legacy">Estructurado (Seguridad/Herramientas/Pasos)</option>
+        <option value="fullhtml">HTML Completo (reemplaza bloques)</option>
+      </select>
       <div id="mode-warning" class="help-note"></div>
     </div>
 
@@ -282,7 +282,7 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function() {
   // Mode toggle logic
-  const modeRadios = Array.from(document.querySelectorAll('input[name="ui_mode"]'));
+  const modeSelect = document.getElementById('render-mode-select');
   const htmlGroup = document.getElementById('html-group');
   const htmlTextarea = document.getElementById('html-textarea');
   const modeWarning = document.getElementById('mode-warning');
@@ -302,10 +302,10 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
     }
   }
 
-  modeRadios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
-  // Initial mode: if HTML has content, default to fullhtml
+  modeSelect.addEventListener('change', () => applyMode(modeSelect.value));
+  // Initial mode: from DB if available, else heuristic
   const initialMode = <?= json_encode(isset($manual['render_mode']) ? ($manual['render_mode'] === 'fullhtml' ? 'fullhtml' : 'legacy') : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy')) ?>;
-  modeRadios.forEach(r => { r.checked = (r.value === initialMode); });
+  modeSelect.value = initialMode;
   applyMode(initialMode);
 
   const pasosTextarea = document.getElementById('pasos_json');
