@@ -1005,12 +1005,7 @@ include '../header.php';
                 data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
                 data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
               >✏️</button>
-              <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-                <input type="hidden" name="action" value="delete_item" />
-                <input type="hidden" name="kc_item_id" value="<?= (int)$kc['item_id'] ?>" />
-                <button type="submit" class="remove-component" title="Remover">×</button>
-              </form>
+              <button type="button" class="remove-component js-delete-item" title="Remover">×</button>
             </div>
           <?php endforeach; endif; ?>
         </div>
@@ -2056,13 +2051,16 @@ include '../header.php';
           openModal('#modalEditCmp');
         });
       }
-      // Eliminar via AJAX
-      const delForm = chip.querySelector('form');
-      if (delForm) {
-        delForm.addEventListener('submit', (e) => {
-          e.preventDefault();
+      // Eliminar via AJAX (botón)
+      const delBtn = chip.querySelector('.js-delete-item');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
           if (!confirm('¿Eliminar componente del kit?')) return;
-          const fd = new FormData(delForm);
+          const fd = new FormData();
+          const csrf = document.querySelector('#kit-form input[name="csrf_token"]')?.value || '';
+          fd.append('csrf_token', csrf);
+          fd.append('action', 'delete_item');
+          fd.append('kc_item_id', chip.getAttribute('data-item-id') || '');
           fd.append('ajax','1');
           console.log('📡 [KitsEdit] Enviando delete_item...');
           fetch(postUrl, { method: 'POST', body: fd })
@@ -2109,12 +2107,7 @@ include '../header.php';
                 data-unidad="${(meta.unidad||'-').replace(/"/g,'&quot;')}"
                 data-incluido="${c.es_incluido_kit === 0 ? 0 : 1}"
               >✏️</button>
-              <form method="POST" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="${formAdd.querySelector('input[name=csrf_token]')?.value||''}" />
-                <input type="hidden" name="action" value="delete_item" />
-                <input type="hidden" name="kc_item_id" value="${c.item_id}" />
-                <button type="submit" class="remove-component" title="Remover">×</button>
-              </form>
+              <button type="button" class="remove-component js-delete-item" title="Remover">×</button>
             `;
             selectedWrap.appendChild(chip);
             bindChipEvents(chip);
