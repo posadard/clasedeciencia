@@ -254,25 +254,23 @@ if (!$kit) {
             try { $tmp = json_decode($kit['seguridad'], true); if (is_array($tmp)) { $kit_seg_obj = $tmp; } } catch(Exception $e) {}
           }
         ?>
-        <?php if ($kit_seg_obj): ?>
-        <div class="kit-safety-panel">
+        <div id="kit-safety-panel" class="kit-safety-panel<?= $kit_seg_obj ? '' : ' muted' ?>">
           <div class="kit-safety-head"><strong>Medidas del kit</strong></div>
           <div class="kit-safety-body">
-            <?php if (!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])): ?>
-              <div class="kit-security-chip">Edad del kit: <?= !empty($kit_seg_obj['edad_min']) ? (int)$kit_seg_obj['edad_min'] : '?' ?>–<?= !empty($kit_seg_obj['edad_max']) ? (int)$kit_seg_obj['edad_max'] : '?' ?> años</div>
-            <?php endif; ?>
-            <?php if (!empty($kit_seg_obj['notas'])): ?>
-              <div class="kit-safety-notes"><?= nl2br(h($kit_seg_obj['notas'])) ?></div>
-            <?php else: ?>
-              <div class="muted">(El kit no tiene notas de seguridad textuales)</div>
-            <?php endif; ?>
+            <div id="kit-security-chip" class="kit-security-chip" style="display: <?= (!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])) ? '' : 'none' ?>;">
+              Edad del kit: <?= !empty($kit_seg_obj['edad_min']) ? (int)$kit_seg_obj['edad_min'] : '?' ?>–<?= !empty($kit_seg_obj['edad_max']) ? (int)$kit_seg_obj['edad_max'] : '?' ?> años
+            </div>
+            <div id="kit-safety-notes" class="kit-safety-notes">
+              <?php if ($kit_seg_obj && !empty($kit_seg_obj['notas'])): ?>
+                <?= nl2br(h($kit_seg_obj['notas'])) ?>
+              <?php else: ?>
+                <span class="muted">(El kit no tiene notas de seguridad textuales)</span>
+              <?php endif; ?>
+            </div>
           </div>
           <label class="kit-safety-choose"><input type="checkbox" id="use-kit-safety" /> Incluir seguridad del kit en este manual</label>
           <div class="help-note">Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.</div>
         </div>
-        <?php else: ?>
-          <div class="kit-safety-panel muted">Este kit no tiene medidas de seguridad registradas.</div>
-        <?php endif; ?>
         <div class="security-age">
           <strong>Edad segura (opcional)</strong>
           <div class="age-fields">
@@ -531,6 +529,64 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const ageMinInput = document.getElementById('sec-age-min');
   const ageMaxInput = document.getElementById('sec-age-max');
   const useKitSafety = document.getElementById('use-kit-safety');
+  const kitSafetyPanel = document.getElementById('kit-safety-panel');
+  const kitSafetyChip = document.getElementById('kit-security-chip');
+  const kitSafetyNotes = document.getElementById('kit-safety-notes');
+  const kitSelect = document.querySelector('select[name="kit_id"]');
+
+  function renderKitSafetyPanel(obj){
+    KIT_SAFETY = obj || null;
+    if (!kitSafetyPanel) return;
+    if (!KIT_SAFETY) {
+      kitSafetyPanel.classList.add('muted');
+      if (kitSafetyChip) kitSafetyChip.style.display = 'none';
+      if (kitSafetyNotes) kitSafetyNotes.innerHTML = '<span class="muted">(El kit no tiene notas de seguridad textuales)</span>';
+      console.log('⚠️ [ManualsEdit] Panel seguridad kit: vacío');
+      return;
+    }
+    kitSafetyPanel.classList.remove('muted');
+    const min = (typeof KIT_SAFETY.edad_min !== 'undefined') ? parseInt(KIT_SAFETY.edad_min,10) : null;
+    const max = (typeof KIT_SAFETY.edad_max !== 'undefined') ? parseInt(KIT_SAFETY.edad_max,10) : null;
+    if (kitSafetyChip) {
+      if (min !== null || max !== null) {
+        kitSafetyChip.style.display = '';
+        kitSafetyChip.textContent = 'Edad del kit: ' + (min !== null ? min : '?') + '–' + (max !== null ? max : '?') + ' años';
+      } else {
+        kitSafetyChip.style.display = 'none';
+      }
+    }
+    if (kitSafetyNotes) {
+      const notas = (KIT_SAFETY.notas ? String(KIT_SAFETY.notas) : '');
+      kitSafetyNotes.innerHTML = notas ? notas.replace(/\n/g,'<br>') : '<span class="muted">(El kit no tiene notas de seguridad textuales)</span>';
+    }
+    console.log('✅ [ManualsEdit] Panel seguridad kit actualizado');
+  }
+
+  async function fetchKitSafetyById(id){
+    try {
+      const res = await fetch('/api/kit-get.php?id=' + encodeURIComponent(String(id)));
+      if (!res.ok) { console.log('❌ [ManualsEdit] Fetch kit-get status:', res.status); return null; }
+      const data = await res.json();
+      console.log('📡 [ManualsEdit] kit-get respuesta:', data);
+      if (data && data.ok && data.kit) {
+        return data.kit.seguridad || null;
+      }
+      return null;
+    } catch (e) {
+      console.log('❌ [ManualsEdit] Error fetch kit-get:', e.message);
+      return null;
+    }
+  }
+
+  if (kitSelect) {
+    kitSelect.addEventListener('change', async function(){
+      const id = this.value ? parseInt(this.value, 10) : 0;
+      if (!id) { renderKitSafetyPanel(null); return; }
+      const seg = await fetchKitSafetyById(id);
+      renderKitSafetyPanel(seg);
+    });
+    console.log('🔍 [ManualsEdit] Observando cambios de kit_id');
+  }
 
   let notes = [];
 
