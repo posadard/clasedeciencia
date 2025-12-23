@@ -69,6 +69,11 @@ include 'includes/header.php';
         $pasos = [];
         $herr = [];
         $seg = [];
+        // Kit safety
+        $kitSeg = null;
+        if (!empty($kit['seguridad'])) {
+            try { $tmpKit = json_decode($kit['seguridad'], true); if (is_array($tmpKit)) { $kitSeg = $tmpKit; } } catch(Exception $e) {}
+        }
         if (!empty($manual['pasos_json'])) {
             $tmp = json_decode($manual['pasos_json'], true);
             if (is_array($tmp)) { $pasos = $tmp; }
@@ -77,61 +82,66 @@ include 'includes/header.php';
             $tmp = json_decode($manual['herramientas_json'], true);
             if (is_array($tmp)) { $herr = $tmp; }
         }
+        $manualSegRaw = null;
         if (!empty($manual['seguridad_json'])) {
             $tmp = json_decode($manual['seguridad_json'], true);
-            if (is_array($tmp)) { $seg = $tmp; }
+            if (is_array($tmp)) { $seg = $tmp; $manualSegRaw = $tmp; }
         }
       ?>
-      <?php if (!empty($seg)): ?>
+      <?php
+        // Compute effective safety by merging manual directives with kit safety (age + free-text notes)
+        $hasManualSafety = !empty($manualSegRaw);
+        $useKitSafety = false;
+        $effectiveAge = ['min' => null, 'max' => null];
+        $manualNotes = [];
+        $kitNotesText = '';
+        if ($hasManualSafety) {
+            $isAssoc = is_array($manualSegRaw) && array_keys($manualSegRaw) !== range(0, count($manualSegRaw)-1);
+            if ($isAssoc) {
+                if (isset($manualSegRaw['usar_seguridad_kit'])) { $useKitSafety = !!$manualSegRaw['usar_seguridad_kit']; }
+                if (!empty($manualSegRaw['edad']) && is_array($manualSegRaw['edad'])) {
+                    $effectiveAge['min'] = isset($manualSegRaw['edad']['min']) ? (int)$manualSegRaw['edad']['min'] : null;
+                    $effectiveAge['max'] = isset($manualSegRaw['edad']['max']) ? (int)$manualSegRaw['edad']['max'] : null;
+                }
+                if (!empty($manualSegRaw['notas_extra']) && is_array($manualSegRaw['notas_extra'])) { $manualNotes = $manualSegRaw['notas_extra']; }
+                elseif (!empty($manualSegRaw['notas']) && is_array($manualSegRaw['notas'])) { $manualNotes = $manualSegRaw['notas']; }
+            } else {
+                // Old shapes: array of notes or [{edad,notas}]
+                if (is_array($manualSegRaw) && isset($manualSegRaw[0]) && is_array($manualSegRaw[0]) && (isset($manualSegRaw[0]['edad']) || isset($manualSegRaw[0]['notas']))) {
+                    $obj = $manualSegRaw[0];
+                    if (!empty($obj['edad'])) {
+                        $effectiveAge['min'] = isset($obj['edad']['min']) ? (int)$obj['edad']['min'] : null;
+                        $effectiveAge['max'] = isset($obj['edad']['max']) ? (int)$obj['edad']['max'] : null;
+                    }
+                    if (!empty($obj['notas']) && is_array($obj['notas'])) { $manualNotes = $obj['notas']; }
+                } else {
+                    $manualNotes = $manualSegRaw;
+                }
+            }
+        }
+        // If manual age not set, use kit age if available
+        if (($effectiveAge['min'] === null || $effectiveAge['max'] === null) && $kitSeg) {
+            if ($effectiveAge['min'] === null && !empty($kitSeg['edad_min'])) $effectiveAge['min'] = (int)$kitSeg['edad_min'];
+            if ($effectiveAge['max'] === null && !empty($kitSeg['edad_max'])) $effectiveAge['max'] = (int)$kitSeg['edad_max'];
+        }
+        // Kit notes are free text; include if directive says so
+        if ($useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
+        $hasAnySafety = $useKitSafety || !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null);
+      ?>
+      <?php if ($hasAnySafety): ?>
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
-          <?php
-            $rendered = false;
-            $segIsAssoc = is_array($seg) && array_keys($seg) !== range(0, count($seg)-1);
-            $segObj = null;
-            if ($segIsAssoc) { $segObj = $seg; }
-            elseif (is_array($seg) && isset($seg[0]) && is_array($seg[0]) && (isset($seg[0]['edad']) || isset($seg[0]['notas']))) { $segObj = $seg[0]; }
-            if ($segObj && (isset($segObj['edad']) || isset($segObj['notas']))):
-              $edadMin = isset($segObj['edad']['min']) ? (int)$segObj['edad']['min'] : null;
-              $edadMax = isset($segObj['edad']['max']) ? (int)$segObj['edad']['max'] : null;
-          ?>
-              <div class="kit-security-chip">Edad segura: <?= ($edadMin !== null ? $edadMin : '?') ?>–<?= ($edadMax !== null ? $edadMax : '?') ?> años</div>
-              <?php if (!empty($segObj['notas']) && is_array($segObj['notas'])): ?>
-                <ul class="security-list">
-                  <?php foreach ($segObj['notas'] as $nota): ?>
-                    <?php
-                      $cat = is_array($nota) ? ($nota['categoria'] ?? '') : '';
-                      $catLower = mb_strtolower($cat);
-                      $icon = '⚠️';
-                      switch ($catLower) {
-                        case 'protección personal': $icon = '🥽'; break;
-                        case 'corte': $icon = '✂️'; break;
-                        case 'químico': $icon = '⚗️'; break;
-                        case 'eléctrico': $icon = '⚡'; break;
-                        case 'calor/fuego': $icon = '🔥'; break;
-                        case 'biológico': $icon = '🧪'; break;
-                        case 'presión/golpe': $icon = '💥'; break;
-                        case 'entorno/ventilación': $icon = '🌬️'; break;
-                        case 'supervisión adulta': $icon = '👨‍🏫'; break;
-                        case 'residuos/reciclaje': $icon = '♻️'; break;
-                      }
-                    ?>
-                    <li>
-                      <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
-                      <?php if (!empty($cat)): ?>
-                        <span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span>
-                      <?php endif; ?>
-                    </li>
-                  <?php endforeach; ?>
-                </ul>
-              <?php endif; ?>
-              <?php $rendered = true; endif; ?>
-          <?php if (!$rendered): ?>
+          <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
+            <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
+          <?php endif; ?>
+          <?php if (!empty($kitNotesText)): ?>
+            <div class="kit-safety-notes-public"><?= nl2br(h($kitNotesText)) ?></div>
+          <?php endif; ?>
+          <?php if (!empty($manualNotes)): ?>
             <ul class="security-list">
-              <?php foreach ($seg as $s): ?>
+              <?php foreach ($manualNotes as $nota): ?>
                 <?php
-                  $text = is_array($s) ? ($s['nota'] ?? '') : $s;
-                  $cat = is_array($s) ? ($s['categoria'] ?? '') : '';
+                  $cat = is_array($nota) ? ($nota['categoria'] ?? '') : '';
                   $catLower = mb_strtolower($cat);
                   $icon = '⚠️';
                   switch ($catLower) {
@@ -148,7 +158,7 @@ include 'includes/header.php';
                   }
                 ?>
                 <li>
-                  <span class="sec-note"><?= h(is_array($text) ? json_encode($text, JSON_UNESCAPED_UNICODE) : $text) ?></span>
+                  <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
                   <?php if (!empty($cat)): ?>
                     <span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span>
                   <?php endif; ?>

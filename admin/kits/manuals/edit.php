@@ -23,7 +23,7 @@ if ($manual_id > 0) {
 
 $kit = null;
 if ($kit_id > 0) {
-  $stmtK = $pdo->prepare('SELECT id, nombre, codigo, slug FROM kits WHERE id = ? LIMIT 1');
+  $stmtK = $pdo->prepare('SELECT id, nombre, codigo, slug, seguridad FROM kits WHERE id = ? LIMIT 1');
   $stmtK->execute([$kit_id]);
   $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
 }
@@ -248,6 +248,31 @@ if (!$kit) {
     <div class="form-group">
       <label>Seguridad</label>
       <div id="security-builder">
+        <?php
+          $kit_seg_obj = null;
+          if (!empty($kit['seguridad'])) {
+            try { $tmp = json_decode($kit['seguridad'], true); if (is_array($tmp)) { $kit_seg_obj = $tmp; } } catch(Exception $e) {}
+          }
+        ?>
+        <?php if ($kit_seg_obj): ?>
+        <div class="kit-safety-panel">
+          <div class="kit-safety-head"><strong>Medidas del kit</strong></div>
+          <div class="kit-safety-body">
+            <?php if (!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])): ?>
+              <div class="kit-security-chip">Edad del kit: <?= !empty($kit_seg_obj['edad_min']) ? (int)$kit_seg_obj['edad_min'] : '?' ?>–<?= !empty($kit_seg_obj['edad_max']) ? (int)$kit_seg_obj['edad_max'] : '?' ?> años</div>
+            <?php endif; ?>
+            <?php if (!empty($kit_seg_obj['notas'])): ?>
+              <div class="kit-safety-notes"><?= nl2br(h($kit_seg_obj['notas'])) ?></div>
+            <?php else: ?>
+              <div class="muted">(El kit no tiene notas de seguridad textuales)</div>
+            <?php endif; ?>
+          </div>
+          <label class="kit-safety-choose"><input type="checkbox" id="use-kit-safety" /> Incluir seguridad del kit en este manual</label>
+          <div class="help-note">Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.</div>
+        </div>
+        <?php else: ?>
+          <div class="kit-safety-panel muted">Este kit no tiene medidas de seguridad registradas.</div>
+        <?php endif; ?>
         <div class="security-age">
           <strong>Edad segura (opcional)</strong>
           <div class="age-fields">
@@ -288,6 +313,9 @@ if (!$kit) {
 <?php require_once __DIR__ . '/../../footer.php'; ?>
 <script>
 console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', <?= (int)$kit_id ?>);
+// Kit safety data for merge
+var KIT_SAFETY = <?= json_encode(isset($kit_seg_obj) ? $kit_seg_obj : null, JSON_UNESCAPED_UNICODE) ?>;
+console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function() {
@@ -502,6 +530,7 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   const addBtn = document.getElementById('add-sec-note-btn');
   const ageMinInput = document.getElementById('sec-age-min');
   const ageMaxInput = document.getElementById('sec-age-max');
+  const useKitSafety = document.getElementById('use-kit-safety');
 
   let notes = [];
 
@@ -602,13 +631,23 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
     const minRaw = ageMinInput.value.trim(); const maxRaw = ageMaxInput.value.trim();
     const min = minRaw === '' ? null : parseInt(minRaw,10);
     const max = maxRaw === '' ? null : parseInt(maxRaw,10);
+    const extras = notes.map(n => ({ nota: n.nota, categoria: n.categoria }));
     let payload = null;
-    if (min !== null || max !== null) {
-      payload = { edad: { }, notas: notes.map(n => ({ nota: n.nota, categoria: n.categoria })) };
-      if (min !== null) payload.edad.min = min;
-      if (max !== null) payload.edad.max = max;
+    if (useKitSafety && useKitSafety.checked) {
+      payload = { usar_seguridad_kit: true };
+      if (min !== null || max !== null) { payload.edad = {}; if (min !== null) payload.edad.min = min; if (max !== null) payload.edad.max = max; }
+      if (extras.length) { payload.notas_extra = extras; }
+      console.log('ℹ️ [ManualsEdit] Merge: incluir seguridad del kit');
     } else {
-      payload = notes.map(n => ({ nota: n.nota, categoria: n.categoria }));
+      if (min !== null || max !== null) {
+        payload = { edad: { }, notas: extras };
+        if (min !== null) payload.edad.min = min;
+        if (max !== null) payload.edad.max = max;
+        console.log('ℹ️ [ManualsEdit] Seguridad: edad + notas propias');
+      } else {
+        payload = extras;
+        console.log('ℹ️ [ManualsEdit] Seguridad: solo notas propias');
+      }
     }
     secTextarea.value = JSON.stringify(payload);
     console.log('📦 [ManualsEdit] Serializado seguridad_json bytes:', secTextarea.value.length);
@@ -617,12 +656,15 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   // Initialize from existing JSON
   (function init(){
     const raw = safeParse(secTextarea.value);
-    if (raw && typeof raw === 'object' && !Array.isArray(raw) && (raw.edad || raw.notas)) {
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      if (typeof raw.usar_seguridad_kit !== 'undefined') {
+        if (useKitSafety) useKitSafety.checked = !!raw.usar_seguridad_kit;
+      }
       if (raw.edad) {
         if (typeof raw.edad.min !== 'undefined') ageMinInput.value = String(raw.edad.min);
         if (typeof raw.edad.max !== 'undefined') ageMaxInput.value = String(raw.edad.max);
       }
-      const ns = Array.isArray(raw.notas) ? raw.notas : [];
+      const ns = Array.isArray(raw.notas_extra) ? raw.notas_extra : (Array.isArray(raw.notas) ? raw.notas : []);
       notes = ns.map(normalizeNote);
     } else {
       const arr = Array.isArray(raw) ? raw : [];
@@ -870,5 +912,8 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 .mode-toggle { display:flex; gap:16px; align-items:center; }
 .disabled-block { opacity:0.5; pointer-events:none; }
 .hidden-block { display:none; }
+.kit-safety-panel { border:1px solid #ddd; padding:8px; border-radius:6px; background:#f9fafb; margin-bottom:8px; }
+.kit-safety-head { font-weight:600; margin-bottom:4px; }
+.kit-safety-notes { color:#444; }
 </style>
 </script>
