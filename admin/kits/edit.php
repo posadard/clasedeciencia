@@ -4,6 +4,8 @@ require_once '../auth.php';
 
 $is_edit = isset($_GET['id']) && ctype_digit($_GET['id']);
 $id = $is_edit ? (int)$_GET['id'] : null;
+// Detect AJAX requests to avoid emitting HTML/JS before JSON
+$is_ajax = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1');
 
 $page_title = $is_edit ? 'Editar Kit' : 'Nuevo Kit';
 
@@ -40,7 +42,7 @@ $areas = [];
 $existing_area_ids = [];
 try {
   $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
-  echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:", ' . (int)count($areas) . ');</script>';
+  if (!$is_ajax) { echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:", ' . (int)count($areas) . ');</script>'; }
 } catch (PDOException $e) { $areas = []; }
 
 
