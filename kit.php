@@ -320,11 +320,12 @@ include 'includes/header.php';
         <h4>Componentes necesarios</h4>
         <ul class="materials-list">
           <?php foreach ($componentes as $m): ?>
-            <li>
+            <?php
+              $item_slug = !empty($m['slug']) ? '/' . $m['slug'] : '';
+              $li_attrs = !empty($item_slug) ? ' data-href="' . h($item_slug) . '" tabindex="0"' : '';
+            ?>
+            <li<?= $li_attrs ?> class="material-item">
               <span class="material-name"><?= h($m['nombre_comun']) ?></span>
-              <?php if (!empty($m['slug'])): ?>
-                <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
-              <?php endif; ?>
               <?php if (!empty($m['advertencias_seguridad'])): ?>
                 <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
               <?php endif; ?>
@@ -341,9 +342,41 @@ include 'includes/header.php';
               <?php if (!empty($m['notas'])): ?>
                 <small class="material-notes"><?= h($m['notas']) ?></small>
               <?php endif; ?>
+              <?php if (!empty($m['slug'])): ?>
+                <span class="icon-decor" aria-hidden="true" style="margin-left:6px">🔎</span>
+              <?php endif; ?>
             </li>
           <?php endforeach; ?>
         </ul>
+        <script>
+          // 🔍 [Kit] Activar click en toda la tarjeta del material
+          (function() {
+            try {
+              var items = document.querySelectorAll('.materials-list li[data-href]');
+              console.log('🔍 [Kit] Materiales clicables:', items.length);
+              items.forEach(function(li) {
+                var href = li.getAttribute('data-href');
+                if (!href) return;
+                // Evitar doble navegación si se hace click en enlaces internos
+                li.addEventListener('click', function(ev) {
+                  var target = ev.target;
+                  if (target && target.closest('a')) { return; }
+                  console.log('✅ [Kit] Click en material →', href);
+                  window.location.href = href;
+                });
+                li.addEventListener('keypress', function(ev) {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                    console.log('✅ [Kit] Keypress en material →', href);
+                    window.location.href = href;
+                    ev.preventDefault();
+                  }
+                });
+              });
+            } catch (e) {
+              console.log('❌ [Kit] Error activando materiales clicables:', e && e.message ? e.message : e);
+            }
+          })();
+        </script>
       </div>
     </section>
     <?php endif; ?>
