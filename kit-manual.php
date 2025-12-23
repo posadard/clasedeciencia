@@ -53,8 +53,14 @@ include 'includes/header.php';
     <div class="manual-meta">
       <span class="badge">Versión <?= h($manual['version']) ?></span>
       <?php if (!empty($manual['idioma'])): ?><span class="badge">Idioma <?= h($manual['idioma']) ?></span><?php endif; ?>
-      <?php if (!empty($manual['time_minutes'])): ?><span class="badge">⏱️ <?= (int)$manual['time_minutes'] ?> min</span><?php endif; ?>
-      <?php if (!empty($manual['dificultad_ensamble'])): ?><span class="badge">📊 <?= h($manual['dificultad_ensamble']) ?></span><?php endif; ?>
+      <?php 
+        $kit_time = isset($kit['time_minutes']) ? (int)$kit['time_minutes'] : null; 
+        $kit_diff = isset($kit['dificultad_ensamble']) ? (string)$kit['dificultad_ensamble'] : null; 
+        $eff_time = !empty($manual['time_minutes']) ? (int)$manual['time_minutes'] : $kit_time; 
+        $eff_diff = !empty($manual['dificultad_ensamble']) ? (string)$manual['dificultad_ensamble'] : $kit_diff; 
+      ?>
+      <?php if (!empty($eff_time)): ?><span class="badge">⏱️ <?= (int)$eff_time ?> min</span><?php endif; ?>
+      <?php if (!empty($eff_diff)): ?><span class="badge">📊 <?= h($eff_diff) ?></span><?php endif; ?>
     </div>
   </header>
 
