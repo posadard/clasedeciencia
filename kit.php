@@ -141,18 +141,6 @@ include 'includes/header.php';
             <?php endif; ?>
           </div>
           <?php endif; ?>
-          <?php if (!empty($kit['time_minutes'])): ?>
-          <div class="spec-item">
-            <span class="spec-label">⏱️ Tiempo</span>
-            <span class="spec-value"><?= (int)$kit['time_minutes'] ?> min</span>
-          </div>
-          <?php endif; ?>
-          <?php if (!empty($kit['dificultad_ensamble'])): ?>
-          <div class="spec-item">
-            <span class="spec-label">�️ Dificultad</span>
-            <span class="spec-value"><?= h(ucfirst($kit['dificultad_ensamble'])) ?></span>
-          </div>
-          <?php endif; ?>
           <?php 
           // Edad recomendada resumida desde seguridad JSON
           $seg_summary = null;
@@ -164,10 +152,27 @@ include 'includes/header.php';
               }
             } catch(Exception $e) { /* no-op */ }
           }
-          if ($seg_summary): ?>
+          ?>
+          <?php if (!empty($kit['time_minutes']) || $seg_summary): ?>
+          <div class="spec-duo">
+            <?php if (!empty($kit['time_minutes'])): ?>
+            <div class="spec-item">
+              <span class="spec-label">⏱️ Tiempo</span>
+              <span class="spec-value"><?= (int)$kit['time_minutes'] ?> min</span>
+            </div>
+            <?php endif; ?>
+            <?php if ($seg_summary): ?>
+            <div class="spec-item">
+              <span class="spec-label">👥 Edad</span>
+              <span class="spec-value"><?= (int)$seg_summary[0] ?>–<?= (int)$seg_summary[1] ?> años</span>
+            </div>
+            <?php endif; ?>
+          </div>
+          <?php endif; ?>
+          <?php if (!empty($kit['dificultad_ensamble'])): ?>
           <div class="spec-item">
-            <span class="spec-label">👥 Edad</span>
-            <span class="spec-value"><?= (int)$seg_summary[0] ?>–<?= (int)$seg_summary[1] ?> años</span>
+            <span class="spec-label">🛠️ Dificultad</span>
+            <span class="spec-value"><?= h(ucfirst($kit['dificultad_ensamble'])) ?></span>
           </div>
           <?php endif; ?>
           <?php if (!empty($ficha_inline)): ?>
