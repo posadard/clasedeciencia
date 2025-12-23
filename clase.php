@@ -487,7 +487,27 @@ include 'includes/header.php';
                     }
                     $kit_seguridad = '';
                     if (!empty($kit['seguridad'])) {
-                        $kit_seguridad = $kit['seguridad'];
+                        $sec = null;
+                        if (is_string($kit['seguridad'])) {
+                            $decoded = json_decode($kit['seguridad'], true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) { $sec = $decoded; }
+                        } elseif (is_array($kit['seguridad'])) {
+                            $sec = $kit['seguridad'];
+                        }
+                        if (is_array($sec)) {
+                            $parts = [];
+                            if (isset($sec['edad_min']) || isset($sec['edad_max'])) {
+                                $min = isset($sec['edad_min']) ? (int)$sec['edad_min'] : null;
+                                $max = isset($sec['edad_max']) ? (int)$sec['edad_max'] : null;
+                                if ($min !== null && $max !== null) { $parts[] = 'Edad segura: ' . $min . '-' . $max . ' años'; }
+                                elseif ($min !== null) { $parts[] = 'Edad segura: ' . $min . '+ años'; }
+                                elseif ($max !== null) { $parts[] = 'Edad segura: ≤' . $max . ' años'; }
+                            }
+                            if (!empty($sec['notas'])) { $parts[] = (string)$sec['notas']; }
+                            $kit_seguridad = implode(' · ', $parts);
+                        } else {
+                            $kit_seguridad = $kit['seguridad'];
+                        }
                     } else {
                         $warnings = [];
                         if (!empty($materiales_por_kit[$kit['id']]) && is_array($materiales_por_kit[$kit['id']])) {
