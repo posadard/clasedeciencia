@@ -129,6 +129,18 @@ include 'includes/header.php';
             <span class="spec-label">🔢 Versión</span>
             <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
           </div>
+          <?php if (!empty($kit['time_minutes'])): ?>
+          <div class="spec-item">
+            <span class="spec-label">⏱️ Tiempo</span>
+            <span class="spec-value"><?= (int)$kit['time_minutes'] ?> min</span>
+          </div>
+          <?php endif; ?>
+          <?php if (!empty($kit['dificultad_ensamble'])): ?>
+          <div class="spec-item">
+            <span class="spec-label">🧩 Dificultad</span>
+            <span class="spec-value"><?= h($kit['dificultad_ensamble']) ?></span>
+          </div>
+          <?php endif; ?>
           <?php 
           // Edad recomendada resumida desde seguridad JSON
           $seg_summary = null;

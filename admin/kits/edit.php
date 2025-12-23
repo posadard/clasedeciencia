@@ -22,6 +22,8 @@ $kit = [
   'imagen_portada' => '',
   'video_portada' => '',
   'seguridad' => null,
+  'time_minutes' => null,
+  'dificultad_ensamble' => '',
   'seo_title' => '',
   'seo_description' => '',
   'activo' => 1,
@@ -46,7 +48,8 @@ try {
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
+    // Select all to gracefully include optional new columns if present
+    $stmt = $pdo->prepare('SELECT * FROM kits WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
@@ -375,6 +378,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $seg_notas = isset($_POST['seg_notas']) ? trim((string)$_POST['seg_notas']) : '';
       if ($seg_notas === '') { $seg_notas = null; }
       $seguridad_json = null;
+      // Tiempo y dificultad (opcionales y canónicos del kit)
+      $time_minutes = (isset($_POST['time_minutes']) && $_POST['time_minutes'] !== '' && is_numeric($_POST['time_minutes'])) ? max(0, (int)$_POST['time_minutes']) : null;
+      $dificultad_ensamble = isset($_POST['dificultad_ensamble']) ? trim((string)$_POST['dificultad_ensamble']) : '';
+      if ($dificultad_ensamble === '') { $dificultad_ensamble = null; }
         // Áreas seleccionadas
         $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
         echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>';
@@ -481,6 +488,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
+            }
+
+            // Intentar guardar tiempo y dificultad si existen columnas (no fallar si aún no se migró)
+            try {
+              if ($time_minutes !== null || $dificultad_ensamble !== null) {
+                $updCols = [];
+                $params = [];
+                if ($time_minutes !== null) { $updCols[] = 'time_minutes = ?'; $params[] = $time_minutes; }
+                if ($dificultad_ensamble !== null) { $updCols[] = 'dificultad_ensamble = ?'; $params[] = $dificultad_ensamble; }
+                if (!empty($updCols)) {
+                  $sqlUpd = 'UPDATE kits SET ' . implode(', ', $updCols) . ' WHERE id = ?';
+                  $params[] = $id;
+                  $pdo->prepare($sqlUpd)->execute($params);
+                  echo '<script>console.log("✅ [KitsEdit] Guardado tiempo/dificultad del kit", ' . json_encode(['time_minutes'=>$time_minutes,'dificultad'=>$dificultad_ensamble]) . ');</script>';
+                }
+              }
+            } catch (PDOException $e) {
+              // Silencioso si columnas no existen
+              echo '<script>console.log("⚠️ [KitsEdit] No se guardó tiempo/dificultad (migración pendiente): ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
             }
 
             // Actualizar relaciones en clase_kits y kits_areas
@@ -722,6 +748,28 @@ include '../header.php';
       <label for="seg_notas">Notas de seguridad</label>
       <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
     </div>
+  </div>
+  <div class="form-group">
+    <h4>Tiempo y dificultad</h4>
+    <div class="field-inline">
+      <div class="form-group">
+        <label for="time_minutes">Tiempo promedio (min)</label>
+        <input type="number" id="time_minutes" name="time_minutes" min="0" step="1" value="<?= htmlspecialchars((string)($kit['time_minutes'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+      </div>
+      <div class="form-group">
+        <label for="dificultad_ensamble">Dificultad de ensamble</label>
+        <?php $dif_val = (string)($kit['dificultad_ensamble'] ?? ''); ?>
+        <select id="dificultad_ensamble" name="dificultad_ensamble">
+          <option value="">(sin especificar)</option>
+          <option value="Muy fácil" <?= $dif_val === 'Muy fácil' ? 'selected' : '' ?>>Muy fácil</option>
+          <option value="Fácil" <?= $dif_val === 'Fácil' ? 'selected' : '' ?>>Fácil</option>
+          <option value="Media" <?= $dif_val === 'Media' ? 'selected' : '' ?>>Media</option>
+          <option value="Difícil" <?= $dif_val === 'Difícil' ? 'selected' : '' ?>>Difícil</option>
+          <option value="Muy difícil" <?= $dif_val === 'Muy difícil' ? 'selected' : '' ?>>Muy difícil</option>
+        </select>
+      </div>
+    </div>
+    <small class="hint">Estos valores se muestran en la ficha del kit y sirven como base para los manuales.</small>
   </div>
   <div class="form-group">
     <label for="contenido_html">Contenido HTML</label>
