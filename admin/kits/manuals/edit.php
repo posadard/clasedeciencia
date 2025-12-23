@@ -191,13 +191,13 @@ if (!$kit) {
         </select>
       </div>
       <div class="form-group">
-        <label>Modo de Renderizado (Frontend)</label>
+        <label>Manual visible en la web</label>
         <?php $rm = isset($manual['render_mode']) ? $manual['render_mode'] : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy'); ?>
         <select name="render_mode">
-          <option value="legacy" <?= ($rm === 'legacy') ? 'selected' : '' ?>>Estructurado (legacy)</option>
-          <option value="fullhtml" <?= ($rm === 'fullhtml') ? 'selected' : '' ?>>HTML Completo</option>
+          <option value="legacy" <?= ($rm === 'legacy') ? 'selected' : '' ?>>Estructurado</option>
+          <option value="fullhtml" <?= ($rm === 'fullhtml') ? 'selected' : '' ?>>HTML completo</option>
         </select>
-        <small>Define el modo que usará el frontend al renderizar.</small>
+        <small>Elige qué manual verá el público; el otro se conserva.</small>
       </div>
     </div>
 
@@ -213,10 +213,10 @@ if (!$kit) {
     </div>
 
     <div class="form-group">
-      <label>Modo de Manual</label>
+      <label>Manual a editar</label>
       <div class="mode-toggle">
-        <label><input type="radio" name="ui_mode" value="legacy" checked /> Estructurado (Seguridad/Herramientas/Pasos)</label>
-        <label><input type="radio" name="ui_mode" value="fullhtml" /> HTML Completo (reemplaza bloques)</label>
+        <label><input type="radio" name="ui_mode" value="legacy" checked /> Manual estructurado (Seguridad/Herramientas/Pasos)</label>
+        <label><input type="radio" name="ui_mode" value="fullhtml" /> Manual HTML (bloque único)</label>
       </div>
       <div id="mode-warning" class="help-note"></div>
     </div>
@@ -300,15 +300,15 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 
   function applyMode(mode) {
     if (mode === 'fullhtml') {
-      modeWarning.textContent = '⚠️ Modo HTML completo activo: se reemplazarán Seguridad, Herramientas y Pasos.';
+      modeWarning.textContent = 'ℹ️ Editor HTML activo: ocultamos Seguridad, Herramientas y Pasos. Nada se elimina.';
       blocks.forEach(b => { if (b) b.classList.add('hidden-block'); });
       htmlGroup.classList.remove('hidden-block');
-      console.log('⚠️ [ManualsEdit] Modo: fullhtml');
+      console.log('ℹ️ [ManualsEdit] Editor: html');
     } else {
-      modeWarning.textContent = 'ℹ️ Modo estructurado: el campo HTML será ignorado al renderizar.';
+      modeWarning.textContent = 'ℹ️ Editor estructurado activo: aquí editas Seguridad, Herramientas y Pasos. El HTML no se usa en este editor.';
       blocks.forEach(b => { if (b) b.classList.remove('hidden-block'); });
       htmlGroup.classList.add('hidden-block');
-      console.log('ℹ️ [ManualsEdit] Modo: legacy');
+      console.log('ℹ️ [ManualsEdit] Editor: estructurado');
     }
   }
 
