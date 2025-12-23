@@ -83,6 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>';
   } else {
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
+    echo '<script>console.log("📡 [KitsEdit] POST action:", ' . json_encode($action) . ');</script>';
+    try { echo '<script>console.log("🔍 [KitsEdit] POST keys:", ' . json_encode(array_keys($_POST)) . ');</script>'; } catch (Exception $___e) {}
 
     if ($action === 'save_attrs' && $is_edit) {
       // Guardar atributos técnicos (atributos_contenidos)
@@ -374,7 +376,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Tiempo y dificultad (fallbacks usados en manual público)
       $time_minutes = (isset($_POST['time_minutes']) && $_POST['time_minutes'] !== '' && is_numeric($_POST['time_minutes'])) ? (int)$_POST['time_minutes'] : null;
       $dificultad_ensamble = isset($_POST['dificultad_ensamble']) ? trim((string)$_POST['dificultad_ensamble']) : '';
-      if ($dificultad_ensamble === '') { $dificultad_ensamble = null; } else { $dificultad_ensamble = mb_substr($dificultad_ensamble, 0, 100, 'UTF-8'); }
+      $dificultades_permitidas = ['Fácil','Media','Difícil'];
+      if ($dificultad_ensamble === '' || !in_array($dificultad_ensamble, $dificultades_permitidas, true)) {
+        $dificultad_ensamble = null;
+      }
       // Seguridad estructurada → JSON
       $seg_edad_min = (isset($_POST['seg_edad_min']) && $_POST['seg_edad_min'] !== '') ? (int)$_POST['seg_edad_min'] : null;
       $seg_edad_max = (isset($_POST['seg_edad_max']) && $_POST['seg_edad_max'] !== '') ? (int)$_POST['seg_edad_max'] : null;
@@ -721,7 +726,16 @@ include '../header.php';
       </div>
       <div class="form-group">
         <label for="dificultad_ensamble">Dificultad de ensamble</label>
-        <input type="text" id="dificultad_ensamble" name="dificultad_ensamble" placeholder="Fácil | Media | Difícil" value="<?= htmlspecialchars(($kit['dificultad_ensamble'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        <select id="dificultad_ensamble" name="dificultad_ensamble">
+          <?php
+            $dif_actual = $kit['dificultad_ensamble'] ?? '';
+            $opts = ['Fácil','Media','Difícil'];
+            foreach ($opts as $opt):
+          ?>
+            <option value="<?= htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') ?>" <?= ($dif_actual === $opt ? 'selected' : '') ?>><?= htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') ?></option>
+          <?php endforeach; ?>
+          <option value="" <?= ($dif_actual === '' || $dif_actual === null ? 'selected' : '') ?>>> Sin especificar</option>
+        </select>
       </div>
     </div>
     <small class="hint">Estos valores se usan como predeterminados en los manuales (si el manual no define sus propios valores).</small>
