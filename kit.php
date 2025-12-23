@@ -125,10 +125,22 @@ include 'includes/header.php';
             <span class="spec-label">🏷️ Código</span>
             <span class="spec-value"><?= h($kit['codigo'] ?? '') ?></span>
           </div>
-          <div class="spec-item">
-            <span class="spec-label">🔢 Versión</span>
-            <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
+          <?php if (!empty($kit['version']) || !empty($kit['updated_at'])): ?>
+          <div class="spec-duo">
+            <?php if (!empty($kit['version'])): ?>
+            <div class="spec-item">
+              <span class="spec-label">🔢 Versión</span>
+              <span class="spec-value"><?= h($kit['version'] ?? '') ?></span>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($kit['updated_at'])): ?>
+            <div class="spec-item">
+              <span class="spec-label">🔄 Actualizado</span>
+              <span class="spec-value"><?= date('d/m/Y', strtotime($kit['updated_at'])) ?></span>
+            </div>
+            <?php endif; ?>
           </div>
+          <?php endif; ?>
           <?php if (!empty($kit['time_minutes'])): ?>
           <div class="spec-item">
             <span class="spec-label">⏱️ Tiempo</span>
@@ -156,12 +168,6 @@ include 'includes/header.php';
           <div class="spec-item">
             <span class="spec-label">👥 Edad</span>
             <span class="spec-value"><?= (int)$seg_summary[0] ?>–<?= (int)$seg_summary[1] ?> años</span>
-          </div>
-          <?php endif; ?>
-          <?php if (!empty($kit['updated_at'])): ?>
-          <div class="spec-item">
-            <span class="spec-label">� Actualizado</span>
-            <span class="spec-value"><?= date('d/m/Y', strtotime($kit['updated_at'])) ?></span>
           </div>
           <?php endif; ?>
           <?php if (!empty($ficha_inline)): ?>

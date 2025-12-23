@@ -3508,6 +3508,13 @@ strong, b {
     gap: var(--spacing-md);
 }
 
+/* Duo block to present two compact specs side by side */
+.spec-duo {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
 .spec-item {
     display: flex;
     flex-direction: column;
@@ -3906,6 +3913,10 @@ strong, b {
         padding: var(--spacing-lg);
     }
     
+    .spec-duo {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
     .summary-title {
         font-size: 1.4rem;
     }
