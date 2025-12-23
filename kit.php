@@ -322,7 +322,7 @@ include 'includes/header.php';
           <?php foreach ($componentes as $m): ?>
             <li>
               <?php if (!empty($m['slug'])): ?>
-                <a href="/<?= h($m['slug']) ?>" class="material-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="display:block; text-decoration:none; color:inherit;">
+                <a href="/<?= h($m['slug']) ?>" class="material-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="display:block; width:100%; text-decoration:none; color:inherit;">
               <?php endif; ?>
                   <span class="material-name"><?= h($m['nombre_comun']) ?></span>
                   <?php if (!empty($m['advertencias_seguridad'])): ?>
