@@ -472,15 +472,20 @@ include 'includes/header.php';
         <section class="kits-section">
             <h2>📦 Kits de Materiales</h2>
             <?php foreach ($kits as $kit): ?>
-                <div class="kit-card">
+                <?php
+                    $comp_count = isset($materiales_por_kit[$kit['id']]) && is_array($materiales_por_kit[$kit['id']]) ? count($materiales_por_kit[$kit['id']]) : 0;
+                    $manual_count = 0;
+                    try {
+                        $stC = $pdo->prepare("SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND status = 'published'");
+                        $stC->execute([$kit['id']]);
+                        $manual_count = (int)($stC->fetchColumn() ?: 0);
+                    } catch (PDOException $e) { $manual_count = 0; }
+                ?>
+                <div class="kit-card" role="link" tabindex="0" onclick="console.log('📦 [Clase] Click kit card →','<?= h($kit['slug'] ?? '') ?>'); window.location.href='/<?= h($kit['slug'] ?? '') ?>';">
                     <div class="kit-header">
-                        <h3>
-                            <a href="/<?= h($kit['slug'] ?? '') ?>" style="text-decoration:none;">
-                                <?= h($kit['nombre']) ?>
-                            </a>
-                            <a href="/<?= h($kit['slug'] ?? '') ?>" class="icon-link" title="Ver kit" aria-label="Ver kit <?= h($kit['nombre']) ?>" style="margin-left:8px;">
-                                🔎
-                            </a>
+                        <h3 class="kit-header-title">
+                            <span class="kit-title-text"><?= h($kit['nombre']) ?>:</span>
+                            <span class="kit-title-byline">🧩 <?= (int)$comp_count ?> componentes 📘 <?= (int)$manual_count ?> manuales<?php if (!empty($kit['version'])): ?> 🔢 v<?= h($kit['version']) ?><?php endif; ?></span>
                             <?php if (!empty($kit['es_principal'])): ?>
                                 <span class="badge badge-primary">Kit Principal</span>
                             <?php else: ?>
@@ -493,11 +498,8 @@ include 'includes/header.php';
                         <h4>Componentes necesarios</h4>
                         <ul class="materials-list">
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
-                                <li>
+                                <li <?php if (!empty($m['slug'])): ?>role="link" tabindex="0" onclick="event.stopPropagation(); console.log('🧪 [Clase] Click componente →','<?= h($m['slug']) ?>'); window.location.href='/<?= h($m['slug']) ?>';"<?php endif; ?>>
                                     <span class="material-name"><?= h($m['nombre_comun']) ?></span>
-                                    <?php if (!empty($m['slug'])): ?>
-                                        <a href="/<?= h($m['slug']) ?>" class="icon-link" title="Ver componente" aria-label="Ver componente <?= h($m['nombre_comun']) ?>" style="margin-left:6px; text-decoration:none;">🔎</a>
-                                    <?php endif; ?>
                                     <?php if (!empty($m['advertencias_seguridad'])): ?>
                                         <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
                                     <?php endif; ?>

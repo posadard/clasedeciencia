@@ -4092,6 +4092,7 @@ strong, b {
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--color-border-light);
     border-left: 4px solid var(--color-primary);
+    cursor: pointer;
 }
 
 .kit-header h3 {
@@ -4101,6 +4102,8 @@ strong, b {
     flex-wrap: wrap;
     margin-bottom: var(--spacing-sm);
 }
+.kit-header-title .kit-title-text { font-weight: 600; }
+.kit-header-title .kit-title-byline { font-weight: 600; color: var(--color-text-light); }
 
 /* Reordenar: lupa primero, luego nombre del kit, luego badges */
 .kit-header h3 .icon-link {
@@ -4143,6 +4146,7 @@ strong, b {
     padding-bottom: calc(var(--spacing-sm) + 24px);
     padding-right: calc(var(--spacing-md) + 28px);
     transition: background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
 }
 .materials-list li + li { margin-top: var(--spacing-sm); }
 .kit-card .materials-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--spacing-sm); }
@@ -4175,16 +4179,7 @@ strong, b {
 }
 
 /* Icon link alignment and visibility */
-.materials-list .icon-link {
-    position: absolute;
-    right: var(--spacing-sm);
-    bottom: var(--spacing-sm);
-    text-decoration: none;
-    opacity: 0.85;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-    font-size: 1rem;
-}
-.materials-list li:hover .icon-link { opacity: 1; transform: translateY(-1px); }
+/* icon-link removed in clickable items; keep spacing balanced */
 
 /* Unified chips/badges */
 .materials-list .badge {
