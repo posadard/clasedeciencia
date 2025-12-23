@@ -11,6 +11,9 @@ if (!isset($_SESSION['csrf_token'])) {
   try { $_SESSION['csrf_token'] = bin2hex(random_bytes(16)); } catch (Exception $e) { $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(16)); }
 }
 
+// Detect AJAX attribute operations early to avoid emitting HTML/JS in JSON responses
+$__is_ajax_request = ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax']) && $_POST['ajax'] === '1');
+
 $kit = [
   'clase_id' => '',
   'nombre' => '',
@@ -40,7 +43,7 @@ $areas = [];
 $existing_area_ids = [];
 try {
   $areas = $pdo->query('SELECT id, nombre, slug FROM areas ORDER BY nombre ASC')->fetchAll(PDO::FETCH_ASSOC);
-  echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:", ' . (int)count($areas) . ');</script>';
+  if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] Áreas cargadas:", ' . (int)count($areas) . ');</script>'; }
 } catch (PDOException $e) { $areas = []; }
 
 
@@ -78,7 +81,7 @@ $action_msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
     $error_msg = 'Token CSRF inválido.';
-    echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>';
+    if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>'; }
   } else {
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
     $is_ajax = isset($_POST['ajax']) && $_POST['ajax'] === '1';
@@ -122,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
           // Si no hay POST para este atributo, no borrar ni modificar
           if (!$hasAttrPost) {
-            echo '<script>console.log("⚠️ [KitsEdit] save_attrs sin POST para atributo ' . (int)$attr_id . ', se conserva");</script>';
+            if (!$__is_ajax_request) { echo '<script>console.log("⚠️ [KitsEdit] save_attrs sin POST para atributo ' . (int)$attr_id . ', se conserva");</script>'; }
             continue;
           }
 
@@ -187,15 +190,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
           }
           $insertedCount = max(0, (int)$orden - 1);
-          echo '<script>console.log("✅ [KitsEdit] save_attrs atributo ' . (int)$attr_id . ' actualizado con ' . $insertedCount . ' valores");</script>';
+          if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] save_attrs atributo ' . (int)$attr_id . ' actualizado con ' . $insertedCount . ' valores");</script>'; }
         }
         $pdo->commit();
         $action_msg = 'Ficha técnica guardada.';
-        echo '<script>console.log("✅ [KitsEdit] Ficha técnica guardada para kit ' . (int)$id . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] Ficha técnica guardada para kit ' . (int)$id . '");</script>'; }
       } catch (PDOException $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-        echo '<script>console.log("❌ [KitsEdit] Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] Error guardando atributos: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
       }
     } else if ($action === 'add_attr' && $is_edit) {
       try {
@@ -271,12 +274,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ], JSON_UNESCAPED_UNICODE);
           exit;
         }
-        echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>'; }
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error agregando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
-        echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
       }
     } else if ($action === 'update_attr' && $is_edit) {
       try {
@@ -352,12 +355,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ], JSON_UNESCAPED_UNICODE);
           exit;
         }
-        echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>'; }
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error actualizando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
-        echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
       }
     } else if ($action === 'delete_attr' && $is_edit) {
       try {
@@ -367,11 +370,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['kit', $id, $def_id]);
         $action_msg = 'Atributo eliminado.';
         if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>true,'action'=>'delete_attr','def_id'=>$def_id]); exit; }
-        echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>'; }
       } catch (PDOException $e) {
         $error_msg = 'Error eliminando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
-        echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
       }
     } else if ($action === 'create_attr_def' && $is_edit) {
       // Crear nueva definición de atributo y mapearla al tipo Kit
@@ -441,12 +444,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ], JSON_UNESCAPED_UNICODE);
           exit;
         }
-        echo '<script>console.log("✅ [KitsEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>'; }
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error creando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
-        echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
       }
     } else if ($action === 'save') {
       // Clases seleccionadas (transfer list)
@@ -476,7 +479,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $seguridad_json = null;
         // Áreas seleccionadas
         $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
-        echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>';
+        if (!$__is_ajax_request) { echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>'; }
 
       if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
         $seguridad_json = json_encode([
@@ -522,7 +525,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ? preg_replace('/\s+\S*$/u', '', mb_substr($desc_source, 0, $max_desc, 'UTF-8'))
           : $desc_source;
       }
-      echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ');</script>';
+      if (!$__is_ajax_request) { echo '<script>console.log("🔍 [SEO] auto title:", ' . json_encode($seo_title) . ', "auto desc:", ' . json_encode($seo_description) . ');</script>'; }
 
       // Normalizar longitudes razonables
       if ($seo_title !== '') { $seo_title = mb_substr($seo_title, 0, 160, 'UTF-8'); }
@@ -604,7 +607,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($areas_sel as $aid) { if ($aid > 0) { $insA->execute([$id, (int)$aid]); } }
               }
               $pdo->commit();
-              echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>';
+              if (!$__is_ajax_request) { echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>'; }
             } catch (PDOException $e) {
               if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
               throw $e;
