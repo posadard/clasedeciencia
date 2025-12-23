@@ -644,6 +644,32 @@ include '../header.php';
       });
     })();
   </script>
+  <script>
+    // Manejo de eliminación de atributo usando formulario externo
+    (function bindAttrDelete(){
+      try {
+        const delForm = document.getElementById('attrDeleteForm');
+        if (!delForm) { console.log('⚠️ [KitsEdit] Form delete_attr no encontrado'); return; }
+        document.querySelectorAll('.js-delete-attr').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const defId = parseInt(btn.getAttribute('data-def-id') || '0', 10);
+            if (!defId) { console.log('⚠️ [KitsEdit] def_id inválido para delete_attr'); return; }
+            if (!confirm('¿Eliminar este atributo del kit?')) { return; }
+            try {
+              const hid = delForm.querySelector('input[name="def_id"]');
+              if (hid) hid.value = String(defId);
+              console.log('📡 [KitsEdit] Enviando delete_attr para atributo', defId);
+              delForm.submit();
+            } catch(e) {
+              console.log('❌ [KitsEdit] Error al enviar delete_attr:', e && e.message);
+            }
+          });
+        });
+      } catch(e) {
+        console.log('❌ [KitsEdit] Error bindAttrDelete:', e && e.message);
+      }
+    })();
+  </script>
 </div>
 
 <?php if ($error_msg !== ''): ?>
@@ -830,12 +856,7 @@ include '../header.php';
               data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
               data-values="<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>"
             >✏️</button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="delete_attr" />
-              <input type="hidden" name="def_id" value="<?= $aid ?>" />
-              <button type="submit" class="remove-component" title="Remover">×</button>
-            </form>
+            <button type="button" class="remove-component js-delete-attr" data-def-id="<?= $aid ?>" title="Remover">×</button>
           </div>
           <?php endforeach; ?>
         </div>
@@ -892,6 +913,13 @@ include '../header.php';
     <div id="seo-manual"></div>
   </div>
 </form>
+
+  <!-- Formulario externo para eliminar atributos (fuera de kit-form) -->
+  <form method="POST" id="attrDeleteForm" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+    <input type="hidden" name="action" value="delete_attr" />
+    <input type="hidden" name="def_id" value="" />
+  </form>
 
 <?php if ($is_edit): ?>
 <div class="form-group" style="margin-top:2rem;">
