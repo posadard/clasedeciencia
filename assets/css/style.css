@@ -4474,3 +4474,84 @@ strong, b {
     }
 }
 
+/* === Kit Inline Card (compact, shown after summary-content in clase.php) === */
+.kit-inline-card {
+    background: #ffffff;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+}
+
+.kit-inline-wrap {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: var(--spacing-md);
+    align-items: center;
+}
+
+.kit-inline-left {
+    background: var(--color-bg-alt);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.kit-inline-thumb { display: block; width: 100%; }
+.kit-inline-thumb img {
+    width: 100%;
+    height: 96px;
+    object-fit: cover;
+    display: block;
+}
+
+.kit-inline-right { display: flex; flex-direction: column; gap: 6px; }
+.kit-inline-header { display: flex; align-items: center; gap: 8px; }
+.kit-inline-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.kit-inline-title { margin: 0; font-size: 1.1rem; }
+.kit-inline-title a { color: var(--color-primary); border: none; }
+.kit-inline-title a:hover { color: var(--color-primary-light); }
+
+.kit-inline-excerpt {
+    color: var(--color-text-light);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 2px 0 6px;
+}
+
+.kit-inline-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.kit-inline-meta .badge {
+    background: rgba(31,60,136,0.08);
+    color: var(--color-primary);
+    border: 1px solid rgba(31,60,136,0.18);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+}
+
+.kit-inline-manuales { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.kit-inline-manuales .man-label { font-size: 0.85rem; color: var(--color-text-muted); font-weight: 600; }
+.kit-inline-manuales .man-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.kit-inline-manuales .tag-pill { font-size: 0.8rem; padding: 2px 8px; }
+
+.kit-inline-areas { display: flex; gap: 6px; flex-wrap: wrap; }
+.kit-inline-areas .tag-pill { font-size: 0.8rem; padding: 2px 8px; }
+
+.kit-inline-actions { margin-top: 6px; }
+.kit-inline-actions .btn { padding: 0.35rem 0.75rem; font-size: 0.9rem; }
+
+@media (max-width: 768px) {
+    .kit-inline-wrap { grid-template-columns: 1fr; }
+    .kit-inline-thumb img { height: 140px; }
+}
+
