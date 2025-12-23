@@ -4122,7 +4122,18 @@ strong, b {
 .kit-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .kit-top-content { flex: 1; min-width: 0; }
 .kit-summary { color: var(--color-text-light); font-size: 0.95rem; line-height: 1.4; margin: 2px 0; }
-.kit-security { color: var(--color-text-light); font-style: italic; font-size: 0.9rem; margin: 0; }
+.kit-security {
+    background: #fff7e6; /* similar a material-warning */
+    color: #8a6d3b;
+    border: 1px solid #ffe0a3;
+    font-size: 0.9rem;
+    margin: 0;
+    padding: 4px 8px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
 
 /* Reordenar: lupa primero, luego nombre del kit, luego badges */
 .kit-header h3 .icon-link {
