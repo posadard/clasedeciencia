@@ -1222,6 +1222,15 @@ include '../header.php';
           dropdown.appendChild(div);
         });
         dropdown.style.display = 'block';
+        // Ensure dropdown overlays other sections: position fixed relative to viewport
+        try {
+          const rect = input.getBoundingClientRect();
+          dropdown.style.position = 'fixed';
+          dropdown.style.left = rect.left + 'px';
+          dropdown.style.top = rect.bottom + 'px';
+          dropdown.style.width = rect.width + 'px';
+          dropdown.style.zIndex = '4000';
+        } catch(_e) {}
       }
       function filter(q){
         const nq = normalize(q);
