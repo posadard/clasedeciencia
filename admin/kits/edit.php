@@ -233,6 +233,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'def_id' => $def_id,
             'label' => $def['etiqueta'],
             'tipo_dato' => $def['tipo_dato'],
+            'cardinalidad' => $def['cardinalidad'],
             'unidad_defecto' => $def['unidad_defecto'],
             'unidades_permitidas_json' => $def['unidades_permitidas_json'],
             'display' => implode(', ', $vals),
@@ -299,6 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'def_id' => $def_id,
             'label' => $def['etiqueta'],
             'tipo_dato' => $def['tipo_dato'],
+            'cardinalidad' => $def['cardinalidad'],
             'unidad_defecto' => $def['unidad_defecto'],
             'unidades_permitidas_json' => $def['unidades_permitidas_json'],
             'display' => implode(', ', $vals),
@@ -1183,6 +1185,16 @@ include '../header.php';
             if (unitGroup) unitGroup.style.display = 'none';
             console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
           }
+          // Preseleccionar unidad si hay en valores
+          try {
+            if ((hasUnits || hasDefault) && Array.isArray(vals) && vals.length) {
+              const currentUnit = vals[0]?.unidad_codigo || '';
+              if (currentUnit) {
+                const opt = Array.from(unitSel.options).find(o => o.value === currentUnit);
+                if (opt) unitSel.value = currentUnit;
+              }
+            }
+          } catch(_e){}
           openModal('#modalEditAttr');
           console.log('✅ [KitsEdit] Editar atributo:', label, `(id=${defId})`);
         } catch(e){ console.log('❌ [KitsEdit] Error al editar atributo:', e && e.message); }
@@ -1259,6 +1271,17 @@ include '../header.php';
       function getCsrfFrom(form){
         return form?.querySelector('input[name="csrf_token"]')?.value || document.querySelector('#kit-form input[name="csrf_token"]')?.value || '';
       }
+      function safeCloseModal(selector){
+        try {
+          if (typeof closeModal === 'function') { closeModal(selector); return; }
+          const overlay = document.querySelector(selector);
+          if (!overlay) return;
+          overlay.style.display = 'none';
+          const content = overlay.querySelector('.modal-content');
+          if (content) { content.setAttribute('aria-hidden', 'true'); }
+          console.log('✅ [KitsEdit] Modal cerrado:', selector);
+        } catch(e){ console.log('⚠️ [KitsEdit] No se pudo cerrar modal:', selector, e && e.message); }
+      }
       // Add Attr
       const formAdd = document.getElementById('formAddAttr');
       if (formAdd) {
@@ -1290,13 +1313,30 @@ include '../header.php';
               div.setAttribute('data-tipo', data.tipo_dato || 'string');
               div.setAttribute('data-units', data.unidades_permitidas_json || '[]');
               div.setAttribute('data-unidad_def', data.unidad_defecto || '');
+              // Construir data-values basado en entrada del modal
+              const isMany = (data.cardinalidad === 'many');
+              const rawVals = (valor || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+              const valuesArray = rawVals.map(v => {
+                const obj = { unidad_codigo: (data.unidad || '') };
+                switch (data.tipo_dato) {
+                  case 'number': obj.valor_numero = parseFloat(v.replace(',','.')); break;
+                  case 'integer': obj.valor_entero = parseInt(v, 10); break;
+                  case 'boolean': obj.valor_booleano = (v === '1' || v.toLowerCase() === 'true' || v.toLowerCase() === 'sí' || v.toLowerCase() === 'si') ? 1 : 0; break;
+                  case 'date': obj.valor_fecha = v; break;
+                  case 'datetime': obj.valor_datetime = v; break;
+                  case 'json': obj.valor_json = v; break;
+                  case 'string': default: obj.valor_string = v; break;
+                }
+                return obj;
+              });
+              div.setAttribute('data-values', JSON.stringify(valuesArray));
               div.innerHTML = `<span class="comp-nombre">${data.label}</span><span class="comp-codigo">${data.display}${data.unidad? ' ' + data.unidad : ''}</span>`;
               const btnX = document.createElement('button'); btnX.type='button'; btnX.className='remove-btn'; btnX.textContent='×'; btnX.onclick = (ev)=>{ ev.stopPropagation(); deselectAttrItem(div); };
               const btnEdit = document.createElement('button'); btnEdit.type='button'; btnEdit.className='edit-component'; btnEdit.title='Editar'; btnEdit.textContent='✏️'; btnEdit.onclick = (ev)=>{ ev.stopPropagation(); editAttrItem(div); };
               div.appendChild(btnX); div.appendChild(btnEdit);
               div.onclick = function(){ editAttrItem(div); };
               selWrap.appendChild(div);
-              try { document.querySelector('#modalAddAttr .js-close-modal')?.click(); } catch(_e){}
+              safeCloseModal('#modalAddAttr');
               // actualizar conteos
               try { updateAttrCounts(); } catch(_e){}
               console.log('✅ [KitsEdit] add_attr actualizado en UI');
@@ -1332,8 +1372,24 @@ include '../header.php';
               if (selItem) {
                 const codigoEl = selItem.querySelector('.comp-codigo');
                 if (codigoEl) codigoEl.textContent = `${data.display}${data.unidad? ' ' + data.unidad : ''}`;
+                // actualizar data-values
+                const rawVals = (valor || '').split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+                const valuesArray = rawVals.map(v => {
+                  const obj = { unidad_codigo: (data.unidad || '') };
+                  switch (data.tipo_dato) {
+                    case 'number': obj.valor_numero = parseFloat(v.replace(',','.')); break;
+                    case 'integer': obj.valor_entero = parseInt(v, 10); break;
+                    case 'boolean': obj.valor_booleano = (v === '1' || v.toLowerCase() === 'true' || v.toLowerCase() === 'sí' || v.toLowerCase() === 'si') ? 1 : 0; break;
+                    case 'date': obj.valor_fecha = v; break;
+                    case 'datetime': obj.valor_datetime = v; break;
+                    case 'json': obj.valor_json = v; break;
+                    case 'string': default: obj.valor_string = v; break;
+                  }
+                  return obj;
+                });
+                selItem.setAttribute('data-values', JSON.stringify(valuesArray));
               }
-              try { document.querySelector('#modalEditAttr .js-close-modal')?.click(); } catch(_e){}
+              safeCloseModal('#modalEditAttr');
               console.log('✅ [KitsEdit] update_attr actualizado en UI');
             } else {
               console.log('⚠️ [KitsEdit] update_attr fallo:', data && data.error);
