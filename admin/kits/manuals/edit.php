@@ -206,8 +206,28 @@ if (!$kit) {
       <textarea name="herramientas_json" id="herramientas_json" rows="4" style="display:none;" placeholder='[ {"nombre":"tijeras","cantidad":1,"nota":"pequeñas","seguridad":"Usar con cuidado"} ]'><?= htmlspecialchars($manual['herramientas_json'] ?? '') ?></textarea>
     </div>
     <div class="form-group">
-      <label>Seguridad (JSON)</label>
-      <textarea name="seguridad_json" rows="4" placeholder='[ "Usa gafas de seguridad" ]'><?= htmlspecialchars($manual['seguridad_json'] ?? '') ?></textarea>
+      <label>Seguridad</label>
+      <div id="security-builder">
+        <div class="security-age">
+          <strong>Edad segura (opcional)</strong>
+          <div class="age-fields">
+            <div>
+              <label>Mín</label>
+              <input type="number" id="sec-age-min" min="0" />
+            </div>
+            <div>
+              <label>Máx</label>
+              <input type="number" id="sec-age-max" min="0" />
+            </div>
+          </div>
+        </div>
+        <div class="security-toolbar">
+          <button type="button" class="btn btn-primary" id="add-sec-note-btn">+ Añadir Nota de Seguridad</button>
+        </div>
+        <ul id="security-list" class="security-list"></ul>
+        <p class="help-note">Añade notas de seguridad una por una. Si defines edad segura, se guardará junto a las notas.</p>
+      </div>
+      <textarea name="seguridad_json" id="seguridad_json" rows="4" style="display:none;" placeholder='{"edad":{"min":10,"max":14},"notas":[{"nota":"Usar gafas","categoria":"protección"}]}' ><?= htmlspecialchars($manual['seguridad_json'] ?? '') ?></textarea>
     </div>
 
     <div class="form-group">
@@ -405,6 +425,146 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   steps = safeParseJSON(pasosTextarea.value).map(normalizeStep);
   renumber();
   renderSteps();
+})();
+
+// --- Security Builder ---
+(function(){
+  const secTextarea = document.getElementById('seguridad_json');
+  const secList = document.getElementById('security-list');
+  const addBtn = document.getElementById('add-sec-note-btn');
+  const ageMinInput = document.getElementById('sec-age-min');
+  const ageMaxInput = document.getElementById('sec-age-max');
+
+  let notes = [];
+
+  function safeParse(raw){ try { return raw ? JSON.parse(raw) : null; } catch(e){ console.log('⚠️ [ManualsEdit] JSON seguridad inválido:', e.message); return null; } }
+  function escapeHTML(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function normalizeNote(n){
+    if (typeof n === 'string') return { nota: n, categoria: '' };
+    if (n && typeof n === 'object') return { nota: (n.nota ? String(n.nota) : ''), categoria: (n.categoria ? String(n.categoria) : '') };
+    return { nota: '', categoria: '' };
+  }
+
+  function render(){
+    secList.innerHTML = '';
+    notes.forEach((n, i) => {
+      const li = document.createElement('li');
+      li.className = 'sec-item';
+      li.setAttribute('data-index', String(i));
+      const header = document.createElement('div');
+      header.className = 'sec-header';
+      header.innerHTML = `
+        <span class="sec-title">${escapeHTML(n.nota || '(sin texto)')}</span>
+        ${n.categoria ? `<span class="muted">(${escapeHTML(n.categoria)})</span>` : ''}
+        <div class="sec-actions">
+          <button type="button" class="btn btn-sm" data-action="up">↑</button>
+          <button type="button" class="btn btn-sm" data-action="down">↓</button>
+          <button type="button" class="btn btn-sm" data-action="edit">Editar</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete">Eliminar</button>
+        </div>`;
+      li.appendChild(header);
+      secList.appendChild(li);
+    });
+    console.log('✅ [ManualsEdit] Renderizadas', notes.length, 'notas de seguridad');
+  }
+
+  function openModal(initial, mode, index){
+    ensureSecModal();
+    document.getElementById('sec-note-text').value = initial?.nota || '';
+    document.getElementById('sec-note-cat').value = initial?.categoria || '';
+    const modal = document.getElementById('sec-modal');
+    modal.dataset.mode = mode;
+    modal.dataset.index = String(index);
+    modal.style.display = 'flex';
+  }
+  function closeModal(){ document.getElementById('sec-modal').style.display = 'none'; }
+  function saveModal(){
+    const text = document.getElementById('sec-note-text').value.trim();
+    const cat = document.getElementById('sec-note-cat').value.trim();
+    if (!text) { alert('Texto de nota requerido'); return; }
+    const modal = document.getElementById('sec-modal');
+    const mode = modal.dataset.mode;
+    const idx = parseInt(modal.dataset.index, 10);
+    const obj = { nota: text, categoria: cat };
+    if (mode === 'create') { notes.push(obj); console.log('✅ [ManualsEdit] Nota de seguridad creada'); }
+    else if (mode === 'edit' && idx >= 0) { notes[idx] = obj; console.log('✅ [ManualsEdit] Nota de seguridad actualizada idx', idx); }
+    render();
+    closeModal();
+  }
+
+  secList.addEventListener('click', function(ev){
+    const btn = ev.target.closest('button'); if (!btn) return;
+    const li = ev.target.closest('.sec-item'); const idx = parseInt(li.getAttribute('data-index'), 10);
+    const action = btn.getAttribute('data-action');
+    if (action === 'up' && idx > 0) { const tmp = notes[idx-1]; notes[idx-1] = notes[idx]; notes[idx] = tmp; render(); }
+    else if (action === 'down' && idx < notes.length - 1) { const tmp = notes[idx+1]; notes[idx+1] = notes[idx]; notes[idx] = tmp; render(); }
+    else if (action === 'edit') { openModal(notes[idx], 'edit', idx); }
+    else if (action === 'delete') { if (confirm('¿Eliminar nota?')) { notes.splice(idx,1); render(); } }
+  });
+
+  addBtn.addEventListener('click', function(){ openModal({ nota:'', categoria:'' }, 'create', -1); });
+
+  const form = document.querySelector('form');
+  form.addEventListener('submit', function(){
+    const minRaw = ageMinInput.value.trim(); const maxRaw = ageMaxInput.value.trim();
+    const min = minRaw === '' ? null : parseInt(minRaw,10);
+    const max = maxRaw === '' ? null : parseInt(maxRaw,10);
+    let payload = null;
+    if (min !== null || max !== null) {
+      payload = { edad: { }, notas: notes.map(n => ({ nota: n.nota, categoria: n.categoria })) };
+      if (min !== null) payload.edad.min = min;
+      if (max !== null) payload.edad.max = max;
+    } else {
+      payload = notes.map(n => ({ nota: n.nota, categoria: n.categoria }));
+    }
+    secTextarea.value = JSON.stringify(payload);
+    console.log('📦 [ManualsEdit] Serializado seguridad_json bytes:', secTextarea.value.length);
+  });
+
+  // Initialize from existing JSON
+  (function init(){
+    const raw = safeParse(secTextarea.value);
+    if (raw && typeof raw === 'object' && !Array.isArray(raw) && (raw.edad || raw.notas)) {
+      if (raw.edad) {
+        if (typeof raw.edad.min !== 'undefined') ageMinInput.value = String(raw.edad.min);
+        if (typeof raw.edad.max !== 'undefined') ageMaxInput.value = String(raw.edad.max);
+      }
+      const ns = Array.isArray(raw.notas) ? raw.notas : [];
+      notes = ns.map(normalizeNote);
+    } else {
+      const arr = Array.isArray(raw) ? raw : [];
+      notes = arr.map(normalizeNote);
+    }
+    render();
+  })();
+
+  function ensureSecModal(){
+    let modal = document.getElementById('sec-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'sec-modal';
+      modal.style.display = 'none';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>Nota de Seguridad</h3>
+          <label>Texto</label>
+          <input type="text" id="sec-note-text" />
+          <label>Categoría (opcional)</label>
+          <input type="text" id="sec-note-cat" />
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" id="sec-save-btn">Guardar</button>
+            <button type="button" class="btn" id="sec-cancel-btn">Cancelar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      document.getElementById('sec-save-btn').addEventListener('click', saveModal);
+      document.getElementById('sec-cancel-btn').addEventListener('click', closeModal);
+      console.log('✅ [ManualsEdit] Security modal creado');
+    }
+    return modal;
+  }
 })();
 
 // --- Tools Builder ---

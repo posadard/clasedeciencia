@@ -83,9 +83,6 @@ include 'includes/header.php';
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
           <?php
-            // Formatos soportados:
-            // 1) ["Usa gafas", "Evita fuego"] -> lista simple
-            // 2) { edad: {min,max}, notas: [..] } o [ {edad:{..}, notas:[..]} ] -> render estructurado
             $rendered = false;
             $segIsAssoc = is_array($seg) && array_keys($seg) !== range(0, count($seg)-1);
             $segObj = null;
@@ -97,17 +94,25 @@ include 'includes/header.php';
           ?>
               <div class="kit-security-chip">Edad segura: <?= ($edadMin !== null ? $edadMin : '?') ?>–<?= ($edadMax !== null ? $edadMax : '?') ?> años</div>
               <?php if (!empty($segObj['notas']) && is_array($segObj['notas'])): ?>
-                <ul>
+                <ul class="security-list">
                   <?php foreach ($segObj['notas'] as $nota): ?>
-                    <li><?= h($nota) ?></li>
+                    <?php if (is_array($nota)): ?>
+                      <li><span class="sec-note"><?= h($nota['nota'] ?? '') ?></span><?php if (!empty($nota['categoria'])): ?> <span class="muted">(<?= h($nota['categoria']) ?>)</span><?php endif; ?></li>
+                    <?php else: ?>
+                      <li><span class="sec-note"><?= h($nota) ?></span></li>
+                    <?php endif; ?>
                   <?php endforeach; ?>
                 </ul>
               <?php endif; ?>
               <?php $rendered = true; endif; ?>
           <?php if (!$rendered): ?>
-            <ul>
+            <ul class="security-list">
               <?php foreach ($seg as $s): ?>
-                <li><?= h(is_array($s) ? json_encode($s, JSON_UNESCAPED_UNICODE) : $s) ?></li>
+                <?php if (is_array($s) && (isset($s['nota']) || isset($s['categoria']))): ?>
+                  <li><span class="sec-note"><?= h($s['nota'] ?? '') ?></span><?php if (!empty($s['categoria'])): ?> <span class="muted">(<?= h($s['categoria']) ?>)</span><?php endif; ?></li>
+                <?php else: ?>
+                  <li><span class="sec-note"><?= h(is_array($s) ? json_encode($s, JSON_UNESCAPED_UNICODE) : $s) ?></span></li>
+                <?php endif; ?>
               <?php endforeach; ?>
             </ul>
           <?php endif; ?>
@@ -181,6 +186,9 @@ console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'ve
 .tools-list { padding-left: 18px; }
 .tool-line { display:flex; gap:6px; align-items:baseline; }
 .tool-note, .tool-sec { color:#555; margin-left: 4px; }
+/* Security note list */
+.security-list { padding-left: 18px; }
+.sec-note { color:#333; }
 @media print {
   .manual-step { page-break-inside: avoid; }
   .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }
