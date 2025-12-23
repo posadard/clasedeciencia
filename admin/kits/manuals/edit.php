@@ -421,6 +421,10 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 
   function isAssocArray(a){ return Array.isArray(a) ? (Object.keys(a).some(k => isNaN(parseInt(k,10)))) : false; }
 
+  function escapeHTML(str){
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
   function normalizeTool(t){
     if (typeof t === 'string') return { nombre: t, cantidad: 1 };
     if (Array.isArray(t)) return { nombre: JSON.stringify(t), cantidad: 1 };
