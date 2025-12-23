@@ -881,6 +881,49 @@ include '../header.php';
     <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
   </div>
+  <?php if ($is_edit): ?>
+  <div class="form-group" style="margin-top:2rem;">
+    <h3>Componentes del Kit</h3>
+
+    <div class="form-group">
+      <label for="component_search">Buscar Componentes</label>
+      <div class="component-selector-container">
+        <div class="selected-components" id="selected-components">
+          <?php if (!empty($componentes)): foreach ($componentes as $kc): ?>
+            <div class="component-chip" data-item-id="<?= (int)$kc['item_id'] ?>" data-orden="<?= (int)$kc['orden'] ?>">
+              <span class="name"><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="meta">· <strong><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></strong> <?= htmlspecialchars(($kc['unidad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+              <?php if (isset($kc['es_incluido_kit']) && (int)$kc['es_incluido_kit'] === 0): ?>
+                <span class="chip-pill chip-danger" title="No incluido">No incluido</span>
+              <?php endif; ?>
+              <button type="button" class="edit-component js-edit-item" title="Editar"
+                data-item-id="<?= (int)$kc['item_id'] ?>"
+                data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
+                data-notas="<?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                data-orden="<?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?>"
+                data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
+                data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
+                data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
+                data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
+              >✏️</button>
+              <button type="button" class="remove-component js-delete-item" title="Remover">×</button>
+            </div>
+          <?php endforeach; endif; ?>
+        </div>
+        <input type="text" id="component_search" placeholder="Escribir para buscar componente..." autocomplete="off" />
+        <datalist id="components_list">
+          <?php foreach ($items as $it): ?>
+            <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
+              <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
+            </option>
+          <?php endforeach; ?>
+        </datalist>
+        <div class="autocomplete-dropdown" id="cmp_autocomplete_dropdown"></div>
+      </div>
+      <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
+    </div>
+  </div>
+  <?php endif; ?>
   <?php
   // Definiciones y valores actuales de atributos del Kit (para UI tipo chips)
   $attr_defs = [];
@@ -979,51 +1022,7 @@ include '../header.php';
     </div>
   </div>
   <?php endif; ?>
-  <?php if ($is_edit): ?>
-  <div class="form-group" style="margin-top:2rem;">
-    <h3>Componentes del Kit</h3>
-
-    <!-- estilos de chips y autocompletado se mueven a assets/css/style.css -->
-
-    <div class="form-group">
-      <label for="component_search">Buscar Componentes</label>
-      <div class="component-selector-container">
-        <div class="selected-components" id="selected-components">
-          <?php if (!empty($componentes)): foreach ($componentes as $kc): ?>
-            <div class="component-chip" data-item-id="<?= (int)$kc['item_id'] ?>" data-orden="<?= (int)$kc['orden'] ?>">
-              <span class="name"><?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="meta">· <strong><?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?></strong> <?= htmlspecialchars(($kc['unidad'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
-              <?php if (isset($kc['es_incluido_kit']) && (int)$kc['es_incluido_kit'] === 0): ?>
-                <span class="chip-pill chip-danger" title="No incluido">No incluido</span>
-              <?php endif; ?>
-              <button type="button" class="edit-component js-edit-item" title="Editar"
-                data-item-id="<?= (int)$kc['item_id'] ?>"
-                data-cantidad="<?= htmlspecialchars($kc['cantidad'], ENT_QUOTES, 'UTF-8') ?>"
-                data-notas="<?= htmlspecialchars(($kc['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                data-orden="<?= htmlspecialchars($kc['orden'], ENT_QUOTES, 'UTF-8') ?>"
-                data-nombre="<?= htmlspecialchars($kc['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
-                data-sku="<?= htmlspecialchars($kc['sku'], ENT_QUOTES, 'UTF-8') ?>"
-                data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
-                data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
-              >✏️</button>
-              <button type="button" class="remove-component js-delete-item" title="Remover">×</button>
-            </div>
-          <?php endforeach; endif; ?>
-        </div>
-        <input type="text" id="component_search" placeholder="Escribir para buscar componente..." autocomplete="off" />
-        <datalist id="components_list">
-          <?php foreach ($items as $it): ?>
-            <option value="<?= (int)$it['id'] ?>" data-name="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-code="<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>">
-              <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (<?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
-            </option>
-          <?php endforeach; ?>
-        </datalist>
-        <div class="autocomplete-dropdown" id="cmp_autocomplete_dropdown"></div>
-      </div>
-      <small>Escribe para buscar componentes. Al seleccionar, completa cantidad y orden en el modal.</small>
-    </div>
-  </div>
-  <?php endif; ?>
+  
   <!-- Taxonomías -->
   <div class="form-section">
     <h2>Taxonomías</h2>
