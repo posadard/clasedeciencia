@@ -480,19 +480,60 @@ include 'includes/header.php';
                         $stC->execute([$kit['id']]);
                         $manual_count = (int)($stC->fetchColumn() ?: 0);
                     } catch (PDOException $e) { $manual_count = 0; }
+                    // Resumen y seguridad
+                    $kit_resumen_short = '';
+                    if (!empty($kit['resumen'])) {
+                        $kit_resumen_short = mb_strlen($kit['resumen']) > 160 ? (mb_substr($kit['resumen'], 0, 157) . '…') : $kit['resumen'];
+                    }
+                    $kit_seguridad = '';
+                    if (!empty($kit['seguridad'])) {
+                        $kit_seguridad = $kit['seguridad'];
+                    } else {
+                        $warnings = [];
+                        if (!empty($materiales_por_kit[$kit['id']]) && is_array($materiales_por_kit[$kit['id']])) {
+                            foreach ($materiales_por_kit[$kit['id']] as $m) {
+                                if (!empty($m['advertencias_seguridad'])) {
+                                    $warnings[] = trim((string)$m['advertencias_seguridad']);
+                                }
+                            }
+                        }
+                        $warnings = array_values(array_unique(array_filter($warnings)));
+                        if (!empty($warnings)) {
+                            $join = implode(' · ', array_slice($warnings, 0, 2));
+                            if (count($warnings) > 2) { $join .= '…'; }
+                            $kit_seguridad = $join;
+                        }
+                    }
                 ?>
                 <div class="kit-card" role="link" tabindex="0" onclick="console.log('📦 [Clase] Click kit card →','<?= h($kit['slug'] ?? '') ?>'); window.location.href='/<?= h($kit['slug'] ?? '') ?>';">
-                    <div class="kit-header">
-                        <h3 class="kit-header-title">
-                            <span class="kit-title-text"><?= h($kit['nombre']) ?>:</span>
-                            <span class="kit-title-byline">🧩 <?= (int)$comp_count ?> componentes 📘 <?= (int)$manual_count ?> manuales<?php if (!empty($kit['version'])): ?> 🔢 v<?= h($kit['version']) ?><?php endif; ?></span>
-                            <?php if (!empty($kit['es_principal'])): ?>
-                                <span class="badge badge-primary">Kit Principal</span>
+                    <div class="kit-card-top">
+                        <div class="kit-thumb">
+                            <?php if (!empty($kit['imagen_portada'])): ?>
+                                <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" loading="lazy" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura kit (bottom) falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
                             <?php else: ?>
-                                <span class="badge badge-secondary">Kit Opcional</span>
+                                <div class="thumbnail-placeholder"><span class="placeholder-icon">📦</span></div>
+                                <script>console.log('⚠️ [Clase] Kit sin imagen (bottom), usando placeholder');</script>
                             <?php endif; ?>
-                        </h3>
-                        <!-- Código eliminado por no ser necesario en la vista pública -->
+                        </div>
+                        <div class="kit-top-content">
+                            <div class="kit-header">
+                                <h3 class="kit-header-title">
+                                    <span class="kit-title-text"><?= h($kit['nombre']) ?>:</span>
+                                    <span class="kit-title-byline">🧩 <?= (int)$comp_count ?> componentes 📘 <?= (int)$manual_count ?> manuales<?php if (!empty($kit['version'])): ?> 🔢 v<?= h($kit['version']) ?><?php endif; ?></span>
+                                    <?php if (!empty($kit['es_principal'])): ?>
+                                        <span class="badge badge-primary">Kit Principal</span>
+                                    <?php else: ?>
+                                        <span class="badge badge-secondary">Kit Opcional</span>
+                                    <?php endif; ?>
+                                </h3>
+                            </div>
+                            <?php if ($kit_resumen_short !== ''): ?>
+                                <p class="kit-summary"><?= h($kit_resumen_short) ?></p>
+                            <?php endif; ?>
+                            <?php if ($kit_seguridad !== ''): ?>
+                                <p class="kit-security">⚠️ <?= h($kit_seguridad) ?></p>
+                            <?php endif; ?>
+                        </div>
                     </div>
                     <?php if (!empty($materiales_por_kit[$kit['id']])): ?>
                         <h4>Componentes necesarios</h4>
