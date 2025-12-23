@@ -25,6 +25,8 @@ $kit = [
   'imagen_portada' => '',
   'video_portada' => '',
   'seguridad' => null,
+  'time_minutes' => null,
+  'dificultad_ensamble' => '',
   'seo_title' => '',
   'seo_description' => '',
   'activo' => 1,
@@ -49,7 +51,7 @@ try {
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, time_minutes, dificultad_ensamble, seo_title, seo_description, activo FROM kits WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
@@ -481,6 +483,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $areas_sel = isset($_POST['areas']) && is_array($_POST['areas']) ? array_map('intval', $_POST['areas']) : [];
         if (!$__is_ajax_request) { echo '<script>console.log("🔍 [KitsEdit] Áreas seleccionadas:", ' . json_encode($areas_sel) . ');</script>'; }
 
+      // Tiempo y dificultad por defecto (kit)
+      $time_minutes = (isset($_POST['time_minutes']) && $_POST['time_minutes'] !== '') ? (int)$_POST['time_minutes'] : null;
+      $dificultad_ensamble = isset($_POST['dificultad_ensamble']) ? trim((string)$_POST['dificultad_ensamble']) : '';
+      if ($dificultad_ensamble === '') { $dificultad_ensamble = null; }
+      if (!$__is_ajax_request) { echo '<script>console.log("🔍 [KitsEdit] Defaults tiempo/dificultad:", ' . json_encode(['time'=>$time_minutes,'dif'=>$dificultad_ensamble]) . ');</script>'; }
+
       if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
         $seguridad_json = json_encode([
           'edad_min' => $seg_edad_min,
@@ -576,11 +584,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
             $pdo->beginTransaction();
             if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
+              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, time_minutes=?, dificultad_ensamble=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $time_minutes, $dificultad_ensamble, $seo_title, $seo_description, $activo, $id]);
             } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo]);
+              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, time_minutes, dificultad_ensamble, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $time_minutes, $dificultad_ensamble, $seo_title, $seo_description, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
             }
@@ -824,6 +832,37 @@ include '../header.php';
       <label for="seg_notas">Notas de seguridad</label>
       <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
     </div>
+  </div>
+  <div class="form-section">
+    <h2>Predeterminados de ensamblaje</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="time_minutes">Tiempo de armado (minutos)</label>
+        <input type="number" id="time_minutes" name="time_minutes" min="0" step="1" value="<?= htmlspecialchars($kit['time_minutes'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+        <small class="hint">Usado como valor por defecto en el manual si no está definido allí.</small>
+      </div>
+      <div class="form-group">
+        <label for="dificultad_ensamble">Dificultad de ensamble</label>
+        <select id="dificultad_ensamble" name="dificultad_ensamble">
+          <?php
+            $dif_val = $kit['dificultad_ensamble'] ?? '';
+            $dif_opts = ['Muy fácil','Fácil','Media','Difícil'];
+            echo '<option value="">(sin definir)</option>';
+            foreach ($dif_opts as $opt) {
+              $sel = ($dif_val === $opt) ? 'selected' : '';
+              echo '<option value="' . htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') . '" ' . $sel . '>' . htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') . '</option>';
+            }
+          ?>
+        </select>
+        <small class="hint">Referencia general del nivel de dificultad.</small>
+      </div>
+    </div>
+    <script>
+      console.log('🔍 [KitsEdit] Defaults iniciales tiempo/dif:', {
+        time: <?= json_encode($kit['time_minutes'] ?? null) ?>,
+        dif: <?= json_encode($kit['dificultad_ensamble'] ?? null) ?>
+      });
+    </script>
   </div>
   <div class="form-group">
     <label for="contenido_html">Contenido HTML</label>
