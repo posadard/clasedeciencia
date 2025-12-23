@@ -1161,6 +1161,111 @@ include '../header.php';
           openModal('#modalEditAttr');
         });
       });
+
+      // Async submit for Edit/Add/Delete attribute actions
+      const currentKitId = <?= $is_edit ? (int)$id : 0 ?>;
+      const csrfTokenEl = document.querySelector('#formEditAttr input[name="csrf_token"]');
+      const csrfToken = csrfTokenEl ? csrfTokenEl.value : (document.querySelector('#formAddAttr input[name="csrf_token"]')?.value || '');
+
+      async function postAttr(action, defId, valor, unidad){
+        const payload = { action, kit_id: currentKitId, def_id: parseInt(defId,10), valor: valor || '', unidad: unidad || '', csrf_token: csrfToken };
+        console.log('📡 [KitsEdit] Enviando atributo:', payload);
+        try {
+          const resp = await fetch('/api/kits-attr.php', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+          });
+          console.log('📡 [KitsEdit] kits-attr status:', resp.status);
+          const data = await resp.json();
+          if (!data || !data.ok) { throw new Error((data && data.error) || 'Respuesta inválida'); }
+          console.log('✅ [KitsEdit] Atributo actualizado:', data);
+          return data;
+        } catch (e) {
+          console.log('❌ [KitsEdit] Error kits-attr:', e && e.message);
+          throw e;
+        }
+      }
+
+      function updateChipUI(defId, displayText, unidad){
+        const chip = document.querySelector('.component-chip[data-attr-id="'+defId+'"]');
+        if (chip) {
+          const meta = chip.querySelector('.meta');
+          if (meta) {
+            meta.innerHTML = '· <strong>'+ (displayText || '') +'</strong>' + (unidad ? ' ' + unidad : '');
+          }
+        } else {
+          // Create new chip if not exists
+          const wrap = document.getElementById('selected-attrs');
+          if (wrap) {
+            const div = document.createElement('div');
+            div.className = 'component-chip';
+            div.setAttribute('data-attr-id', String(defId));
+            // Minimal: label unknown here; keep defId as placeholder
+            div.innerHTML = '<span class="name">Atributo #'+defId+'</span><span class="meta">· <strong>'+ (displayText || '') +'</strong>'+ (unidad ? ' ' + unidad : '') +'</span>'+
+              '<button type="button" class="edit-component js-edit-attr" data-attr-id="'+defId+'" title="Editar">✏️</button>'+
+              '<form method="POST" style="display:inline;"><input type="hidden" name="csrf_token" value="'+csrfToken+'" />'+
+              '<input type="hidden" name="action" value="delete_attr" />'+
+              '<input type="hidden" name="def_id" value="'+defId+'" />'+
+              '<button type="submit" class="remove-component" title="Remover">×</button></form>';
+            wrap.appendChild(div);
+          }
+        }
+      }
+
+      function closeModal(sel){ try { closeModal(sel); } catch(_e){} }
+
+      // Intercept edit submit
+      const formEditAttr = document.getElementById('formEditAttr');
+      if (formEditAttr) {
+        formEditAttr.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const defId = document.getElementById('edit_def_id').value;
+          const valor = document.getElementById('edit_valor').value.trim();
+          const unidad = document.getElementById('edit_unidad') ? document.getElementById('edit_unidad').value : '';
+          try {
+            const res = await postAttr('update_attr', defId, valor, unidad);
+            updateChipUI(defId, valor, unidad);
+            closeModal('#modalEditAttr');
+            console.log('✅ [KitsEdit] Edit atributo guardado sin recargar');
+          } catch(e) {
+            alert('Error al guardar atributo: '+ (e && e.message ? e.message : ''));
+          }
+        });
+      }
+
+      // Intercept add submit
+      const formAddAttr = document.getElementById('formAddAttr');
+      if (formAddAttr) {
+        formAddAttr.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const defId = document.getElementById('add_def_id').value;
+          const valor = document.getElementById('add_valor').value.trim();
+          const unidad = document.getElementById('add_unidad') ? document.getElementById('add_unidad').value : '';
+          try {
+            const res = await postAttr('add_attr', defId, valor, unidad);
+            updateChipUI(defId, valor, unidad);
+            closeModal('#modalAddAttr');
+            console.log('✅ [KitsEdit] Nuevo atributo agregado sin recargar');
+          } catch(e) {
+            alert('Error al agregar atributo: '+ (e && e.message ? e.message : ''));
+          }
+        });
+      }
+
+      // Intercept delete submits inside chips
+      document.querySelectorAll('#selected-attrs .component-chip form').forEach(f => {
+        f.addEventListener('submit', async (ev) => {
+          ev.preventDefault();
+          const defId = f.querySelector('input[name="def_id"]').value;
+          try {
+            const res = await postAttr('delete_attr', defId, '', '');
+            const chip = f.closest('.component-chip');
+            if (chip) chip.remove();
+            console.log('✅ [KitsEdit] Atributo eliminado sin recargar');
+          } catch(e) {
+            alert('Error al eliminar atributo: '+ (e && e.message ? e.message : ''));
+          }
+        });
+      });
     })();
   </script>
   
