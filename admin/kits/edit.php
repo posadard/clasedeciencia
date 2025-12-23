@@ -21,8 +21,6 @@ $kit = [
   'contenido_html' => '',
   'imagen_portada' => '',
   'video_portada' => '',
-  'time_minutes' => null,
-  'dificultad_ensamble' => '',
   'seguridad' => null,
   'seo_title' => '',
   'seo_description' => '',
@@ -48,7 +46,7 @@ try {
 
 if ($is_edit) {
   try {
-    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT id, clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo FROM kits WHERE id = ?');
     $stmt->execute([$id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row) { $kit = $row; } else { $is_edit = false; $id = null; }
@@ -83,8 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>';
   } else {
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
-    echo '<script>console.log("📡 [KitsEdit] POST action:", ' . json_encode($action) . ');</script>';
-    try { echo '<script>console.log("🔍 [KitsEdit] POST keys:", ' . json_encode(array_keys($_POST)) . ');</script>'; } catch (Exception $___e) {}
 
     if ($action === 'save_attrs' && $is_edit) {
       // Guardar atributos técnicos (atributos_contenidos)
@@ -373,13 +369,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $video_portada = isset($_POST['video_portada']) ? trim((string)$_POST['video_portada']) : '';
       $seo_title = isset($_POST['seo_title']) ? trim((string)$_POST['seo_title']) : '';
       $seo_description = isset($_POST['seo_description']) ? trim((string)$_POST['seo_description']) : '';
-      // Tiempo y dificultad (fallbacks usados en manual público)
-      $time_minutes = (isset($_POST['time_minutes']) && $_POST['time_minutes'] !== '' && is_numeric($_POST['time_minutes'])) ? (int)$_POST['time_minutes'] : null;
-      $dificultad_ensamble = isset($_POST['dificultad_ensamble']) ? trim((string)$_POST['dificultad_ensamble']) : '';
-      $dificultades_permitidas = ['Fácil','Media','Difícil'];
-      if ($dificultad_ensamble === '' || !in_array($dificultad_ensamble, $dificultades_permitidas, true)) {
-        $dificultad_ensamble = null;
-      }
       // Seguridad estructurada → JSON
       $seg_edad_min = (isset($_POST['seg_edad_min']) && $_POST['seg_edad_min'] !== '') ? (int)$_POST['seg_edad_min'] : null;
       $seg_edad_max = (isset($_POST['seg_edad_max']) && $_POST['seg_edad_max'] !== '') ? (int)$_POST['seg_edad_max'] : null;
@@ -485,11 +474,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
             $pdo->beginTransaction();
             if ($is_edit) {
-              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, time_minutes=?, dificultad_ensamble=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $time_minutes, $dificultad_ensamble, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
+              $stmt = $pdo->prepare('UPDATE kits SET clase_id=?, nombre=?, slug=?, codigo=?, version=?, resumen=?, contenido_html=?, imagen_portada=?, video_portada=?, seguridad=?, seo_title=?, seo_description=?, activo=?, updated_at=NOW() WHERE id=?');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo, $id]);
             } else {
-              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
-              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $time_minutes, $dificultad_ensamble, $seguridad_json, $seo_title, $seo_description, $activo]);
+              $stmt = $pdo->prepare('INSERT INTO kits (clase_id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, seguridad, seo_title, seo_description, activo, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())');
+              $stmt->execute([$principal_clase_id, $nombre, $slug, $codigo, $version, $resumen, $contenido_html, $imagen_portada, $video_portada, $seguridad_json, $seo_title, $seo_description, $activo]);
               $id = (int)$pdo->lastInsertId();
               $is_edit = true;
             }
@@ -718,29 +707,6 @@ include '../header.php';
     </div>
   </div>
   <div class="form-group">
-    <h4>Tiempo y dificultad</h4>
-    <div class="field-inline">
-      <div class="form-group">
-        <label for="time_minutes">Tiempo estimado (minutos)</label>
-        <input type="number" id="time_minutes" name="time_minutes" min="0" step="1" value="<?= htmlspecialchars(($kit['time_minutes'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-      <div class="form-group">
-        <label for="dificultad_ensamble">Dificultad de ensamble</label>
-        <select id="dificultad_ensamble" name="dificultad_ensamble">
-          <?php
-            $dif_actual = $kit['dificultad_ensamble'] ?? '';
-            $opts = ['Fácil','Media','Difícil'];
-            foreach ($opts as $opt):
-          ?>
-            <option value="<?= htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') ?>" <?= ($dif_actual === $opt ? 'selected' : '') ?>><?= htmlspecialchars($opt, ENT_QUOTES, 'UTF-8') ?></option>
-          <?php endforeach; ?>
-          <option value="" <?= ($dif_actual === '' || $dif_actual === null ? 'selected' : '') ?>>> Sin especificar</option>
-        </select>
-      </div>
-    </div>
-    <small class="hint">Estos valores se usan como predeterminados en los manuales (si el manual no define sus propios valores).</small>
-  </div>
-  <div class="form-group">
     <h4>Seguridad</h4>
     <div class="field-inline">
       <div class="form-group">
@@ -771,13 +737,11 @@ include '../header.php';
       $st = $pdo->prepare('SELECT d.* FROM atributos_definiciones d JOIN atributos_mapeo m ON m.atributo_id = d.id WHERE m.tipo_entidad = ? AND m.visible = 1 ORDER BY m.orden ASC, d.id ASC');
       $st->execute(['kit']);
       $attr_defs = $st->fetchAll(PDO::FETCH_ASSOC);
-      echo '<script>console.log("🔍 [KitsEdit] Definiciones de atributos:", ' . (int)count($attr_defs) . ');</script>';
     } catch (PDOException $e) { $attr_defs = []; }
     try {
       $sv = $pdo->prepare('SELECT * FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? ORDER BY atributo_id ASC, orden ASC');
       $sv->execute(['kit', $id]);
       $rows = $sv->fetchAll(PDO::FETCH_ASSOC);
-      echo '<script>console.log("🔍 [KitsEdit] Valores de atributos cargados:", ' . (int)count($rows) . ');</script>';
       foreach ($rows as $r) {
         $aid = (int)$r['atributo_id'];
         if (!isset($attr_vals[$aid])) $attr_vals[$aid] = [];
