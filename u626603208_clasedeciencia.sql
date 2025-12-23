@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 21, 2025 at 11:16 PM
+-- Generation Time: Dec 23, 2025 at 02:14 AM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -191,9 +191,10 @@ INSERT INTO `atributos_contenidos` (`id`, `tipo_entidad`, `entidad_id`, `atribut
 (1, 'kit', 4, 1, 'madera', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 19:42:19', '2025-12-21 19:42:19'),
 (2, 'componente', 12, 2, 'Blanco', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 19:45:31', '2025-12-21 19:45:31'),
 (3, 'kit', 4, 2, 'rojo, azul, verde', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 19:47:50', '2025-12-21 19:47:50'),
-(4, 'kit', 6, 2, 'verde', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 20:07:11', '2025-12-21 20:07:11'),
 (5, 'clase', 1, 22, '10', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 20:58:13', '2025-12-21 20:58:13'),
-(15, 'clase', 6, 23, 'jjj', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 21:39:39', '2025-12-21 21:39:39');
+(15, 'clase', 6, 23, 'jjj', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-21 21:39:39', '2025-12-21 21:39:39'),
+(16, 'kit', 6, 3, NULL, 10.000000, NULL, NULL, NULL, NULL, NULL, 'KGM', 'es-CO', 1, 'manual', '2025-12-22 00:11:48', '2025-12-22 00:11:48'),
+(17, 'kit', 6, 4, NULL, 2.000000, NULL, NULL, NULL, NULL, NULL, 'CMT', 'es-CO', 1, 'manual', '2025-12-22 00:11:56', '2025-12-22 00:11:56');
 
 -- --------------------------------------------------------
 
@@ -519,12 +520,12 @@ CREATE TABLE `clase_kits` (
 --
 
 INSERT INTO `clase_kits` (`clase_id`, `kit_id`, `sort_order`, `es_principal`, `created_at`) VALUES
-(1, 1, 1, 1, '2025-12-20 21:53:17'),
+(1, 1, 1, 1, '2025-12-21 23:20:07'),
 (2, 2, 1, 1, '2025-12-20 21:53:17'),
 (3, 3, 1, 1, '2025-12-20 21:53:17'),
 (4, 4, 1, 1, '2025-12-21 19:48:45'),
 (5, 5, 1, 1, '2025-12-20 21:53:17'),
-(6, 6, 1, 1, '2025-12-21 21:39:42'),
+(6, 6, 1, 1, '2025-12-22 00:57:26'),
 (7, 7, 1, 1, '2025-12-20 21:53:17'),
 (8, 8, 1, 1, '2025-12-20 21:53:17'),
 (9, 9, 1, 1, '2025-12-20 21:53:17'),
@@ -971,21 +972,41 @@ CREATE TABLE `kits` (
 --
 
 INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `slug`, `codigo`, `version`, `resumen`, `contenido_html`, `imagen_portada`, `video_portada`, `seguridad`, `seo_title`, `seo_description`, `activo`, `created_at`, `updated_at`) VALUES
-(1, 1, 'Microscopio sencillo', NULL, 'KIT-MICROSCOPIO_SENCILLO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 04:15:30'),
-(2, 2, 'Kit: Pulmón mecánico', NULL, 'KIT-PULMON_MECANICO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(3, 3, 'Kit: Circuito eléctrico básico', NULL, 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(4, 4, 'Separación de mezclas', 'kit-separacion-de-mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 19:48:45'),
-(5, 5, 'Test de pH', NULL, 'KIT-TEST_DE_PH', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 16:46:06'),
-(6, 6, 'Radio de cristal', 'kit-radio-de-cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-21 15:59:17'),
-(7, 7, 'Kit: Motor eléctrico simple', NULL, 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(8, 8, 'Kit: Osmosis con vegetales', NULL, 'KIT-OSMOSIS_CON_VEGETALES', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(9, 9, 'Kit: Carro trampa de ratón', NULL, 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(10, 10, 'Kit: Generador manual (dinamo)', NULL, 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(11, 11, 'Kit: Carro solar', NULL, 'KIT-CARRO_SOLAR', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(12, 12, 'Kit: Turbina eólica de mesa', NULL, 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(13, 13, 'Kit: Electroimán', NULL, 'KIT-ELECTROIMAN', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(14, 14, 'Kit: Tratamiento de agua', NULL, 'KIT-TRATAMIENTO_DE_AGUA', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28'),
-(15, 15, 'Kit: Análisis químico del entorno', NULL, 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, '2025-12-20 04:46:28', '2025-12-20 04:46:28');
+(1, 1, 'Microscopio sencillo', 'kit-microscopio-sencillo', 'KIT-MICROSCOPIO_SENCILLO', '1.0', 'Kit para construir un microscopio sencillo para observación básica en el aula.', '<h2>Descripción</h2><p>Este kit permite armar un microscopio artesanal para iniciar la observación de objetos y texturas.</p><h3>Incluye</h3><ul><li>Lentes y elementos de soporte</li><li>Partes para estructura</li></ul><h3>Sugerencias</h3><p>Usa luz natural o una lámpara para mejorar la visualización.</p>', '/assets/images/kits/kit-1.jpg', 'https://www.youtube.com/embed/kit-1-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"Manipula lentes y piezas pequeñas con cuidado. Supervisión docente recomendada.\"}', 'Kit educativo: Microscopio sencillo', 'Kit para construir un microscopio sencillo y observar detalles básicos de forma segura.', 1, '2025-12-20 04:46:28', '2025-12-21 23:20:07'),
+(2, 2, 'Kit: Pulmón mecánico', NULL, 'KIT-PULMON_MECANICO', '1.0', 'Modelo didáctico para comprender presión y volumen en un sistema respiratorio sencillo.', '<h2>Descripción</h2><p>Arma un modelo de pulmón mecánico para evidenciar cambios de presión y volumen.</p><h3>Aprendizajes</h3><ul><li>Relación presión-volumen</li><li>Movimiento de membrana</li></ul>', '/assets/images/kits/kit-2.jpg', 'https://www.youtube.com/embed/kit-2-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"Supervisa el uso de globos. Evita golpes bruscos o estiramientos excesivos.\"}', 'Kit educativo: Kit: Pulmón mecánico', 'Modelo de pulmón mecánico para explorar presión y volumen con seguridad básica.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(3, 3, 'Kit: Circuito eléctrico básico', NULL, 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', 'Kit para armar un circuito simple con batería, interruptor y LED.', '<h2>Descripción</h2><p>Ensamble un circuito básico y observe la transformación de energía eléctrica en luz.</p><h3>Incluye</h3><ul><li>Pilas y porta baterías</li><li>Cables, interruptor y LED</li></ul>', '/assets/images/kits/kit-3.jpg', 'https://www.youtube.com/embed/kit-3-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"No cortocircuites las baterías. Verifica polaridad del LED.\"}', 'Kit educativo: Kit: Circuito eléctrico básico', 'Circuito eléctrico básico con LED para iniciar en electricidad de forma segura.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(4, 4, 'Separación de mezclas', 'kit-separacion-de-mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', 'Kit para practicar métodos físicos como filtración y decantación.', '<h2>Descripción</h2><p>Explora técnicas de separación con papel filtro, embudo y recipientes.</p><h3>Actividades</h3><ul><li>Filtración de mezclas</li><li>Observación de resultados</li></ul>', '/assets/images/kits/kit-4.jpg', 'https://www.youtube.com/embed/kit-4-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"Manejo cuidadoso del agua y utensilios. Mantén orden y limpieza.\"}', 'Kit educativo: Separación de mezclas', 'Separación de mezclas con filtros y embudos para actividades de laboratorio escolar.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(5, 5, 'Test de pH', NULL, 'KIT-TEST_DE_PH', '1.0', 'Kit con tiras indicadoras para identificar ácidos y bases.', '<h2>Descripción</h2><p>Mide el pH de sustancias cotidianas y registra resultados.</p><h3>Incluye</h3><ul><li>Tiras de pH</li><li>Accesorios básicos de medición</li></ul>', '/assets/images/kits/kit-5.jpg', 'https://www.youtube.com/embed/kit-5-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"No ingieras sustancias. Lava manos tras la práctica.\"}', 'Kit educativo: Test de pH', 'Pruebas de pH para explorar ácidos y bases con normas básicas de seguridad.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(6, 6, 'Radio de cristal', 'kit-radio-de-cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', '<h2>Descripci&oacute;n</h2>\r\n\r\n<p>Analiza la modulaci&oacute;n AM con un receptor pasivo de cristal.</p>\r\n\r\n<h3>Componentes</h3>\r\n\r\n<ul>\r\n	<li>Diodo de germanio</li>\r\n	<li>Auricular de alta impedancia</li>\r\n	<li>Alambre para bobina</li>\r\n</ul>\r\n', '/assets/images/kits/kit-6.jpg', 'https://www.youtube.com/embed/kit-6-instrucciones', '{\"edad_min\":14,\"edad_max\":18,\"notas\":\"No conectes el circuito a la red eléctrica. Usa antena y tierra de forma segura.\"}', 'Kit educativo: Radio de cristal', 'Receptor de radio de cristal para explorar modulación AM y resonancia LC.', 1, '2025-12-20 04:46:28', '2025-12-22 00:57:26'),
+(7, 7, 'Kit: Motor eléctrico simple', NULL, 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', 'Kit para construir un motor sencillo y relacionar electricidad y magnetismo.', '<h2>Descripción</h2><p>Arma un rotor básico para observar movimiento por fuerza electromagnética.</p><h3>Aprendizajes</h3><ul><li>Interacción campo-corriente</li><li>Variables de velocidad</li></ul>', '/assets/images/kits/kit-7.jpg', 'https://www.youtube.com/embed/kit-7-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Evita sobrecalentamiento por corrientes prolongadas. Supervisión recomendada.\"}', 'Kit educativo: Kit: Motor eléctrico simple', 'Motor eléctrico simple para analizar fuerza electromagnética de forma segura.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(8, 8, 'Kit: Osmosis con vegetales', NULL, 'KIT-OSMOSIS_CON_VEGETALES', '1.0', 'Kit para observar transporte celular con soluciones salinas en vegetales.', '<h2>Descripción</h2><p>Explora cambios por osmosis usando muestras vegetales y sal.</p><h3>Registro</h3><p>Compara longitudes/masas antes y después.</p>', '/assets/images/kits/kit-8.jpg', 'https://www.youtube.com/embed/kit-8-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Higiene y manejo adecuado de alimentos. Limpia la mesa al finalizar.\"}', 'Kit educativo: Kit: Osmosis con vegetales', 'Experimento de osmosis con vegetales para evidenciar transporte de agua.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(9, 9, 'Kit: Carro trampa de ratón', NULL, 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', 'Kit para construir un carro impulsado por energía potencial de una trampa.', '<h2>Descripción</h2><p>Convierte energía potencial en movimiento y analiza fricción.</p><h3>Sugerencias</h3><p>Prueba distintas superficies y mide distancias.</p>', '/assets/images/kits/kit-9.jpg', 'https://www.youtube.com/embed/kit-9-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Riesgo de pellizco. Manipula la trampa con cuidado y protección.\"}', 'Kit educativo: Kit: Carro trampa de ratón', 'Carro propulsado por trampa para estudiar energía y fricción en movimiento.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(10, 10, 'Kit: Generador manual (dinamo)', NULL, 'KIT-GENERADOR_MANUAL_DINAMO', '1.0', 'Kit para generar electricidad manualmente y relacionar movimiento con energía.', '<h2>Descripción</h2><p>Acciona una dinamo y mide efectos sobre una carga.</p><h3>Variaciones</h3><p>Cambia velocidad de giro y registra resultados.</p>', '/assets/images/kits/kit-10.jpg', 'https://www.youtube.com/embed/kit-10-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Evita conexiones inadecuadas. No fuerces el mecanismo.\"}', 'Kit educativo: Kit: Generador manual (dinamo)', 'Dinamo manual para comprender generación eléctrica segura y controlada.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(11, 11, 'Kit: Carro solar', NULL, 'KIT-CARRO_SOLAR', '1.0', 'Kit para construir un vehículo impulsado por energía solar.', '<h2>Descripción</h2><p>Integra panel solar y motor para evaluar eficiencia energética.</p><h3>Exploración</h3><p>Prueba ángulos de incidencia y sombras.</p>', '/assets/images/kits/kit-11.jpg', 'https://www.youtube.com/embed/kit-11-instrucciones', '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"Manipula el panel con cuidado. Evita golpes y flexiones.\"}', 'Kit educativo: Kit: Carro solar', 'Carro solar para analizar eficiencia y parámetros de energía renovable.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(12, 12, 'Kit: Turbina eólica de mesa', NULL, 'KIT-TURBINA_EOLICA_DE_MESA', '1.0', 'Kit para diseñar una turbina de mesa y convertir energía del viento.', '<h2>Descripción</h2><p>Construye una hélice y mide energía generada.</p><h3>Pruebas</h3><p>Compara número de palas y ángulos.</p>', '/assets/images/kits/kit-12.jpg', 'https://www.youtube.com/embed/kit-12-instrucciones', '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"Mantén distancia de la hélice en movimiento. Usa protección si es necesario.\"}', 'Kit educativo: Kit: Turbina eólica de mesa', 'Turbina eólica de mesa para estudiar conversión de energía del viento.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(13, 13, 'Kit: Electroimán', NULL, 'KIT-ELECTROIMAN', '1.0', 'Kit para construir un electroimán y analizar variables de fuerza y campo.', '<h2>Descripción</h2><p>Enrola alambre en un núcleo y experimenta con corriente y vueltas.</p><h3>Observa</h3><p>Variación de fuerza con espiras y corriente.</p>', '/assets/images/kits/kit-13.jpg', 'https://www.youtube.com/embed/kit-13-instrucciones', '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"Evita calentamiento prolongado por corrientes altas. Ensayos breves.\"}', 'Kit educativo: Kit: Electroimán', 'Electroimán escolar para explorar relación corriente-campo de forma segura.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(14, 14, 'Kit: Tratamiento de agua', NULL, 'KIT-TRATAMIENTO_DE_AGUA', '1.0', 'Kit para construir un filtro por capas y evaluar calidad del agua.', '<h2>Descripción</h2><p>Arma un filtro con carbón, arena y grava para remover impurezas.</p><h3>Registro</h3><p>Observa claridad antes y después.</p>', '/assets/images/kits/kit-14.jpg', 'https://www.youtube.com/embed/kit-14-instrucciones', '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"Gestiona residuos adecuadamente. No ingieras muestras de ensayo.\"}', 'Kit educativo: Kit: Tratamiento de agua', 'Filtro de agua escolar para comprender procesos físico-químicos con seguridad.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39'),
+(15, 15, 'Kit: Análisis químico del entorno', NULL, 'KIT-ANALISIS_QUIMICO_DEL_ENTORNO', '1.0', 'Kit para realizar pruebas químicas seguras a sustancias cotidianas.', '<h2>Descripción</h2><p>Aplica pruebas sencillas y documenta resultados con enfoque seguro.</p><h3>Ética</h3><p>Maneja sustancias con responsabilidad y registra observaciones.</p>', '/assets/images/kits/kit-15.jpg', 'https://www.youtube.com/embed/kit-15-instrucciones', '{\"edad_min\": 15, \"edad_max\": 18, \"notas\": \"No ingieras sustancias. Usa guantes/bata según el docente.\"}', 'Kit educativo: Kit: Análisis químico del entorno', 'Análisis químico seguro de sustancias cotidianas para el aula.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `kits_areas`
+--
+
+CREATE TABLE `kits_areas` (
+  `kit_id` int(11) NOT NULL,
+  `area_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `kits_areas`
+--
+
+INSERT INTO `kits_areas` (`kit_id`, `area_id`) VALUES
+(6, 1),
+(6, 4),
+(6, 5);
 
 -- --------------------------------------------------------
 
@@ -1117,6 +1138,7 @@ CREATE TABLE `kit_manuals` (
   `herramientas_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`herramientas_json`)),
   `seguridad_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`seguridad_json`)),
   `html` mediumtext DEFAULT NULL,
+  `render_mode` enum('legacy','fullhtml') NOT NULL DEFAULT 'legacy',
   `published_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -1477,6 +1499,14 @@ ALTER TABLE `kits`
   ADD KEY `idx_kits_clase` (`clase_id`);
 
 --
+-- Indexes for table `kits_areas`
+--
+ALTER TABLE `kits_areas`
+  ADD PRIMARY KEY (`kit_id`,`area_id`),
+  ADD KEY `idx_kits_areas_kit` (`kit_id`),
+  ADD KEY `idx_kits_areas_area` (`area_id`);
+
+--
 -- Indexes for table `kit_componentes`
 --
 ALTER TABLE `kit_componentes`
@@ -1536,7 +1566,7 @@ ALTER TABLE `areas`
 -- AUTO_INCREMENT for table `atributos_contenidos`
 --
 ALTER TABLE `atributos_contenidos`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `atributos_definiciones`
@@ -1769,6 +1799,13 @@ ALTER TABLE `ia_mensajes`
 --
 ALTER TABLE `kits`
   ADD CONSTRAINT `fk_kits_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `kits_areas`
+--
+ALTER TABLE `kits_areas`
+  ADD CONSTRAINT `fk_kits_areas_area` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_kits_areas_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `kit_componentes`

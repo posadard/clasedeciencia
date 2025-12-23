@@ -534,8 +534,20 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
   const kitSelect = document.querySelector('select[name="kit_id"]');
 
+  function toSafetyObj(raw){
+    try {
+      if (!raw) return null;
+      if (typeof raw === 'string') return JSON.parse(raw);
+      if (typeof raw === 'object') return raw;
+      return null;
+    } catch(e) {
+      console.log('⚠️ [ManualsEdit] Error parse seguridad kit:', e.message);
+      return null;
+    }
+  }
+
   function renderKitSafetyPanel(obj){
-    KIT_SAFETY = obj || null;
+    KIT_SAFETY = toSafetyObj(obj);
     if (!kitSafetyPanel) return;
     if (!KIT_SAFETY) {
       kitSafetyPanel.classList.add('muted');
@@ -569,7 +581,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       const data = await res.json();
       console.log('📡 [ManualsEdit] kit-get respuesta:', data);
       if (data && data.ok && data.kit) {
-        return data.kit.seguridad || null;
+        const obj = toSafetyObj(data.kit.seguridad || null);
+        return obj;
       }
       return null;
     } catch (e) {
