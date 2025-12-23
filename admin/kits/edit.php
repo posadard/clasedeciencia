@@ -596,6 +596,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $orden = isset($_POST['orden']) && ctype_digit($_POST['orden']) ? (int)$_POST['orden'] : 0;
       if ($item_id <= 0 || $cantidad <= 0) {
         $error_msg = 'Selecciona un componente y cantidad válida.';
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$error_msg]); exit; }
       } else {
         try {
           // Ajuste al schema: usar sort_order en vez de orden
@@ -603,8 +604,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $stmt = $pdo->prepare('INSERT INTO kit_componentes (kit_id, item_id, cantidad, es_incluido_kit, notas, sort_order) VALUES (?,?,?,?,?,?)');
           $stmt->execute([$id, $item_id, $cantidad, 1, $notas, $orden]);
           $action_msg = 'Componente agregado.';
+          if ($is_ajax) {
+            // Devolver datos del item para renderizar chip
+            $info = ['item_id'=>$item_id,'cantidad'=>$cantidad,'orden'=>$orden,'notas'=>$notas,'es_incluido_kit'=>1];
+            try {
+              $q = $pdo->prepare('SELECT nombre_comun, sku, unidad FROM kit_items WHERE id = ? LIMIT 1');
+              $q->execute([$item_id]);
+              $row = $q->fetch(PDO::FETCH_ASSOC);
+              if ($row) { $info['nombre_comun']=$row['nombre_comun']; $info['sku']=$row['sku']; $info['unidad']=$row['unidad']; }
+            } catch(PDOException $e) {}
+            header('Content-Type: application/json'); echo json_encode(['ok'=>true,'message'=>$action_msg,'item'=>$info]); exit;
+          }
         } catch (PDOException $e) {
           $error_msg = 'Error al agregar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$error_msg]); exit; }
         }
       }
     } else if ($action === 'delete_item' && $is_edit) {
@@ -612,13 +625,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $kc_item_id = isset($_POST['kc_item_id']) && ctype_digit($_POST['kc_item_id']) ? (int)$_POST['kc_item_id'] : 0;
       if ($kc_item_id <= 0) {
         $error_msg = 'Componente inválido.';
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$error_msg]); exit; }
       } else {
         try {
           $stmt = $pdo->prepare('DELETE FROM kit_componentes WHERE kit_id = ? AND item_id = ?');
           $stmt->execute([$id, $kc_item_id]);
           $action_msg = 'Componente eliminado.';
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>true,'message'=>$action_msg,'item_id'=>$kc_item_id]); exit; }
         } catch (PDOException $e) {
           $error_msg = 'Error al eliminar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$error_msg]); exit; }
         }
       }
     } else if ($action === 'update_item' && $is_edit) {
@@ -630,17 +646,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $incluido = isset($_POST['es_incluido_kit']) ? 1 : 0;
       if ($kc_item_id <= 0 || $cantidad <= 0) {
         $error_msg = 'Selecciona un componente válido y cantidad positiva.';
-        echo '<script>console.log("❌ [KitsEdit] update_item inválido");</script>';
+        if (!$is_ajax) { echo '<script>console.log("❌ [KitsEdit] update_item inválido");</script>'; }
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$error_msg]); exit; }
       } else {
         try {
           if ($notas !== '') { $notas = mb_substr($notas, 0, 255, 'UTF-8'); } else { $notas = null; }
           $stmt = $pdo->prepare('UPDATE kit_componentes SET cantidad = ?, notas = ?, sort_order = ?, es_incluido_kit = ? WHERE kit_id = ? AND item_id = ?');
           $stmt->execute([$cantidad, $notas, $orden, $incluido, $id, $kc_item_id]);
           $action_msg = 'Componente actualizado.';
-          echo '<script>console.log("✅ [KitsEdit] update_item guardado; incluido=' . ($incluido? '1':'0') . '");</script>';
+          if (!$is_ajax) { echo '<script>console.log("✅ [KitsEdit] update_item guardado; incluido=' . ($incluido? '1':'0') . '");</script>'; }
+          if ($is_ajax) {
+            $info = ['item_id'=>$kc_item_id,'cantidad'=>$cantidad,'orden'=>$orden,'notas'=>$notas,'es_incluido_kit'=>$incluido];
+            try {
+              $q = $pdo->prepare('SELECT nombre_comun, sku, unidad FROM kit_items WHERE id = ? LIMIT 1');
+              $q->execute([$kc_item_id]);
+              $row = $q->fetch(PDO::FETCH_ASSOC);
+              if ($row) { $info['nombre_comun']=$row['nombre_comun']; $info['sku']=$row['sku']; $info['unidad']=$row['unidad']; }
+            } catch(PDOException $e) {}
+            header('Content-Type: application/json'); echo json_encode(['ok'=>true,'message'=>$action_msg,'item'=>$info]); exit;
+          }
         } catch (PDOException $e) {
           $error_msg = 'Error al actualizar componente: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
-          echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
+          if (!$is_ajax) { echo '<script>console.log("❌ [KitsEdit] update_item error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>'; }
+          if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$error_msg]); exit; }
         }
       }
     }
@@ -963,12 +991,7 @@ include '../header.php';
               data-unidad="<?= htmlspecialchars(($kc['unidad'] ?? '-'), ENT_QUOTES, 'UTF-8') ?>"
               data-incluido="<?= isset($kc['es_incluido_kit']) ? (int)$kc['es_incluido_kit'] : 1 ?>"
             >✏️</button>
-            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar componente del kit?')">
-              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-              <input type="hidden" name="action" value="delete_item" />
-              <input type="hidden" name="kc_item_id" value="<?= (int)$kc['item_id'] ?>" />
-              <button type="submit" class="remove-component" title="Remover">×</button>
-            </form>
+            <button type="button" class="remove-component js-delete-item" data-item-id="<?= (int)$kc['item_id'] ?>" title="Remover">×</button>
           </div>
         <?php endforeach; endif; ?>
       </div>
@@ -1775,11 +1798,108 @@ include '../header.php';
   // Logs de envío de formularios
   const formEdit = document.getElementById('formEditCmp');
   if (formEdit) {
-    formEdit.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando update_item...'));
+    formEdit.addEventListener('submit', (e) => {
+      e.preventDefault();
+      console.log('📡 [KitsEdit] Enviando update_item...');
+      try {
+        const fd = new FormData(formEdit);
+        fd.append('ajax','1');
+        fetch(window.location.href, { method:'POST', body: fd }).then(r => r.json()).then((json) => {
+          console.log('✅ [KitsEdit] update_item respuesta:', json);
+          if (!json || json.ok !== true) { console.log('❌ [KitsEdit] update_item error:', json && json.error); return; }
+          const it = json.item || {};
+          const wrap = document.getElementById('selected-components');
+          const chip = wrap ? wrap.querySelector('.component-chip[data-item-id="'+String(it.item_id)+'"]') : null;
+          if (chip) {
+            chip.setAttribute('data-orden', String(it.orden || 0));
+            const nameEl = chip.querySelector('.name');
+            const metaEl = chip.querySelector('.meta');
+            if (nameEl && it.nombre_comun) nameEl.textContent = it.nombre_comun;
+            if (metaEl) metaEl.innerHTML = '· <strong>'+(it.cantidad ?? '')+'</strong> '+(it.unidad ?? '');
+            const pill = chip.querySelector('.chip-pill');
+            if (pill) pill.remove();
+            if (Number(it.es_incluido_kit) === 0) {
+              const span = document.createElement('span'); span.className='chip-pill chip-danger'; span.title='No incluido'; span.textContent='No incluido'; chip.insertBefore(span, chip.querySelector('.edit-component'));
+            }
+            const editBtn = chip.querySelector('.js-edit-item');
+            if (editBtn) {
+              editBtn.setAttribute('data-cantidad', String(it.cantidad ?? ''));
+              editBtn.setAttribute('data-orden', String(it.orden ?? '0'));
+              editBtn.setAttribute('data-notas', String(it.notas ?? ''));
+              editBtn.setAttribute('data-incluido', String(it.es_incluido_kit ?? 1));
+              if (it.unidad) editBtn.setAttribute('data-unidad', String(it.unidad));
+              if (it.nombre_comun) editBtn.setAttribute('data-nombre', String(it.nombre_comun));
+              if (it.sku) editBtn.setAttribute('data-sku', String(it.sku));
+            }
+          }
+          closeModal('#modalEditCmp');
+        }).catch((err) => { console.log('❌ [KitsEdit] update_item fetch error:', err && err.message); });
+      } catch(e2) { console.log('❌ [KitsEdit] update_item excepción:', e2 && e2.message); }
+    });
   }
   const formAdd = document.getElementById('formAddCmp');
   if (formAdd) {
-    formAdd.addEventListener('submit', () => console.log('📡 [KitsEdit] Enviando add_item...'));
+    formAdd.addEventListener('submit', (e) => {
+      e.preventDefault();
+      console.log('📡 [KitsEdit] Enviando add_item...');
+      try {
+        const fd = new FormData(formAdd);
+        fd.append('ajax','1');
+        fetch(window.location.href, { method:'POST', body: fd }).then(r => r.json()).then((json) => {
+          console.log('✅ [KitsEdit] add_item respuesta:', json);
+          if (!json || json.ok !== true) { console.log('❌ [KitsEdit] add_item error:', json && json.error); return; }
+          const it = json.item || {};
+          const wrap = document.getElementById('selected-components');
+          if (wrap) {
+            const chip = document.createElement('div');
+            chip.className='component-chip';
+            chip.setAttribute('data-item-id', String(it.item_id));
+            chip.setAttribute('data-orden', String(it.orden || 0));
+            const pillHtml = Number(it.es_incluido_kit) === 0 ? '<span class="chip-pill chip-danger" title="No incluido">No incluido</span>' : '';
+            chip.innerHTML = `
+              <span class="name">${it.nombre_comun || ''}</span>
+              <span class="meta">· <strong>${it.cantidad ?? ''}</strong> ${it.unidad ?? ''}</span>
+              ${pillHtml}
+              <button type="button" class="edit-component js-edit-item" title="Editar"
+                data-item-id="${it.item_id}"
+                data-cantidad="${it.cantidad ?? ''}"
+                data-notas="${it.notas ?? ''}"
+                data-orden="${it.orden ?? '0'}"
+                data-nombre="${it.nombre_comun ?? ''}"
+                data-sku="${it.sku ?? ''}"
+                data-unidad="${it.unidad ?? '-'}"
+                data-incluido="${it.es_incluido_kit ?? 1}"
+              >✏️</button>
+              <button type="button" class="remove-component js-delete-item" data-item-id="${it.item_id}" title="Remover">×</button>
+            `;
+            wrap.appendChild(chip);
+            // Rebind edit click for the new chip
+            try {
+              chip.querySelector('.js-edit-item')?.addEventListener('click', () => {
+                const btn = chip.querySelector('.js-edit-item');
+                const itemId = btn.getAttribute('data-item-id');
+                const cantidad = btn.getAttribute('data-cantidad');
+                const notas = btn.getAttribute('data-notas') || '';
+                const orden = btn.getAttribute('data-orden') || '0';
+                const nombre = btn.getAttribute('data-nombre') || '';
+                const sku = btn.getAttribute('data-sku') || '';
+                const unidad = btn.getAttribute('data-unidad') || '';
+                const incluido = btn.getAttribute('data-incluido') || '1';
+                document.getElementById('edit_kc_item_id').value = itemId;
+                document.getElementById('edit_cantidad').value = cantidad;
+                document.getElementById('edit_notas').value = notas;
+                document.getElementById('edit_orden').value = orden;
+                document.getElementById('editCmpInfo').textContent = `${nombre} (SKU ${sku}) · Unidad: ${unidad}`;
+                const chk = document.getElementById('edit_incluido'); if (chk) chk.checked = (incluido === '1');
+                console.log('🔍 [KitsEdit] Editar item (nuevo)', { itemId, cantidad, orden, incluido });
+                openModal('#modalEditCmp');
+              });
+            } catch(_e){}
+          }
+          closeModal('#modalAddCmp');
+        }).catch((err) => { console.log('❌ [KitsEdit] add_item fetch error:', err && err.message); });
+      } catch(e2) { console.log('❌ [KitsEdit] add_item excepción:', e2 && e2.message); }
+    });
   }
 
   
@@ -1859,6 +1979,33 @@ include '../header.php';
     // Cerrar si clic fuera del combo
     document.addEventListener('click', (e) => {
       if (!combo.contains(e.target) && !e.target.closest('.js-open-add-modal')) close();
+    });
+  })();
+
+  // Eliminar componente vía AJAX
+  (function bindDeleteComponent(){
+    const wrap = document.getElementById('selected-components');
+    if (!wrap) return;
+    wrap.addEventListener('click', (e) => {
+      const btn = e.target.closest('.js-delete-item');
+      if (!btn) return;
+      const itemId = btn.getAttribute('data-item-id');
+      if (!itemId) return;
+      if (!confirm('¿Eliminar componente del kit?')) return;
+      try {
+        const csrf = document.querySelector('input[name="csrf_token"]')?.value || '';
+        const fd = new FormData();
+        fd.append('csrf_token', csrf);
+        fd.append('action', 'delete_item');
+        fd.append('kc_item_id', itemId);
+        fd.append('ajax', '1');
+        fetch(window.location.href, { method:'POST', body: fd }).then(r => r.json()).then((json) => {
+          console.log('✅ [KitsEdit] delete_item respuesta:', json);
+          if (!json || json.ok !== true) { console.log('❌ [KitsEdit] delete_item error:', json && json.error); return; }
+          const chip = wrap.querySelector('.component-chip[data-item-id="'+String(itemId)+'"]');
+          chip?.remove();
+        }).catch((err) => { console.log('❌ [KitsEdit] delete_item fetch error:', err && err.message); });
+      } catch(e2) { console.log('❌ [KitsEdit] delete_item excepción:', e2 && e2.message); }
     });
   })();
 
