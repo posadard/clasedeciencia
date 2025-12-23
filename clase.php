@@ -247,7 +247,11 @@ include 'includes/header.php';
     <section class="kits-inline" aria-label="Kits relacionados">
         <h3>📦 Kits relacionados</h3>
         <?php
-        console_log('🔍 [Clase] Kits relacionados cargados: ' . count($kits));
+        ?>
+        <script>
+            console.log('🔍 [Clase] Kits relacionados cargados:', <?= count($kits) ?>);
+        </script>
+        <?php
         foreach ($kits as $kit_inline):
             $kid = (int)$kit_inline['id'];
             $kit_comp_count = isset($materiales_por_kit[$kid]) && is_array($materiales_por_kit[$kid]) ? count($materiales_por_kit[$kid]) : 0;
