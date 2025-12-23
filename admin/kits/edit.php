@@ -645,28 +645,145 @@ include '../header.php';
     })();
   </script>
   <script>
-    // Manejo de eliminación de atributo usando formulario externo
-    (function bindAttrDelete(){
-      try {
-        const delForm = document.getElementById('attrDeleteForm');
-        if (!delForm) { console.log('⚠️ [KitsEdit] Form delete_attr no encontrado'); return; }
-        document.querySelectorAll('.js-delete-attr').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const defId = parseInt(btn.getAttribute('data-def-id') || '0', 10);
-            if (!defId) { console.log('⚠️ [KitsEdit] def_id inválido para delete_attr'); return; }
-            if (!confirm('¿Eliminar este atributo del kit?')) { return; }
-            try {
-              const hid = delForm.querySelector('input[name="def_id"]');
-              if (hid) hid.value = String(defId);
-              console.log('📡 [KitsEdit] Enviando delete_attr para atributo', defId);
-              delForm.submit();
-            } catch(e) {
-              console.log('❌ [KitsEdit] Error al enviar delete_attr:', e && e.message);
-            }
+    // Exporta función para re-vincular delete en chips
+    (function(){
+      window.bindAttrDelete = function(){
+        try {
+          const delForm = document.getElementById('attrDeleteForm');
+          if (!delForm) { console.log('⚠️ [KitsEdit] Form delete_attr no encontrado'); return; }
+          document.querySelectorAll('.js-delete-attr').forEach(btn => {
+            // Evitar múltiples bindings
+            if (btn._delBound) return; btn._delBound = true;
+            btn.addEventListener('click', () => {
+              const defId = parseInt(btn.getAttribute('data-def-id') || '0', 10);
+              if (!defId) { console.log('⚠️ [KitsEdit] def_id inválido para delete_attr'); return; }
+              if (!confirm('¿Eliminar este atributo del kit?')) { return; }
+              try {
+                const hid = delForm.querySelector('input[name="def_id"]');
+                if (hid) hid.value = String(defId);
+                console.log('📡 [KitsEdit] Enviando delete_attr para atributo', defId);
+                delForm.submit();
+              } catch(e) {
+                console.log('❌ [KitsEdit] Error al enviar delete_attr:', e && e.message);
+              }
+            });
           });
+        } catch(e) {
+          console.log('❌ [KitsEdit] Error bindAttrDelete:', e && e.message);
+        }
+      };
+      // Ejecuta al cargar
+      window.bindAttrDelete();
+    })();
+  </script>
+
+  <script>
+    // Re-vincula botones de edición de atributo tras actualizar chips
+    (function(){
+      window.bindEditAttrButtons = function(){
+        try {
+          document.querySelectorAll('.js-edit-attr').forEach(btn => {
+            if (btn._editBound) return; btn._editBound = true;
+            btn.addEventListener('click', () => {
+              const defId = btn.getAttribute('data-attr-id');
+              const label = btn.getAttribute('data-label');
+              const tipo = btn.getAttribute('data-tipo');
+              const unitsJson = btn.getAttribute('data-units');
+              const unitDef = btn.getAttribute('data-unidad_def') || '';
+              const valsRaw = btn.getAttribute('data-values') || '[]';
+              let vals = [];
+              try { vals = JSON.parse(valsRaw); } catch(_e) { vals = []; }
+              document.getElementById('edit_def_id').value = defId;
+              document.getElementById('editAttrInfo').textContent = label;
+              const inputEl = document.getElementById('edit_valor');
+              const unitSel = document.getElementById('edit_unidad');
+              const unitGroup = document.getElementById('edit_unidad_group');
+              inputEl.value = '';
+              unitSel.innerHTML = '';
+              if (Array.isArray(vals) && vals.length) {
+                const parts = vals.map(v => {
+                  if (tipo === 'number') return v.valor_numero;
+                  if (tipo === 'integer') return v.valor_entero;
+                  if (tipo === 'boolean') return (parseInt(v.valor_booleano,10)===1?'1':'0');
+                  if (tipo === 'date') return v.valor_fecha;
+                  if (tipo === 'datetime') return v.valor_datetime;
+                  if (tipo === 'json') return v.valor_json;
+                  return v.valor_string;
+                }).filter(Boolean);
+                inputEl.value = parts.join(', ');
+              }
+              let units = [];
+              try { const parsed = JSON.parse(unitsJson || '[]'); if (Array.isArray(parsed)) units = parsed; } catch(_e){ units = []; }
+              const hasUnits = Array.isArray(units) && units.length > 0;
+              const hasDefault = !!unitDef;
+              if (hasUnits || hasDefault) {
+                const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent = unitDef ? `(por defecto: ${unitDef})` : '(sin unidad)'; unitSel.appendChild(opt0);
+                if (hasUnits) units.forEach(u => { const o=document.createElement('option'); o.value=u; o.textContent=u; unitSel.appendChild(o); });
+                if (unitGroup) unitGroup.style.display = '';
+                console.log('🔍 [KitsEdit] Unidad visible (aplica)');
+              } else {
+                if (unitGroup) unitGroup.style.display = 'none';
+                console.log('🔍 [KitsEdit] Unidad oculta (no aplica)');
+              }
+              openModal('#modalEditAttr');
+            });
+          });
+        } catch(e) {
+          console.log('❌ [KitsEdit] Error bindEditAttrButtons:', e && e.message);
+        }
+      };
+      // Inicial
+      window.bindEditAttrButtons();
+    })();
+  </script>
+
+  <script>
+    // Interceptar envío de agregar/editar atributo para evitar recarga
+    (function ajaxAttrForms(){
+      function replaceSelectedAttrs(htmlText){
+        try {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlText, 'text/html');
+          const newSel = doc.getElementById('selected-attrs');
+          const curSel = document.getElementById('selected-attrs');
+          if (newSel && curSel) {
+            curSel.innerHTML = newSel.innerHTML;
+            // Re-vincular acciones en chips
+            window.bindAttrDelete();
+            window.bindEditAttrButtons();
+          } else {
+            console.log('⚠️ [KitsEdit] selected-attrs no encontrado al actualizar');
+          }
+        } catch(e) { console.log('❌ [KitsEdit] Error reemplazando chips:', e && e.message); }
+      }
+
+      async function postForm(formEl){
+        const fd = new FormData(formEl);
+        try {
+          const resp = await fetch(window.location.href, { method: 'POST', body: fd, credentials: 'same-origin' });
+          console.log('📡 [KitsEdit] AJAX attr status:', resp.status);
+          const html = await resp.text();
+          replaceSelectedAttrs(html);
+        } catch(e) {
+          console.log('❌ [KitsEdit] AJAX attr error:', e && e.message);
+        }
+      }
+
+      const formAdd = document.getElementById('formAddAttr');
+      if (formAdd) {
+        formAdd.addEventListener('submit', (e) => {
+          e.preventDefault();
+          console.log('📡 [KitsEdit] Enviando add_attr (AJAX)');
+          postForm(formAdd).then(() => { try { closeModal('#modalAddAttr'); console.log('✅ [KitsEdit] Atributo agregado (sin recarga)'); } catch(_e){} });
         });
-      } catch(e) {
-        console.log('❌ [KitsEdit] Error bindAttrDelete:', e && e.message);
+      }
+      const formEdit = document.getElementById('formEditAttr');
+      if (formEdit) {
+        formEdit.addEventListener('submit', (e) => {
+          e.preventDefault();
+          console.log('📡 [KitsEdit] Enviando update_attr (AJAX)');
+          postForm(formEdit).then(() => { try { closeModal('#modalEditAttr'); console.log('✅ [KitsEdit] Atributo actualizado (sin recarga)'); } catch(_e){} });
+        });
       }
     })();
   </script>
