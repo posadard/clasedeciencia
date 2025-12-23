@@ -276,12 +276,12 @@ include 'includes/header.php';
         <div class="kit-inline-wrap">
             <div class="kit-inline-left">
                 <?php if (!empty($kit_inline['imagen_portada'])): ?>
-                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit">
-                        <img src="<?= h($kit_inline['imagen_portada']) ?>" alt="<?= h($kit_inline['nombre']) ?>" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura kit falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit" style="display:block;width:100%;height:100%;">
+                        <img src="<?= h($kit_inline['imagen_portada']) ?>" alt="<?= h($kit_inline['nombre']) ?>" width="56" height="56" loading="lazy" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura kit falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
                     </a>
                 <?php else: ?>
-                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit">
-                        <div class="summary-placeholder"><span class="placeholder-icon">📦</span></div>
+                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit" style="display:block;width:100%;height:100%;">
+                        <span class="placeholder-icon" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--color-bg-alt);">📦</span>
                     </a>
                 <?php endif; ?>
             </div>
@@ -291,7 +291,7 @@ include 'includes/header.php';
                     <?php if (!empty($kit_inline['es_principal'])): ?><span class="badge badge-primary" style="margin-left:6px;">Principal</span><?php endif; ?>
                 </div>
                 <h3 class="kit-inline-title">
-                    <a href="/<?= h($kit_inline['slug']) ?>" title="Ver kit" style="text-decoration:none;">
+                    <a href="/<?= h($kit_inline['slug']) ?>" title="Ver kit: <?= h($kit_inline['nombre']) ?>" style="text-decoration:none;">
                         <?= h($kit_inline['nombre']) ?>
                     </a>
                 </h3>
