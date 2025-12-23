@@ -1211,7 +1211,7 @@ include '../header.php';
         }
       }
 
-      function closeModal(sel){ try { closeModal(sel); } catch(_e){} }
+      function hideModalSel(sel){ const el = document.querySelector(sel); if (el) { el.classList.remove('active'); console.log('🔍 [KitsEdit] Modal cerrado (helper):', sel); } }
 
       // Intercept edit submit
       const formEditAttr = document.getElementById('formEditAttr');
@@ -1224,7 +1224,7 @@ include '../header.php';
           try {
             const res = await postAttr('update_attr', defId, valor, unidad);
             updateChipUI(defId, valor, unidad);
-            closeModal('#modalEditAttr');
+            hideModalSel('#modalEditAttr');
             console.log('✅ [KitsEdit] Edit atributo guardado sin recargar');
           } catch(e) {
             alert('Error al guardar atributo: '+ (e && e.message ? e.message : ''));
@@ -1243,7 +1243,7 @@ include '../header.php';
           try {
             const res = await postAttr('add_attr', defId, valor, unidad);
             updateChipUI(defId, valor, unidad);
-            closeModal('#modalAddAttr');
+            hideModalSel('#modalAddAttr');
             console.log('✅ [KitsEdit] Nuevo atributo agregado sin recargar');
           } catch(e) {
             alert('Error al agregar atributo: '+ (e && e.message ? e.message : ''));
