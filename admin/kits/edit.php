@@ -81,6 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo '<script>console.log("❌ [KitsEdit] CSRF inválido");</script>';
   } else {
     $action = isset($_POST['action']) ? $_POST['action'] : 'save';
+    $is_ajax = isset($_POST['ajax']) && $_POST['ajax'] === '1';
 
     if ($action === 'save_attrs' && $is_edit) {
       // Guardar atributos técnicos (atributos_contenidos)
@@ -236,10 +237,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $pdo->commit();
         $action_msg = 'Atributo agregado.';
+        if ($is_ajax) {
+          // Construir payload similar a Clases
+          $display_vals = [];
+          foreach ($vals as $v) {
+            switch ($tipo) {
+              case 'number': $display_vals[] = is_numeric(str_replace(',', '.', $v)) ? rtrim(rtrim((string)str_replace(',', '.', $v), '0'), '.') : (string)$v; break;
+              case 'integer': $display_vals[] = (string)((int)$v); break;
+              case 'boolean': $display_vals[] = (in_array(strtolower((string)$v), ['1','true','sí','si'], true) ? 'Sí' : 'No'); break;
+              case 'date':
+              case 'datetime':
+              case 'json':
+              case 'string':
+              default: $display_vals[] = (string)$v; break;
+            }
+          }
+          $unit_effective = ($unidad !== '' ? $unidad : ($def['unidad_defecto'] ?? null));
+          header('Content-Type: application/json');
+          echo json_encode([
+            'ok'=>true,
+            'action'=>'add_attr',
+            'def'=>[
+              'id'=>$def_id,
+              'etiqueta'=>$def['etiqueta'],
+              'tipo_dato'=>$tipo,
+              'cardinalidad'=>$card,
+              'unidad_defecto'=>$def['unidad_defecto'] ?? null,
+              'unidades_permitidas'=> $def['unidades_permitidas_json'] ? json_decode($def['unidades_permitidas_json'], true) : [],
+            ],
+            'display'=>implode(', ', array_filter($display_vals)),
+            'unidad'=>$unit_effective,
+            'raw_values'=>$vals,
+          ], JSON_UNESCAPED_UNICODE);
+          exit;
+        }
         echo '<script>console.log("✅ [KitsEdit] add_attr guardado");</script>';
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error agregando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
         echo '<script>console.log("❌ [KitsEdit] add_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'update_attr' && $is_edit) {
@@ -283,10 +319,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $pdo->commit();
         $action_msg = 'Atributo actualizado.';
+        if ($is_ajax) {
+          $display_vals = [];
+          foreach ($vals as $v) {
+            switch ($tipo) {
+              case 'number': $display_vals[] = is_numeric(str_replace(',', '.', $v)) ? rtrim(rtrim((string)str_replace(',', '.', $v), '0'), '.') : (string)$v; break;
+              case 'integer': $display_vals[] = (string)((int)$v); break;
+              case 'boolean': $display_vals[] = (in_array(strtolower((string)$v), ['1','true','sí','si'], true) ? 'Sí' : 'No'); break;
+              case 'date':
+              case 'datetime':
+              case 'json':
+              case 'string':
+              default: $display_vals[] = (string)$v; break;
+            }
+          }
+          $unit_effective = ($unidad !== '' ? $unidad : ($def['unidad_defecto'] ?? null));
+          header('Content-Type: application/json');
+          echo json_encode([
+            'ok'=>true,
+            'action'=>'update_attr',
+            'def'=>[
+              'id'=>$def_id,
+              'etiqueta'=>$def['etiqueta'],
+              'tipo_dato'=>$tipo,
+              'cardinalidad'=>$card,
+              'unidad_defecto'=>$def['unidad_defecto'] ?? null,
+              'unidades_permitidas'=> $def['unidades_permitidas_json'] ? json_decode($def['unidades_permitidas_json'], true) : [],
+            ],
+            'display'=>implode(', ', array_filter($display_vals)),
+            'unidad'=>$unit_effective,
+            'raw_values'=>$vals,
+          ], JSON_UNESCAPED_UNICODE);
+          exit;
+        }
         echo '<script>console.log("✅ [KitsEdit] update_attr guardado");</script>';
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error actualizando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
         echo '<script>console.log("❌ [KitsEdit] update_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'delete_attr' && $is_edit) {
@@ -296,9 +366,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare('DELETE FROM atributos_contenidos WHERE tipo_entidad = ? AND entidad_id = ? AND atributo_id = ?');
         $stmt->execute(['kit', $id, $def_id]);
         $action_msg = 'Atributo eliminado.';
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>true,'action'=>'delete_attr','def_id'=>$def_id]); exit; }
         echo '<script>console.log("✅ [KitsEdit] delete_attr ejecutado");</script>';
       } catch (PDOException $e) {
         $error_msg = 'Error eliminando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
         echo '<script>console.log("❌ [KitsEdit] delete_attr error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'create_attr_def' && $is_edit) {
@@ -352,10 +424,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $pdo->commit();
         $action_msg = 'Atributo creado y mapeado.';
+        if ($is_ajax) {
+          header('Content-Type: application/json');
+          echo json_encode([
+            'ok'=>true,
+            'action'=>'create_attr_def',
+            'def'=>[
+              'id'=>$def_id,
+              'clave'=>$clave,
+              'etiqueta'=>$etiqueta,
+              'tipo_dato'=>$tipo,
+              'cardinalidad'=>$card,
+              'unidad_defecto'=>($unidad_def !== '' ? $unidad_def : null),
+              'unidades_permitidas'=>!empty($unidades)? array_values($unidades): [],
+            ]
+          ], JSON_UNESCAPED_UNICODE);
+          exit;
+        }
         echo '<script>console.log("✅ [KitsEdit] create_attr_def listo: ' . htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') . '");</script>';
       } catch (Exception $e) {
         if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
         $error_msg = 'Error creando atributo: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
+        if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok'=>false,'error'=>$e->getMessage()]); exit; }
         echo '<script>console.log("❌ [KitsEdit] create_attr_def error: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '");</script>';
       }
     } else if ($action === 'save') {
@@ -801,6 +891,12 @@ include '../header.php';
 </form>
 
   <?php if ($is_edit): ?>
+  <!-- Hidden delete form for Kit attributes (outside main form) -->
+  <form method="POST" id="formDeleteAttrKit" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+    <input type="hidden" name="action" value="delete_attr" />
+    <input type="hidden" name="def_id" id="delete_def_id_kit" />
+  </form>
   <div class="card" style="margin-top:2rem;">
     <h3>Ficha técnica (chips)</h3>
     <div class="form-group">
@@ -1263,6 +1359,139 @@ include '../header.php';
     }
   })();
 </script>
+
+<?php if ($is_edit): ?>
+<script>
+  // AJAX helper for kit attribute actions (mirrors Clases editor)
+  function postAjaxKit(formEl, successCb){
+    const fd = new FormData(formEl);
+    fd.append('ajax','1');
+    console.log('📡 [KitsEdit] AJAX', fd.get('action'));
+    fetch(window.location.href, { method: 'POST', body: fd, headers: { 'Accept': 'application/json' }})
+      .then(r => r.json())
+      .then(data => {
+        if (!data || data.ok !== true) throw new Error(data && data.error ? data.error : 'Error desconocido');
+        console.log('✅ [KitsEdit] AJAX ok:', data.action);
+        successCb(data);
+      })
+      .catch(err => {
+        console.log('❌ [KitsEdit] AJAX error:', err && err.message);
+        alert('Error: ' + (err && err.message ? err.message : 'operación fallida'));
+      });
+  }
+
+  function displayFromKit(tipo, values){
+    if (!Array.isArray(values)) return '';
+    const parts = values.map(v => {
+      switch (tipo){
+        case 'number': return (typeof v === 'string' ? v : String(v)).replace(/,/g,'.').replace(/\.$/, '');
+        case 'integer': return String(parseInt(v,10));
+        case 'boolean': return (String(v).toLowerCase()==='1' || String(v).toLowerCase()==='true' || String(v).toLowerCase()==='sí' || String(v).toLowerCase()==='si') ? 'Sí' : 'No';
+        default: return String(v);
+      }
+    }).filter(Boolean);
+    return parts.join(', ');
+  }
+
+  const formEditAttr = document.getElementById('formEditAttr');
+  const formAddAttr = document.getElementById('formAddAttr');
+  function upsertAttrChipKit(def, display, unidad, rawValues){
+    const wrap = document.getElementById('selected-attrs');
+    if (!wrap) return;
+    let chip = wrap.querySelector('.component-chip[data-attr-id="' + def.id + '"]');
+    const unitText = unidad ? (' ' + unidad) : '';
+    if (!chip){
+      chip = document.createElement('div');
+      chip.className = 'component-chip';
+      chip.setAttribute('data-attr-id', String(def.id));
+      chip.innerHTML = `
+        <span class="name"></span>
+        <span class="meta">· <strong class="meta-val"></strong><span class="meta-unit"></span></span>
+        <button type="button" class="edit-component js-edit-attr" title="Editar"
+          data-attr-id="${def.id}"
+          data-label="${def.etiqueta}"
+          data-tipo="${def.tipo_dato}"
+          data-card="${def.cardinalidad}"
+          data-units='${JSON.stringify(def.unidades_permitidas || [])}'
+          data-unidad_def="${def.unidad_defecto || ''}"
+          data-values='${JSON.stringify((rawValues||[]).map(v=>({valor_string:String(v)})))}'
+        >✏️</button>
+        <form method="POST" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+          <input type="hidden" name="action" value="delete_attr" />
+          <input type="hidden" name="def_id" value="${def.id}" />
+          <button type="submit" class="remove-component" title="Remover">×</button>
+        </form>`;
+      wrap.appendChild(chip);
+    }
+    chip.querySelector('.name').textContent = def.etiqueta;
+    chip.querySelector('.meta-val').textContent = display;
+    const unitEl = chip.querySelector('.meta-unit');
+    unitEl.textContent = unidad ? (' ' + unidad) : '';
+    // Rebind edit-open behavior
+    try {
+      chip.querySelector('.js-edit-attr').addEventListener('click', () => {
+        const btn = chip.querySelector('.js-edit-attr');
+        btn.dispatchEvent(new Event('click'));
+      });
+    } catch(_e){}
+    // Intercept delete form submit to use AJAX
+    try {
+      const delForm = chip.querySelector('form');
+      if (delForm && !delForm.dataset.bound){
+        delForm.dataset.bound = '1';
+        delForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (!confirm('¿Eliminar este atributo del kit?')) return;
+          postAjaxKit(delForm, () => { chip.remove(); });
+        });
+      }
+    } catch(_e){}
+  }
+
+  if (formEditAttr){
+    formEditAttr.addEventListener('submit', (e) => {
+      e.preventDefault();
+      postAjaxKit(formEditAttr, (resp) => {
+        const valuesRaw = Array.isArray(resp.raw_values) ? resp.raw_values : [];
+        const display = resp.display || displayFromKit(resp.def.tipo_dato || 'string', valuesRaw);
+        upsertAttrChipKit(resp.def, display, resp.unidad || '', valuesRaw);
+        // close modal
+        try { document.querySelector('[data-target="#modalEditAttr"]').click(); } catch(_e){}
+        try { document.querySelector('#modalEditAttr')?.classList.remove('active'); } catch(_e){}
+      });
+    });
+  }
+  if (formAddAttr){
+    formAddAttr.addEventListener('submit', (e) => {
+      e.preventDefault();
+      postAjaxKit(formAddAttr, (resp) => {
+        const valuesRaw = Array.isArray(resp.raw_values) ? resp.raw_values : [];
+        const display = resp.display || displayFromKit(resp.def.tipo_dato || 'string', valuesRaw);
+        upsertAttrChipKit(resp.def, display, resp.unidad || '', valuesRaw);
+        document.getElementById('attr_search').value = '';
+        try { document.querySelector('[data-target="#modalAddAttr"]').click(); } catch(_e){}
+        try { document.querySelector('#modalAddAttr')?.classList.remove('active'); } catch(_e){}
+      });
+    });
+  }
+
+  // Intercept existing delete forms inside chips to avoid page reload
+  (function bindChipDeleteForms(){
+    const wrap = document.getElementById('selected-attrs');
+    if (!wrap) return;
+    wrap.querySelectorAll('form').forEach(f => {
+      if (f.dataset.bound === '1') return;
+      f.dataset.bound = '1';
+      f.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!confirm('¿Eliminar este atributo del kit?')) return;
+        postAjaxKit(f, () => { try { f.closest('.component-chip')?.remove(); } catch(_e){} });
+      });
+    });
+  })();
+</script>
+<?php endif; ?>
 <!-- Clases vinculadas al Kit (Transfer List) -->
 <div class="card" style="margin-top:2rem;">
   <h3>Clases vinculadas al Kit</h3>
