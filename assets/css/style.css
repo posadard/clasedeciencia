@@ -4483,6 +4483,7 @@ strong, b {
     box-shadow: none;
     padding: var(--spacing-sm) 0;
     margin: var(--spacing-md) 0;
+    cursor: pointer;
 }
 
 .kit-inline-wrap {
@@ -4517,6 +4518,7 @@ strong, b {
     letter-spacing: 0.04em;
 }
 .kit-inline-title { margin: 0; font-size: 1rem; line-height: 1.2; }
+.kit-inline-title .kit-inline-byline { margin-left: 6px; font-size: 0.9rem; color: var(--color-text-light); font-weight: 600; }
 .kit-inline-title a { color: var(--color-primary); border: none; }
 .kit-inline-title a:hover { color: var(--color-primary-light); }
 

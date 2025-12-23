@@ -272,17 +272,17 @@ include 'includes/header.php';
     }
     ?>
     <?php if (!empty($kit_inline)): ?>
-    <section class="kit-inline-card" aria-label="Kit relacionado">
+    <section class="kit-inline-card" aria-label="Kit relacionado" role="link" tabindex="0" onclick="if(!event.target.closest('a')){ console.log('📦 [Clase] Click kit inline →','<?= h($kit_inline['slug']) ?>'); window.location.href='/<?= h($kit_inline['slug']) ?>'; }">
         <div class="kit-inline-wrap">
             <div class="kit-inline-left">
                 <?php if (!empty($kit_inline['imagen_portada'])): ?>
-                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit" style="display:block;width:100%;height:100%;">
+                    <div class="kit-inline-thumb" style="display:block;width:100%;height:100%;">
                         <img src="<?= h($kit_inline['imagen_portada']) ?>" alt="<?= h($kit_inline['nombre']) ?>" width="56" height="56" loading="lazy" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura kit falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
-                    </a>
+                    </div>
                 <?php else: ?>
-                    <a href="/<?= h($kit_inline['slug']) ?>" class="kit-inline-thumb" title="Ver kit" style="display:block;width:100%;height:100%;">
+                    <div class="kit-inline-thumb" style="display:block;width:100%;height:100%;">
                         <span class="placeholder-icon" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:var(--color-bg-alt);">📦</span>
-                    </a>
+                    </div>
                 <?php endif; ?>
             </div>
             <div class="kit-inline-right">
@@ -291,19 +291,13 @@ include 'includes/header.php';
                     <?php if (!empty($kit_inline['es_principal'])): ?><span class="badge badge-primary" style="margin-left:6px;">Principal</span><?php endif; ?>
                 </div>
                 <h3 class="kit-inline-title">
-                    <a href="/<?= h($kit_inline['slug']) ?>" title="Ver kit: <?= h($kit_inline['nombre']) ?>" style="text-decoration:none;">
-                        <?= h($kit_inline['nombre']) ?>
-                    </a>
+                    <span><?= h($kit_inline['nombre']) ?>:</span>
+                    <span class="kit-inline-byline">🧩 <?= (int)$kit_comp_count ?> componentes 📘 <?= count($kit_manuals) ?> manuales<?php if (!empty($kit_inline['version'])): ?> 🔢 v<?= h($kit_inline['version']) ?><?php endif; ?></span>
                 </h3>
                 <?php if (!empty($kit_inline['resumen'])): ?>
                     <?php $kit_resumen_short = mb_strlen($kit_inline['resumen']) > 160 ? (mb_substr($kit_inline['resumen'], 0, 157) . '…') : $kit_inline['resumen']; ?>
                     <p class="kit-inline-excerpt"><?= h($kit_resumen_short) ?></p>
                 <?php endif; ?>
-                <div class="kit-inline-meta">
-                    <span class="badge">🧩 <?= (int)$kit_comp_count ?> componentes</span>
-                    <span class="badge">📘 <?= count($kit_manuals) ?> manuales</span>
-                    <?php if (!empty($kit_inline['version'])): ?><span class="badge">🔢 v<?= h($kit_inline['version']) ?></span><?php endif; ?>
-                </div>
                 <?php if (!empty($kit_manuals)): ?>
                 <div class="kit-inline-manuales">
                     <span class="man-label">Manuales:</span>
@@ -316,16 +310,6 @@ include 'includes/header.php';
                     </div>
                 </div>
                 <?php endif; ?>
-                <?php if (!empty($kit_areas)): ?>
-                <div class="kit-inline-areas">
-                    <?php foreach ($kit_areas as $a): ?>
-                        <a class="tag-pill" href="/kits?area=<?= h($a['slug']) ?>" title="Ver kits de <?= h($a['nombre']) ?>">#<?= h($a['nombre']) ?></a>
-                    <?php endforeach; ?>
-                </div>
-                <?php endif; ?>
-                <div class="kit-inline-actions">
-                    <a href="/<?= h($kit_inline['slug']) ?>" class="btn btn-secondary" title="Ver Kit">Ver Kit</a>
-                </div>
             </div>
         </div>
     </section>
