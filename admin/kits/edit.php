@@ -644,40 +644,6 @@ include '../header.php';
       });
     })();
   </script>
-  <script>
-    // Manejo de eliminación de atributo usando formulario externo
-    (function bindAttrDelete(){
-      try {
-        const delForm = document.getElementById('attrDeleteForm');
-        if (!delForm) { console.log('⚠️ [KitsEdit] Form delete_attr no encontrado'); return; }
-        document.querySelectorAll('.js-delete-attr').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const defId = parseInt(btn.getAttribute('data-def-id') || '0', 10);
-            if (!defId) { console.log('⚠️ [KitsEdit] def_id inválido para delete_attr'); return; }
-            if (!confirm('¿Eliminar este atributo del kit?')) { return; }
-            try {
-              const hid = delForm.querySelector('input[name="def_id"]');
-              if (hid) hid.value = String(defId);
-              console.log('📡 [KitsEdit] Enviando AJAX delete_attr para atributo', defId);
-              const fd = new FormData(delForm);
-              fetch(window.location.href, {
-                method: 'POST',
-                body: fd,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                credentials: 'same-origin'
-              }).then(resp => { console.log('📡 [KitsEdit] Resp status', resp.status, 'para delete_attr'); return resp.text(); })
-                .then(() => { console.log('✅ [KitsEdit] Atributo eliminado (sin refresh)'); try { btn.closest('.component-chip')?.remove(); } catch(_e){} })
-                .catch(err => { console.log('❌ [KitsEdit] Error AJAX delete_attr:', err && err.message); });
-            } catch(e) {
-              console.log('❌ [KitsEdit] Error al enviar delete_attr:', e && e.message);
-            }
-          });
-        });
-      } catch(e) {
-        console.log('❌ [KitsEdit] Error bindAttrDelete:', e && e.message);
-      }
-    })();
-  </script>
 </div>
 
 <?php if ($error_msg !== ''): ?>
@@ -864,7 +830,12 @@ include '../header.php';
               data-unidad_def="<?= htmlspecialchars($def['unidad_defecto'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
               data-values="<?= htmlspecialchars(json_encode($values), ENT_QUOTES, 'UTF-8') ?>"
             >✏️</button>
-            <button type="button" class="remove-component js-delete-attr" data-def-id="<?= $aid ?>" title="Remover">×</button>
+            <form method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este atributo del kit?')">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+              <input type="hidden" name="action" value="delete_attr" />
+              <input type="hidden" name="def_id" value="<?= $aid ?>" />
+              <button type="submit" class="remove-component" title="Remover">×</button>
+            </form>
           </div>
           <?php endforeach; ?>
         </div>
@@ -921,13 +892,6 @@ include '../header.php';
     <div id="seo-manual"></div>
   </div>
 </form>
-
-  <!-- Formulario externo para eliminar atributos (fuera de kit-form) -->
-  <form method="POST" id="attrDeleteForm" style="display:none;">
-    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
-    <input type="hidden" name="action" value="delete_attr" />
-    <input type="hidden" name="def_id" value="" />
-  </form>
 
 <?php if ($is_edit): ?>
 <div class="form-group" style="margin-top:2rem;">
@@ -1329,45 +1293,6 @@ include '../header.php';
     }
   })();
 </script>
-  <script>
-    // Evitar refresh al agregar/editar/crear atributos: enviar por fetch
-    (function bindAttrFormsAjax(){
-      function postForm(form){
-        try {
-          const fd = new FormData(form);
-          console.log('📡 [KitsEdit] Enviando AJAX', fd.get('action'));
-          return fetch(window.location.href, {
-            method: 'POST',
-            body: fd,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin'
-          });
-        } catch(e){ console.log('❌ [KitsEdit] Error preparando AJAX:', e && e.message); return Promise.reject(e); }
-      }
-
-      function handleSuccess(action){
-        console.log('✅ [KitsEdit] Acción AJAX completada:', action);
-        // No refrescamos la página; el usuario conserva cambios del formulario principal
-      }
-
-      function bind(id){
-        const form = document.getElementById(id);
-        if (!form) { console.log('⚠️ [KitsEdit] Form no encontrado:', id); return; }
-        form.addEventListener('submit', function(ev){
-          ev.preventDefault();
-          const action = (new FormData(form)).get('action');
-          postForm(form)
-            .then(resp => { console.log('📡 [KitsEdit] Resp status', resp.status, 'para', action); return resp.text(); })
-            .then(() => { handleSuccess(action); try { const tgt = form.closest('.modal-overlay'); if (tgt) tgt.classList.remove('active'); } catch(_e){} })
-            .catch(err => { console.log('❌ [KitsEdit] Error AJAX', action, err && err.message); });
-        });
-      }
-
-      bind('formAddAttr');
-      bind('formEditAttr');
-      bind('formCreateAttr');
-    })();
-  </script>
 <!-- Clases vinculadas al Kit (Transfer List) -->
 <div class="card" style="margin-top:2rem;">
   <h3>Clases vinculadas al Kit</h3>
