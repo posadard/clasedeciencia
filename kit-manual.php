@@ -117,9 +117,22 @@ include 'includes/header.php';
       <?php if (!empty($herr)): ?>
         <section>
           <h2>🔧 Herramientas</h2>
-          <ul>
+          <ul class="tools-list">
             <?php foreach ($herr as $hitem): ?>
-              <li><?= h(is_array($hitem) ? json_encode($hitem, JSON_UNESCAPED_UNICODE) : $hitem) ?></li>
+              <?php if (is_array($hitem) && (isset($hitem['nombre']) || isset($hitem['cantidad']) || isset($hitem['nota']) || isset($hitem['seguridad']))): ?>
+                <li>
+                  <div class="tool-line">
+                    <strong><?= h($hitem['nombre'] ?? '(sin nombre)') ?></strong>
+                    <?php if (isset($hitem['cantidad']) && $hitem['cantidad'] !== '' && $hitem['cantidad'] !== null): ?>
+                      <span class="muted">(<?= h(is_numeric($hitem['cantidad']) ? (int)$hitem['cantidad'] : $hitem['cantidad']) ?>)</span>
+                    <?php endif; ?>
+                  </div>
+                  <?php if (!empty($hitem['nota'])): ?><div class="tool-note">Nota: <?= h($hitem['nota']) ?></div><?php endif; ?>
+                  <?php if (!empty($hitem['seguridad'])): ?><div class="tool-sec">⚠️ Seguridad: <?= h($hitem['seguridad']) ?></div><?php endif; ?>
+                </li>
+              <?php else: ?>
+                <li><?= h(is_array($hitem) ? json_encode($hitem, JSON_UNESCAPED_UNICODE) : $hitem) ?></li>
+              <?php endif; ?>
             <?php endforeach; ?>
           </ul>
         </section>
@@ -164,6 +177,10 @@ console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'ve
 .manual-step { margin-bottom: 12px; }
 .manual-step .step-head { margin-bottom: 6px; }
 .kit-security-chip { display:inline-block; background:#fffbe6; border:1px solid #ffe58f; color:#8c6d1f; padding:4px 8px; border-radius:6px; margin:4px 0; }
+/* Tools list styles */
+.tools-list { padding-left: 18px; }
+.tool-line { display:flex; gap:6px; align-items:baseline; }
+.tool-note, .tool-sec { color:#555; margin-left: 4px; }
 @media print {
   .manual-step { page-break-inside: avoid; }
   .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }

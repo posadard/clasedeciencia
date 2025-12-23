@@ -195,8 +195,15 @@ if (!$kit) {
       <textarea name="pasos_json" id="pasos_json" rows="8" style="display:none;" placeholder='[ {"orden":1, "titulo":"Paso 1", "html":"<p>...</p>"} ]'><?= htmlspecialchars($manual['pasos_json'] ?? '') ?></textarea>
     </div>
     <div class="form-group">
-      <label>Herramientas (JSON)</label>
-      <textarea name="herramientas_json" rows="4" placeholder='[ "tijeras", "pegante" ]'><?= htmlspecialchars($manual['herramientas_json'] ?? '') ?></textarea>
+      <label>Herramientas</label>
+      <div id="tools-builder">
+        <div class="tools-toolbar">
+          <button type="button" class="btn btn-primary" id="add-tool-btn">+ Añadir Herramienta</button>
+        </div>
+        <ul id="tools-list" class="tools-list"></ul>
+        <p class="help-note">Añade herramientas una por una. Se guardan como objetos con nombre, cantidad y notas. Se serializan a JSON antes de enviar.</p>
+      </div>
+      <textarea name="herramientas_json" id="herramientas_json" rows="4" style="display:none;" placeholder='[ {"nombre":"tijeras","cantidad":1,"nota":"pequeñas","seguridad":"Usar con cuidado"} ]'><?= htmlspecialchars($manual['herramientas_json'] ?? '') ?></textarea>
     </div>
     <div class="form-group">
       <label>Seguridad (JSON)</label>
@@ -400,6 +407,153 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
   renderSteps();
 })();
 
+// --- Tools Builder ---
+(function(){
+  const toolsTextarea = document.getElementById('herramientas_json');
+  const toolsList = document.getElementById('tools-list');
+  const addToolBtn = document.getElementById('add-tool-btn');
+  let tools = [];
+  let toolModalState = { mode: 'create', index: -1 };
+
+  function safeParseTools(raw){
+    try { return raw ? JSON.parse(raw) : []; } catch(e){ console.log('⚠️ [ManualsEdit] JSON herramientas inválido, se reinicia:', e.message); return []; }
+  }
+
+  function isAssocArray(a){ return Array.isArray(a) ? (Object.keys(a).some(k => isNaN(parseInt(k,10)))) : false; }
+
+  function normalizeTool(t){
+    if (typeof t === 'string') return { nombre: t, cantidad: 1 };
+    if (Array.isArray(t)) return { nombre: JSON.stringify(t), cantidad: 1 };
+    if (t && typeof t === 'object') {
+      return {
+        nombre: (t.nombre ? String(t.nombre) : ''),
+        cantidad: (t.cantidad !== undefined && t.cantidad !== null ? t.cantidad : ''),
+        nota: (t.nota ? String(t.nota) : ''),
+        seguridad: (t.seguridad ? String(t.seguridad) : '')
+      };
+    }
+    return { nombre: '', cantidad: '', nota: '', seguridad: '' };
+  }
+
+  function renderTools(){
+    toolsList.innerHTML = '';
+    tools.forEach((t, i) => {
+      const li = document.createElement('li');
+      li.className = 'tool-item';
+      li.setAttribute('data-index', String(i));
+      const header = document.createElement('div');
+      header.className = 'tool-header';
+      header.innerHTML = `
+        <span class="tool-title">${escapeHTML(t.nombre || '(sin nombre)')}</span>
+        <div class="tool-actions">
+          <button type="button" class="btn btn-sm" data-action="up">↑</button>
+          <button type="button" class="btn btn-sm" data-action="down">↓</button>
+          <button type="button" class="btn btn-sm" data-action="edit">Editar</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete">Eliminar</button>
+        </div>`;
+      const body = document.createElement('div');
+      body.className = 'tool-body';
+      const qty = (t.cantidad !== undefined && t.cantidad !== null && String(t.cantidad).trim() !== '') ? `Cantidad: ${escapeHTML(String(t.cantidad))}` : '';
+      const nota = (t.nota ? `Nota: ${escapeHTML(t.nota)}` : '');
+      const seg = (t.seguridad ? `⚠️ Seguridad: ${escapeHTML(t.seguridad)}` : '');
+      const parts = [qty, nota, seg].filter(Boolean);
+      body.innerHTML = parts.length ? parts.map(p => `<div>${p}</div>`).join('') : '<div class="muted">(sin detalles)</div>';
+      li.appendChild(header);
+      li.appendChild(body);
+      toolsList.appendChild(li);
+    });
+    console.log('✅ [ManualsEdit] Renderizadas', tools.length, 'herramientas');
+  }
+
+  function openToolModal(initial, mode, index){
+    toolModalState = { mode, index };
+    ensureToolModal();
+    document.getElementById('tool-name').value = initial?.nombre || '';
+    document.getElementById('tool-qty').value = (initial?.cantidad !== undefined && initial?.cantidad !== null) ? String(initial.cantidad) : '';
+    document.getElementById('tool-note').value = initial?.nota || '';
+    document.getElementById('tool-sec').value = initial?.seguridad || '';
+    document.getElementById('tool-modal').style.display = 'flex';
+  }
+
+  function closeToolModal(){ document.getElementById('tool-modal').style.display = 'none'; }
+
+  function saveToolModal(){
+    const nombre = document.getElementById('tool-name').value.trim();
+    const cantidadRaw = document.getElementById('tool-qty').value.trim();
+    const nota = document.getElementById('tool-note').value.trim();
+    const seguridad = document.getElementById('tool-sec').value.trim();
+    const cantidad = (cantidadRaw === '' ? '' : (/^\d+$/.test(cantidadRaw) ? parseInt(cantidadRaw,10) : cantidadRaw));
+    const obj = { nombre, cantidad, nota, seguridad };
+    if (!nombre) { alert('Nombre requerido'); return; }
+    if (toolModalState.mode === 'create') {
+      tools.push(obj);
+      console.log('✅ [ManualsEdit] Herramienta creada');
+    } else if (toolModalState.mode === 'edit' && toolModalState.index >= 0) {
+      tools[toolModalState.index] = obj;
+      console.log('✅ [ManualsEdit] Herramienta actualizada idx', toolModalState.index);
+    }
+    renderTools();
+    closeToolModal();
+  }
+
+  toolsList.addEventListener('click', function(ev){
+    const btn = ev.target.closest('button');
+    if (!btn) return;
+    const li = ev.target.closest('.tool-item');
+    const idx = parseInt(li.getAttribute('data-index'), 10);
+    const action = btn.getAttribute('data-action');
+    if (action === 'up' && idx > 0) { const tmp = tools[idx-1]; tools[idx-1] = tools[idx]; tools[idx] = tmp; renderTools(); console.log('🔍 [ManualsEdit] Herramienta arriba idx', idx); }
+    else if (action === 'down' && idx < tools.length - 1) { const tmp = tools[idx+1]; tools[idx+1] = tools[idx]; tools[idx] = tmp; renderTools(); console.log('🔍 [ManualsEdit] Herramienta abajo idx', idx); }
+    else if (action === 'delete') { if (confirm('¿Eliminar herramienta?')) { tools.splice(idx, 1); renderTools(); console.log('✅ [ManualsEdit] Herramienta eliminada idx', idx); } }
+    else if (action === 'edit') { openToolModal(tools[idx], 'edit', idx); }
+  });
+
+  addToolBtn.addEventListener('click', function(){ openToolModal({ nombre:'', cantidad:'', nota:'', seguridad:'' }, 'create', -1); });
+
+  // Serialize on submit
+  const form = document.querySelector('form');
+  form.addEventListener('submit', function(){
+    const payload = tools.map(t => ({ nombre: t.nombre, cantidad: t.cantidad, nota: t.nota, seguridad: t.seguridad }));
+    toolsTextarea.value = JSON.stringify(payload);
+    console.log('📦 [ManualsEdit] Serializado herramientas_json bytes:', toolsTextarea.value.length);
+  });
+
+  // Initialize
+  tools = safeParseTools(toolsTextarea.value).map(normalizeTool);
+  renderTools();
+
+  function ensureToolModal(){
+    let modal = document.getElementById('tool-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'tool-modal';
+      modal.style.display = 'none';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h3>Herramienta</h3>
+          <label>Nombre</label>
+          <input type="text" id="tool-name" />
+          <label>Cantidad (número o texto)</label>
+          <input type="text" id="tool-qty" />
+          <label>Nota</label>
+          <input type="text" id="tool-note" />
+          <label>Nota de Seguridad</label>
+          <input type="text" id="tool-sec" />
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" id="tool-save-btn">Guardar</button>
+            <button type="button" class="btn" id="tool-cancel-btn">Cancelar</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      document.getElementById('tool-save-btn').addEventListener('click', saveToolModal);
+      document.getElementById('tool-cancel-btn').addEventListener('click', closeToolModal);
+      console.log('✅ [ManualsEdit] Tool modal creado');
+    }
+    return modal;
+  }
+})();
+
 // Modal se crea bajo demanda por ensureModal()
 
 // CKEditor CDN
@@ -426,5 +580,14 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:9999; }
 .modal-content { background:#fff; width:min(900px, 92vw); max-height:90vh; overflow:auto; padding:16px; border-radius:8px; }
 .modal-actions { display:flex; gap:8px; margin-top:8px; }
+
+/* Tools Builder styles */
+.tools-toolbar { display:flex; gap:8px; margin-bottom:8px; }
+.tools-list { list-style:none; padding:0; margin:0; }
+.tool-item { border:1px solid #ddd; margin-bottom:8px; border-radius:6px; overflow:hidden; }
+.tool-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:6px 8px; }
+.tool-title { flex:1; }
+.tool-actions { display:flex; gap:6px; }
+.tool-body { padding:8px; background:#fff; color:#444; }
 </style>
 </script>
