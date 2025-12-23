@@ -55,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $herr_json = trim($_POST['herramientas_json'] ?? '');
     $seg_json = trim($_POST['seguridad_json'] ?? '');
     $html = $_POST['html'] ?? null;
-    $ui_mode = (($_POST['render_mode'] ?? $_POST['ui_mode'] ?? '') === 'fullhtml') ? 'fullhtml' : 'legacy';
+    $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
+    $render_mode_post = ($_POST['render_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
 
     // Basic validations
     if ($kit_id <= 0) {
@@ -91,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($manual_id > 0) {
           if ($has_render_mode_column) {
             $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ? WHERE id = ?');
-            $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $ui_mode, $manual_id]);
+            $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $manual_id]);
           } else {
             $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ? WHERE id = ?');
             $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
@@ -101,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
           if ($has_render_mode_column) {
             $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, render_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmtI->execute([$kit_id, $slug, $status === 'published' ? $version : $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $ui_mode]);
+            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post]);
           } else {
             $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html]);
@@ -189,6 +190,15 @@ if (!$kit) {
           <option value="published" <?= ($st === 'published') ? 'selected' : '' ?>>Publicado</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>Modo de Renderizado (Frontend)</label>
+        <?php $rm = isset($manual['render_mode']) ? $manual['render_mode'] : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy'); ?>
+        <select name="render_mode">
+          <option value="legacy" <?= ($rm === 'legacy') ? 'selected' : '' ?>>Estructurado (legacy)</option>
+          <option value="fullhtml" <?= ($rm === 'fullhtml') ? 'selected' : '' ?>>HTML Completo</option>
+        </select>
+        <small>Define el modo que usará el frontend al renderizar.</small>
+      </div>
     </div>
 
     <div class="form-row">
@@ -204,10 +214,10 @@ if (!$kit) {
 
     <div class="form-group">
       <label>Modo de Manual</label>
-      <select name="render_mode" id="render-mode-select">
-        <option value="legacy">Estructurado (Seguridad/Herramientas/Pasos)</option>
-        <option value="fullhtml">HTML Completo (reemplaza bloques)</option>
-      </select>
+      <div class="mode-toggle">
+        <label><input type="radio" name="ui_mode" value="legacy" checked /> Estructurado (Seguridad/Herramientas/Pasos)</label>
+        <label><input type="radio" name="ui_mode" value="fullhtml" /> HTML Completo (reemplaza bloques)</label>
+      </div>
       <div id="mode-warning" class="help-note"></div>
     </div>
 
@@ -282,7 +292,7 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function() {
   // Mode toggle logic
-  const modeSelect = document.getElementById('render-mode-select');
+  const modeRadios = Array.from(document.querySelectorAll('input[name="ui_mode"]'));
   const htmlGroup = document.getElementById('html-group');
   const htmlTextarea = document.getElementById('html-textarea');
   const modeWarning = document.getElementById('mode-warning');
@@ -302,10 +312,10 @@ console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', 
     }
   }
 
-  modeSelect.addEventListener('change', () => applyMode(modeSelect.value));
-  // Initial mode: from DB if available, else heuristic
+  modeRadios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
+  // Initial mode: if HTML has content, default to fullhtml
   const initialMode = <?= json_encode(isset($manual['render_mode']) ? ($manual['render_mode'] === 'fullhtml' ? 'fullhtml' : 'legacy') : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy')) ?>;
-  modeSelect.value = initialMode;
+  modeRadios.forEach(r => { r.checked = (r.value === initialMode); });
   applyMode(initialMode);
 
   const pasosTextarea = document.getElementById('pasos_json');
