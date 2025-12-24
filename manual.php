@@ -58,13 +58,11 @@ if (!$manual) {
     exit;
 }
 
-// Título y descripción usando Tipo, Versión y Entidad (Kit/Componente)
-$entity_name = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun']))
-  ? (string)$comp['nombre_comun']
-  : (string)$kit['nombre'];
-$version_text = !empty($manual['version']) ? (' ' . (string)$manual['version']) : '';
-$page_title = 'Manual: ' . h($tipo_label) . $version_text . ' ' . h($entity_name);
-$page_description = 'Manual ' . h($tipo_label) . $version_text . ' de ' . h($entity_name);
+$entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
+$version_text_raw = !empty($manual['version']) ? ('versión ' . (string)$manual['version']) : '';
+$display_title_raw = 'Manual de ' . $tipo_label . ($version_text_raw ? (' ' . $version_text_raw) : '') . ' ' . $entity_name_raw;
+$page_title = $display_title_raw;
+$page_description = 'Guía/Manual: ' . $display_title_raw;
 
 // Tipo/Ambito/Icono y componente vinculado si aplica
 $tipo_map = [
@@ -103,14 +101,16 @@ include 'includes/header.php';
 ?>
 <div class="container">
   <div class="breadcrumb">
-    <strong>Manual:</strong> <?= h($tipo_label) ?><?= !empty($manual['version']) ? ' ' . h($manual['version']) : '' ?> <?= h($entity_name) ?>
+    <a href="/">Inicio</a> / 
+    <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
+    <strong><?= h($display_title_raw) ?></strong>
   </div>
 
   <header class="manual-header">
     <div class="manual-head">
       <div class="manual-emoji" aria-hidden="true"><?= $tipo_emoji ?></div>
       <div class="manual-title-wrap">
-        <h1>Manual: <?= h($tipo_label) ?><?= !empty($manual['version']) ? ' ' . h($manual['version']) : '' ?> <?= h($entity_name) ?></h1>
+        <h1><?= h($display_title_raw) ?></h1>
         <div class="manual-meta">
           <span class="badge"><?= h($tipo_label) ?></span>
           <span class="badge">Versión <?= h($manual['version']) ?></span>
