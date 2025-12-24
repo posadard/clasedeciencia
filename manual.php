@@ -58,11 +58,8 @@ if (!$manual) {
     exit;
 }
 
-$entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
-$version_text_raw = !empty($manual['version']) ? ('versión ' . (string)$manual['version']) : '';
-$display_title_raw = 'Manual de ' . $tipo_label . ($version_text_raw ? (' ' . $version_text_raw) : '') . ' ' . $entity_name_raw;
-$page_title = $display_title_raw;
-$page_description = 'Guía/Manual: ' . $display_title_raw;
+// Delay display title build until ambito, tipo_label and comp are resolved
+// (moved below after ambito & tipo calculation)
 
 // Tipo/Ambito/Icono y componente vinculado si aplica
 $tipo_map = [
@@ -107,6 +104,13 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
     $comp = $stmtC->fetch(PDO::FETCH_ASSOC) ?: null;
   } catch (Exception $e) { $comp = null; }
 }
+
+// Build friendly display title now that tipo, ambito and entity are known
+$entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
+$version_text_raw = !empty($manual['version']) ? ('versión ' . (string)$manual['version']) : '';
+$display_title_raw = 'Manual de ' . $tipo_label . ($version_text_raw ? (' ' . $version_text_raw) : '') . ' ' . $entity_name_raw;
+$page_title = $display_title_raw;
+$page_description = 'Guía/Manual: ' . $display_title_raw;
 
 // Canonical: usar solo el slug del manual (ya incluye entidad y fecha)
 $canonical_url = SITE_URL . '/' . urlencode($manual['slug']);
