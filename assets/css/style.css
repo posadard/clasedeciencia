@@ -4603,7 +4603,7 @@ strong, b {
     .kit-inline-title .kit-inline-byline { font-size: 0.85rem; }
 }
 
-/* === Manual Detail (kit-manual.php) === */
+/* === Manual Detail (manual.php) === */
 .manual-toc-row { display:flex; gap:12px; align-items:flex-start; margin:12px 0; }
 .manual-toc { flex: 1 1 auto; }
 .manual-toc h2 { margin-bottom:6px; font-size:1.05rem; }

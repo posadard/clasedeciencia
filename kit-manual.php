@@ -37,7 +37,7 @@ if (!$manual) {
 
 $page_title = 'Manual: ' . h($manual['slug']) . ' - ' . h($kit['nombre']);
 $page_description = 'Guía/Manual del kit ' . h($kit['nombre']) . ' (' . h($manual['slug']) . ')';
-$canonical_url = SITE_URL . '/kit-manual.php?kit=' . urlencode($kit['slug']) . '&slug=' . urlencode($manual['slug']);
+$canonical_url = SITE_URL . '/manual.php?kit=' . urlencode($kit['slug']) . '&slug=' . urlencode($manual['slug']);
 
 // Extra: tipo/ambito/icono y componente vinculado si aplica
 $tipo_map = [
