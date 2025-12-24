@@ -113,8 +113,6 @@ $status_key = strtolower((string)($manual['status'] ?? ''));
 $status_labels = ['draft' => 'Borrador', 'approved' => 'Aprobado', 'published' => 'Publicado', 'discontinued' => 'Descontinuado'];
 $status_label = $status_labels[$status_key] ?? '';
 $state_text_raw = ($status_key !== '' && $status_key !== 'published') ? ('(' . $status_label . ')') : '';
-// Flag para descontinuado
-$is_discontinued = ($status_key === 'discontinued');
 // Formato: Manual de [Tipo] [Entidad] [versión] [(Estado no publicado)]
 $display_title_raw = 'Manual de ' . $tipo_label . ' ' . $entity_name_raw
   . ($version_text_raw ? (' ' . $version_text_raw) : '')
@@ -138,7 +136,7 @@ include 'includes/header.php';
     <div class="manual-head">
       <div class="manual-emoji" aria-hidden="true"><?= $tipo_emoji ?></div>
       <div class="manual-title-wrap">
-        <h1><?= h($display_title_raw) ?><?php if ($is_discontinued): ?><span class="badge badge-danger" style="margin-left:8px;">⚠️ Descontinuado</span><?php endif; ?></h1>
+        <h1><?= h($display_title_raw) ?></h1>
         <div class="manual-meta">
           <span class="badge"><?= h($tipo_label) ?></span>
           <span class="badge">Versión <?= h($manual['version']) ?></span>
@@ -176,6 +174,12 @@ include 'includes/header.php';
       $mode = isset($manual['render_mode']) ? $manual['render_mode'] : ((!empty($manual['html'])) ? 'fullhtml' : 'legacy');
     ?>
     <?php if ($mode === 'fullhtml' && !empty($manual['html'])): ?>
+      <?php if ($status_key === 'discontinued'): ?>
+        <section class="safety-info">
+          <h2>⚠️ Seguridad</h2>
+          <div class="badge badge-danger">⚠️ Este manual ha sido descontinuado</div>
+        </section>
+      <?php endif; ?>
       <?= $manual['html'] ?>
     <?php else: ?>
       <?php
@@ -289,12 +293,11 @@ include 'includes/header.php';
           </nav>
         </div>
       <?php endif; ?>
-      <?php $renderSafety = ($hasAnySafety || $is_discontinued); ?>
-      <?php if ($renderSafety): ?>
+      <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
-          <?php if ($is_discontinued): ?>
-            <div class="kit-safety-notes-public"><strong>⚠️ Este manual ha sido descontinuado.</strong></div>
+          <?php if ($status_key === 'discontinued'): ?>
+            <div class="badge badge-danger" style="margin:4px 0;">⚠️ Este manual ha sido descontinuado</div>
           <?php endif; ?>
           <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
             <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
@@ -364,7 +367,7 @@ include 'includes/header.php';
           <ol class="manual-steps">
             <?php foreach ($pasos as $idx => $p): ?>
               <li class="manual-step" id="paso-<?= (int)($idx + 1) ?>">
-                <div class="step-head"><strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong><?php if ($is_discontinued): ?><span class="badge badge-danger" style="margin-left:6px;">⚠️ Descontinuado</span><?php endif; ?></div>
+                <div class="step-head"><strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong></div>
                 <div class="step-body">
                   <?php if (!empty($p['html'])): ?>
                     <?= $p['html'] ?>
@@ -391,6 +394,26 @@ console.log('🔍 [Manual] Kit:', <?= json_encode(['id'=>$kit['id'],'slug'=>$kit
 console.log('🔍 [Manual] Slug manual:', '<?= h($manual_slug) ?>');
 console.log('✅ [Manual] Cargado:', <?= json_encode(['id'=>$manual['id'],'version'=>$manual['version'],'idioma'=>$manual['idioma'],'status'=>$manual['status']]) ?>);
 console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? count($pasos) : 0 ?>);
+</script>
+<script>
+// Añadir etiqueta "Descontinuado" a cada título h2 del manual cuando corresponda
+(function(){
+  try {
+    var isDisc = <?= json_encode($status_key === 'discontinued') ?>;
+    if (!isDisc) return;
+    var headers = document.querySelectorAll('.manual-content h2');
+    headers.forEach(function(h){
+      var tag = document.createElement('span');
+      tag.className = 'badge badge-danger';
+      tag.style.marginLeft = '8px';
+      tag.textContent = '⚠️ Descontinuado';
+      h.appendChild(tag);
+    });
+    console.log('⚠️ [Manual] Etiquetas descontinuado añadidas a', headers.length, 'títulos');
+  } catch (e) {
+    console.log('❌ [Manual] Error añadiendo etiquetas descontinuado:', e && e.message ? e.message : e);
+  }
+})();
 </script>
 <style>
 /* Print-friendly tweaks for manual steps */
