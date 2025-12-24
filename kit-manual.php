@@ -79,7 +79,7 @@ include 'includes/header.php';
   </div>
 
   <header class="manual-header">
-        <div class="manual-toc-row">
+    <div class="manual-head">
       <div class="manual-emoji" aria-hidden="true"><?= $tipo_emoji ?></div>
       <div class="manual-title-wrap">
         <h1><?= h(ucwords(str_replace('-', ' ', (string)$manual['slug']))) ?></h1>
@@ -99,7 +99,6 @@ include 'includes/header.php';
           <?php if (!empty($manual['updated_at'])): ?><span class="badge">🔄 Actualizado <?= h(date('d/m/Y', strtotime($manual['updated_at']))) ?></span><?php endif; ?>
           <?php if ($ambito === 'componente'): ?>
             <?php if ($comp && !empty($comp['slug'])): ?>
-            <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
               <span class="badge">🔧 Para componente: <a href="/<?= h($comp['slug']) ?>" title="Ver componente <?= h($comp['nombre_comun']) ?>"><?= h($comp['nombre_comun']) ?></a></span>
             <?php else: ?>
               <span class="badge">🔧 Ámbito: Componente</span>
@@ -216,24 +215,18 @@ include 'includes/header.php';
             </ol>
           </nav>
           <aside class="manual-toc-aside">
-            .manual-toc-row { display:flex; gap:12px; align-items:flex-start; margin:12px 0; }
-            .manual-toc { flex: 1 1 auto; }
-            .manual-toc-aside { flex: 0 0 220px; }
-            .manual-toc-image { width:100%; height:140px; object-fit:cover; border-radius:8px; border:1px solid #e3e8f3; background:#fff; display:block; }
-            .manual-toc-placeholder { width:100%; height:140px; display:flex; align-items:center; justify-content:center; border:1px dashed #cbd5e1; border-radius:8px; background:#f8fafc; font-size:48px; }
-            @media (max-width: 720px) {
-              .manual-toc-row { flex-direction: column; }
-              .manual-toc-aside { flex-basis:auto; width:100%; }
-              .manual-toc-image, .manual-toc-placeholder { height: 180px; }
-            }
+            <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
             <?php if (!empty($kit['imagen_portada'])): ?>
-              <img src="<?= h($kit['imagen_portada']) ?>"
+              <img id="<?= h($img_id) ?>"
+                   src="<?= h($kit['imagen_portada']) ?>"
                    alt="Imagen del kit <?= h($kit['nombre']) ?>"
                    class="manual-toc-image"
-                   onerror="this.onerror=null; console.log('❌ [KitManual] Imagen portada kit falló'); this.replaceWith((function(){var d=document.createElement('div'); d.className='manual-toc-placeholder'; d.innerHTML='📦'; return d;})());" />
+                   onerror="this.onerror=null; console.log('❌ [KitManual] Imagen portada kit falló'); this.replaceWith((function(){var d=document.createElement('div'); d.id='<?= h($img_id) ?>'; d.className='manual-toc-placeholder'; d.innerHTML='📦'; return d;})());" />
+              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
               <script>console.log('✅ [KitManual] Imagen portada mostrada junto al índice');</script>
             <?php else: ?>
-              <div class="manual-toc-placeholder" title="Sin imagen de kit">📦</div>
+              <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit">📦</div>
+              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
               <script>console.log('⚠️ [KitManual] Kit sin imagen, usando placeholder en índice');</script>
             <?php endif; ?>
           </aside>
@@ -336,7 +329,7 @@ include 'includes/header.php';
 console.log('🔍 [KitManual] Kit:', <?= json_encode(['id'=>$kit['id'],'slug'=>$kit['slug'],'nombre'=>$kit['nombre']]) ?>);
 console.log('🔍 [KitManual] Slug manual:', '<?= h($manual_slug) ?>');
 console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'version'=>$manual['version'],'idioma'=>$manual['idioma'],'status'=>$manual['status']]) ?>);
-console.log('🔍 [KitManual] Pasos:', <?= isset($manual['pasos_json']) && $manual['pasos_json'] ? 'JSON.parse(' . json_encode($manual['pasos_json']) . ').length' : 0 ?>);
+console.log('🔍 [KitManual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? count($pasos) : 0 ?>);
 </script>
 <style>
 /* Print-friendly tweaks for manual steps */
