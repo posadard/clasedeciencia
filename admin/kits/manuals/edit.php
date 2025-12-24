@@ -107,6 +107,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if (!preg_match('/\d{2}-\d{2}-\d{2}$/', $slug)) {
         $slug .= '-' . $dateSuffix;
       }
+      // Asegurar concatenación del slug del kit o componente al final
+      $entitySuffix = '';
+      if ($has_ambito_column && $ambito === 'componente' && $has_item_id_column && $item_id) {
+        try {
+          $qs = $pdo->prepare('SELECT slug FROM kit_items WHERE id = ? LIMIT 1');
+          $qs->execute([$item_id]);
+          $entitySuffix = (string)($qs->fetchColumn() ?: '');
+        } catch (PDOException $e) { $entitySuffix = ''; }
+        if ($entitySuffix === '') {
+          // Fallback: derive from component name if available
+          try {
+            $qs2 = $pdo->prepare('SELECT nombre_comun FROM kit_items WHERE id = ? LIMIT 1');
+            $qs2->execute([$item_id]);
+            $name = (string)($qs2->fetchColumn() ?: '');
+            if ($name !== '') { $tmp = strtolower(preg_replace('/[^a-z0-9\-]+/','-', $name)); $tmp = preg_replace('/-+/', '-', trim($tmp, '-')); $entitySuffix = $tmp; }
+          } catch (PDOException $e) {}
+        }
+      } else if ($kit && !empty($kit['slug'])) {
+        $entitySuffix = (string)$kit['slug'];
+      }
+      if ($entitySuffix !== '') {
+        // Append if not already present at end
+        if (!preg_match('/-' . preg_quote($entitySuffix, '/') . '$/', $slug)) {
+          $slug .= '-' . $entitySuffix;
+        }
+      }
       echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix + fecha):", ' . json_encode($slug) . ');</script>';
       // Para el caso extremo de que todo quede vacío, aseguramos 'manual-'
       if ($slug === '') { $slug = 'manual-'; }
@@ -268,14 +294,14 @@ if (!$kit) {
     $kit_items = [];
     if ($kit_id > 0) {
       try {
-        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.sku FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
+        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.slug, ki.sku FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
         $q->execute([$kit_id]);
         $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
       } catch (PDOException $e) { $kit_items = []; }
     }
     if (empty($kit_items)) {
       try {
-        $q = $pdo->query('SELECT id, nombre_comun, sku FROM kit_items ORDER BY nombre_comun ASC');
+        $q = $pdo->query('SELECT id, nombre_comun, slug, sku FROM kit_items ORDER BY nombre_comun ASC');
         $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
       } catch (PDOException $e) { $kit_items = []; }
     }
@@ -327,7 +353,7 @@ if (!$kit) {
         <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
           <option value="">-- Selecciona --</option>
           <?php foreach ($kit_items as $it): ?>
-            <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+            <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-slug="<?= htmlspecialchars($it['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
           <?php endforeach; ?>
         </select>
         <?php if (!$has_item_id_column): ?>
@@ -481,6 +507,8 @@ if (!$kit) {
 console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', <?= (int)$kit_id ?>);
 // Publicado en (si existe) para generar fecha dd-mm-yy
 var MANUAL_PUBLISHED_AT = <?= json_encode(isset($manual['published_at']) ? $manual['published_at'] : null) ?>;
+// Slug del kit para sufijo automático
+var KIT_SLUG = <?= json_encode(isset($kit['slug']) ? $kit['slug'] : null) ?>;
 // Kit safety data for merge
 var KIT_SAFETY = <?= json_encode(isset($kit_seg_obj) ? $kit_seg_obj : null, JSON_UNESCAPED_UNICODE) ?>;
 console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
@@ -538,6 +566,16 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     return nombre.replace(/\s*\(SKU.*\)$/i, '').trim();
   }
 
+  function getItemSlug(){
+    if (!itemSel) return '';
+    const opt = itemSel.options[itemSel.selectedIndex];
+    if (!opt) return '';
+    const s = opt.getAttribute('data-slug') || '';
+    if (s) return s;
+    // Fallback: derive from name
+    return baseSlugify(getItemNombre());
+  }
+
   function buildSuggestion(){
     const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
     const verInput = document.querySelector('input[name="version"]');
@@ -561,10 +599,19 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       dateStr = dd + '-' + mm + '-' + yy;
     })();
 
-    // manual-{tipo}-{version}-{dd-mm-yy}
+    // manual-{tipo}-{version}-{dd-mm-yy}-{entitySlug}
     const parts = ['manual', tipo];
     if (verNorm) parts.push(verNorm);
     parts.push(dateStr);
+    // Append kit or component slug
+    let entitySlug = '';
+    const amb = (ambSel ? ambSel.value : 'kit') || 'kit';
+    if (amb === 'componente') {
+      entitySlug = getItemSlug();
+    } else {
+      entitySlug = KIT_SLUG || '';
+    }
+    if (entitySlug) parts.push(entitySlug);
     const base = parts.join('-');
     const s = normalizeManualSlug(base);
     console.log('🔍 [ManualsEdit] Sugerencia de slug:', base, '→', s);

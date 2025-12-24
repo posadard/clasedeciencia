@@ -91,9 +91,8 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
   } catch (Exception $e) { $comp = null; }
 }
 
-// Canonical: pretty combined slug without extra tokens; kit/component slugs already carry their prefixes
-$combined_slug = $manual['slug'] . '-' . ($ambito === 'componente' && $comp && !empty($comp['slug']) ? $comp['slug'] : $kit['slug']);
-$canonical_url = SITE_URL . '/' . urlencode($combined_slug);
+// Canonical: usar solo el slug del manual (ya incluye entidad y fecha)
+$canonical_url = SITE_URL . '/' . urlencode($manual['slug']);
 
 include 'includes/header.php';
 ?>
