@@ -583,6 +583,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               }
               $pdo->commit();
               echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>';
+              
+              // Sincronizar publicación de manuales (dual-list) ANTES de redirigir
+              try {
+                $posted_manuals = isset($_POST['manuals_published']) ? (array)$_POST['manuals_published'] : [];
+                $selected_ids = [];
+                foreach ($posted_manuals as $mid) {
+                  $mid = filter_var($mid, FILTER_VALIDATE_INT);
+                  if ($mid !== false) { $selected_ids[] = (int)$mid; }
+                }
+                // Cargar estado actual para calcular diferencias
+                $stmC = $pdo->prepare('SELECT id, status FROM kit_manuals WHERE kit_id = ?');
+                $stmC->execute([(int)$id]);
+                $rows = $stmC->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                $currently_published = [];
+                foreach ($rows as $r) { if (($r['status'] ?? '') === 'published') { $currently_published[(int)$r['id']] = true; } }
+                // Conjuntos
+                $selected_set = array_fill_keys($selected_ids, true);
+                $to_publish = [];
+                $to_unpublish = [];
+                foreach ($selected_ids as $sid) { if (!isset($currently_published[$sid])) { $to_publish[] = $sid; } }
+                foreach ($currently_published as $pid => $_t) { if (!isset($selected_set[$pid])) { $to_unpublish[] = $pid; } }
+                // Debug
+                echo '<script>console.log("🔍 [KitsEdit] manuals_published POST:",' . json_encode($selected_ids) . ');</script>';
+                echo '<script>console.log("🔍 [KitsEdit] currently_published:",' . json_encode(array_keys($currently_published)) . ');</script>';
+                // Aplicar cambios
+                if (!empty($to_publish)) {
+                  $ph = implode(',', array_fill(0, count($to_publish), '?'));
+                  $sqlP = "UPDATE kit_manuals SET status = 'published', published_at = IFNULL(published_at, NOW()) WHERE id IN ($ph) AND kit_id = ?";
+                  $paramsP = array_merge($to_publish, [(int)$id]);
+                  $pdo->prepare($sqlP)->execute($paramsP);
+                }
+                if (!empty($to_unpublish)) {
+                  $ph = implode(',', array_fill(0, count($to_unpublish), '?'));
+                  $sqlU = "UPDATE kit_manuals SET status = 'discontinued' WHERE id IN ($ph) AND kit_id = ?";
+                  $paramsU = array_merge($to_unpublish, [(int)$id]);
+                  $pdo->prepare($sqlU)->execute($paramsU);
+                }
+                echo '<script>console.log("✅ [KitsEdit] Publicar:",' . json_encode($to_publish) . ', "; Despublicar:",' . json_encode($to_unpublish) . ');</script>';
+              } catch (PDOException $e) {
+                echo '<script>console.log("❌ [KitsEdit] Error sincronizando manuales:",' . json_encode($e->getMessage()) . ');</script>';
+              }
             } catch (PDOException $e) {
               if ($pdo && $pdo->inTransaction()) { $pdo->rollBack(); }
               throw $e;
@@ -738,63 +779,7 @@ try {
   $items = [];
 }
 
-// Sincronizar publicación de manuales desde dual-list (differences, 4 estados)
-// Política: la dual-list solo gestiona visibilidad (published vs no publicado).
-// Al despublicar, el estado pasa a 'approved' por defecto (el editor/lista pueden cambiar luego a draft/discontinued).
-if ($is_edit && $_SERVER['REQUEST_METHOD'] === 'POST') {
-  $posted_manuals = isset($_POST['manuals_published']) ? (array)$_POST['manuals_published'] : [];
-  $selected_ids = [];
-  foreach ($posted_manuals as $mid) {
-    $mid = filter_var($mid, FILTER_VALIDATE_INT);
-    if ($mid !== false) { $selected_ids[] = (int)$mid; }
-  }
-  try {
-    // Cargar estado actual para calcular difs
-    $stmC = $pdo->prepare('SELECT id, status, published_at FROM kit_manuals WHERE kit_id = ?');
-    $stmC->execute([(int)$id]);
-    $rows = $stmC->fetchAll(PDO::FETCH_ASSOC);
-    $currently_published = [];
-    foreach ($rows as $r) {
-      if (($r['status'] ?? '') === 'published') { $currently_published[(int)$r['id']] = true; }
-    }
-
-    // Conjuntos
-    $selected_set = array_fill_keys($selected_ids, true);
-    $to_publish = [];
-    $to_unpublish = [];
-    foreach ($selected_ids as $sid) {
-      if (!isset($currently_published[$sid])) { $to_publish[] = $sid; }
-    }
-    foreach ($currently_published as $pid => $_t) {
-      if (!isset($selected_set[$pid])) { $to_unpublish[] = $pid; }
-    }
-
-    // Debug: imprimir selección y estado actual
-    echo '<script>console.log("🔍 [KitsEdit] manuals_published POST:",' . json_encode($selected_ids) . ');</script>';
-    echo '<script>console.log("🔍 [KitsEdit] currently_published:",' . json_encode(array_keys($currently_published)) . ');</script>';
-
-    // Aplicar cambios en transacción
-    $pdo->beginTransaction();
-    if (!empty($to_publish)) {
-      $ph = implode(',', array_fill(0, count($to_publish), '?'));
-      $sqlP = "UPDATE kit_manuals SET status = 'published', published_at = IFNULL(published_at, NOW()) WHERE id IN ($ph) AND kit_id = ?";
-      $paramsP = array_merge($to_publish, [(int)$id]);
-      $pdo->prepare($sqlP)->execute($paramsP);
-    }
-    if (!empty($to_unpublish)) {
-      $ph = implode(',', array_fill(0, count($to_unpublish), '?'));
-      // Política solicitada: al despublicar, marcar como 'discontinued'
-      $sqlU = "UPDATE kit_manuals SET status = 'discontinued' WHERE id IN ($ph) AND kit_id = ?";
-      $paramsU = array_merge($to_unpublish, [(int)$id]);
-      $pdo->prepare($sqlU)->execute($paramsU);
-    }
-    $pdo->commit();
-    echo '<script>console.log("✅ [KitsEdit] Publicar:",' . json_encode($to_publish) . ', "; Despublicar:",' . json_encode($to_unpublish) . ');</script>';
-  } catch (PDOException $e) {
-    if ($pdo->inTransaction()) { $pdo->rollBack(); }
-    echo '<script>console.log("❌ [KitsEdit] Error sincronizando manuales:",' . json_encode($e->getMessage()) . ');</script>';
-  }
-}
+// Nota: la sincronización de manuales ahora se realiza dentro del flujo de "save" antes de redirigir.
 
 include '../header.php';
 ?>
