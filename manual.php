@@ -8,54 +8,54 @@ $kit_slug = isset($_GET['kit']) ? trim($_GET['kit']) : '';
 $manual_slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 $comp_slug = isset($_GET['comp']) ? trim($_GET['comp']) : '';
 
-// Allow resolution via component slug when kit slug is absent
-if ($kit_slug === '' && $manual_slug !== '' && $comp_slug !== '') {
-  try {
-    $stmtI = $pdo->prepare('SELECT id FROM kit_items WHERE slug = ? LIMIT 1');
-    $stmtI->execute([$comp_slug]);
-    $comp_id = (int)($stmtI->fetchColumn() ?: 0);
-  } catch (Exception $e) { $comp_id = 0; }
-  if ($comp_id > 0) {
-    try {
-      $stmtM = $pdo->prepare("SELECT * FROM kit_manuals WHERE slug = ? AND item_id = ? AND status = 'published' LIMIT 1");
-      $stmtM->execute([$manual_slug, $comp_id]);
-      $manual = $stmtM->fetch(PDO::FETCH_ASSOC);
-      if ($manual) {
-        $stmtK = $pdo->prepare('SELECT id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo, updated_at FROM kits WHERE id = ? AND activo = 1 LIMIT 1');
-        $stmtK->execute([(int)$manual['kit_id']]);
-        $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
-        if ($kit) { $kit_slug = (string)$kit['slug']; }
-      }
-    } catch (Exception $e) { /* no-op */ }
-  }
+// Resolver por slug del manual únicamente
+if ($manual_slug === '') {
+  header('HTTP/1.1 302 Found');
+  header('Location: /');
+  exit;
 }
 
-if ($kit_slug === '' || $manual_slug === '') {
-    header('HTTP/1.1 302 Found');
-    header('Location: /');
-    exit;
-}
+try {
+  $stmtM = $pdo->prepare("SELECT * FROM kit_manuals WHERE slug = ? AND status = 'published' LIMIT 1");
+  $stmtM->execute([$manual_slug]);
+  $manual = $stmtM->fetch(PDO::FETCH_ASSOC);
+} catch (Exception $e) { $manual = false; }
 
-$kit = cdc_get_kit_by_slug($pdo, $kit_slug);
-if (!$kit) {
-    header('HTTP/1.0 404 Not Found');
-    $page_title = 'Kit no encontrado';
-    $page_description = 'El kit solicitado no existe o no está activo.';
-    include 'includes/header.php';
-    echo '<div class="container"><h1>Kit no encontrado</h1></div>';
-    include 'includes/footer.php';
-    exit;
-}
-
-$manual = cdc_get_kit_manual_by_slug($pdo, (int)$kit['id'], $manual_slug, true);
 if (!$manual) {
-    header('HTTP/1.0 404 Not Found');
-    $page_title = 'Manual no encontrado';
-    $page_description = 'El manual solicitado no existe o no está publicado.';
-    include 'includes/header.php';
-    echo '<div class="container"><div class="breadcrumb"><a href="/">Inicio</a> / <a href="/kit.php?slug=' . h($kit['slug']) . '">Kit</a> / <strong>Manual</strong></div><h1>Manual no encontrado</h1></div>';
-    include 'includes/footer.php';
-    exit;
+  header('HTTP/1.0 404 Not Found');
+  $page_title = 'Manual no encontrado';
+  $page_description = 'El manual solicitado no existe o no está publicado.';
+  include 'includes/header.php';
+  echo '<div class="container"><div class="breadcrumb"><a href="/">Inicio</a> / <strong>Manual</strong></div><h1>Manual no encontrado</h1></div>';
+  include 'includes/footer.php';
+  exit;
+}
+
+// Derivar kit desde el manual o, si es ámbito componente y no hay kit_id, mediante relación de componente
+$kit = null;
+if (!empty($manual['kit_id'])) {
+  try {
+    $stmtK = $pdo->prepare('SELECT id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo, updated_at FROM kits WHERE id = ? AND activo = 1 LIMIT 1');
+    $stmtK->execute([(int)$manual['kit_id']]);
+    $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
+  } catch (Exception $e) { $kit = null; }
+}
+if (!$kit && isset($manual['ambito']) && $manual['ambito'] === 'componente' && !empty($manual['item_id'])) {
+  try {
+    $stmtK = $pdo->prepare('SELECT k.id, k.nombre, k.slug, k.codigo, k.version, k.resumen, k.contenido_html, k.imagen_portada, k.video_portada, k.time_minutes, k.dificultad_ensamble, k.seguridad, k.seo_title, k.seo_description, k.activo, k.updated_at FROM kits k JOIN kit_componentes kc ON kc.kit_id = k.id WHERE kc.item_id = ? AND k.activo = 1 LIMIT 1');
+    $stmtK->execute([(int)$manual['item_id']]);
+    $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
+  } catch (Exception $e) { $kit = null; }
+}
+if (!$kit) {
+  // Sin kit activo asociado: mostrar 404 amigable
+  header('HTTP/1.0 404 Not Found');
+  $page_title = 'Kit no encontrado';
+  $page_description = 'No se pudo determinar el kit asociado a este manual.';
+  include 'includes/header.php';
+  echo '<div class="container"><div class="breadcrumb"><a href="/">Inicio</a> / <strong>Manual</strong></div><h1>Kit no encontrado</h1></div>';
+  include 'includes/footer.php';
+  exit;
 }
 
 // Delay display title build until ambito, tipo_label and comp are resolved
