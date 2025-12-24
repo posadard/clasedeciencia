@@ -108,7 +108,15 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
 // Build friendly display title now that tipo, ambito and entity are known
 $entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
 $version_text_raw = !empty($manual['version']) ? ('versión ' . (string)$manual['version']) : '';
-$display_title_raw = 'Manual de ' . $tipo_label . ($version_text_raw ? (' ' . $version_text_raw) : '') . ' ' . $entity_name_raw;
+// Estado al final si no es publicado
+$status_key = strtolower((string)($manual['status'] ?? ''));
+$status_labels = ['draft' => 'Borrador', 'approved' => 'Aprobado', 'published' => 'Publicado', 'discontinued' => 'Descontinuado'];
+$status_label = $status_labels[$status_key] ?? '';
+$state_text_raw = ($status_key !== '' && $status_key !== 'published') ? ('(' . $status_label . ')') : '';
+// Formato: Manual de [Tipo] [Entidad] [versión] [(Estado no publicado)]
+$display_title_raw = 'Manual de ' . $tipo_label . ' ' . $entity_name_raw
+  . ($version_text_raw ? (' ' . $version_text_raw) : '')
+  . ($state_text_raw ? (' ' . $state_text_raw) : '');
 $page_title = $display_title_raw;
 $page_description = 'Guía/Manual: ' . $display_title_raw;
 
