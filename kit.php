@@ -390,21 +390,44 @@ include 'includes/header.php';
     </section>
 
     <section class="kit-manuals">
-    <h2>🛠️ Manuales Disponibles</h2>
-    <?php if (!empty($manuales)): ?>
-      <ul>
-        <?php foreach ($manuales as $man): ?>
-          <li>
-            <a href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($man['slug']) ?>">
-              <?= h($man['slug']) ?> (v<?= h($man['version']) ?>)
-            </a>
-            <small class="muted">Idioma: <?= h($man['idioma']) ?><?= $man['time_minutes'] ? ' · ' . (int)$man['time_minutes'] . ' min' : '' ?></small>
-          </li>
-        <?php endforeach; ?>
-      </ul>
-    <?php else: ?>
-      <p class="muted">Aún no hay manuales publicados para este kit.</p>
-    <?php endif; ?>
+      <h2>🛠️ Manuales Disponibles</h2>
+      <?php if (!empty($manuales)): ?>
+        <section class="kit-inline-card" role="region" aria-label="Manuales del kit">
+          <div class="kit-inline-wrap">
+            <div class="kit-inline-left">
+              <div class="kit-inline-thumb" style="display:block;width:100%;height:100%;">
+                <?php if (!empty($kit['imagen_portada'])): ?>
+                  <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; console.log('❌ [Kit] Thumb manuales falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📘'; p.appendChild(s); this.replaceWith(p);" />
+                <?php else: ?>
+                  <div class="summary-placeholder"><span class="placeholder-icon">📘</span></div>
+                <?php endif; ?>
+              </div>
+            </div>
+            <div class="kit-inline-right">
+              <h3 class="kit-inline-title">
+                <span><?= h($kit['nombre']) ?></span>
+                <span class="kit-inline-byline">🧩 <?= (int)count($componentes) ?> componentes 📘 <?= (int)count($manuales) ?> manuales<?= !empty($kit['version']) ? ' 🔢 v' . h($kit['version']) : '' ?></span>
+              </h3>
+              <?php if (!empty($kit['resumen'])): ?>
+                <p class="kit-inline-excerpt"><?= h($kit['resumen']) ?></p>
+              <?php endif; ?>
+              <div class="kit-inline-manuales">
+                <span class="man-label">Manuales:</span>
+                <div class="man-pills">
+                  <?php foreach ($manuales as $man): ?>
+                    <a class="tag-pill" href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($man['slug']) ?>" title="Manual <?= h($man['slug']) ?>">
+                      <?= h($man['slug']) ?> · <?= h($man['idioma'] ?: 'es') ?><?= !empty($man['time_minutes']) ? ' · ⏱️ ' . (int)$man['time_minutes'] . 'm' : '' ?>
+                    </a>
+                  <?php endforeach; ?>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <script>console.log('✅ [Kit] Manuales: render pills estilo inline-card');</script>
+      <?php else: ?>
+        <p class="muted">Aún no hay manuales publicados para este kit.</p>
+      <?php endif; ?>
     </section>
 
     <?php // Ficha técnica ya precomputada como $ficha_inline arriba ?>
