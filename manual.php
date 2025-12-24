@@ -283,7 +283,7 @@ include 'includes/header.php';
         }
       ?>
       <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued'): ?>
-        <div class="manual-toc-row">
+        <div class="manual-toc-row" style="display:flex; align-items:flex-start; gap:12px;">
           <aside class="manual-toc-aside">
             <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
             <?php if (!empty($kit['imagen_portada'])): ?>
@@ -300,7 +300,7 @@ include 'includes/header.php';
               <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder en índice');</script>
             <?php endif; ?>
           </aside>
-          <div class="manual-toc-right">
+          <div class="manual-toc-right" style="flex:1; min-width:0;">
             <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
               <section class="safety-info">
                 <h2>⚠️ Seguridad</h2>
@@ -344,19 +344,19 @@ include 'includes/header.php';
                 <?php endif; ?>
               </section>
             <?php endif; ?>
-            <?php if (!empty($toc_items)): ?>
-              <nav class="manual-toc" aria-label="Índice de pasos" style="margin-top:10px;">
-                <h2>🧭 Índice</h2>
-                <ol>
-                  <?php foreach ($toc_items as $ti): ?>
-                    <li><a href="#<?= h($ti['id']) ?>"><strong><?= h($ti['title']) ?></strong>: <?= h($ti['preview']) ?></a></li>
-                  <?php endforeach; ?>
-                </ol>
-              </nav>
-              <script>console.log('🔁 [Manual] Intercambio: imagen izquierda, seguridad derecha y índice debajo');</script>
-            <?php endif; ?>
           </div>
         </div>
+      <?php endif; ?>
+      <?php if (!empty($toc_items)): ?>
+        <nav class="manual-toc" aria-label="Índice de pasos" style="margin-top:10px;">
+          <h2>🧭 Índice</h2>
+          <ol>
+            <?php foreach ($toc_items as $ti): ?>
+              <li><a href="#<?= h($ti['id']) ?>"><strong><?= h($ti['title']) ?></strong>: <?= h($ti['preview']) ?></a></li>
+            <?php endforeach; ?>
+          </ol>
+        </nav>
+        <script>console.log('🔁 [Manual] Índice fuera del bloque de imagen/seguridad, títulos en negrilla');</script>
       <?php endif; ?>
 
       <?php if (!empty($herr)): ?>
@@ -456,11 +456,6 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .manual-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .manual-resumen { font-size:1.05rem; color:#444; margin-top:8px; }
 .manual-toc { background:#f7f9fc; border:1px solid #e3e8f3; border-radius:8px; padding:10px 12px; }
-.manual-toc-row { display:flex; gap:12px; align-items:flex-start; }
-.manual-toc-aside { flex:0 0 160px; max-width:160px; }
-.manual-toc-right { flex:1; min-width:0; }
-.safety-info { width:100%; }
-.manual-toc { width:100%; }
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
