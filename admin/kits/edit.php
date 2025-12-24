@@ -738,6 +738,34 @@ try {
   $items = [];
 }
 
+// Sincronizar publicación de manuales desde dual-list (se ejecuta al guardar el kit)
+if ($is_edit && $_SERVER['REQUEST_METHOD'] === 'POST') {
+  $posted_manuals = isset($_POST['manuals_published']) ? (array)$_POST['manuals_published'] : [];
+  $selected_ids = [];
+  foreach ($posted_manuals as $mid) {
+    $mid = filter_var($mid, FILTER_VALIDATE_INT);
+    if ($mid !== false) { $selected_ids[] = (int)$mid; }
+  }
+  try {
+    $pdo->beginTransaction();
+    $stmD = $pdo->prepare('UPDATE kit_manuals SET status = ?, published_at = NULL WHERE kit_id = ?');
+    $stmD->execute(['draft', (int)$id]);
+
+    if (!empty($selected_ids)) {
+      $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
+      $sql = "UPDATE kit_manuals SET status = 'published', published_at = IFNULL(published_at, NOW()) WHERE id IN ($placeholders) AND kit_id = ?";
+      $params = array_merge($selected_ids, [(int)$id]);
+      $stmP = $pdo->prepare($sql);
+      $stmP->execute($params);
+    }
+    $pdo->commit();
+    echo '<script>console.log("✅ [KitsEdit] Manuales sincronizados (publicación)");</script>';
+  } catch (PDOException $e) {
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    echo '<script>console.log("❌ [KitsEdit] Error sincronizando manuales:",' . json_encode($e->getMessage()) . ');</script>';
+  }
+}
+
 include '../header.php';
 ?>
 <div class="page-header">
@@ -1686,48 +1714,130 @@ include '../header.php';
     <div id="clases-hidden"></div>
   </div>
 </div>
-  <!-- Manuales del Kit (Preview + Acciones) -->
+  <!-- Manuales del Kit (Dual-list: Publicar/Despublicar) -->
   <div class="card" style="margin-top:2rem;">
     <h3>Manuales del Kit</h3>
-    <small class="hint" style="display:block; margin-bottom:6px;">Crea y gestiona los manuales de armado para este kit.</small>
+    <small class="hint" style="display:block; margin-bottom:6px;">Publica o despublica manuales. Crea nuevos desde aquí.</small>
     <?php if ($is_edit): ?>
       <div style="display:flex; gap:8px; align-items:center; margin: 8px 0; flex-wrap: wrap;">
         <a class="btn" href="/admin/kits/manuals/edit.php?kit_id=<?= (int)$id ?>">+ Nuevo Manual</a>
         <a class="btn btn-secondary" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$id ?>">Ver todos</a>
       </div>
-      <?php if (!empty($kit_manuals)): ?>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Slug</th>
-              <th>Idioma</th>
-              <th>Versión</th>
-              <th>Status</th>
-              <th>Actualizado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+      <div class="dual-listbox-container">
+        <div class="listbox-panel">
+          <div class="listbox-header">
+            <strong>Disponibles</strong>
+            <span id="man-available-count" class="counter">(0)</span>
+          </div>
+          <input type="text" id="search-manuales" class="listbox-search" placeholder="🔍 Buscar manuales...">
+          <div class="listbox-content" id="available-manuales">
             <?php foreach ($kit_manuals as $m): ?>
-              <tr>
-                <td><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars($m['version'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars($m['status'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= !empty($m['updated_at']) ? htmlspecialchars(date('Y-m-d H:i', strtotime($m['updated_at'])), ENT_QUOTES, 'UTF-8') : '' ?></td>
-                <td>
-                  <a class="btn btn-sm" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>">Editar</a>
-                  <?php if (!empty($kit['slug']) && ($m['status'] ?? '') === 'published'): ?>
-                    <a class="btn btn-sm" target="_blank" href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($m['slug']) ?>">Ver público</a>
-                  <?php endif; ?>
-                </td>
-              </tr>
+              <?php if (($m['status'] ?? '') !== 'published'): ?>
+                <div class="competencia-item" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" onclick="selectManualItem(this)">
+                  <span class="comp-nombre"><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="comp-codigo"><?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?></span>
+                  <a class="edit-component" title="Editar" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>" onclick="event.stopPropagation();">✏️</a>
+                </div>
+              <?php endif; ?>
             <?php endforeach; ?>
-          </tbody>
-        </table>
-      <?php else: ?>
-        <p class="muted">Aún no hay manuales. Crea el primero con “+ Nuevo Manual”.</p>
-      <?php endif; ?>
+          </div>
+        </div>
+        <div class="listbox-buttons">
+          <button type="button" onclick="moveAllManuales(true)" title="Publicar todos">➡️</button>
+          <button type="button" onclick="moveAllManuales(false)" title="Quitar publicación de todos">⬅️</button>
+        </div>
+        <div class="listbox-panel">
+          <div class="listbox-header">
+            <strong>Publicados</strong>
+            <span id="man-selected-count" class="counter">(0)</span>
+          </div>
+          <div class="listbox-content" id="selected-manuales">
+            <?php foreach ($kit_manuals as $m): ?>
+              <?php if (($m['status'] ?? '') === 'published'): ?>
+                <div class="competencia-item selected" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" onclick="deselectManualItem(this)">
+                  <span class="comp-nombre"><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="comp-codigo"><?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?></span>
+                  <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectManualItem(this.parentElement)">×</button>
+                  <?php if (!empty($kit['slug'])): ?>
+                    <a class="edit-component" title="Ver público" target="_blank" href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($m['slug']) ?>" onclick="event.stopPropagation();">🔗</a>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </div>
+          <small class="hint" style="margin-top: 10px; display: block;">Haz clic para quitar publicación. Usa × para quitar.</small>
+        </div>
+        <!-- Hidden inputs (outside form) must target kit-form -->
+        <div id="manuales-hidden">
+          <?php foreach ($kit_manuals as $m): if (($m['status'] ?? '') === 'published'): ?>
+            <input type="hidden" name="manuals_published[]" value="<?= (int)$m['id'] ?>" form="kit-form">
+          <?php endif; endforeach; ?>
+        </div>
+      </div>
+      <script>
+        function updateManualCounts() {
+          const a = document.querySelectorAll('#available-manuales .competencia-item:not(.hidden)').length;
+          const s = document.querySelectorAll('#selected-manuales .competencia-item').length;
+          document.getElementById('man-available-count').textContent = `(${a})`;
+          document.getElementById('man-selected-count').textContent = `(${s})`;
+          console.log('🔍 [Manuales] Disponibles:', a, 'Publicados:', s);
+        }
+        function addManualHidden(id) {
+          const wrap = document.getElementById('manuales-hidden');
+          if (!wrap.querySelector(`input[name="manuals_published[]"][value="${id}"]`)) {
+            const i = document.createElement('input');
+            i.type = 'hidden'; i.name = 'manuals_published[]'; i.value = id; i.setAttribute('form','kit-form');
+            wrap.appendChild(i);
+          }
+        }
+        function removeManualHidden(id) {
+          const wrap = document.getElementById('manuales-hidden');
+          wrap.querySelectorAll(`input[name="manuals_published[]"][value="${id}"]`).forEach(n => n.remove());
+        }
+        function selectManualItem(el) {
+          const id = el.getAttribute('data-id');
+          const target = document.getElementById('selected-manuales');
+          el.classList.add('selected');
+          el.onclick = function(){ deselectManualItem(el); };
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button'; removeBtn.className = 'remove-btn'; removeBtn.textContent = '×';
+          removeBtn.onclick = function(ev){ ev.stopPropagation(); deselectManualItem(el); };
+          el.appendChild(removeBtn);
+          target.appendChild(el);
+          addManualHidden(id);
+          updateManualCounts();
+        }
+        function deselectManualItem(el) {
+          const id = el.getAttribute('data-id');
+          const target = document.getElementById('available-manuales');
+          el.classList.remove('selected');
+          el.querySelectorAll('.remove-btn').forEach(b => b.remove());
+          el.onclick = function(){ selectManualItem(el); };
+          target.appendChild(el);
+          removeManualHidden(id);
+          updateManualCounts();
+        }
+        function moveAllManuales(add) {
+          const from = add ? document.querySelectorAll('#available-manuales .competencia-item:not(.hidden)') : document.querySelectorAll('#selected-manuales .competencia-item');
+          const arr = Array.from(from);
+          arr.forEach(el => add ? selectManualItem(el) : deselectManualItem(el));
+          console.log(add ? '✅ [Manuales] Publicados todos' : '⚠️ [Manuales] Despublicados todos');
+        }
+        document.addEventListener('DOMContentLoaded', function(){
+          const search = document.getElementById('search-manuales');
+          if (search) {
+            search.addEventListener('input', function(){
+              const q = this.value.toLowerCase();
+              document.querySelectorAll('#available-manuales .competencia-item').forEach(el => {
+                const text = (el.dataset.slug + ' ' + (el.dataset.idioma||'')).toLowerCase();
+                el.classList.toggle('hidden', q && !text.includes(q));
+              });
+              updateManualCounts();
+            });
+          }
+          updateManualCounts();
+        });
+      </script>
     <?php else: ?>
       <p class="muted">Guarda el kit para crear manuales.</p>
     <?php endif; ?>
