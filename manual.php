@@ -7,6 +7,26 @@ require_once 'includes/db-functions.php';
 $kit_slug = isset($_GET['kit']) ? trim($_GET['kit']) : '';
 $manual_slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 
+// Friendly URL support: /{manual-slug}-{kit-slug} or /{manual-slug}-{comp-slug}
+if (($kit_slug === '' || $manual_slug === '') && isset($_SERVER['REQUEST_URI'])) {
+  $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+  $path = trim($path ?? '', '/');
+  if ($path !== '' && strpos($path, '.php') === false) {
+    // Use last segment
+    $segments = explode('/', $path);
+    $last = end($segments);
+    if (strpos($last, '-kit-') !== false) {
+      $pos = strpos($last, '-kit-');
+      $manual_slug = substr($last, 0, $pos) ?: '';
+      $kit_slug = substr($last, $pos + 1) ?: '';
+    } else if (strpos($last, '-comp-') !== false) {
+      $pos = strpos($last, '-comp-');
+      $manual_slug = substr($last, 0, $pos) ?: '';
+      $kit_slug = substr($last, $pos + 1) ?: '';
+    }
+  }
+}
+
 if ($kit_slug === '' || $manual_slug === '') {
     header('HTTP/1.1 302 Found');
     header('Location: /');
@@ -14,6 +34,18 @@ if ($kit_slug === '' || $manual_slug === '') {
 }
 
 $kit = cdc_get_kit_by_slug($pdo, $kit_slug);
+// If kit not found and suffix may be a component slug, resolve kit via component
+if (!$kit && !empty($kit_slug)) {
+  try {
+    $stmtK = $pdo->prepare('SELECT k.id, k.nombre, k.slug 
+                 FROM kit_items i 
+                 JOIN kit_componentes kc ON kc.item_id = i.id 
+                 JOIN kits k ON k.id = kc.kit_id 
+                 WHERE i.slug = ? LIMIT 1');
+    $stmtK->execute([$kit_slug]);
+    $kit = $stmtK->fetch(PDO::FETCH_ASSOC) ?: null;
+  } catch (Exception $e) { /* no-op */ }
+}
 if (!$kit) {
     header('HTTP/1.0 404 Not Found');
     $page_title = 'Kit no encontrado';
@@ -37,7 +69,7 @@ if (!$manual) {
 
 $page_title = 'Manual: ' . h($manual['slug']) . ' - ' . h($kit['nombre']);
 $page_description = 'Guía/Manual del kit ' . h($kit['nombre']) . ' (' . h($manual['slug']) . ')';
-$canonical_url = SITE_URL . '/manual.php?kit=' . urlencode($kit['slug']) . '&slug=' . urlencode($manual['slug']);
+$canonical_url = SITE_URL . '/' . urlencode($manual['slug']) . '-' . urlencode($kit['slug']);
 
 // Tipo/Ambito/Icono y componente vinculado si aplica
 $tipo_map = [

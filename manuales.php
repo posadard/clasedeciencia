@@ -20,11 +20,13 @@ try {
     if ($tipo !== '') { $where[] = 'm.tipo_manual = ?'; $params[] = $tipo; }
     if ($ambito !== '' && in_array($ambito, ['kit','componente'])) { $where[] = 'm.ambito = ?'; $params[] = $ambito; }
     if ($idioma !== '') { $where[] = 'm.idioma = ?'; $params[] = $idioma; }
-    $sql = "SELECT m.id, m.slug, m.version, m.idioma, m.time_minutes, m.dificultad_ensamble, m.updated_at, m.published_at,
-                   m.tipo_manual, m.ambito, m.item_id,
-                   k.id AS kit_id, k.nombre AS kit_nombre, k.slug AS kit_slug
-            FROM kit_manuals m
-            JOIN kits k ON k.id = m.kit_id
+        $sql = "SELECT m.id, m.slug, m.version, m.idioma, m.time_minutes, m.dificultad_ensamble, m.updated_at, m.published_at,
+             m.tipo_manual, m.ambito, m.item_id,
+             k.id AS kit_id, k.nombre AS kit_nombre, k.slug AS kit_slug,
+             i.slug AS item_slug
+           FROM kit_manuals m
+           JOIN kits k ON k.id = m.kit_id
+           LEFT JOIN kit_items i ON i.id = m.item_id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY k.nombre ASC, m.slug ASC, m.version DESC";
     $stmt = $pdo->prepare($sql);
@@ -100,7 +102,8 @@ include 'includes/header.php';
             $emoji = '📘'; $label = 'Manual';
             if ($tk && isset($tipo_map[$tk])) { $emoji = $tipo_map[$tk]['emoji']; $label = $tipo_map[$tk]['label']; }
             elseif (strpos(strtolower($m['slug']), 'arm') !== false) { $emoji = '🛠️'; $label = 'Armado'; }
-            $href = '/manual.php?kit=' . urlencode($m['kit_slug']) . '&slug=' . urlencode($m['slug']);
+            $suffixSlug = ($m['ambito'] === 'componente' && !empty($m['item_slug'])) ? $m['item_slug'] : $m['kit_slug'];
+            $href = '/' . urlencode($m['slug']) . '-' . urlencode($suffixSlug);
           ?>
           <a class="manual-card" href="<?= h($href) ?>" style="display:block; border:1px solid #e3e8f3; border-radius:8px; padding:10px; background:#fff; text-decoration:none;">
             <div style="display:flex; gap:10px; align-items:center;">
