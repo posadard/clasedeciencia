@@ -78,9 +78,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
     $render_mode_post = ($_POST['render_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
 
-    // Basic validations
-    if ($kit_id <= 0) {
-      $error_msg = 'Kit requerido.';
+    // Derivar kit_id si ámbito = componente y no se seleccionó kit
+    if ($ambito === 'componente' && ($kit_id <= 0) && $item_id) {
+      try {
+        $qk = $pdo->prepare('SELECT kit_id FROM kit_componentes WHERE item_id = ? ORDER BY kit_id ASC LIMIT 1');
+        $qk->execute([$item_id]);
+        $foundKid = (int)($qk->fetchColumn() ?: 0);
+        if ($foundKid > 0) {
+          $kit_id = $foundKid;
+          echo '<script>console.log("ℹ️ [ManualsEdit] Derivado kit_id desde componente:", ' . json_encode($kit_id) . ');</script>';
+        } else {
+          echo '<script>console.log("⚠️ [ManualsEdit] Componente sin kit asociado");</script>';
+        }
+      } catch (PDOException $e) {
+        echo '<script>console.log("⚠️ [ManualsEdit] Error derivando kit desde componente:", ' . json_encode($e->getMessage()) . ');</script>';
+      }
+    }
+
+    // Validaciones básicas
+    if ($ambito === 'kit' && $kit_id <= 0) {
+      $error_msg = 'Kit requerido para ámbito Kit.';
+    } elseif ($ambito === 'componente' && (!$item_id)) {
+      $error_msg = 'Componente requerido para ámbito Componente.';
+    } elseif ($ambito === 'componente' && $kit_id <= 0) {
+      $error_msg = 'Este componente no está vinculado a ningún kit. Asocia el componente a un kit o selecciona un kit.';
     } elseif ($slug === '') {
       $error_msg = 'Slug requerido.';
     } elseif (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
@@ -183,12 +204,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($manual_id > 0) {
           $was_published = ($manual && ($manual['status'] ?? '') === 'published');
           $becomes_published = ($status === 'published');
-          // Build dynamic UPDATE with available columns
+          // Build dynamic UPDATE with available columns (incluir kit_id si cambió)
           $setParts = [
-            'slug = ?', 'version = ?', 'status = ?', 'idioma = ?', 'time_minutes = ?', 'dificultad_ensamble = ?',
+            'kit_id = ?', 'slug = ?', 'version = ?', 'status = ?', 'idioma = ?', 'time_minutes = ?', 'dificultad_ensamble = ?',
             'pasos_json = ?', 'herramientas_json = ?', 'seguridad_json = ?', 'html = ?'
           ];
-          $params = [$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          $params = [$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
           if ($has_render_mode_column) { $setParts[] = 'render_mode = ?'; $params[] = $render_mode_post; }
           if ($has_tipo_manual_column) { $setParts[] = 'tipo_manual = ?'; $params[] = $tipo_manual; }
           if ($has_ambito_column) { $setParts[] = 'ambito = ?'; $params[] = $ambito; }
