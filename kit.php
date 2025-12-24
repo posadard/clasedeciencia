@@ -476,7 +476,7 @@ include 'includes/header.php';
                    onkeypress="if(event.key==='Enter' || event.key===' '){ if(!event.target.closest('a')){ window.location.href='<?= h($href) ?>'; event.preventDefault(); } }">
             <div class="kit-inline-wrap">
               <div class="kit-inline-left">
-                <div class="summary-placeholder"><span class="placeholder-icon"><?= $icon ?></span></div>
+                <div class="manual-type-emoji" aria-hidden="true"><?= $icon ?></div>
               </div>
               <div class="kit-inline-right">
                 <h3 class="kit-inline-title">
@@ -571,4 +571,14 @@ console.log('🛡️ [Kit] Nota de seguridad aplicada por defecto');
 console.log('📚 [Kit] Clases vinculadas:', <?= count($clases) ?>);
 console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 </script>
+<style>
+/* Bigger emoji instead of blue placeholder box for manual type */
+.kit-inline-card .kit-inline-wrap { display:flex; gap:12px; align-items:center; }
+.kit-inline-card .kit-inline-left { flex: 0 0 72px; width:72px; display:flex; align-items:center; justify-content:center; }
+.kit-inline-card .manual-type-emoji { font-size:56px; line-height:1; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
+@media (max-width: 600px) {
+  .kit-inline-card .kit-inline-left { flex-basis:56px; width:56px; }
+  .kit-inline-card .manual-type-emoji { font-size:44px; }
+}
+</style>
 <?php include 'includes/footer.php'; ?>
