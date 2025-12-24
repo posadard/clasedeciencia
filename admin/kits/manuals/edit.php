@@ -240,12 +240,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// Load kits for selector if needed
+// Load kits for selector
 $kits = [];
-if (!$kit) {
-  $stmtKs = $pdo->query('SELECT id, nombre FROM kits ORDER BY nombre ASC');
+try {
+  $stmtKs = $pdo->query('SELECT id, nombre, slug FROM kits ORDER BY nombre ASC');
   $kits = $stmtKs->fetchAll(PDO::FETCH_ASSOC);
-}
+} catch (PDOException $e) { $kits = []; }
 ?>
 <div class="container">
   <h1><?= $manual ? 'Editar Manual' : 'Nuevo Manual' ?></h1>
@@ -260,20 +260,7 @@ if (!$kit) {
   <form method="post">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
 
-    <div class="form-group">
-      <label>Kit</label>
-      <?php if ($kit): ?>
-        <input type="hidden" name="kit_id" value="<?= (int)$kit['id'] ?>" />
-        <input type="text" value="<?= htmlspecialchars($kit['nombre']) ?>" disabled />
-      <?php else: ?>
-        <select name="kit_id" required>
-          <option value="">-- Selecciona --</option>
-          <?php foreach ($kits as $k): ?>
-            <option value="<?= (int)$k['id'] ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      <?php endif; ?>
-    </div>
+    <!-- Kit selector will appear after Ámbito to follow the desired flow -->
 
     <div class="form-group">
       <label>Slug</label>
@@ -359,6 +346,18 @@ if (!$kit) {
           <small class="help-note">Ejecuta la migración para habilitar el vínculo con componentes.</small>
         <?php endif; ?>
       </div>
+    </div>
+
+    <!-- Kit selector placed after Ámbito for logical flow -->
+    <div class="form-group">
+      <label>Kit</label>
+      <select name="kit_id" required>
+        <option value="">-- Selecciona kit --</option>
+        <?php foreach ($kits as $k): ?>
+          <option value="<?= (int)$k['id'] ?>" data-slug="<?= htmlspecialchars($k['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <small class="help-note">Selecciona el kit. Si el ámbito es Componente, podrás elegir el componente de este u otro kit.</small>
     </div>
 
     <div class="form-group">
