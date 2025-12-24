@@ -85,6 +85,12 @@ RewriteRule ^(kit-[a-z0-9-]+)/?$ /kit.php?slug=$1 [L,QSA]
 RewriteRule ^(componente-[a-z0-9-]+)/?$ /componente.php?slug=$1 [L,QSA]
 RewriteRule ^(clase-[a-z0-9-]+)/?$ /clase.php?slug=$1 [L,QSA]
 
+# URL amigable para manuales combinando manual y entidad (kit/componente)
+# /{manual}-{kit-slug} -> manual.php?slug={manual}&kit={kit-slug}
+RewriteRule ^([a-z0-9-]+)-(kit-[a-z0-9-]+)$ /manual.php?slug=$1&kit=$2 [L,QSA]
+# /{manual}-{componente-slug} -> manual.php?slug={manual}&comp={componente-slug}
+RewriteRule ^([a-z0-9-]+)-(componente-[a-z0-9-]+)$ /manual.php?slug=$1&comp=$2 [L,QSA]
+
 # Redirecciones 301 desde URLs con query a las rutas bonitas
 RewriteCond %{THE_REQUEST} \s/kit\.php\?slug=([^\s&]+) [NC]
 RewriteRule ^kit\.php$ /%1? [R=301,L]
