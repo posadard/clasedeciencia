@@ -392,39 +392,52 @@ include 'includes/header.php';
     <section class="kit-manuals">
       <h2>🛠️ Manuales Disponibles</h2>
       <?php if (!empty($manuales)): ?>
-        <section class="kit-inline-card" role="region" aria-label="Manuales del kit">
-          <div class="kit-inline-wrap">
-            <div class="kit-inline-left">
-              <div class="kit-inline-thumb" style="display:block;width:100%;height:100%;">
-                <?php if (!empty($kit['imagen_portada'])): ?>
-                  <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null; console.log('❌ [Kit] Thumb manuales falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📘'; p.appendChild(s); this.replaceWith(p);" />
-                <?php else: ?>
-                  <div class="summary-placeholder"><span class="placeholder-icon">📘</span></div>
-                <?php endif; ?>
+        <?php foreach ($manuales as $man):
+          $href = '/kit-manual.php?kit=' . urlencode($kit['slug']) . '&slug=' . urlencode($man['slug']);
+          $man_title = str_replace('-', ' ', (string)$man['slug']);
+          $man_title = mb_convert_case($man_title, MB_CASE_TITLE, 'UTF-8');
+          $idioma = !empty($man['idioma']) ? $man['idioma'] : 'es';
+          $tiempo = isset($man['time_minutes']) && $man['time_minutes'] ? ((int)$man['time_minutes']) . 'm' : null;
+          $version = !empty($man['version']) ? (string)$man['version'] : null;
+          $dif = !empty($man['dificultad_ensamble']) ? (string)$man['dificultad_ensamble'] : null;
+        ?>
+          <section class="kit-inline-card" role="link" tabindex="0" aria-label="Manual <?= h($man['slug']) ?>"
+                   onclick="if(!event.target.closest('a')){ console.log('📘 [Kit] Click manual →','<?= h($man['slug']) ?>'); window.location.href='<?= h($href) ?>'; }"
+                   onkeypress="if(event.key==='Enter' || event.key===' '){ if(!event.target.closest('a')){ window.location.href='<?= h($href) ?>'; event.preventDefault(); } }">
+            <div class="kit-inline-wrap">
+              <div class="kit-inline-left">
+                <div class="kit-inline-thumb" style="display:block;width:100%;height:100%;">
+                  <?php if (!empty($kit['imagen_portada'])): ?>
+                    <img src="<?= h($kit['imagen_portada']) ?>" alt="Thumb manual <?= h($man['slug']) ?>" style="width:100%;height:100%;object-fit:cover;"
+                         onerror="this.onerror=null; console.log('❌ [Kit] Thumb manual falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📘'; p.appendChild(s); this.replaceWith(p);" />
+                  <?php else: ?>
+                    <div class="summary-placeholder"><span class="placeholder-icon">📘</span></div>
+                  <?php endif; ?>
+                </div>
               </div>
-            </div>
-            <div class="kit-inline-right">
-              <h3 class="kit-inline-title">
-                <span><?= h($kit['nombre']) ?></span>
-                <span class="kit-inline-byline">🧩 <?= (int)count($componentes) ?> componentes 📘 <?= (int)count($manuales) ?> manuales<?= !empty($kit['version']) ? ' 🔢 v' . h($kit['version']) : '' ?></span>
-              </h3>
-              <?php if (!empty($kit['resumen'])): ?>
-                <p class="kit-inline-excerpt"><?= h($kit['resumen']) ?></p>
-              <?php endif; ?>
-              <div class="kit-inline-manuales">
-                <span class="man-label">Manuales:</span>
-                <div class="man-pills">
-                  <?php foreach ($manuales as $man): ?>
-                    <a class="tag-pill" href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($man['slug']) ?>" title="Manual <?= h($man['slug']) ?>">
-                      <?= h($man['slug']) ?> · <?= h($man['idioma'] ?: 'es') ?><?= !empty($man['time_minutes']) ? ' · ⏱️ ' . (int)$man['time_minutes'] . 'm' : '' ?>
+              <div class="kit-inline-right">
+                <h3 class="kit-inline-title">
+                  <span><?= h($man_title) ?></span>
+                  <span class="kit-inline-byline">
+                    🌐 <?= h($idioma) ?>
+                    <?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
+                    <?= $dif ? ' · 🛠️ ' . h(ucfirst($dif)) : '' ?>
+                    <?= $version ? ' · 🔢 v' . h($version) : '' ?>
+                  </span>
+                </h3>
+                <div class="kit-inline-manuales">
+                  <span class="man-label">Abrir:</span>
+                  <div class="man-pills">
+                    <a class="tag-pill" href="<?= h($href) ?>" title="Ver manual <?= h($man['slug']) ?>">
+                      <?= h($man['slug']) ?> · <?= h($idioma) ?><?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
                     </a>
-                  <?php endforeach; ?>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
-        <script>console.log('✅ [Kit] Manuales: render pills estilo inline-card');</script>
+          </section>
+        <?php endforeach; ?>
+        <script>console.log('✅ [Kit] Manuales: <?= count($manuales) ?> cards renderizadas');</script>
       <?php else: ?>
         <p class="muted">Aún no hay manuales publicados para este kit.</p>
       <?php endif; ?>
