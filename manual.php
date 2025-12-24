@@ -104,6 +104,8 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
     $comp = $stmtC->fetch(PDO::FETCH_ASSOC) ?: null;
   } catch (Exception $e) { $comp = null; }
 }
+// Componentes del kit (para replicar bloque como en kit.php)
+$componentes = cdc_get_kit_componentes($pdo, (int)$kit['id']);
 
 // Build friendly display title now that tipo, ambito and entity are known
 $entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
@@ -179,6 +181,85 @@ include 'includes/header.php';
           <h2>⚠️ Seguridad</h2>
           <div class="badge badge-danger">⚠️ Este manual ha sido descontinuado</div>
         </section>
+      <?php endif; ?>
+      <?php if (!empty($toc_items)): ?>
+        <nav class="manual-toc" aria-label="Índice de pasos" style="margin-top:10px;">
+          <h2>🧭 Índice</h2>
+          <ol>
+            <?php foreach ($toc_items as $ti): ?>
+              <li><a href="#<?= h($ti['id']) ?>"><strong><?= h($ti['title']) ?></strong>: <?= h($ti['preview']) ?></a></li>
+            <?php endforeach; ?>
+          </ol>
+        </nav>
+        <script>console.log('🔁 [Manual] Índice fuera del bloque de imagen/seguridad, títulos en negrilla');</script>
+      <?php endif; ?>
+
+      <?php if (!empty($componentes)): ?>
+      <section class="kits-section">
+        <div class="kit-card">
+          <h4>Componentes necesarios</h4>
+          <ul class="materials-list">
+            <?php foreach ($componentes as $m): ?>
+              <?php
+                $item_slug = !empty($m['slug']) ? '/' . $m['slug'] : '';
+                $li_attrs = !empty($item_slug) ? ' data-href="' . h($item_slug) . '" tabindex="0"' : '';
+              ?>
+              <li<?= $li_attrs ?> class="material-item">
+                <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+                <?php if (!empty($m['advertencias_seguridad'])): ?>
+                  <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
+                <?php endif; ?>
+                <?php if (!empty($m['cantidad'])): ?>
+                  <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+                <?php endif; ?>
+                <?php if (isset($m['es_incluido_kit'])): ?>
+                  <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+                    <span class="badge badge-success">✓ Incluido</span>
+                  <?php else: ?>
+                    <span class="badge badge-danger">No incluido</span>
+                  <?php endif; ?>
+                <?php endif; ?>
+                <?php if (!empty($m['notas'])): ?>
+                  <small class="material-notes"><?= h($m['notas']) ?></small>
+                <?php endif; ?>
+                <?php if (!empty($m['slug'])): ?>
+                  <span class="icon-decor" aria-hidden="true" style="margin-left:6px">🔎</span>
+                <?php endif; ?>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <script>
+            // 🔍 [Manual] Activar click en toda la tarjeta del material (replicado de kit.php)
+            (function() {
+              try {
+                var items = document.querySelectorAll('.materials-list li[data-href]');
+                console.log('🔍 [Manual] Materiales clicables:', items.length);
+                items.forEach(function(li) {
+                  var href = li.getAttribute('data-href');
+                  if (!href) return;
+                  // Evitar doble navegación si se hace click en enlaces internos
+                  li.addEventListener('click', function(ev) {
+                    var target = ev.target;
+                    if (target && target.closest('a')) { return; }
+                    console.log('✅ [Manual] Click en material →', href);
+                    window.location.href = href;
+                  });
+                  li.addEventListener('keypress', function(ev) {
+                    if (ev.key === 'Enter' || ev.key === ' ') {
+                      console.log('✅ [Manual] Keypress en material →', href);
+                      window.location.href = href;
+                      ev.preventDefault();
+                    }
+                  });
+                });
+              } catch (e) {
+                console.log('❌ [Manual] Error activando materiales clicables:', e && e.message ? e.message : e);
+              }
+            })();
+          </script>
+        </div>
+      </section>
+      <script>console.log('📦 [Manual] Componentes renderizados:', <?= !empty($componentes) ? count($componentes) : 0 ?>);</script>
       <?php endif; ?>
       <?= $manual['html'] ?>
     <?php else: ?>
