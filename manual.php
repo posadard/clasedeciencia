@@ -261,38 +261,27 @@ include 'includes/header.php';
             } else {
               $titulo = 'Paso ' . ($idx + 1);
             }
-            $toc_items[] = [ 'id' => 'paso-' . ($idx + 1), 'titulo' => $titulo ];
+            // Derivar texto del paso (priorizar contenido) y truncar a 10 palabras
+            $raw = '';
+            if (is_array($p)) {
+              if (!empty($p['html'])) { $raw = strip_tags((string)$p['html']); }
+              elseif (!empty($p['descripcion'])) { $raw = (string)$p['descripcion']; }
+              elseif (!empty($p['texto'])) { $raw = (string)$p['texto']; }
+            }
+            if ($raw === '') { $raw = $titulo; }
+            $words = preg_split('/\s+/u', trim($raw), -1, PREG_SPLIT_NO_EMPTY);
+            $preview = '';
+            if ($words && count($words) > 0) {
+              $slice = array_slice($words, 0, 10);
+              $preview = implode(' ', $slice);
+              if (count($words) > 10) { $preview .= '…'; }
+            } else {
+              $preview = $titulo;
+            }
+            $toc_items[] = [ 'id' => 'paso-' . ($idx + 1), 'text' => $preview ];
           }
         }
       ?>
-      <?php if (!empty($toc_items)): ?>
-        <div class="manual-toc-row">
-          <aside class="manual-toc-aside">
-            <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
-            <?php if (!empty($kit['imagen_portada'])): ?>
-              <img id="<?= h($img_id) ?>"
-                   src="<?= h($kit['imagen_portada']) ?>"
-                   alt="Imagen del kit <?= h($kit['nombre']) ?>"
-                   class="manual-toc-image"
-                   onerror="this.onerror=null; console.log('❌ [Manual] Imagen portada kit falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
-              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
-              <script>console.log('✅ [Manual] Imagen portada mostrada junto al índice');</script>
-            <?php else: ?>
-              <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit"><span class="placeholder-icon">📦</span></div>
-              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
-              <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder en índice');</script>
-            <?php endif; ?>
-          </aside>
-          <nav class="manual-toc" aria-label="Índice de pasos">
-            <h2>🧭 Índice</h2>
-            <ol>
-              <?php foreach ($toc_items as $ti): ?>
-                <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['titulo']) ?></a></li>
-              <?php endforeach; ?>
-            </ol>
-          </nav>
-        </div>
-      <?php endif; ?>
       <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
@@ -335,6 +324,35 @@ include 'includes/header.php';
             </ul>
           <?php endif; ?>
         </section>
+      <?php endif; ?>
+      <?php if (!empty($toc_items)): ?>
+        <div class="manual-toc-row">
+          <aside class="manual-toc-aside">
+            <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
+            <?php if (!empty($kit['imagen_portada'])): ?>
+              <img id="<?= h($img_id) ?>"
+                   src="<?= h($kit['imagen_portada']) ?>"
+                   alt="Imagen del kit <?= h($kit['nombre']) ?>"
+                   class="manual-toc-image"
+                   onerror="this.onerror=null; console.log('❌ [Manual] Imagen portada kit falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
+              <script>console.log('✅ [Manual] Imagen portada mostrada junto al índice');</script>
+            <?php else: ?>
+              <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit"><span class="placeholder-icon">📦</span></div>
+              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
+              <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder en índice');</script>
+            <?php endif; ?>
+          </aside>
+          <nav class="manual-toc" aria-label="Índice de pasos">
+            <h2>🧭 Índice</h2>
+            <ol>
+              <?php foreach ($toc_items as $ti): ?>
+                <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['text']) ?></a></li>
+              <?php endforeach; ?>
+            </ol>
+          </nav>
+        </div>
+        <script>console.log('🔁 [Manual] Intercambio: seguridad e índice reordenados');</script>
       <?php endif; ?>
 
       <?php if (!empty($herr)): ?>
