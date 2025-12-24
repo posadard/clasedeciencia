@@ -281,10 +281,9 @@ try {
     <div class="form-group">
       <label>Slug</label>
       <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="ej. armado-basico" style="flex:1;" />
-        <button type="button" class="btn" id="btn-generar-slug">⚡ Generar</button>
+        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="se genera automáticamente" style="flex:1;" readonly />
       </div>
-      <small>El formato sugerido es <strong>manual-{tipo}-{version}-{dd-mm-yy}</strong>. Los puntos de versión se convierten a guiones.</small>
+      <small>Se actualiza automáticamente: <strong>manual-{tipo}-{version}-{dd-mm-yy}-{entidad}</strong>. No editable.</small>
     </div>
 
     <div class="form-group">
