@@ -117,44 +117,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $raw = preg_replace('/^(?:manual-)+/', '', $raw);
       $body = trim($raw, '-');
       $slug = ($body !== '') ? ('manual-' . $body) : 'manual-';
-      // Asegurar sufijo de fecha dd-mm-yy para unicidad
-      // Tomar fecha publicada si disponible; si no, ahora
-      $dateSource = null;
-      if ($manual_id > 0 && $manual) { $dateSource = $manual['published_at'] ?? null; }
-      if (!$dateSource && $status === 'published') { $dateSource = date('Y-m-d H:i:s'); }
-      if (!$dateSource) { $dateSource = date('Y-m-d H:i:s'); }
-      $dateSuffix = date('d-m-y', strtotime($dateSource));
-      // Si no termina con -dd-mm-yy, añadir
-      if (!preg_match('/\d{2}-\d{2}-\d{2}$/', $slug)) {
-        $slug .= '-' . $dateSuffix;
-      }
-      // Asegurar concatenación del slug del kit o componente al final
-      $entitySuffix = '';
-      if ($has_ambito_column && $ambito === 'componente' && $has_item_id_column && $item_id) {
-        try {
-          $qs = $pdo->prepare('SELECT slug FROM kit_items WHERE id = ? LIMIT 1');
-          $qs->execute([$item_id]);
-          $entitySuffix = (string)($qs->fetchColumn() ?: '');
-        } catch (PDOException $e) { $entitySuffix = ''; }
-        if ($entitySuffix === '') {
-          // Fallback: derive from component name if available
-          try {
-            $qs2 = $pdo->prepare('SELECT nombre_comun FROM kit_items WHERE id = ? LIMIT 1');
-            $qs2->execute([$item_id]);
-            $name = (string)($qs2->fetchColumn() ?: '');
-            if ($name !== '') { $tmp = strtolower(preg_replace('/[^a-z0-9\-]+/','-', $name)); $tmp = preg_replace('/-+/', '-', trim($tmp, '-')); $entitySuffix = $tmp; }
-          } catch (PDOException $e) {}
-        }
-      } else if ($kit && !empty($kit['slug'])) {
-        $entitySuffix = (string)$kit['slug'];
-      }
-      if ($entitySuffix !== '') {
-        // Append if not already present at end
-        if (!preg_match('/-' . preg_quote($entitySuffix, '/') . '$/', $slug)) {
-          $slug .= '-' . $entitySuffix;
-        }
-      }
-      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix + fecha):", ' . json_encode($slug) . ');</script>';
+      // Confiar en el slug generado por el cliente: no re-apendemos fecha ni entidad aquí
+      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix, sin re-apéndices):", ' . json_encode($slug) . ');</script>';
       // Para el caso extremo de que todo quede vacío, aseguramos 'manual-'
       if ($slug === '') { $slug = 'manual-'; }
     }
