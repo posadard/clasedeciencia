@@ -87,14 +87,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Slug inválido: usa a-z, 0-9 y guiones.';
     }
 
-    // Normalizar slug (minúsculas, guiones únicos, sin bordes)
+    // Normalizar slug con prefijo obligatorio 'manual-'
     if (!$error_msg && $slug !== '') {
-      $slug = strtolower($slug);
-      $slug = preg_replace('/[^a-z0-9\-]+/', '-', $slug);
-      $slug = preg_replace('/-+/', '-', $slug);
-      $slug = trim($slug, '-');
-      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado:", ' . json_encode($slug) . ');</script>';
-      if ($slug === '') { $error_msg = 'Slug requerido.'; }
+      $raw = strtolower($slug);
+      $raw = preg_replace('/[^a-z0-9\-]+/', '-', $raw);
+      $raw = preg_replace('/-+/', '-', $raw);
+      // Quitar repeticiones de 'manual-' al inicio y preparar cuerpo
+      $raw = preg_replace('/^(?:manual-)+/', '', $raw);
+      $body = trim($raw, '-');
+      $slug = ($body !== '') ? ('manual-' . $body) : 'manual-';
+      // Asegurar sufijo de fecha dd-mm-yy para unicidad
+      // Tomar fecha publicada si disponible; si no, ahora
+      $dateSource = null;
+      if ($manual_id > 0 && $manual) { $dateSource = $manual['published_at'] ?? null; }
+      if (!$dateSource && $status === 'published') { $dateSource = date('Y-m-d H:i:s'); }
+      if (!$dateSource) { $dateSource = date('Y-m-d H:i:s'); }
+      $dateSuffix = date('d-m-y', strtotime($dateSource));
+      // Si no termina con -dd-mm-yy, añadir
+      if (!preg_match('/\d{2}-\d{2}-\d{2}$/', $slug)) {
+        $slug .= '-' . $dateSuffix;
+      }
+      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix + fecha):", ' . json_encode($slug) . ');</script>';
+      // Para el caso extremo de que todo quede vacío, aseguramos 'manual-'
+      if ($slug === '') { $slug = 'manual-'; }
     }
 
     // Verificar unicidad por (kit_id, idioma, slug)
@@ -240,7 +255,7 @@ if (!$kit) {
         <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="ej. armado-basico" style="flex:1;" />
         <button type="button" class="btn" id="btn-generar-slug">⚡ Generar</button>
       </div>
-      <small>Usa a-z, 0-9 y guiones. Se sugiere según tipo/ámbito.</small>
+      <small>El formato sugerido es <strong>manual-{tipo}-{version}-{dd-mm-yy}</strong>. Los puntos de versión se convierten a guiones.</small>
     </div>
 
     <div class="form-group">
@@ -464,6 +479,8 @@ if (!$kit) {
 <?php require_once __DIR__ . '/../../footer.php'; ?>
 <script>
 console.log('🔍 [ManualsEdit] Manual ID:', <?= (int)$manual_id ?>, 'Kit ID:', <?= (int)$kit_id ?>);
+// Publicado en (si existe) para generar fecha dd-mm-yy
+var MANUAL_PUBLISHED_AT = <?= json_encode(isset($manual['published_at']) ? $manual['published_at'] : null) ?>;
 // Kit safety data for merge
 var KIT_SAFETY = <?= json_encode(isset($kit_seg_obj) ? $kit_seg_obj : null, JSON_UNESCAPED_UNICODE) ?>;
 console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
@@ -490,7 +507,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemSel = document.querySelector('select[name="item_id"]');
 
-  function slugify(str){
+  function baseSlugify(str){
     if (!str) return '';
     try { str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch(e) {}
     return String(str)
@@ -498,6 +515,19 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/-+/g, '-')
       .replace(/^-+|-+$/g, '');
+  }
+
+  function normalizeManualSlug(raw){
+    // Siempre devolver con prefijo único 'manual-'. Si el cuerpo queda vacío → 'manual-'
+    let s = String(raw || '');
+    // Pre-slugify to clean characters
+    s = s.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-+/g, '-');
+    // Remove any leading repetitions of manual-
+    s = s.replace(/^(?:manual-)+/, '');
+    // Body slug
+    const body = s.replace(/^-+|-+$/g, '');
+    const finalSlug = body ? ('manual-' + body) : 'manual-';
+    return finalSlug;
   }
 
   function getItemNombre(){
@@ -510,33 +540,33 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
   function buildSuggestion(){
     const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
-    const amb = (ambSel ? ambSel.value : 'kit') || 'kit';
-    let base = '';
-    if (amb === 'componente') {
-      const nombreItem = getItemNombre();
-      if (nombreItem) {
-        base = tipo + '-' + nombreItem;
+    const verInput = document.querySelector('input[name="version"]');
+    const rawVer = (verInput ? verInput.value : '') || '';
+    // Mantener solo números y puntos, luego reemplazar '.' por '-'
+    const verClean = rawVer.toLowerCase().replace(/[^0-9.]+/g, '');
+    const verNorm = verClean ? verClean.replace(/\./g, '-') : '';
+    // Fecha dd-mm-yy: usar MANUAL_PUBLISHED_AT si existe; si no, hoy
+    let dateStr = '';
+    (function(){
+      let d;
+      if (typeof MANUAL_PUBLISHED_AT === 'string' && MANUAL_PUBLISHED_AT) {
+        const t = Date.parse(MANUAL_PUBLISHED_AT);
+        d = isNaN(t) ? new Date() : new Date(t);
       } else {
-        base = tipo + '-componente';
+        d = new Date();
       }
-    } else {
-      // Mapear sugerencias por tipo para ámbito kit
-      const map = {
-        'armado': 'armado-basico',
-        'uso': 'uso-general',
-        'calibracion': 'calibracion',
-        'mantenimiento': 'mantenimiento',
-        'seguridad': 'seguridad',
-        'teoria': 'teoria',
-        'experimento': 'experimento',
-        'solucion': 'solucion',
-        'evaluacion': 'evaluacion',
-        'docente': 'docente',
-        'referencia': 'referencia'
-      };
-      base = map[tipo] || tipo;
-    }
-    const s = slugify(base);
+      const dd = String(d.getDate()).padStart(2,'0');
+      const mm = String(d.getMonth()+1).padStart(2,'0');
+      const yy = String(d.getFullYear()).slice(-2);
+      dateStr = dd + '-' + mm + '-' + yy;
+    })();
+
+    // manual-{tipo}-{version}-{dd-mm-yy}
+    const parts = ['manual', tipo];
+    if (verNorm) parts.push(verNorm);
+    parts.push(dateStr);
+    const base = parts.join('-');
+    const s = normalizeManualSlug(base);
     console.log('🔍 [ManualsEdit] Sugerencia de slug:', base, '→', s);
     return s;
   }
@@ -564,8 +594,27 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
   // Normalizar mientras escribe (suave): al perder foco
   if (slugInput) {
+    // Prefill on focus if empty
+    slugInput.addEventListener('focus', function(){
+      if ((slugInput.value || '').trim() === '') {
+        slugInput.value = 'manual-';
+        console.log('ℹ️ [ManualsEdit] Prefill slug con manual-');
+      }
+    });
+    // Enforce prefix and normalization on input without duplicating manual-
+    slugInput.addEventListener('input', function(){
+      const val = slugInput.value || '';
+      if (!val.toLowerCase().startsWith('manual-')) {
+        const norm = normalizeManualSlug(val);
+        if (norm !== slugInput.value) {
+          slugInput.value = norm;
+          console.log('ℹ️ [ManualsEdit] Forzando prefijo manual-');
+        }
+      }
+    });
+    // Final normalization on blur
     slugInput.addEventListener('blur', function(){
-      const norm = slugify(slugInput.value);
+      const norm = normalizeManualSlug(slugInput.value);
       if (norm !== slugInput.value) {
         console.log('ℹ️ [ManualsEdit] Normalizando slug a:', norm);
         slugInput.value = norm;
