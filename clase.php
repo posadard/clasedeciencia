@@ -289,7 +289,7 @@ include 'includes/header.php';
                         <span class="man-label">Manuales:</span>
                         <div class="man-pills">
                             <?php foreach ($kit_manuals as $m): ?>
-                                <a class="tag-pill" href="/<?= h($m['slug']) . '-' . h($kit_inline['slug']) ?>" title="Manual <?= h($m['slug']) ?>">
+                                <a class="tag-pill" href="/<?= h($m['slug']) ?>" title="Manual <?= h($m['slug']) ?>">
                                     <?= h($m['slug']) ?><?php if (!empty($m['idioma'])): ?> · <?= h($m['idioma']) ?><?php endif; ?><?php if (!empty($m['time_minutes'])): ?> · ⏱️ <?= (int)$m['time_minutes'] ?>m<?php endif; ?>
                                 </a>
                             <?php endforeach; ?>
