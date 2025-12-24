@@ -433,19 +433,18 @@ include 'includes/header.php';
       <?php if (!empty($herr)): ?>
         <section class="kits-section">
           <div class="kit-card">
-            <h4>Herramientas</h4>
+            <h4>Herramientas (no incluido)</h4>
             <ul class="materials-list">
               <?php foreach ($herr as $hitem): ?>
                 <?php if (is_array($hitem) && (isset($hitem['nombre']) || isset($hitem['cantidad']) || isset($hitem['nota']) || isset($hitem['seguridad']))): ?>
                   <li class="material-item">
                     <span class="material-name"><?= h($hitem['nombre'] ?? '(sin nombre)') ?></span>
-                    <?php if (!empty($hitem['seguridad'])): ?>
-                      <small class="material-warning">⚠️ <?= h($hitem['seguridad']) ?></small>
-                    <?php endif; ?>
                     <?php if (isset($hitem['cantidad']) && $hitem['cantidad'] !== '' && $hitem['cantidad'] !== null): ?>
-                      <span class="badge"><?= h(is_numeric($hitem['cantidad']) ? (int)$hitem['cantidad'] : $hitem['cantidad']) ?></span>
+                      <span class="badge" style="margin-left:6px;"><?= h(is_numeric($hitem['cantidad']) ? (int)$hitem['cantidad'] : $hitem['cantidad']) ?></span>
                     <?php endif; ?>
-                    <span class="badge badge-danger">No incluido</span>
+                    <?php if (!empty($hitem['seguridad'])): ?>
+                      <small class="material-warning" style="margin-left:8px;">⚠️ <?= h($hitem['seguridad']) ?></small>
+                    <?php endif; ?>
                     <?php if (!empty($hitem['nota'])): ?>
                       <small class="material-notes"><?= h($hitem['nota']) ?></small>
                     <?php endif; ?>
@@ -453,7 +452,6 @@ include 'includes/header.php';
                 <?php else: ?>
                   <li class="material-item">
                     <span class="material-name"><?= h(is_array($hitem) ? json_encode($hitem, JSON_UNESCAPED_UNICODE) : $hitem) ?></span>
-                    <span class="badge badge-danger">No incluido</span>
                   </li>
                 <?php endif; ?>
               <?php endforeach; ?>
