@@ -79,7 +79,7 @@ include 'includes/header.php';
   </div>
 
   <header class="manual-header">
-    <div class="manual-head">
+        <div class="manual-toc-row">
       <div class="manual-emoji" aria-hidden="true"><?= $tipo_emoji ?></div>
       <div class="manual-title-wrap">
         <h1><?= h(ucwords(str_replace('-', ' ', (string)$manual['slug']))) ?></h1>
@@ -99,6 +99,7 @@ include 'includes/header.php';
           <?php if (!empty($manual['updated_at'])): ?><span class="badge">🔄 Actualizado <?= h(date('d/m/Y', strtotime($manual['updated_at']))) ?></span><?php endif; ?>
           <?php if ($ambito === 'componente'): ?>
             <?php if ($comp && !empty($comp['slug'])): ?>
+            <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
               <span class="badge">🔧 Para componente: <a href="/<?= h($comp['slug']) ?>" title="Ver componente <?= h($comp['nombre_comun']) ?>"><?= h($comp['nombre_comun']) ?></a></span>
             <?php else: ?>
               <span class="badge">🔧 Ámbito: Componente</span>
@@ -355,10 +356,7 @@ console.log('🔍 [KitManual] Pasos:', <?= isset($manual['pasos_json']) && $manu
 .manual-title-wrap h1 { margin: 0 0 4px; }
 .manual-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .manual-resumen { font-size:1.05rem; color:#444; margin-top:8px; }
-.manual-toc { background:#f7f9fc; border:1px solid #e3e8f3; border-radius:8px; padding:10px 12px; margin:12px 0; }
-.manual-toc h2 { margin-bottom:6px; font-size:1.05rem; }
-.manual-toc ol { padding-left: 18px; }
-.manual-toc a { border-bottom: 1px dashed rgba(0,0,0,0.2); }
+.manual-toc { background:#f7f9fc; border:1px solid #e3e8f3; border-radius:8px; padding:10px 12px; }
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
