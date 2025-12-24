@@ -610,18 +610,21 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   function buildSuggestion(){
     const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
     const verInput = document.querySelector('input[name="version"]');
+    const pubInput = document.querySelector('input[name="published_at"]');
+    const statusSel = document.querySelector('select[name="status"]');
     const rawVer = (verInput ? verInput.value : '') || '';
     // Mantener solo números y puntos, luego reemplazar '.' por '-'
     const verClean = rawVer.toLowerCase().replace(/[^0-9.]+/g, '');
     const verNorm = verClean ? verClean.replace(/\./g, '-') : '';
-    // Fecha dd-mm-yy: usar MANUAL_PUBLISHED_AT si existe; si no, hoy
+    // Fecha dd-mm-yy: preferir input published_at; si no, hoy
     let dateStr = '';
     (function(){
       let d;
-      if (typeof MANUAL_PUBLISHED_AT === 'string' && MANUAL_PUBLISHED_AT) {
-        const t = Date.parse(MANUAL_PUBLISHED_AT);
+      if (pubInput && pubInput.value) {
+        const t = Date.parse(pubInput.value);
         d = isNaN(t) ? new Date() : new Date(t);
       } else {
+        // Si el estado es publicado, usar hoy; de lo contrario también hoy para sugerencia única
         d = new Date();
       }
       const dd = String(d.getDate()).padStart(2,'0');
@@ -653,10 +656,14 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
   // Autogenerar en cambios relevantes
   const verInput = document.querySelector('input[name="version"]');
+  const pubInput = document.querySelector('input[name="published_at"]');
+  const statusSel = document.querySelector('select[name="status"]');
   if (tipoSel) tipoSel.addEventListener('change', updateSlug);
   if (ambSel) ambSel.addEventListener('change', updateSlug);
   if (entitySel) entitySel.addEventListener('change', updateSlug);
   if (verInput) verInput.addEventListener('input', updateSlug);
+  if (pubInput) pubInput.addEventListener('input', updateSlug);
+  if (statusSel) statusSel.addEventListener('change', updateSlug);
 
   // Normalizar mientras escribe (suave): al perder foco
   if (slugInput) {
