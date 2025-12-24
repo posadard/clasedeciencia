@@ -95,13 +95,16 @@ include 'includes/header.php';
           ?>
           <?php if (!empty($eff_time)): ?><span class="badge">⏱️ <?= (int)$eff_time ?> min</span><?php endif; ?>
           <?php if (!empty($eff_diff)): ?><span class="badge">📊 <?= h($eff_diff) ?></span><?php endif; ?>
-          <?php if (!empty($manual['published_at'])): ?><span class="badge">🔄 Publicado <?= h(date('d/m/Y', strtotime($manual['published_at']))) ?></span><?php endif; ?>
+          <?php if (!empty($manual['published_at'])): ?><span class="badge">🗓️ Publicado <?= h(date('d/m/Y', strtotime($manual['published_at']))) ?></span><?php endif; ?>
+          <?php if (!empty($manual['updated_at'])): ?><span class="badge">🔄 Actualizado <?= h(date('d/m/Y', strtotime($manual['updated_at']))) ?></span><?php endif; ?>
           <?php if ($ambito === 'componente'): ?>
             <?php if ($comp && !empty($comp['slug'])): ?>
               <span class="badge">🔧 Para componente: <a href="/<?= h($comp['slug']) ?>" title="Ver componente <?= h($comp['nombre_comun']) ?>"><?= h($comp['nombre_comun']) ?></a></span>
             <?php else: ?>
               <span class="badge">🔧 Ámbito: Componente</span>
             <?php endif; ?>
+          <?php else: ?>
+            <span class="badge">📦 Ámbito: Kit</span>
           <?php endif; ?>
         </div>
       </div>
@@ -141,6 +144,12 @@ include 'includes/header.php';
             if (is_array($tmp)) { $seg = $tmp; $manualSegRaw = $tmp; }
         }
       ?>
+      <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
+        <section class="component-warnings">
+          <h2>⚠️ Advertencias del Componente</h2>
+          <div class="component-warning-text"><?= nl2br(h($comp['advertencias_seguridad'])) ?></div>
+        </section>
+      <?php endif; ?>
       <?php
         // Compute effective safety by merging manual directives with kit safety (age + free-text notes)
         $hasManualSafety = !empty($manualSegRaw);
@@ -181,6 +190,30 @@ include 'includes/header.php';
         if ($useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
         $hasAnySafety = $useKitSafety || !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null);
       ?>
+      <?php
+        $toc_items = [];
+        if (!empty($pasos)) {
+          foreach ($pasos as $idx => $p) {
+            $titulo = '';
+            if (is_array($p)) {
+              $titulo = !empty($p['titulo']) ? (string)$p['titulo'] : ('Paso ' . ($idx + 1));
+            } else {
+              $titulo = 'Paso ' . ($idx + 1);
+            }
+            $toc_items[] = [ 'id' => 'paso-' . ($idx + 1), 'titulo' => $titulo ];
+          }
+        }
+      ?>
+      <?php if (!empty($toc_items)): ?>
+        <nav class="manual-toc" aria-label="Índice de pasos">
+          <h2>🧭 Índice</h2>
+          <ol>
+            <?php foreach ($toc_items as $ti): ?>
+              <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['titulo']) ?></a></li>
+            <?php endforeach; ?>
+          </ol>
+        </nav>
+      <?php endif; ?>
       <?php if ($hasAnySafety): ?>
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
@@ -251,7 +284,7 @@ include 'includes/header.php';
           <h2>📋 Pasos</h2>
           <ol class="manual-steps">
             <?php foreach ($pasos as $idx => $p): ?>
-              <li class="manual-step">
+              <li class="manual-step" id="paso-<?= (int)($idx + 1) ?>">
                 <div class="step-head"><strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong></div>
                 <div class="step-body">
                   <?php if (!empty($p['html'])): ?>
@@ -278,6 +311,7 @@ include 'includes/header.php';
 console.log('🔍 [KitManual] Kit:', <?= json_encode(['id'=>$kit['id'],'slug'=>$kit['slug'],'nombre'=>$kit['nombre']]) ?>);
 console.log('🔍 [KitManual] Slug manual:', '<?= h($manual_slug) ?>');
 console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'version'=>$manual['version'],'idioma'=>$manual['idioma'],'status'=>$manual['status']]) ?>);
+console.log('🔍 [KitManual] Pasos:', <?= isset($manual['pasos_json']) && $manual['pasos_json'] ? 'JSON.parse(' . json_encode($manual['pasos_json']) . ').length' : 0 ?>);
 </script>
 <style>
 /* Print-friendly tweaks for manual steps */
@@ -297,6 +331,13 @@ console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'ve
 .manual-title-wrap h1 { margin: 0 0 4px; }
 .manual-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .manual-resumen { font-size:1.05rem; color:#444; margin-top:8px; }
+.manual-toc { background:#f7f9fc; border:1px solid #e3e8f3; border-radius:8px; padding:10px 12px; margin:12px 0; }
+.manual-toc h2 { margin-bottom:6px; font-size:1.05rem; }
+.manual-toc ol { padding-left: 18px; }
+.manual-toc a { border-bottom: 1px dashed rgba(0,0,0,0.2); }
+.component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
+.component-warnings h2 { margin-bottom:6px; }
+.component-warning-text { white-space:pre-wrap; }
 @media print {
   .manual-step { page-break-inside: avoid; }
   .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }
