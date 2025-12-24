@@ -206,6 +206,22 @@ include 'includes/header.php';
       ?>
       <?php if (!empty($toc_items)): ?>
         <div class="manual-toc-row">
+          <aside class="manual-toc-aside">
+            <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
+            <?php if (!empty($kit['imagen_portada'])): ?>
+              <img id="<?= h($img_id) ?>"
+                   src="<?= h($kit['imagen_portada']) ?>"
+                   alt="Imagen del kit <?= h($kit['nombre']) ?>"
+                   class="manual-toc-image"
+                   onerror="this.onerror=null; console.log('❌ [KitManual] Imagen portada kit falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
+              <script>console.log('✅ [KitManual] Imagen portada mostrada junto al índice');</script>
+            <?php else: ?>
+              <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit"><span class="placeholder-icon">📦</span></div>
+              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
+              <script>console.log('⚠️ [KitManual] Kit sin imagen, usando placeholder en índice');</script>
+            <?php endif; ?>
+          </aside>
           <nav class="manual-toc" aria-label="Índice de pasos">
             <h2>🧭 Índice</h2>
             <ol>
@@ -214,22 +230,6 @@ include 'includes/header.php';
               <?php endforeach; ?>
             </ol>
           </nav>
-          <aside class="manual-toc-aside">
-            <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
-            <?php if (!empty($kit['imagen_portada'])): ?>
-              <img id="<?= h($img_id) ?>"
-                   src="<?= h($kit['imagen_portada']) ?>"
-                   alt="Imagen del kit <?= h($kit['nombre']) ?>"
-                   class="manual-toc-image"
-                   onerror="this.onerror=null; console.log('❌ [KitManual] Imagen portada kit falló'); this.replaceWith((function(){var d=document.createElement('div'); d.id='<?= h($img_id) ?>'; d.className='manual-toc-placeholder'; d.innerHTML='📦'; return d;})());" />
-              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
-              <script>console.log('✅ [KitManual] Imagen portada mostrada junto al índice');</script>
-            <?php else: ?>
-              <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit">📦</div>
-              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
-              <script>console.log('⚠️ [KitManual] Kit sin imagen, usando placeholder en índice');</script>
-            <?php endif; ?>
-          </aside>
         </div>
       <?php endif; ?>
       <?php if ($hasAnySafety): ?>
