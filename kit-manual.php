@@ -205,14 +205,38 @@ include 'includes/header.php';
         }
       ?>
       <?php if (!empty($toc_items)): ?>
-        <nav class="manual-toc" aria-label="Índice de pasos">
-          <h2>🧭 Índice</h2>
-          <ol>
-            <?php foreach ($toc_items as $ti): ?>
-              <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['titulo']) ?></a></li>
-            <?php endforeach; ?>
-          </ol>
-        </nav>
+        <div class="manual-toc-row">
+          <nav class="manual-toc" aria-label="Índice de pasos">
+            <h2>🧭 Índice</h2>
+            <ol>
+              <?php foreach ($toc_items as $ti): ?>
+                <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['titulo']) ?></a></li>
+              <?php endforeach; ?>
+            </ol>
+          </nav>
+          <aside class="manual-toc-aside">
+            .manual-toc-row { display:flex; gap:12px; align-items:flex-start; margin:12px 0; }
+            .manual-toc { flex: 1 1 auto; }
+            .manual-toc-aside { flex: 0 0 220px; }
+            .manual-toc-image { width:100%; height:140px; object-fit:cover; border-radius:8px; border:1px solid #e3e8f3; background:#fff; display:block; }
+            .manual-toc-placeholder { width:100%; height:140px; display:flex; align-items:center; justify-content:center; border:1px dashed #cbd5e1; border-radius:8px; background:#f8fafc; font-size:48px; }
+            @media (max-width: 720px) {
+              .manual-toc-row { flex-direction: column; }
+              .manual-toc-aside { flex-basis:auto; width:100%; }
+              .manual-toc-image, .manual-toc-placeholder { height: 180px; }
+            }
+            <?php if (!empty($kit['imagen_portada'])): ?>
+              <img src="<?= h($kit['imagen_portada']) ?>"
+                   alt="Imagen del kit <?= h($kit['nombre']) ?>"
+                   class="manual-toc-image"
+                   onerror="this.onerror=null; console.log('❌ [KitManual] Imagen portada kit falló'); this.replaceWith((function(){var d=document.createElement('div'); d.className='manual-toc-placeholder'; d.innerHTML='📦'; return d;})());" />
+              <script>console.log('✅ [KitManual] Imagen portada mostrada junto al índice');</script>
+            <?php else: ?>
+              <div class="manual-toc-placeholder" title="Sin imagen de kit">📦</div>
+              <script>console.log('⚠️ [KitManual] Kit sin imagen, usando placeholder en índice');</script>
+            <?php endif; ?>
+          </aside>
+        </div>
       <?php endif; ?>
       <?php if ($hasAnySafety): ?>
         <section class="safety-info">
