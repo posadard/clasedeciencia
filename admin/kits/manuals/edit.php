@@ -89,11 +89,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Slug inválido: usa a-z, 0-9 y guiones.';
     }
 
-    // Deterministic slug build: manual-{tipo}-{version}-{dd-mm-yy}-{entitySlug}
+    // Deterministic slug build: manual-{tipo}-{entidad}-{dd-mm-yy}-V{version}
     if (!$error_msg) {
-      // Normalize version: keep digits and dots; convert dots to hyphens
+      // Normalize version: keep digits and dots; convert dots to underscores and prefix with 'V'
       $ver_clean = strtolower(preg_replace('/[^0-9\.]+/', '', (string)$version));
-      $ver_norm = $ver_clean !== '' ? str_replace('.', '-', $ver_clean) : '';
+      $ver_norm_underscore = $ver_clean !== '' ? str_replace('.', '_', $ver_clean) : '';
+      $ver_part = $ver_norm_underscore !== '' ? ('V' . $ver_norm_underscore) : '';
       // Date dd-mm-yy from published_at if present, else now
       $date_src = null;
       if ($manual_id > 0 && $manual && !empty($manual['published_at'])) { $date_src = $manual['published_at']; }
@@ -116,11 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       } else if ($kit && !empty($kit['slug'])) {
         $entity_slug = (string)$kit['slug'];
       }
-      // Build parts
+      // Build parts (order): manual-{tipo}-{entidad}-{dd-mm-yy}-{Vversion}
       $parts = ['manual', $tipo_manual];
-      if ($ver_norm !== '') { $parts[] = $ver_norm; }
-      $parts[] = $date_part;
       if ($entity_slug !== '') { $parts[] = $entity_slug; }
+      $parts[] = $date_part;
+      if ($ver_part !== '') { $parts[] = $ver_part; }
       $built = implode('-', array_filter($parts));
       // Sanitize
       $built = strtolower($built);
@@ -283,7 +284,7 @@ try {
       <div style="display:flex; gap:8px; align-items:center;">
         <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="se genera automáticamente" style="flex:1;" readonly />
       </div>
-      <small>Se actualiza automáticamente: <strong>manual-{tipo}-{version}-{dd-mm-yy}-{entidad}</strong>. No editable.</small>
+      <small>Se actualiza automáticamente: <strong>manual-{tipo}-{entidad}-{dd-mm-yy}-V{version}</strong>. No editable.</small>
     </div>
 
     
@@ -611,9 +612,10 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
     const verInput = document.querySelector('input[name="version"]');
     const rawVer = (verInput ? verInput.value : '') || '';
-    // Mantener solo números y puntos, luego reemplazar '.' por '-'
+    // Mantener solo números y puntos; puntos → guiones bajos y prefijo 'V'
     const verClean = rawVer.toLowerCase().replace(/[^0-9.]+/g, '');
-    const verNorm = verClean ? verClean.replace(/\./g, '-') : '';
+    const verNormUnderscore = verClean ? verClean.replace(/\./g, '_') : '';
+    const verPart = verNormUnderscore ? ('V' + verNormUnderscore) : '';
     // Fecha dd-mm-yy: usar MANUAL_PUBLISHED_AT si existe; si no, hoy
     let dateStr = '';
     (function(){
@@ -630,10 +632,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       dateStr = dd + '-' + mm + '-' + yy;
     })();
 
-    // manual-{tipo}-{version}-{dd-mm-yy}-{entitySlug}
+    // manual-{tipo}-{entidad}-{dd-mm-yy}-{Vversion}
     const parts = ['manual', tipo];
-    if (verNorm) parts.push(verNorm);
-    parts.push(dateStr);
     // Append kit or component slug
     let entitySlug = '';
     const amb = (ambSel ? ambSel.value : 'kit') || 'kit';
@@ -643,6 +643,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       entitySlug = KIT_SLUG || '';
     }
     if (entitySlug) parts.push(entitySlug);
+    parts.push(dateStr);
+    if (verPart) parts.push(verPart);
     const base = parts.join('-');
     const s = normalizeManualSlug(base);
     console.log('🔍 [ManualsEdit] Sugerencia de slug:', base, '→', s);
