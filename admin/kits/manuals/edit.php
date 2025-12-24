@@ -319,17 +319,7 @@ try {
       </div>
     </div>
 
-    <!-- Kit selector placed after Ámbito for logical flow -->
-    <div class="form-group">
-      <label>Kit</label>
-      <select name="kit_id" required>
-        <option value="">-- Selecciona kit --</option>
-        <?php foreach ($kits as $k): ?>
-          <option value="<?= (int)$k['id'] ?>" data-slug="<?= htmlspecialchars($k['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <small class="help-note">Selecciona el kit. Si el ámbito es Componente, podrás elegir el componente de este u otro kit.</small>
-    </div>
+    
 
     <div class="form-group">
       <label>Resumen (opcional)</label>
@@ -640,7 +630,11 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     // Append kit or component slug
     let entitySlug = '';
     const amb = (ambSel ? ambSel.value : 'kit') || 'kit';
-    entitySlug = getEntitySlug() || (KIT_SLUG || '');
+    // Only fall back to KIT_SLUG when ámbito=kit; for componente require entity selection
+    entitySlug = getEntitySlug();
+    if (!entitySlug && amb === 'kit') {
+      entitySlug = KIT_SLUG || '';
+    }
     if (entitySlug) parts.push(entitySlug);
     const base = parts.join('-');
     const s = normalizeManualSlug(base);
@@ -888,8 +882,10 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const kitSafetyPanel = document.getElementById('kit-safety-panel');
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
-  const kitSelect = document.querySelector('select[name="kit_id"]');
   const securityAgeWrap = document.querySelector('.security-age');
+  const ambSel = document.getElementById('ambito-select');
+  const entitySel = document.getElementById('entity-select');
+  const hiddenKit = document.getElementById('hidden-kit-id');
 
   function toSafetyObj(raw){
     try {
@@ -972,28 +968,27 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     }
   }
 
-  if (kitSelect) {
-    kitSelect.addEventListener('change', async function(){
-      const id = this.value ? parseInt(this.value, 10) : 0;
-      if (!id) { renderKitSafetyPanel(null); return; }
-      const seg = await fetchKitSafetyById(id);
-      renderKitSafetyPanel(seg);
-      // Fetch full kit to obtain slug and refresh automatic slug
-      try {
-        const res = await fetch('/api/kit-get.php?id=' + encodeURIComponent(String(id)));
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.ok && data.kit) {
-            KIT_SLUG = data.kit.slug || KIT_SLUG;
-            console.log('🔍 [ManualsEdit] KIT_SLUG actualizado:', KIT_SLUG);
-            // Recompute manual slug
-            const slugInputEl = document.getElementById('manual-slug');
-            if (slugInputEl) { slugInputEl.value = buildSuggestion(); }
-          }
+  async function updateKitSafetyFromCurrent(){
+    const kid = hiddenKit && hiddenKit.value ? parseInt(hiddenKit.value, 10) : 0;
+    if (!kid) { renderKitSafetyPanel(null); return; }
+    const seg = await fetchKitSafetyById(kid);
+    renderKitSafetyPanel(seg);
+    // Also refresh KIT_SLUG via API for robustness
+    try {
+      const res = await fetch('/api/kit-get.php?id=' + encodeURIComponent(String(kid)));
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.ok && data.kit) {
+          KIT_SLUG = data.kit.slug || KIT_SLUG;
+          console.log('🔍 [ManualsEdit] KIT_SLUG actualizado:', KIT_SLUG);
         }
-      } catch(e) { console.log('⚠️ [ManualsEdit] Error obteniendo KIT_SLUG:', e.message); }
-    });
-    console.log('🔍 [ManualsEdit] Observando cambios de kit_id');
+      }
+    } catch(e) { console.log('⚠️ [ManualsEdit] Error obteniendo KIT_SLUG:', e.message); }
+  }
+
+  if (ambSel && entitySel) {
+    ambSel.addEventListener('change', function(){ updateKitSafetyFromCurrent(); });
+    entitySel.addEventListener('change', function(){ updateKitSafetyFromCurrent(); });
   }
 
   if (useKitSafety) {
