@@ -438,10 +438,12 @@ include 'includes/header.php';
               <?php foreach ($herr as $hitem): ?>
                 <?php if (is_array($hitem) && (isset($hitem['nombre']) || isset($hitem['cantidad']) || isset($hitem['nota']) || isset($hitem['seguridad']))): ?>
                   <li class="material-item">
-                    <span class="material-name"><?= h($hitem['nombre'] ?? '(sin nombre)') ?></span>
-                    <?php if (isset($hitem['cantidad']) && $hitem['cantidad'] !== '' && $hitem['cantidad'] !== null): ?>
-                      <span class="badge" style="margin-left:6px;"><?= h(is_numeric($hitem['cantidad']) ? (int)$hitem['cantidad'] : $hitem['cantidad']) ?></span>
-                    <?php endif; ?>
+                    <span class="material-name">
+                      <?= h($hitem['nombre'] ?? '(sin nombre)') ?>
+                      <?php if (isset($hitem['cantidad']) && $hitem['cantidad'] !== '' && $hitem['cantidad'] !== null): ?>
+                        <span class="badge" style="margin-left:6px;"><?= h(is_numeric($hitem['cantidad']) ? (int)$hitem['cantidad'] : $hitem['cantidad']) ?></span>
+                      <?php endif; ?>
+                    </span>
                     <?php if (!empty($hitem['seguridad'])): ?>
                       <small class="material-warning" style="margin-left:8px;">⚠️ <?= h($hitem['seguridad']) ?></small>
                     <?php endif; ?>
