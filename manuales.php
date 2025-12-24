@@ -102,8 +102,7 @@ include 'includes/header.php';
             $emoji = '📘'; $label = 'Manual';
             if ($tk && isset($tipo_map[$tk])) { $emoji = $tipo_map[$tk]['emoji']; $label = $tipo_map[$tk]['label']; }
             elseif (strpos(strtolower($m['slug']), 'arm') !== false) { $emoji = '🛠️'; $label = 'Armado'; }
-            $combined = $m['slug'] . '-' . ($m['ambito'] === 'componente' && !empty($m['item_slug']) ? $m['item_slug'] : $m['kit_slug']);
-            $href = '/' . h($combined);
+            $href = '/' . h($m['slug']);
           ?>
           <a class="manual-card" href="<?= h($href) ?>" style="display:block; border:1px solid #e3e8f3; border-radius:8px; padding:10px; background:#fff; text-decoration:none;">
             <div style="display:flex; gap:10px; align-items:center;">

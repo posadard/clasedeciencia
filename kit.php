@@ -385,7 +385,7 @@ include 'includes/header.php';
       <h2>🛠️ Manuales Disponibles</h2>
       <?php if (!empty($manuales)): ?>
         <?php foreach ($manuales as $man):
-          $href = '/' . h($man['slug']) . '-' . h($kit['slug']);
+          $href = '/' . h($man['slug']);
           $man_title = str_replace('-', ' ', (string)$man['slug']);
           $man_title = mb_convert_case($man_title, MB_CASE_TITLE, 'UTF-8');
           $idioma = !empty($man['idioma']) ? $man['idioma'] : 'es';
