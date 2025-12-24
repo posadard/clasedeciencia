@@ -1,0 +1,44 @@
+Informe de la sesión – Clase de Ciencia
+Fecha: 2025-12-24
+
+Resumen breve
+Se homogenizó la UI de filtros de manuales con la de kits, se añadieron enlaces de navegación (header/footer), y se implementó soporte integral para manuales descontinuados (listado, detalle y en kit). En el manual se reorganizó Seguridad/Índice, se añadió bloque de Componentes y se estilizó Herramientas al estilo de kits, incluyendo modal con detalles completos y textos truncados en cards.
+
+Cambios principales
+1) Navegación y filtros
+- manuales.php: Filtros con layout de kits (filters-sidebar, filter-group, buttons). Cuenta y grid alineadas.
+- includes/header.php: Enlace “Manuales” tras “Componentes”.
+- includes/footer.php: Enlaces rápidos “Kits”, “Componentes” y “Manuales”.
+
+2) Manuales descontinuados
+- manuales.php: Se listan ‘published’ y ‘discontinued’; badge visible “⚠️ Descontinuado”.
+- kit.php: Se muestran manuales publicados y descontinuados; badge visible junto al título.
+- manual.php: Carga manual ‘published’ y ‘discontinued’; badge visible en meta; etiquetas “⚠️ Descontinuado” añadidas a todos los h2.
+
+3) manual.php – Estructura y contenido
+- Seguridad/Índice: Se intercambió la ubicación. Imagen del kit a la izquierda; a la derecha Seguridad (full width). Índice fuera del bloque, a ancho completo.
+- Índice: Cada ítem muestra “Título del paso: 10 palabras…”, títulos en negrita.
+- Componentes del kit: Nuevo bloque bajo el índice, antes de Herramientas, con el mismo estilo que kit.php (kits-section → kit-card → materials-list) y tarjetas clicables.
+- Herramientas: Mismo estilo que componentes; encabezado “Herramientas (no incluido)”. Cantidad colocada justo al lado del nombre en la misma fila. Tarjetas clicables abren un modal con información completa (nombre, cantidad, seguridad, nota). En las tarjetas se truncan seguridad y nota a 10 palabras + “…”.
+- Seguridad (contenido combinado): Se agregan dos líneas compactas con fuente menor, concatenando “Nombre: nota_truncada” para componentes y herramientas, separadas con “ - ”.
+
+4) .htaccess y rutas (previo en la sesión)
+- Soporte para slugs únicos de manual: /{manual-slug} → manual.php?slug=…
+- Redirecciones 301 desde URLs heredadas que concatenaban kit/componente a la ruta del manual hacia la ruta canónica de slug único.
+
+Páginas/archivos afectados
+- manuales.php, kit.php, manual.php
+- includes/header.php, includes/footer.php
+- .htaccess (previo en la sesión)
+
+Notas de depuración añadidas
+- Consola en kits/manuales: conteos, filtros, sort.
+- manual.php: logs de intercambio de seguridad/índice, etiquetas de descontinuado, componentes/herramientas clicables y modal de herramientas.
+
+Sugerencias de próximos pasos
+- Filtro opcional en manuales.php para mostrar solo publicados o solo descontinuados.
+- Añadir unidad en cantidades de herramientas (p.ej., “2 piezas”) y, si aplica, miniatura por herramienta/componente.
+- Verificar que paginaciones preserven filtros/sort en listados.
+
+Estado
+Todos los cambios solicitados para esta sesión han sido implementados y probados a nivel de estructura/código (sin ejecución).
