@@ -1778,7 +1778,7 @@ include '../header.php';
                   <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectManualItem(this.parentElement)">×</button>
                   <a class="edit-component" title="Editar" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>" onclick="event.stopPropagation();">✏️</a>
                   <?php if (!empty($kit['slug'])): ?>
-                    <a class="edit-component" title="Ver público" target="_blank" href="/manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($m['slug']) ?>" onclick="event.stopPropagation();">🔗</a>
+                    <a class="edit-component" title="Ver público" target="_blank" href="/<?= h($m['slug']) . '-' . h($kit['slug']) ?>" onclick="event.stopPropagation();">🔗</a>
                   <?php endif; ?>
                 </div>
               <?php endif; ?>
