@@ -738,7 +738,9 @@ try {
   $items = [];
 }
 
-// Sincronizar publicación de manuales desde dual-list (se ejecuta al guardar el kit)
+// Sincronizar publicación de manuales desde dual-list (differences, 4 estados)
+// Política: la dual-list solo gestiona visibilidad (published vs no publicado).
+// Al despublicar, el estado pasa a 'approved' por defecto (el editor/lista pueden cambiar luego a draft/discontinued).
 if ($is_edit && $_SERVER['REQUEST_METHOD'] === 'POST') {
   $posted_manuals = isset($_POST['manuals_published']) ? (array)$_POST['manuals_published'] : [];
   $selected_ids = [];
@@ -747,19 +749,43 @@ if ($is_edit && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($mid !== false) { $selected_ids[] = (int)$mid; }
   }
   try {
-    $pdo->beginTransaction();
-    $stmD = $pdo->prepare('UPDATE kit_manuals SET status = ?, published_at = NULL WHERE kit_id = ?');
-    $stmD->execute(['draft', (int)$id]);
+    // Cargar estado actual para calcular difs
+    $stmC = $pdo->prepare('SELECT id, status, published_at FROM kit_manuals WHERE kit_id = ?');
+    $stmC->execute([(int)$id]);
+    $rows = $stmC->fetchAll(PDO::FETCH_ASSOC);
+    $currently_published = [];
+    foreach ($rows as $r) {
+      if (($r['status'] ?? '') === 'published') { $currently_published[(int)$r['id']] = true; }
+    }
 
-    if (!empty($selected_ids)) {
-      $placeholders = implode(',', array_fill(0, count($selected_ids), '?'));
-      $sql = "UPDATE kit_manuals SET status = 'published', published_at = IFNULL(published_at, NOW()) WHERE id IN ($placeholders) AND kit_id = ?";
-      $params = array_merge($selected_ids, [(int)$id]);
-      $stmP = $pdo->prepare($sql);
-      $stmP->execute($params);
+    // Conjuntos
+    $selected_set = array_fill_keys($selected_ids, true);
+    $to_publish = [];
+    $to_unpublish = [];
+    foreach ($selected_ids as $sid) {
+      if (!isset($currently_published[$sid])) { $to_publish[] = $sid; }
+    }
+    foreach ($currently_published as $pid => $_t) {
+      if (!isset($selected_set[$pid])) { $to_unpublish[] = $pid; }
+    }
+
+    // Aplicar cambios en transacción
+    $pdo->beginTransaction();
+    if (!empty($to_publish)) {
+      $ph = implode(',', array_fill(0, count($to_publish), '?'));
+      $sqlP = "UPDATE kit_manuals SET status = 'published', published_at = IFNULL(published_at, NOW()) WHERE id IN ($ph) AND kit_id = ?";
+      $paramsP = array_merge($to_publish, [(int)$id]);
+      $pdo->prepare($sqlP)->execute($paramsP);
+    }
+    if (!empty($to_unpublish)) {
+      $ph = implode(',', array_fill(0, count($to_unpublish), '?'));
+      // Fallback conservador: approved (mantiene que está listo pero oculto)
+      $sqlU = "UPDATE kit_manuals SET status = 'approved' WHERE id IN ($ph) AND kit_id = ?";
+      $paramsU = array_merge($to_unpublish, [(int)$id]);
+      $pdo->prepare($sqlU)->execute($paramsU);
     }
     $pdo->commit();
-    echo '<script>console.log("✅ [KitsEdit] Manuales sincronizados (publicación)");</script>';
+    echo '<script>console.log("✅ [KitsEdit] Publicar:",' . json_encode($to_publish) . ', "; Despublicar:",' . json_encode($to_unpublish) . ');</script>';
   } catch (PDOException $e) {
     if ($pdo->inTransaction()) { $pdo->rollBack(); }
     echo '<script>console.log("❌ [KitsEdit] Error sincronizando manuales:",' . json_encode($e->getMessage()) . ');</script>';
@@ -1733,9 +1759,12 @@ include '../header.php';
           <div class="listbox-content" id="available-manuales">
             <?php foreach ($kit_manuals as $m): ?>
               <?php if (($m['status'] ?? '') !== 'published'): ?>
-                <div class="competencia-item" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" onclick="selectManualItem(this)">
+                <div class="competencia-item" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" data-status="<?= htmlspecialchars($m['status'] ?? 'draft', ENT_QUOTES, 'UTF-8') ?>" onclick="selectManualItem(this)">
                   <span class="comp-nombre"><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></span>
-                  <span class="comp-codigo"><?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="comp-codigo">
+                    <?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?>
+                    <em class="status-badge status-<?= htmlspecialchars($m['status'] ?? 'draft', ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($m['status'] ?? 'draft', ENT_QUOTES, 'UTF-8') ?></em>
+                  </span>
                   <a class="edit-component" title="Editar" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>" onclick="event.stopPropagation();">✏️</a>
                 </div>
               <?php endif; ?>
@@ -1754,10 +1783,11 @@ include '../header.php';
           <div class="listbox-content" id="selected-manuales">
             <?php foreach ($kit_manuals as $m): ?>
               <?php if (($m['status'] ?? '') === 'published'): ?>
-                <div class="competencia-item selected" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" onclick="deselectManualItem(this)">
+                <div class="competencia-item selected" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" data-status="published" onclick="deselectManualItem(this)">
                   <span class="comp-nombre"><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></span>
                   <span class="comp-codigo"><?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?></span>
                   <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectManualItem(this.parentElement)">×</button>
+                  <a class="edit-component" title="Editar" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>" onclick="event.stopPropagation();">✏️</a>
                   <?php if (!empty($kit['slug'])): ?>
                     <a class="edit-component" title="Ver público" target="_blank" href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($m['slug']) ?>" onclick="event.stopPropagation();">🔗</a>
                   <?php endif; ?>
