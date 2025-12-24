@@ -7,42 +7,6 @@ require_once 'includes/db-functions.php';
 $kit_slug = isset($_GET['kit']) ? trim($_GET['kit']) : '';
 $manual_slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 
-// Support combined slug format: {manual}-kit-{kit} or {manual}-comp-{item}
-if ($kit_slug === '' && $manual_slug !== '') {
-  if (strpos($manual_slug, '-kit-') !== false) {
-    $parts = explode('-kit-', $manual_slug, 2);
-    if (count($parts) === 2) { $manual_slug = trim($parts[0]); $kit_slug = trim($parts[1]); }
-  } elseif (strpos($manual_slug, '-comp-') !== false) {
-    $parts = explode('-comp-', $manual_slug, 2);
-    if (count($parts) === 2) {
-      $manual_only = trim($parts[0]);
-      $comp_slug = trim($parts[1]);
-      // Resolve component id by slug
-      try {
-        $stmtI = $pdo->prepare('SELECT id FROM kit_items WHERE slug = ? LIMIT 1');
-        $stmtI->execute([$comp_slug]);
-        $comp_id = (int)($stmtI->fetchColumn() ?: 0);
-      } catch (Exception $e) { $comp_id = 0; }
-      if ($comp_id > 0) {
-        try {
-          $stmtM = $pdo->prepare("SELECT * FROM kit_manuals WHERE slug = ? AND item_id = ? AND status = 'published' LIMIT 1");
-          $stmtM->execute([$manual_only, $comp_id]);
-          $manual = $stmtM->fetch(PDO::FETCH_ASSOC);
-          if ($manual) {
-            // Fetch kit using manual's kit_id
-            $stmtK = $pdo->prepare('SELECT id, nombre, slug, codigo, version, resumen, contenido_html, imagen_portada, video_portada, time_minutes, dificultad_ensamble, seguridad, seo_title, seo_description, activo, updated_at FROM kits WHERE id = ? AND activo = 1 LIMIT 1');
-            $stmtK->execute([(int)$manual['kit_id']]);
-            $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
-            // Override slugs for downstream usage
-            $kit_slug = $kit ? (string)$kit['slug'] : '';
-            $manual_slug = $manual_only;
-          }
-        } catch (Exception $e) {}
-      }
-    }
-  }
-}
-
 if ($kit_slug === '' || $manual_slug === '') {
     header('HTTP/1.1 302 Found');
     header('Location: /');
@@ -73,8 +37,8 @@ if (!$manual) {
 
 $page_title = 'Manual: ' . h($manual['slug']) . ' - ' . h($kit['nombre']);
 $page_description = 'Guía/Manual del kit ' . h($kit['nombre']) . ' (' . h($manual['slug']) . ')';
-// Canonical favor pretty combined slug if available
-$combined_slug = $manual['slug'] . '-' . ($manual['ambito'] === 'componente' && !empty($manual['item_id']) ? 'comp-' : 'kit-') . ($manual['ambito'] === 'componente' && !empty($manual['item_id']) ? (function() use($pdo, $manual){ try{ $s=$pdo->prepare('SELECT slug FROM kit_items WHERE id = ?'); $s->execute([(int)$manual['item_id']]); return (string)($s->fetchColumn() ?: ''); }catch(Exception $e){ return ''; } })() : $kit['slug']);
+// Canonical: pretty combined slug without extra tokens; kit/component slugs already carry their prefixes
+$combined_slug = $manual['slug'] . '-' . ($ambito === 'componente' && $comp && !empty($comp['slug']) ? $comp['slug'] : $kit['slug']);
 $canonical_url = SITE_URL . '/' . urlencode($combined_slug);
 
 // Tipo/Ambito/Icono y componente vinculado si aplica
