@@ -68,7 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ambito = trim($_POST['ambito'] ?? 'kit');
     $ambito = ($ambito === 'componente') ? 'componente' : 'kit';
     $item_id = isset($_POST['item_id']) && $_POST['item_id'] !== '' ? intval($_POST['item_id']) : null;
-    if ($ambito !== 'componente') { $item_id = null; }
+    // Exclusividad: si es componente → kit_id NULL; si es kit → item_id NULL
+    if ($ambito === 'componente') { $kit_id = 0; }
+    else { $item_id = null; }
     $resumen = isset($_POST['resumen']) ? trim((string)$_POST['resumen']) : '';
     if ($resumen !== '') { $resumen = mb_substr($resumen, 0, 255, 'UTF-8'); }
     $pasos_json = trim($_POST['pasos_json'] ?? '');
@@ -87,71 +89,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Slug inválido: usa a-z, 0-9 y guiones.';
     }
 
-    // Normalizar slug con prefijo obligatorio 'manual-'
-    if (!$error_msg && $slug !== '') {
-      $raw = strtolower($slug);
-      $raw = preg_replace('/[^a-z0-9\-]+/', '-', $raw);
-      $raw = preg_replace('/-+/', '-', $raw);
-      // Quitar repeticiones de 'manual-' al inicio y preparar cuerpo
-      $raw = preg_replace('/^(?:manual-)+/', '', $raw);
-      $body = trim($raw, '-');
-      $slug = ($body !== '') ? ('manual-' . $body) : 'manual-';
-      // Asegurar sufijo de fecha dd-mm-yy para unicidad
-      // Tomar fecha publicada si disponible; si no, ahora
-      $dateSource = null;
-      if ($manual_id > 0 && $manual) { $dateSource = $manual['published_at'] ?? null; }
-      if (!$dateSource && $status === 'published') { $dateSource = date('Y-m-d H:i:s'); }
-      if (!$dateSource) { $dateSource = date('Y-m-d H:i:s'); }
-      $dateSuffix = date('d-m-y', strtotime($dateSource));
-      // Si no termina con -dd-mm-yy, añadir
-      if (!preg_match('/\d{2}-\d{2}-\d{2}$/', $slug)) {
-        $slug .= '-' . $dateSuffix;
-      }
-      // Asegurar concatenación del slug del kit o componente al final
-      $entitySuffix = '';
-      if ($has_ambito_column && $ambito === 'componente' && $has_item_id_column && $item_id) {
+    // Deterministic slug build: manual-{tipo}-{version}-{dd-mm-yy}-{entitySlug}
+    if (!$error_msg) {
+      // Normalize version: keep digits and dots; convert dots to hyphens
+      $ver_clean = strtolower(preg_replace('/[^0-9\.]+/', '', (string)$version));
+      $ver_norm = $ver_clean !== '' ? str_replace('.', '-', $ver_clean) : '';
+      // Date dd-mm-yy from published_at if present, else now
+      $date_src = null;
+      if ($manual_id > 0 && $manual && !empty($manual['published_at'])) { $date_src = $manual['published_at']; }
+      if (!$date_src && $status === 'published' && !empty($published_at)) { $date_src = $published_at; }
+      if (!$date_src) { $date_src = date('Y-m-d H:i:s'); }
+      $date_part = date('d-m-y', strtotime($date_src));
+      // Entity slug
+      $entity_slug = '';
+      if ($ambito === 'componente' && $item_id) {
         try {
-          $qs = $pdo->prepare('SELECT slug FROM kit_items WHERE id = ? LIMIT 1');
+          $qs = $pdo->prepare('SELECT slug, nombre_comun FROM kit_items WHERE id = ? LIMIT 1');
           $qs->execute([$item_id]);
-          $entitySuffix = (string)($qs->fetchColumn() ?: '');
-        } catch (PDOException $e) { $entitySuffix = ''; }
-        if ($entitySuffix === '') {
-          // Fallback: derive from component name if available
-          try {
-            $qs2 = $pdo->prepare('SELECT nombre_comun FROM kit_items WHERE id = ? LIMIT 1');
-            $qs2->execute([$item_id]);
-            $name = (string)($qs2->fetchColumn() ?: '');
-            if ($name !== '') { $tmp = strtolower(preg_replace('/[^a-z0-9\-]+/','-', $name)); $tmp = preg_replace('/-+/', '-', trim($tmp, '-')); $entitySuffix = $tmp; }
-          } catch (PDOException $e) {}
-        }
+          $row = $qs->fetch(PDO::FETCH_ASSOC);
+          $entity_slug = (string)($row['slug'] ?? '');
+          if ($entity_slug === '' && !empty($row['nombre_comun'])) {
+            $tmp = strtolower(preg_replace('/[^a-z0-9\-]+/', '-', (string)$row['nombre_comun']));
+            $entity_slug = preg_replace('/-+/', '-', trim($tmp, '-'));
+          }
+        } catch (PDOException $e) { $entity_slug = ''; }
       } else if ($kit && !empty($kit['slug'])) {
-        $entitySuffix = (string)$kit['slug'];
+        $entity_slug = (string)$kit['slug'];
       }
-      if ($entitySuffix !== '') {
-        // Append if not already present at end
-        if (!preg_match('/-' . preg_quote($entitySuffix, '/') . '$/', $slug)) {
-          $slug .= '-' . $entitySuffix;
-        }
-      }
-      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix + fecha):", ' . json_encode($slug) . ');</script>';
-      // Para el caso extremo de que todo quede vacío, aseguramos 'manual-'
-      if ($slug === '') { $slug = 'manual-'; }
+      // Build parts
+      $parts = ['manual', $tipo_manual];
+      if ($ver_norm !== '') { $parts[] = $ver_norm; }
+      $parts[] = $date_part;
+      if ($entity_slug !== '') { $parts[] = $entity_slug; }
+      $built = implode('-', array_filter($parts));
+      // Sanitize
+      $built = strtolower($built);
+      $built = preg_replace('/[^a-z0-9\-]+/', '-', $built);
+      $built = preg_replace('/-+/', '-', $built);
+      $built = trim($built, '-');
+      // Ensure single manual- prefix
+      $built = preg_replace('/^(?:manual-)+/', 'manual-', $built);
+      if ($built === 'manual') { $built = 'manual-'; }
+      $slug = $built;
+      echo '<script>console.log("🔍 [ManualsEdit] Slug ensamblado:", ' . json_encode($slug) . ');</script>';
     }
 
-    // Verificar unicidad por (kit_id, idioma, slug)
-    if (!$error_msg && $kit_id > 0 && $slug !== '') {
+    // Verificar unicidad por entidad (kit o componente) + idioma + slug
+    if (!$error_msg && $slug !== '') {
       try {
-        if ($manual_id > 0) {
-          $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND idioma = ? AND slug = ? AND id <> ?');
-          $chk->execute([$kit_id, $idioma, $slug, $manual_id]);
+        if ($ambito === 'componente' && $item_id) {
+          if ($manual_id > 0) {
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE item_id = ? AND idioma = ? AND slug = ? AND id <> ?');
+            $chk->execute([$item_id, $idioma, $slug, $manual_id]);
+          } else {
+            $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE item_id = ? AND idioma = ? AND slug = ?');
+            $chk->execute([$item_id, $idioma, $slug]);
+          }
+          $exists = (int)$chk->fetchColumn();
+          if ($exists > 0) {
+            $error_msg = 'El slug ya existe para este componente e idioma. Elige otro.';
+            echo '<script>console.log("⚠️ [ManualsEdit] Slug duplicado para item_id=' . (int)$item_id . ' idioma=' . htmlspecialchars($idioma, ENT_QUOTES, 'UTF-8') . '");</script>';
+          }
         } else {
-          $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND idioma = ? AND slug = ?');
-          $chk->execute([$kit_id, $idioma, $slug]);
-        }
-        $exists = (int)$chk->fetchColumn();
-        if ($exists > 0) {
-          $error_msg = 'El slug ya existe para este kit e idioma. Elige otro.';
-          echo '<script>console.log("⚠️ [ManualsEdit] Slug duplicado para kit_id=' . (int)$kit_id . ' idioma=' . htmlspecialchars($idioma, ENT_QUOTES, 'UTF-8') . '");</script>';
+          // ámbito kit
+          $kid = ($kit_id > 0 ? $kit_id : null);
+          if ($kid !== null) {
+            if ($manual_id > 0) {
+              $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND idioma = ? AND slug = ? AND id <> ?');
+              $chk->execute([$kid, $idioma, $slug, $manual_id]);
+            } else {
+              $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND idioma = ? AND slug = ?');
+              $chk->execute([$kid, $idioma, $slug]);
+            }
+            $exists = (int)$chk->fetchColumn();
+            if ($exists > 0) {
+              $error_msg = 'El slug ya existe para este kit e idioma. Elige otro.';
+              echo '<script>console.log("⚠️ [ManualsEdit] Slug duplicado para kit_id=' . (int)$kid . ' idioma=' . htmlspecialchars($idioma, ENT_QUOTES, 'UTF-8') . '");</script>';
+            }
+          }
         }
       } catch (PDOException $e) {
         echo '<script>console.log("⚠️ [ManualsEdit] Error verificando unicidad:", ' . json_encode($e->getMessage()) . ');</script>';
@@ -189,6 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'pasos_json = ?', 'herramientas_json = ?', 'seguridad_json = ?', 'html = ?'
           ];
           $params = [$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          // Persist exclusivity of entity
+          $setParts[] = 'kit_id = ?'; $params[] = ($ambito === 'componente' ? null : ($kit_id > 0 ? $kit_id : null));
           if ($has_render_mode_column) { $setParts[] = 'render_mode = ?'; $params[] = $render_mode_post; }
           if ($has_tipo_manual_column) { $setParts[] = 'tipo_manual = ?'; $params[] = $tipo_manual; }
           if ($has_ambito_column) { $setParts[] = 'ambito = ?'; $params[] = $ambito; }
@@ -206,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           // Build dynamic INSERT
           $fields = ['kit_id','slug','version','status','idioma','time_minutes','dificultad_ensamble','pasos_json','herramientas_json','seguridad_json','html'];
           $place = array_fill(0, count($fields), '?');
-          $vals = [$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          $vals = [($ambito === 'componente' ? null : ($kit_id > 0 ? $kit_id : null)), $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
           if ($has_render_mode_column) { $fields[]='render_mode'; $place[]='?'; $vals[]=$render_mode_post; }
           if ($has_tipo_manual_column) { $fields[]='tipo_manual'; $place[]='?'; $vals[]=$tipo_manual; }
           if ($has_ambito_column) { $fields[]='ambito'; $place[]='?'; $vals[]=$ambito; }
@@ -240,17 +257,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// Load kits for selector if needed
+// Load kits for selector (always)
 $kits = [];
-if (!$kit) {
-  $stmtKs = $pdo->query('SELECT id, nombre FROM kits ORDER BY nombre ASC');
+try {
+  $stmtKs = $pdo->query('SELECT id, nombre, slug FROM kits ORDER BY nombre ASC');
   $kits = $stmtKs->fetchAll(PDO::FETCH_ASSOC);
-}
+} catch (PDOException $e) { $kits = []; }
 ?>
 <div class="container">
   <h1><?= $manual ? 'Editar Manual' : 'Nuevo Manual' ?></h1>
   <?php if ($kit): ?>
-    <p>Kit: <strong><?= htmlspecialchars($kit['nombre']) ?></strong> (ID <?= (int)$kit['id'] ?>)</p>
+    <p>Kit actual: <strong><?= htmlspecialchars($kit['nombre']) ?></strong> (ID <?= (int)$kit['id'] ?>)</p>
     <p><a href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit['id'] ?>">Volver a Manuales</a></p>
   <?php endif; ?>
 
@@ -260,19 +277,15 @@ if (!$kit) {
   <form method="post">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
 
-    <div class="form-group">
+    <div class="form-group" id="ambito-kit-wrap">
       <label>Kit</label>
-      <?php if ($kit): ?>
-        <input type="hidden" name="kit_id" value="<?= (int)$kit['id'] ?>" />
-        <input type="text" value="<?= htmlspecialchars($kit['nombre']) ?>" disabled />
-      <?php else: ?>
-        <select name="kit_id" required>
-          <option value="">-- Selecciona --</option>
-          <?php foreach ($kits as $k): ?>
-            <option value="<?= (int)$k['id'] ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      <?php endif; ?>
+      <select name="kit_id" id="kit-select">
+        <option value="">-- Selecciona --</option>
+        <?php foreach ($kits as $k): ?>
+          <option value="<?= (int)$k['id'] ?>" data-slug="<?= htmlspecialchars($k['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <small class="help-note">Solo se guardará cuando el ámbito sea Kit.</small>
     </div>
 
     <div class="form-group">
@@ -518,10 +531,12 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   // Toggle ambito → item selector
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemWrap = document.getElementById('ambito-item-wrap');
+  const kitWrap = document.getElementById('ambito-kit-wrap');
   function applyAmb(){
     if (!ambSel || !itemWrap) return;
     const v = ambSel.value;
     itemWrap.style.display = (v === 'componente') ? '' : 'none';
+    if (kitWrap) { kitWrap.style.display = (v === 'componente') ? 'none' : ''; }
     console.log('🔍 [ManualsEdit] Ámbito:', v);
   }
   if (ambSel) { ambSel.addEventListener('change', applyAmb); applyAmb(); }
@@ -973,6 +988,17 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   if (kitSelect) {
     kitSelect.addEventListener('change', async function(){
       const id = this.value ? parseInt(this.value, 10) : 0;
+      // Update KIT_SLUG for slug suggestion
+      const opt = this.options[this.selectedIndex];
+      const optSlug = opt ? (opt.getAttribute('data-slug') || '') : '';
+      KIT_SLUG = optSlug || KIT_SLUG;
+      console.log('🔍 [ManualsEdit] KIT_SLUG actualizado:', KIT_SLUG || '(vacío)');
+      // Regenerar slug si campo está vacío
+      const slugInput = document.getElementById('manual-slug');
+      if (slugInput && (slugInput.value || '').trim() === '') {
+        slugInput.value = (typeof buildSuggestion === 'function') ? buildSuggestion() : slugInput.value;
+        console.log('✅ [ManualsEdit] Slug regenerado tras cambio de kit:', slugInput.value);
+      }
       if (!id) { renderKitSafetyPanel(null); return; }
       const seg = await fetchKitSafetyById(id);
       renderKitSafetyPanel(seg);
