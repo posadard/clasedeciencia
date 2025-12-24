@@ -349,7 +349,7 @@ include 'includes/header.php';
                 <h2>🧭 Índice</h2>
                 <ol>
                   <?php foreach ($toc_items as $ti): ?>
-                    <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['title']) ?>: <?= h($ti['preview']) ?></a></li>
+                    <li><a href="#<?= h($ti['id']) ?>"><strong><?= h($ti['title']) ?></strong>: <?= h($ti['preview']) ?></a></li>
                   <?php endforeach; ?>
                 </ol>
               </nav>
@@ -456,6 +456,11 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .manual-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .manual-resumen { font-size:1.05rem; color:#444; margin-top:8px; }
 .manual-toc { background:#f7f9fc; border:1px solid #e3e8f3; border-radius:8px; padding:10px 12px; }
+.manual-toc-row { display:flex; gap:12px; align-items:flex-start; }
+.manual-toc-aside { flex:0 0 160px; max-width:160px; }
+.manual-toc-right { flex:1; min-width:0; }
+.safety-info { width:100%; }
+.manual-toc { width:100%; }
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
