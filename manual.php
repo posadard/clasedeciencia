@@ -365,66 +365,68 @@ include 'includes/header.php';
         } catch (Exception $e) { $man_components = []; }
       ?>
       <?php if (!empty($man_components)): ?>
-        <section class="manual-components" style="margin-top:12px;">
-          <h2>🧪 Componentes del Kit</h2>
-          <ul class="materials-list">
-            <?php foreach ($man_components as $m): ?>
-              <?php
-                $item_slug = !empty($m['slug']) ? '/' . $m['slug'] : '';
-                $li_attrs = !empty($item_slug) ? ' data-href="' . h($item_slug) . '" tabindex="0"' : '';
-              ?>
-              <li<?= $li_attrs ?> class="material-item">
-                <span class="material-name"><?= h($m['nombre_comun'] ?? 'Material') ?></span>
-                <?php if (!empty($m['advertencias_seguridad'])): ?>
-                  <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
-                <?php endif; ?>
-                <?php if (!empty($m['cantidad'])): ?>
-                  <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
-                <?php endif; ?>
-                <?php if (isset($m['es_incluido_kit'])): ?>
-                  <?php if ((int)$m['es_incluido_kit'] === 1): ?>
-                    <span class="badge badge-success">✓ Incluido</span>
-                  <?php else: ?>
-                    <span class="badge badge-danger">No incluido</span>
+        <section class="kits-section">
+          <div class="kit-card">
+            <h4>Componentes necesarios</h4>
+            <ul class="materials-list">
+              <?php foreach ($man_components as $m): ?>
+                <?php
+                  $item_slug = !empty($m['slug']) ? '/' . $m['slug'] : '';
+                  $li_attrs = !empty($item_slug) ? ' data-href="' . h($item_slug) . '" tabindex="0"' : '';
+                ?>
+                <li<?= $li_attrs ?> class="material-item">
+                  <span class="material-name"><?= h($m['nombre_comun']) ?></span>
+                  <?php if (!empty($m['advertencias_seguridad'])): ?>
+                    <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
                   <?php endif; ?>
-                <?php endif; ?>
-                <?php if (!empty($m['notas'])): ?>
-                  <small class="material-notes"><?= h($m['notas']) ?></small>
-                <?php endif; ?>
-                <?php if (!empty($m['slug'])): ?>
-                  <span class="icon-decor" aria-hidden="true" style="margin-left:6px">🔎</span>
-                <?php endif; ?>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-          <script>
-            // 🔍 [Manual] Activar click en toda la tarjeta del material (igual que kit.php)
-            (function() {
-              try {
-                var items = document.querySelectorAll('.manual-components .materials-list li[data-href]');
-                console.log('🔍 [Manual] Componentes clicables:', items.length);
-                items.forEach(function(li) {
-                  var href = li.getAttribute('data-href');
-                  if (!href) return;
-                  li.addEventListener('click', function(ev) {
-                    var target = ev.target;
-                    if (target && target.closest('a')) { return; }
-                    console.log('✅ [Manual] Click en componente →', href);
-                    window.location.href = href;
-                  });
-                  li.addEventListener('keypress', function(ev) {
-                    if (ev.key === 'Enter' || ev.key === ' ') {
-                      console.log('✅ [Manual] Keypress en componente →', href);
+                  <?php if (!empty($m['cantidad'])): ?>
+                    <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
+                  <?php endif; ?>
+                  <?php if (isset($m['es_incluido_kit'])): ?>
+                    <?php if ((int)$m['es_incluido_kit'] === 1): ?>
+                      <span class="badge badge-success">✓ Incluido</span>
+                    <?php else: ?>
+                      <span class="badge badge-danger">No incluido</span>
+                    <?php endif; ?>
+                  <?php endif; ?>
+                  <?php if (!empty($m['notas'])): ?>
+                    <small class="material-notes"><?= h($m['notas']) ?></small>
+                  <?php endif; ?>
+                  <?php if (!empty($m['slug'])): ?>
+                    <span class="icon-decor" aria-hidden="true" style="margin-left:6px">🔎</span>
+                  <?php endif; ?>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+            <script>
+              // 🔍 [Manual] Activar click en toda la tarjeta del material (igual que kit.php)
+              (function() {
+                try {
+                  var items = document.querySelectorAll('.kits-section .materials-list li[data-href]');
+                  console.log('🔍 [Manual] Componentes clicables:', items.length);
+                  items.forEach(function(li) {
+                    var href = li.getAttribute('data-href');
+                    if (!href) return;
+                    li.addEventListener('click', function(ev) {
+                      var target = ev.target;
+                      if (target && target.closest('a')) { return; }
+                      console.log('✅ [Manual] Click en componente →', href);
                       window.location.href = href;
-                      ev.preventDefault();
-                    }
+                    });
+                    li.addEventListener('keypress', function(ev) {
+                      if (ev.key === 'Enter' || ev.key === ' ') {
+                        console.log('✅ [Manual] Keypress en componente →', href);
+                        window.location.href = href;
+                        ev.preventDefault();
+                      }
+                    });
                   });
-                });
-              } catch (e) {
-                console.log('❌ [Manual] Error activando componentes clicables:', e && e.message ? e.message : e);
-              }
-            })();
-          </script>
+                } catch (e) {
+                  console.log('❌ [Manual] Error activando componentes clicables:', e && e.message ? e.message : e);
+                }
+              })();
+            </script>
+          </div>
         </section>
       <?php endif; ?>
 
