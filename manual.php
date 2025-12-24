@@ -342,6 +342,51 @@ include 'includes/header.php';
                     <?php endforeach; ?>
                   </ul>
                 <?php endif; ?>
+                <?php
+                  // Concatenar notas de seguridad de componentes y herramientas (10 palabras) con el nombre
+                  $wp = function($text, $limit = 10){
+                    $t = trim(strip_tags((string)$text));
+                    if ($t === '') return '';
+                    $parts = preg_split('/\s+/u', $t, -1, PREG_SPLIT_NO_EMPTY);
+                    if (!$parts || !count($parts)) return '';
+                    if (count($parts) <= (int)$limit) return implode(' ', $parts);
+                    return implode(' ', array_slice($parts, 0, (int)$limit)) . '…';
+                  };
+                  $components_line = '';
+                  $tools_line = '';
+                  try {
+                    $comp_list = cdc_get_kit_componentes($pdo, (int)$kit['id']);
+                  } catch (Exception $e) { $comp_list = []; }
+                  $comp_pairs = [];
+                  if (!empty($comp_list)) {
+                    foreach ($comp_list as $cm) {
+                      if (!empty($cm['advertencias_seguridad'])) {
+                        $name = (string)($cm['nombre_comun'] ?? '');
+                        $prev = $wp($cm['advertencias_seguridad'], 10);
+                        if ($name !== '' && $prev !== '') { $comp_pairs[] = $name . ': ' . $prev; }
+                      }
+                    }
+                  }
+                  if (!empty($comp_pairs)) { $components_line = implode(' - ', $comp_pairs); }
+                  $tool_pairs = [];
+                  if (!empty($herr)) {
+                    foreach ($herr as $ht) {
+                      if (is_array($ht) && !empty($ht['seguridad'])) {
+                        $tname = (string)($ht['nombre'] ?? '');
+                        $tprev = $wp($ht['seguridad'], 10);
+                        if ($tname !== '' && $tprev !== '') { $tool_pairs[] = $tname . ': ' . $tprev; }
+                      }
+                    }
+                  }
+                  if (!empty($tool_pairs)) { $tools_line = implode(' - ', $tool_pairs); }
+                ?>
+                <?php if ($components_line !== '' || $tools_line !== ''): ?>
+                  <div class="safety-concat" aria-label="Notas adicionales de seguridad">
+                    <?php if ($components_line !== ''): ?><div class="safety-concat-line"><?= h($components_line) ?></div><?php endif; ?>
+                    <?php if ($tools_line !== ''): ?><div class="safety-concat-line"><?= h($tools_line) ?></div><?php endif; ?>
+                  </div>
+                  <script>console.log('🧪 [Manual] Notas seguridad concat:', { componentes: <?= json_encode($comp_pairs) ?>, herramientas: <?= json_encode($tool_pairs) ?> });</script>
+                <?php endif; ?>
               </section>
             <?php endif; ?>
           </div>
@@ -589,6 +634,8 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 /* Security note list */
 .security-list { padding-left: 18px; }
 .sec-note { color:#333; }
+.safety-concat { margin-top:6px; }
+.safety-concat-line { font-size: 0.9rem; color:#555; }
 .manual-head { display:flex; gap:12px; align-items:center; }
 .manual-emoji { font-size:60px; line-height:1; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
 .manual-title-wrap h1 { margin: 0 0 4px; }
