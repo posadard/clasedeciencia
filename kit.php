@@ -25,7 +25,7 @@ if (!$kit) {
 
 $componentes = cdc_get_kit_componentes($pdo, (int)$kit['id']);
 $clases = cdc_get_kit_clases($pdo, (int)$kit['id']);
-$manuales = cdc_get_kit_manuals($pdo, (int)$kit['id'], true);
+$manuales = cdc_get_kit_manuals($pdo, (int)$kit['id'], false);
 // Áreas del kit (múltiples)
 $kit_areas = cdc_get_kit_areas($pdo, (int)$kit['id']);
 
@@ -392,6 +392,7 @@ include 'includes/header.php';
           $tiempo = isset($man['time_minutes']) && $man['time_minutes'] ? ((int)$man['time_minutes']) . 'm' : null;
           $version = !empty($man['version']) ? (string)$man['version'] : null;
           $dif = !empty($man['dificultad_ensamble']) ? (string)$man['dificultad_ensamble'] : null;
+          $is_disc = isset($man['status']) && strtolower((string)$man['status']) === 'discontinued';
           // Icono por tipo de manual (si existe) o heurística por slug
           $icon = '📘';
           $tipo = isset($man['tipo_manual']) ? (string)$man['tipo_manual'] : '';
@@ -473,6 +474,7 @@ include 'includes/header.php';
               <div class="kit-inline-right">
                 <h3 class="kit-inline-title">
                   <span><?= h($man_title) ?></span>
+                  <?php if ($is_disc): ?><span class="badge badge-danger" style="margin-left:8px;">⚠️ Descontinuado</span><?php endif; ?>
                   <span class="kit-inline-byline">
                     🌐 <?= h($idioma) ?>
                     <?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
@@ -496,7 +498,14 @@ include 'includes/header.php';
             </div>
           </section>
         <?php endforeach; ?>
-        <script>console.log('✅ [Kit] Manuales: <?= count($manuales) ?> cards renderizadas');</script>
+        <script>
+          (function(){
+            var total = <?= count($manuales) ?>;
+            var discontinued = <?= json_encode(array_values(array_filter(array_map(function($m){ return strtolower((string)($m['status'] ?? '')) === 'discontinued'; }, $manuales)))) ?>.length;
+            console.log('✅ [Kit] Manuales renderizadas:', total);
+            console.log('⚠️ [Kit] Manuales descontinuados:', discontinued);
+          })();
+        </script>
       <?php else: ?>
         <p class="muted">Aún no hay manuales publicados para este kit.</p>
       <?php endif; ?>

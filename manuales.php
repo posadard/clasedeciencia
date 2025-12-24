@@ -15,12 +15,14 @@ $idioma = isset($_GET['idioma']) ? trim($_GET['idioma']) : '';
 
 $items = [];
 try {
-    $where = ["m.status = 'published'", "k.activo = 1"];
+    $where = ["k.activo = 1"];
     $params = [];
+    // Mostrar publicados y descontinuados
+    $where[] = "m.status IN ('published','discontinued')";
     if ($tipo !== '') { $where[] = 'm.tipo_manual = ?'; $params[] = $tipo; }
     if ($ambito !== '' && in_array($ambito, ['kit','componente'])) { $where[] = 'm.ambito = ?'; $params[] = $ambito; }
     if ($idioma !== '') { $where[] = 'm.idioma = ?'; $params[] = $idioma; }
-        $sql = "SELECT m.id, m.slug, m.version, m.idioma, m.time_minutes, m.dificultad_ensamble, m.updated_at, m.published_at,
+      $sql = "SELECT m.id, m.slug, m.version, m.idioma, m.time_minutes, m.dificultad_ensamble, m.updated_at, m.published_at, m.status,
              m.tipo_manual, m.ambito, m.item_id,
              k.id AS kit_id, k.nombre AS kit_nombre, k.slug AS kit_slug,
              i.slug AS item_slug
@@ -119,6 +121,7 @@ include 'includes/header.php';
             if ($tk && isset($tipo_map[$tk])) { $emoji = $tipo_map[$tk]['emoji']; $label = $tipo_map[$tk]['label']; }
             elseif (strpos(strtolower($m['slug']), 'arm') !== false) { $emoji = '🛠️'; $label = 'Armado'; }
             $href = '/' . h($m['slug']);
+            $is_disc = isset($m['status']) && strtolower((string)$m['status']) === 'discontinued';
           ?>
           <article class="article-card" data-href="<?= h($href) ?>">
             <a class="card-link" href="<?= h($href) ?>">
@@ -127,6 +130,7 @@ include 'includes/header.php';
                   <span class="section-badge">Manual</span>
                   <span class="badge"><?= h($label) ?></span>
                   <?php if (!empty($m['idioma'])): ?><span class="badge"><?= h($m['idioma']) ?></span><?php endif; ?>
+                  <?php if ($is_disc): ?><span class="badge badge-danger">⚠️ Descontinuado</span><?php endif; ?>
                 </div>
                 <h3><?= h(ucwords(str_replace('-', ' ', (string)$m['slug']))) ?></h3>
                 <div class="card-footer">
