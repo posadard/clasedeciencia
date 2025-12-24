@@ -286,10 +286,7 @@ try {
       <small>Se actualiza automáticamente: <strong>manual-{tipo}-{version}-{dd-mm-yy}-{entidad}</strong>. No editable.</small>
     </div>
 
-    <div class="form-group">
-      <label>Idioma</label>
-      <input type="text" name="idioma" value="<?= htmlspecialchars($manual['idioma'] ?? 'es-CO') ?>" />
-    </div>
+    
 
     <?php
     // Load kit items for component scope selector (prefer items in this kit)
@@ -378,9 +375,24 @@ try {
 
     <div class="form-row">
       <div class="form-group">
+        <label>Idioma</label>
+        <input type="text" name="idioma" value="<?= htmlspecialchars($manual['idioma'] ?? 'es-CO') ?>" />
+      </div>
+      <div class="form-group">
         <label>Versión</label>
         <input type="text" name="version" value="<?= htmlspecialchars($manual['version'] ?? '1.0') ?>" />
       </div>
+      <div class="form-group">
+        <label>Tiempo (minutos)</label>
+        <input type="number" name="time_minutes" value="<?= htmlspecialchars($manual['time_minutes'] ?? '') ?>" />
+      </div>
+      <div class="form-group">
+        <label>Dificultad de Ensamble</label>
+        <input type="text" name="dificultad_ensamble" value="<?= htmlspecialchars($manual['dificultad_ensamble'] ?? '') ?>" />
+      </div>
+    </div>
+
+    <div class="form-row">
       <div class="form-group">
         <label>Status</label>
         <select name="status">
