@@ -39,6 +39,36 @@ $page_title = 'Manual: ' . h($manual['slug']) . ' - ' . h($kit['nombre']);
 $page_description = 'Guía/Manual del kit ' . h($kit['nombre']) . ' (' . h($manual['slug']) . ')';
 $canonical_url = SITE_URL . '/kit-manual.php?kit=' . urlencode($kit['slug']) . '&slug=' . urlencode($manual['slug']);
 
+// Extra: tipo/ambito/icono y componente vinculado si aplica
+$tipo_map = [
+  'seguridad' => ['emoji' => '🛡️', 'label' => 'Seguridad'],
+  'armado' => ['emoji' => '🛠️', 'label' => 'Armado'],
+  'calibracion' => ['emoji' => '🎛️', 'label' => 'Calibración'],
+  'uso' => ['emoji' => '▶️', 'label' => 'Uso'],
+  'mantenimiento' => ['emoji' => '🧰', 'label' => 'Mantenimiento'],
+  'teoria' => ['emoji' => '📘', 'label' => 'Teoría'],
+  'experimento' => ['emoji' => '🧪', 'label' => 'Experimento'],
+  'solucion' => ['emoji' => '🩺', 'label' => 'Solución'],
+  'evaluacion' => ['emoji' => '✅', 'label' => 'Evaluación'],
+  'docente' => ['emoji' => '👩‍🏫', 'label' => 'Docente'],
+  'referencia' => ['emoji' => '📚', 'label' => 'Referencia']
+];
+$tipo_key = isset($manual['tipo_manual']) ? strtolower((string)$manual['tipo_manual']) : '';
+$tipo_emoji = '📘';
+$tipo_label = 'Manual';
+if ($tipo_key && isset($tipo_map[$tipo_key])) { $tipo_emoji = $tipo_map[$tipo_key]['emoji']; $tipo_label = $tipo_map[$tipo_key]['label']; }
+elseif (strpos(strtolower($manual['slug']), 'arm') !== false) { $tipo_emoji = '🛠️'; $tipo_label = 'Armado'; }
+
+$ambito = isset($manual['ambito']) && $manual['ambito'] === 'componente' ? 'componente' : 'kit';
+$comp = null;
+if ($ambito === 'componente' && !empty($manual['item_id'])) {
+  try {
+    $stmtC = $pdo->prepare('SELECT id, nombre_comun, slug, sku FROM kit_items WHERE id = ? LIMIT 1');
+    $stmtC->execute([(int)$manual['item_id']]);
+    $comp = $stmtC->fetch(PDO::FETCH_ASSOC) ?: null;
+  } catch (Exception $e) { $comp = null; }
+}
+
 include 'includes/header.php';
 ?>
 <div class="container">
@@ -49,19 +79,36 @@ include 'includes/header.php';
   </div>
 
   <header class="manual-header">
-    <h1>🛠️ Manual: <?= h($manual['slug']) ?></h1>
-    <div class="manual-meta">
-      <span class="badge">Versión <?= h($manual['version']) ?></span>
-      <?php if (!empty($manual['idioma'])): ?><span class="badge">Idioma <?= h($manual['idioma']) ?></span><?php endif; ?>
-      <?php 
-        $kit_time = isset($kit['time_minutes']) ? (int)$kit['time_minutes'] : null; 
-        $kit_diff = isset($kit['dificultad_ensamble']) ? (string)$kit['dificultad_ensamble'] : null; 
-        $eff_time = !empty($manual['time_minutes']) ? (int)$manual['time_minutes'] : $kit_time; 
-        $eff_diff = !empty($manual['dificultad_ensamble']) ? (string)$manual['dificultad_ensamble'] : $kit_diff; 
-      ?>
-      <?php if (!empty($eff_time)): ?><span class="badge">⏱️ <?= (int)$eff_time ?> min</span><?php endif; ?>
-      <?php if (!empty($eff_diff)): ?><span class="badge">📊 <?= h($eff_diff) ?></span><?php endif; ?>
+    <div class="manual-head">
+      <div class="manual-emoji" aria-hidden="true"><?= $tipo_emoji ?></div>
+      <div class="manual-title-wrap">
+        <h1><?= h(ucwords(str_replace('-', ' ', (string)$manual['slug']))) ?></h1>
+        <div class="manual-meta">
+          <span class="badge"><?= h($tipo_label) ?></span>
+          <span class="badge">Versión <?= h($manual['version']) ?></span>
+          <?php if (!empty($manual['idioma'])): ?><span class="badge">🌐 <?= h($manual['idioma']) ?></span><?php endif; ?>
+          <?php 
+            $kit_time = isset($kit['time_minutes']) ? (int)$kit['time_minutes'] : null; 
+            $kit_diff = isset($kit['dificultad_ensamble']) ? (string)$kit['dificultad_ensamble'] : null; 
+            $eff_time = !empty($manual['time_minutes']) ? (int)$manual['time_minutes'] : $kit_time; 
+            $eff_diff = !empty($manual['dificultad_ensamble']) ? (string)$manual['dificultad_ensamble'] : $kit_diff; 
+          ?>
+          <?php if (!empty($eff_time)): ?><span class="badge">⏱️ <?= (int)$eff_time ?> min</span><?php endif; ?>
+          <?php if (!empty($eff_diff)): ?><span class="badge">📊 <?= h($eff_diff) ?></span><?php endif; ?>
+          <?php if (!empty($manual['published_at'])): ?><span class="badge">🔄 Publicado <?= h(date('d/m/Y', strtotime($manual['published_at']))) ?></span><?php endif; ?>
+          <?php if ($ambito === 'componente'): ?>
+            <?php if ($comp && !empty($comp['slug'])): ?>
+              <span class="badge">🔧 Para componente: <a href="/<?= h($comp['slug']) ?>" title="Ver componente <?= h($comp['nombre_comun']) ?>"><?= h($comp['nombre_comun']) ?></a></span>
+            <?php else: ?>
+              <span class="badge">🔧 Ámbito: Componente</span>
+            <?php endif; ?>
+          <?php endif; ?>
+        </div>
+      </div>
     </div>
+    <?php if (!empty($manual['resumen'])): ?>
+      <p class="manual-resumen"><?= h($manual['resumen']) ?></p>
+    <?php endif; ?>
   </header>
 
   <article class="manual-content">
@@ -245,6 +292,11 @@ console.log('✅ [KitManual] Cargado:', <?= json_encode(['id'=>$manual['id'],'ve
 /* Security note list */
 .security-list { padding-left: 18px; }
 .sec-note { color:#333; }
+.manual-head { display:flex; gap:12px; align-items:center; }
+.manual-emoji { font-size:60px; line-height:1; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
+.manual-title-wrap h1 { margin: 0 0 4px; }
+.manual-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.manual-resumen { font-size:1.05rem; color:#444; margin-top:8px; }
 @media print {
   .manual-step { page-break-inside: avoid; }
   .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }
