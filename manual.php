@@ -16,7 +16,7 @@ if ($manual_slug === '') {
 }
 
 try {
-  $stmtM = $pdo->prepare("SELECT * FROM kit_manuals WHERE slug = ? AND status = 'published' LIMIT 1");
+  $stmtM = $pdo->prepare("SELECT * FROM kit_manuals WHERE slug = ? AND status IN ('published','discontinued') LIMIT 1");
   $stmtM->execute([$manual_slug]);
   $manual = $stmtM->fetch(PDO::FETCH_ASSOC);
 } catch (Exception $e) { $manual = false; }
@@ -24,7 +24,7 @@ try {
 if (!$manual) {
   header('HTTP/1.0 404 Not Found');
   $page_title = 'Manual no encontrado';
-  $page_description = 'El manual solicitado no existe o no está publicado.';
+  $page_description = 'El manual solicitado no existe o no está publicado ni descontinuado.';
   include 'includes/header.php';
   echo '<div class="container"><div class="breadcrumb"><a href="/">Inicio</a> / <strong>Manual</strong></div><h1>Manual no encontrado</h1></div>';
   include 'includes/footer.php';
@@ -141,6 +141,7 @@ include 'includes/header.php';
           <span class="badge"><?= h($tipo_label) ?></span>
           <span class="badge">Versión <?= h($manual['version']) ?></span>
           <?php if (!empty($manual['idioma'])): ?><span class="badge">🌐 <?= h($manual['idioma']) ?></span><?php endif; ?>
+          <?php if ($status_key === 'discontinued'): ?><span class="badge badge-danger">⚠️ Descontinuado</span><?php endif; ?>
           <?php 
             $kit_time = isset($kit['time_minutes']) ? (int)$kit['time_minutes'] : null; 
             $kit_diff = isset($kit['dificultad_ensamble']) ? (string)$kit['dificultad_ensamble'] : null; 
