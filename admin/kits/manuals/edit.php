@@ -277,16 +277,6 @@ try {
   <form method="post">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
 
-    <div class="form-group" id="ambito-kit-wrap">
-      <label>Kit</label>
-      <select name="kit_id" id="kit-select">
-        <option value="">-- Selecciona --</option>
-        <?php foreach ($kits as $k): ?>
-          <option value="<?= (int)$k['id'] ?>" data-slug="<?= htmlspecialchars($k['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
-        <?php endforeach; ?>
-      </select>
-      <small class="help-note">Solo se guardará cuando el ámbito sea Kit.</small>
-    </div>
 
     <div class="form-group">
       <label>Slug</label>
@@ -361,24 +351,30 @@ try {
           <small class="help-note">Ejecuta la migración para habilitar el ámbito.</small>
         <?php endif; ?>
       </div>
-      <div class="form-group" id="ambito-item-wrap" style="min-width:280px; display:none;">
-        <label>Componente (si ámbito = componente)</label>
-        <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
-          <option value="">-- Selecciona --</option>
-          <?php foreach ($kit_items as $it): ?>
-            <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-slug="<?= htmlspecialchars($it['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
-          <?php endforeach; ?>
-        </select>
-        <?php if (!$has_item_id_column): ?>
-          <small class="help-note">Ejecuta la migración para habilitar el vínculo con componentes.</small>
-        <?php endif; ?>
-      </div>
     </div>
 
-    <div class="form-group">
-      <label>Resumen (opcional)</label>
-      <input type="text" name="resumen" maxlength="255" value="<?= htmlspecialchars($manual['resumen'] ?? '') ?>" <?= $has_resumen_column ? '' : 'disabled' ?> />
-      <small class="help-note">Breve extracto (≤255). Útil para tarjetas en el frontend.</small>
+    <div class="form-group" id="ambito-kit-wrap">
+      <label>Kit</label>
+      <select name="kit_id" id="kit-select">
+        <option value="">-- Selecciona --</option>
+        <?php foreach ($kits as $k): ?>
+          <option value="<?= (int)$k['id'] ?>" data-slug="<?= htmlspecialchars($k['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <small class="help-note">Solo se guardará cuando el ámbito sea Kit.</small>
+    </div>
+
+    <div class="form-group" id="ambito-item-wrap" style="min-width:280px; display:none;">
+      <label>Componente (si ámbito = componente)</label>
+      <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
+        <option value="">-- Selecciona --</option>
+        <?php foreach ($kit_items as $it): ?>
+          <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-slug="<?= htmlspecialchars($it['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+        <?php endforeach; ?>
+      </select>
+      <?php if (!$has_item_id_column): ?>
+        <small class="help-note">Ejecuta la migración para habilitar el vínculo con componentes.</small>
+      <?php endif; ?>
     </div>
 
     <div class="form-row">
@@ -406,6 +402,12 @@ try {
         </select>
         <small>Elige qué manual verá el público; el otro se conserva.</small>
       </div>
+    </div>
+
+    <div class="form-group">
+      <label>Resumen (opcional)</label>
+      <input type="text" name="resumen" maxlength="255" value="<?= htmlspecialchars($manual['resumen'] ?? '') ?>" <?= $has_resumen_column ? '' : 'disabled' ?> />
+      <small class="help-note">Breve extracto (≤255). Útil para tarjetas en el frontend.</small>
     </div>
 
     <div class="form-row">
@@ -549,6 +551,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const tipoSel = document.querySelector('select[name="tipo_manual"]');
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemSel = document.querySelector('select[name="item_id"]');
+  const verInput = document.querySelector('input[name="version"]');
 
   function baseSlugify(str){
     if (!str) return '';
@@ -653,6 +656,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   if (tipoSel) tipoSel.addEventListener('change', applySuggestionIfEmpty);
   if (ambSel) ambSel.addEventListener('change', applySuggestionIfEmpty);
   if (itemSel) itemSel.addEventListener('change', applySuggestionIfEmpty);
+  if (verInput) verInput.addEventListener('change', applySuggestionIfEmpty);
 
   // Normalizar mientras escribe (suave): al perder foco
   if (slugInput) {
