@@ -278,54 +278,11 @@ include 'includes/header.php';
             } else {
               $preview = $titulo;
             }
-            $toc_items[] = [ 'id' => 'paso-' . ($idx + 1), 'text' => $preview ];
+            $toc_items[] = [ 'id' => 'paso-' . ($idx + 1), 'title' => $titulo, 'preview' => $preview ];
           }
         }
       ?>
-      <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
-        <section class="safety-info">
-          <h2>⚠️ Seguridad</h2>
-          <?php if ($status_key === 'discontinued'): ?>
-            <div class="badge badge-danger" style="margin:4px 0;">⚠️ Este manual ha sido descontinuado</div>
-          <?php endif; ?>
-          <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
-            <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
-          <?php endif; ?>
-          <?php if (!empty($kitNotesText)): ?>
-            <div class="kit-safety-notes-public"><?= nl2br(h($kitNotesText)) ?></div>
-          <?php endif; ?>
-          <?php if (!empty($manualNotes)): ?>
-            <ul class="security-list">
-              <?php foreach ($manualNotes as $nota): ?>
-                <?php
-                  $cat = is_array($nota) ? ($nota['categoria'] ?? '') : '';
-                  $catLower = mb_strtolower($cat);
-                  $icon = '⚠️';
-                  switch ($catLower) {
-                    case 'protección personal': $icon = '🥽'; break;
-                    case 'corte': $icon = '✂️'; break;
-                    case 'químico': $icon = '⚗️'; break;
-                    case 'eléctrico': $icon = '⚡'; break;
-                    case 'calor/fuego': $icon = '🔥'; break;
-                    case 'biológico': $icon = '🧪'; break;
-                    case 'presión/golpe': $icon = '💥'; break;
-                    case 'entorno/ventilación': $icon = '🌬️'; break;
-                    case 'supervisión adulta': $icon = '👨‍🏫'; break;
-                    case 'residuos/reciclaje': $icon = '♻️'; break;
-                  }
-                ?>
-                <li>
-                  <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
-                  <?php if (!empty($cat)): ?>
-                    <span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span>
-                  <?php endif; ?>
-                </li>
-              <?php endforeach; ?>
-            </ul>
-          <?php endif; ?>
-        </section>
-      <?php endif; ?>
-      <?php if (!empty($toc_items)): ?>
+      <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued'): ?>
         <div class="manual-toc-row">
           <aside class="manual-toc-aside">
             <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
@@ -343,16 +300,63 @@ include 'includes/header.php';
               <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder en índice');</script>
             <?php endif; ?>
           </aside>
-          <nav class="manual-toc" aria-label="Índice de pasos">
-            <h2>🧭 Índice</h2>
-            <ol>
-              <?php foreach ($toc_items as $ti): ?>
-                <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['text']) ?></a></li>
-              <?php endforeach; ?>
-            </ol>
-          </nav>
+          <div class="manual-toc-right">
+            <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
+              <section class="safety-info">
+                <h2>⚠️ Seguridad</h2>
+                <?php if ($status_key === 'discontinued'): ?>
+                  <div class="badge badge-danger" style="margin:4px 0;">⚠️ Este manual ha sido descontinuado</div>
+                <?php endif; ?>
+                <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
+                  <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
+                <?php endif; ?>
+                <?php if (!empty($kitNotesText)): ?>
+                  <div class="kit-safety-notes-public"><?= nl2br(h($kitNotesText)) ?></div>
+                <?php endif; ?>
+                <?php if (!empty($manualNotes)): ?>
+                  <ul class="security-list">
+                    <?php foreach ($manualNotes as $nota): ?>
+                      <?php
+                        $cat = is_array($nota) ? ($nota['categoria'] ?? '') : '';
+                        $catLower = mb_strtolower($cat);
+                        $icon = '⚠️';
+                        switch ($catLower) {
+                          case 'protección personal': $icon = '🥽'; break;
+                          case 'corte': $icon = '✂️'; break;
+                          case 'químico': $icon = '⚗️'; break;
+                          case 'eléctrico': $icon = '⚡'; break;
+                          case 'calor/fuego': $icon = '🔥'; break;
+                          case 'biológico': $icon = '🧪'; break;
+                          case 'presión/golpe': $icon = '💥'; break;
+                          case 'entorno/ventilación': $icon = '🌬️'; break;
+                          case 'supervisión adulta': $icon = '👨‍🏫'; break;
+                          case 'residuos/reciclaje': $icon = '♻️'; break;
+                        }
+                      ?>
+                      <li>
+                        <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
+                        <?php if (!empty($cat)): ?>
+                          <span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span>
+                        <?php endif; ?>
+                      </li>
+                    <?php endforeach; ?>
+                  </ul>
+                <?php endif; ?>
+              </section>
+            <?php endif; ?>
+            <?php if (!empty($toc_items)): ?>
+              <nav class="manual-toc" aria-label="Índice de pasos" style="margin-top:10px;">
+                <h2>🧭 Índice</h2>
+                <ol>
+                  <?php foreach ($toc_items as $ti): ?>
+                    <li><a href="#<?= h($ti['id']) ?>"><?= h($ti['title']) ?>: <?= h($ti['preview']) ?></a></li>
+                  <?php endforeach; ?>
+                </ol>
+              </nav>
+              <script>console.log('🔁 [Manual] Intercambio: imagen izquierda, seguridad derecha y índice debajo');</script>
+            <?php endif; ?>
+          </div>
         </div>
-        <script>console.log('🔁 [Manual] Intercambio: seguridad e índice reordenados');</script>
       <?php endif; ?>
 
       <?php if (!empty($herr)): ?>
