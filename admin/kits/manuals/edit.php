@@ -78,30 +78,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
     $render_mode_post = ($_POST['render_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
 
-    // Derivar kit_id si ámbito = componente y no se seleccionó kit
-    if ($ambito === 'componente' && ($kit_id <= 0) && $item_id) {
-      try {
-        $qk = $pdo->prepare('SELECT kit_id FROM kit_componentes WHERE item_id = ? ORDER BY kit_id ASC LIMIT 1');
-        $qk->execute([$item_id]);
-        $foundKid = (int)($qk->fetchColumn() ?: 0);
-        if ($foundKid > 0) {
-          $kit_id = $foundKid;
-          echo '<script>console.log("ℹ️ [ManualsEdit] Derivado kit_id desde componente:", ' . json_encode($kit_id) . ');</script>';
-        } else {
-          echo '<script>console.log("⚠️ [ManualsEdit] Componente sin kit asociado");</script>';
-        }
-      } catch (PDOException $e) {
-        echo '<script>console.log("⚠️ [ManualsEdit] Error derivando kit desde componente:", ' . json_encode($e->getMessage()) . ');</script>';
-      }
-    }
-
-    // Validaciones básicas
-    if ($ambito === 'kit' && $kit_id <= 0) {
-      $error_msg = 'Kit requerido para ámbito Kit.';
-    } elseif ($ambito === 'componente' && (!$item_id)) {
-      $error_msg = 'Componente requerido para ámbito Componente.';
-    } elseif ($ambito === 'componente' && $kit_id <= 0) {
-      $error_msg = 'Este componente no está vinculado a ningún kit. Asocia el componente a un kit o selecciona un kit.';
+    // Basic validations
+    if ($kit_id <= 0) {
+      $error_msg = 'Kit requerido.';
     } elseif ($slug === '') {
       $error_msg = 'Slug requerido.';
     } elseif (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
@@ -117,8 +96,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $raw = preg_replace('/^(?:manual-)+/', '', $raw);
       $body = trim($raw, '-');
       $slug = ($body !== '') ? ('manual-' . $body) : 'manual-';
-      // Confiar en el slug generado por el cliente: no re-apendemos fecha ni entidad aquí
-      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix, sin re-apéndices):", ' . json_encode($slug) . ');</script>';
+      // Asegurar sufijo de fecha dd-mm-yy para unicidad
+      // Tomar fecha publicada si disponible; si no, ahora
+      $dateSource = null;
+      if ($manual_id > 0 && $manual) { $dateSource = $manual['published_at'] ?? null; }
+      if (!$dateSource && $status === 'published') { $dateSource = date('Y-m-d H:i:s'); }
+      if (!$dateSource) { $dateSource = date('Y-m-d H:i:s'); }
+      $dateSuffix = date('d-m-y', strtotime($dateSource));
+      // Si no termina con -dd-mm-yy, añadir
+      if (!preg_match('/\d{2}-\d{2}-\d{2}$/', $slug)) {
+        $slug .= '-' . $dateSuffix;
+      }
+      // Asegurar concatenación del slug del kit o componente al final
+      $entitySuffix = '';
+      if ($has_ambito_column && $ambito === 'componente' && $has_item_id_column && $item_id) {
+        try {
+          $qs = $pdo->prepare('SELECT slug FROM kit_items WHERE id = ? LIMIT 1');
+          $qs->execute([$item_id]);
+          $entitySuffix = (string)($qs->fetchColumn() ?: '');
+        } catch (PDOException $e) { $entitySuffix = ''; }
+        if ($entitySuffix === '') {
+          // Fallback: derive from component name if available
+          try {
+            $qs2 = $pdo->prepare('SELECT nombre_comun FROM kit_items WHERE id = ? LIMIT 1');
+            $qs2->execute([$item_id]);
+            $name = (string)($qs2->fetchColumn() ?: '');
+            if ($name !== '') { $tmp = strtolower(preg_replace('/[^a-z0-9\-]+/','-', $name)); $tmp = preg_replace('/-+/', '-', trim($tmp, '-')); $entitySuffix = $tmp; }
+          } catch (PDOException $e) {}
+        }
+      } else if ($kit && !empty($kit['slug'])) {
+        $entitySuffix = (string)$kit['slug'];
+      }
+      if ($entitySuffix !== '') {
+        // Append if not already present at end
+        if (!preg_match('/-' . preg_quote($entitySuffix, '/') . '$/', $slug)) {
+          $slug .= '-' . $entitySuffix;
+        }
+      }
+      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado (manual- prefix + fecha):", ' . json_encode($slug) . ');</script>';
       // Para el caso extremo de que todo quede vacío, aseguramos 'manual-'
       if ($slug === '') { $slug = 'manual-'; }
     }
@@ -168,12 +183,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($manual_id > 0) {
           $was_published = ($manual && ($manual['status'] ?? '') === 'published');
           $becomes_published = ($status === 'published');
-          // Build dynamic UPDATE with available columns (incluir kit_id si cambió)
+          // Build dynamic UPDATE with available columns
           $setParts = [
-            'kit_id = ?', 'slug = ?', 'version = ?', 'status = ?', 'idioma = ?', 'time_minutes = ?', 'dificultad_ensamble = ?',
+            'slug = ?', 'version = ?', 'status = ?', 'idioma = ?', 'time_minutes = ?', 'dificultad_ensamble = ?',
             'pasos_json = ?', 'herramientas_json = ?', 'seguridad_json = ?', 'html = ?'
           ];
-          $params = [$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          $params = [$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
           if ($has_render_mode_column) { $setParts[] = 'render_mode = ?'; $params[] = $render_mode_post; }
           if ($has_tipo_manual_column) { $setParts[] = 'tipo_manual = ?'; $params[] = $tipo_manual; }
           if ($has_ambito_column) { $setParts[] = 'ambito = ?'; $params[] = $ambito; }
@@ -225,12 +240,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// Load kits for selector
+// Load kits for selector if needed
 $kits = [];
-try {
-  $stmtKs = $pdo->query('SELECT id, nombre, slug FROM kits ORDER BY nombre ASC');
+if (!$kit) {
+  $stmtKs = $pdo->query('SELECT id, nombre FROM kits ORDER BY nombre ASC');
   $kits = $stmtKs->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) { $kits = []; }
+}
 ?>
 <div class="container">
   <h1><?= $manual ? 'Editar Manual' : 'Nuevo Manual' ?></h1>
@@ -245,14 +260,28 @@ try {
   <form method="post">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
 
-    <!-- Kit selector will appear after Ámbito to follow the desired flow -->
+    <div class="form-group">
+      <label>Kit</label>
+      <?php if ($kit): ?>
+        <input type="hidden" name="kit_id" value="<?= (int)$kit['id'] ?>" />
+        <input type="text" value="<?= htmlspecialchars($kit['nombre']) ?>" disabled />
+      <?php else: ?>
+        <select name="kit_id" required>
+          <option value="">-- Selecciona --</option>
+          <?php foreach ($kits as $k): ?>
+            <option value="<?= (int)$k['id'] ?>" <?= ($kit_id == (int)$k['id']) ? 'selected' : '' ?>><?= htmlspecialchars($k['nombre']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      <?php endif; ?>
+    </div>
 
     <div class="form-group">
       <label>Slug</label>
       <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required readonly aria-readonly="true" placeholder="se genera automáticamente" style="flex:1; background:#f7f7f7; color:#555;" />
+        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="ej. armado-basico" style="flex:1;" />
+        <button type="button" class="btn" id="btn-generar-slug">⚡ Generar</button>
       </div>
-      <small>Se genera automáticamente como <strong>manual-{tipo}-{version}-{dd-mm-yy}-{kit|componente}</strong> y está bloqueado.</small>
+      <small>El formato sugerido es <strong>manual-{tipo}-{version}-{dd-mm-yy}</strong>. Los puntos de versión se convierten a guiones.</small>
     </div>
 
     <div class="form-group">
@@ -261,12 +290,21 @@ try {
     </div>
 
     <?php
-    // Load components list with kit context (prefer all with a mapped kit)
+    // Load kit items for component scope selector (prefer items in this kit)
     $kit_items = [];
-    try {
-      $q = $pdo->query('SELECT ki.id, ki.nombre_comun, ki.slug, ki.sku, kc.kit_id, k.nombre AS kit_nombre FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id JOIN kits k ON k.id = kc.kit_id ORDER BY ki.nombre_comun ASC');
-      $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    } catch (PDOException $e) { $kit_items = []; }
+    if ($kit_id > 0) {
+      try {
+        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.slug, ki.sku FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
+        $q->execute([$kit_id]);
+        $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
+      } catch (PDOException $e) { $kit_items = []; }
+    }
+    if (empty($kit_items)) {
+      try {
+        $q = $pdo->query('SELECT id, nombre_comun, slug, sku FROM kit_items ORDER BY nombre_comun ASC');
+        $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
+      } catch (PDOException $e) { $kit_items = []; }
+    }
     $amb_val = $manual['ambito'] ?? 'kit';
     $item_val = isset($manual['item_id']) ? (int)$manual['item_id'] : 0;
     $tipo_val = $manual['tipo_manual'] ?? 'armado';
@@ -302,7 +340,7 @@ try {
       </div>
       <div class="form-group">
         <label>Ámbito</label>
-        <select name="ambito" id="ambito-select" <?= $has_ambito_column ? '' : 'disabled' ?>>
+        <select name="ambito" <?= $has_ambito_column ? '' : 'disabled' ?>>
           <option value="kit" <?= ($amb_val === 'kit') ? 'selected' : '' ?>>Kit</option>
           <option value="componente" <?= ($amb_val === 'componente') ? 'selected' : '' ?>>Componente</option>
         </select>
@@ -310,16 +348,19 @@ try {
           <small class="help-note">Ejecuta la migración para habilitar el ámbito.</small>
         <?php endif; ?>
       </div>
-      <div class="form-group" id="entity-wrap" style="min-width:280px;">
-        <label>Entidad</label>
-        <select id="entity-select" autocomplete="off"></select>
-        <input type="hidden" name="kit_id" id="hidden-kit-id" value="<?= (int)($kit_id ?? 0) ?>" />
-        <input type="hidden" name="item_id" id="hidden-item-id" value="<?= (int)($item_val ?? 0) ?>" />
-        <small class="help-note">Selecciona el Kit o Componente según el ámbito.</small>
+      <div class="form-group" id="ambito-item-wrap" style="min-width:280px; display:none;">
+        <label>Componente (si ámbito = componente)</label>
+        <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
+          <option value="">-- Selecciona --</option>
+          <?php foreach ($kit_items as $it): ?>
+            <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-slug="<?= htmlspecialchars($it['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+          <?php endforeach; ?>
+        </select>
+        <?php if (!$has_item_id_column): ?>
+          <small class="help-note">Ejecuta la migración para habilitar el vínculo con componentes.</small>
+        <?php endif; ?>
       </div>
     </div>
-
-    
 
     <div class="form-group">
       <label>Resumen (opcional)</label>
@@ -474,96 +515,25 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function(){
-  // Single Entidad selector that adapts to Ámbito
-  const ambSel = document.getElementById('ambito-select');
-  const entitySel = document.getElementById('entity-select');
-  const hiddenKit = document.getElementById('hidden-kit-id');
-  const hiddenItem = document.getElementById('hidden-item-id');
-
-  // Data sources from PHP
-  const KITS_LIST = <?= json_encode($kits, JSON_UNESCAPED_UNICODE) ?>;
-  const COMPONENTS_LIST = <?= json_encode($kit_items, JSON_UNESCAPED_UNICODE) ?>;
-
-  function option(label, value, slug){
-    const opt = document.createElement('option');
-    opt.value = String(value);
-    opt.textContent = label;
-    if (slug) opt.dataset.slug = slug;
-    return opt;
+  // Toggle ambito → item selector
+  const ambSel = document.querySelector('select[name="ambito"]');
+  const itemWrap = document.getElementById('ambito-item-wrap');
+  function applyAmb(){
+    if (!ambSel || !itemWrap) return;
+    const v = ambSel.value;
+    itemWrap.style.display = (v === 'componente') ? '' : 'none';
+    console.log('🔍 [ManualsEdit] Ámbito:', v);
   }
-
-  function populateEntity(){
-    if (!ambSel || !entitySel) return;
-    const amb = ambSel.value;
-    entitySel.innerHTML = '';
-    if (amb === 'kit') {
-      entitySel.appendChild(option('-- Selecciona kit --', '', ''));
-      (KITS_LIST || []).forEach(k => {
-        entitySel.appendChild(option(k.nombre, k.id, k.slug || ''));
-      });
-      // Select current
-      const curKid = hiddenKit ? parseInt(hiddenKit.value || '0', 10) : 0;
-      entitySel.value = curKid ? String(curKid) : '';
-    } else {
-      entitySel.appendChild(option('-- Selecciona componente --', '', ''));
-      (COMPONENTS_LIST || []).forEach(c => {
-        const label = c.nombre_comun + (c.kit_nombre ? (' (' + c.kit_nombre + ')') : '');
-        entitySel.appendChild(option(label, c.id, c.slug || ''));
-      });
-      const curItem = hiddenItem ? parseInt(hiddenItem.value || '0', 10) : 0;
-      entitySel.value = curItem ? String(curItem) : '';
-    }
-    console.log('🔍 [ManualsEdit] Entidad poblada para ámbito:', amb);
-    updateEntityMapping();
-    updateSlug();
-  }
-
-  function findKitSlugById(id){
-    id = parseInt(id || '0', 10);
-    const k = (KITS_LIST || []).find(x => parseInt(x.id,10) === id);
-    return k ? (k.slug || '') : '';
-  }
-  function findKitIdByComponentId(itemId){
-    itemId = parseInt(itemId || '0', 10);
-    const c = (COMPONENTS_LIST || []).find(x => parseInt(x.id,10) === itemId);
-    return c ? parseInt(c.kit_id||'0',10) : 0;
-  }
-  function findComponentSlugById(itemId){
-    itemId = parseInt(itemId || '0', 10);
-    const c = (COMPONENTS_LIST || []).find(x => parseInt(x.id,10) === itemId);
-    return c ? (c.slug || '') : '';
-  }
-
-  function updateEntityMapping(){
-    const amb = ambSel ? ambSel.value : 'kit';
-    const val = entitySel ? parseInt(entitySel.value || '0', 10) : 0;
-    if (amb === 'kit') {
-      if (hiddenKit) hiddenKit.value = val ? String(val) : '';
-      if (hiddenItem) hiddenItem.value = '';
-      KIT_SLUG = findKitSlugById(val) || KIT_SLUG;
-    } else {
-      if (hiddenItem) hiddenItem.value = val ? String(val) : '';
-      const kid = findKitIdByComponentId(val);
-      if (hiddenKit) hiddenKit.value = kid ? String(kid) : hiddenKit.value;
-      // Keep KIT_SLUG in sync when possible
-      KIT_SLUG = findKitSlugById(hiddenKit.value) || KIT_SLUG;
-    }
-    console.log('🔍 [ManualsEdit] Mapping actualizado kit_id=', hiddenKit.value, ' item_id=', hiddenItem.value);
-  }
-
-  if (ambSel && entitySel) {
-    ambSel.addEventListener('change', populateEntity);
-    entitySel.addEventListener('change', function(){ updateEntityMapping(); updateSlug(); });
-    populateEntity();
-  }
+  if (ambSel) { ambSel.addEventListener('change', applyAmb); applyAmb(); }
 })();
 
 // --- Slug Generator & Normalizer ---
 (function(){
   const slugInput = document.getElementById('manual-slug');
+  const genBtn = document.getElementById('btn-generar-slug');
   const tipoSel = document.querySelector('select[name="tipo_manual"]');
-  const ambSel = document.getElementById('ambito-select');
-  const entitySel = document.getElementById('entity-select');
+  const ambSel = document.querySelector('select[name="ambito"]');
+  const itemSel = document.querySelector('select[name="item_id"]');
 
   function baseSlugify(str){
     if (!str) return '';
@@ -588,33 +558,39 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     return finalSlug;
   }
 
-  function getEntitySlug(){
-    if (!entitySel) return '';
-    const opt = entitySel.options[entitySel.selectedIndex];
+  function getItemNombre(){
+    if (!itemSel) return '';
+    const opt = itemSel.options[itemSel.selectedIndex];
+    if (!opt) return '';
+    const nombre = opt.getAttribute('data-nombre') || opt.textContent || '';
+    return nombre.replace(/\s*\(SKU.*\)$/i, '').trim();
+  }
+
+  function getItemSlug(){
+    if (!itemSel) return '';
+    const opt = itemSel.options[itemSel.selectedIndex];
     if (!opt) return '';
     const s = opt.getAttribute('data-slug') || '';
     if (s) return s;
-    return baseSlugify(opt.textContent || '');
+    // Fallback: derive from name
+    return baseSlugify(getItemNombre());
   }
 
   function buildSuggestion(){
     const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
     const verInput = document.querySelector('input[name="version"]');
-    const pubInput = document.querySelector('input[name="published_at"]');
-    const statusSel = document.querySelector('select[name="status"]');
     const rawVer = (verInput ? verInput.value : '') || '';
     // Mantener solo números y puntos, luego reemplazar '.' por '-'
     const verClean = rawVer.toLowerCase().replace(/[^0-9.]+/g, '');
     const verNorm = verClean ? verClean.replace(/\./g, '-') : '';
-    // Fecha dd-mm-yy: preferir input published_at; si no, hoy
+    // Fecha dd-mm-yy: usar MANUAL_PUBLISHED_AT si existe; si no, hoy
     let dateStr = '';
     (function(){
       let d;
-      if (pubInput && pubInput.value) {
-        const t = Date.parse(pubInput.value);
+      if (typeof MANUAL_PUBLISHED_AT === 'string' && MANUAL_PUBLISHED_AT) {
+        const t = Date.parse(MANUAL_PUBLISHED_AT);
         d = isNaN(t) ? new Date() : new Date(t);
       } else {
-        // Si el estado es publicado, usar hoy; de lo contrario también hoy para sugerencia única
         d = new Date();
       }
       const dd = String(d.getDate()).padStart(2,'0');
@@ -630,9 +606,9 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     // Append kit or component slug
     let entitySlug = '';
     const amb = (ambSel ? ambSel.value : 'kit') || 'kit';
-    // Only fall back to KIT_SLUG when ámbito=kit; for componente require entity selection
-    entitySlug = getEntitySlug();
-    if (!entitySlug && amb === 'kit') {
+    if (amb === 'componente') {
+      entitySlug = getItemSlug();
+    } else {
       entitySlug = KIT_SLUG || '';
     }
     if (entitySlug) parts.push(entitySlug);
@@ -642,27 +618,55 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     return s;
   }
 
-  function updateSlug(){
+  function applySuggestionIfEmpty(){
     if (!slugInput) return;
-    slugInput.value = buildSuggestion();
-    console.log('✅ [ManualsEdit] Slug actualizado automáticamente:', slugInput.value);
+    const cur = (slugInput.value || '').trim();
+    if (cur === '') {
+      slugInput.value = buildSuggestion();
+    }
   }
 
-  // Autogenerar en cambios relevantes
-  const verInput = document.querySelector('input[name="version"]');
-  const pubInput = document.querySelector('input[name="published_at"]');
-  const statusSel = document.querySelector('select[name="status"]');
-  if (tipoSel) tipoSel.addEventListener('change', updateSlug);
-  if (ambSel) ambSel.addEventListener('change', updateSlug);
-  if (entitySel) entitySel.addEventListener('change', updateSlug);
-  if (verInput) verInput.addEventListener('input', updateSlug);
-  if (pubInput) pubInput.addEventListener('input', updateSlug);
-  if (statusSel) statusSel.addEventListener('change', updateSlug);
+  if (genBtn) {
+    genBtn.addEventListener('click', function(){
+      if (!slugInput) return;
+      slugInput.value = buildSuggestion();
+      console.log('✅ [ManualsEdit] Slug generado:', slugInput.value);
+    });
+  }
+
+  // Autogenerar cuando cambie tipo/ámbito/componente si el campo está vacío
+  if (tipoSel) tipoSel.addEventListener('change', applySuggestionIfEmpty);
+  if (ambSel) ambSel.addEventListener('change', applySuggestionIfEmpty);
+  if (itemSel) itemSel.addEventListener('change', applySuggestionIfEmpty);
 
   // Normalizar mientras escribe (suave): al perder foco
   if (slugInput) {
-    // Inicial: compute immediately
-    updateSlug();
+    // Prefill on focus if empty
+    slugInput.addEventListener('focus', function(){
+      if ((slugInput.value || '').trim() === '') {
+        slugInput.value = 'manual-';
+        console.log('ℹ️ [ManualsEdit] Prefill slug con manual-');
+      }
+    });
+    // Enforce prefix and normalization on input without duplicating manual-
+    slugInput.addEventListener('input', function(){
+      const val = slugInput.value || '';
+      if (!val.toLowerCase().startsWith('manual-')) {
+        const norm = normalizeManualSlug(val);
+        if (norm !== slugInput.value) {
+          slugInput.value = norm;
+          console.log('ℹ️ [ManualsEdit] Forzando prefijo manual-');
+        }
+      }
+    });
+    // Final normalization on blur
+    slugInput.addEventListener('blur', function(){
+      const norm = normalizeManualSlug(slugInput.value);
+      if (norm !== slugInput.value) {
+        console.log('ℹ️ [ManualsEdit] Normalizando slug a:', norm);
+        slugInput.value = norm;
+      }
+    });
   }
 })();
 
@@ -882,10 +886,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const kitSafetyPanel = document.getElementById('kit-safety-panel');
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
+  const kitSelect = document.querySelector('select[name="kit_id"]');
   const securityAgeWrap = document.querySelector('.security-age');
-  const ambSel = document.getElementById('ambito-select');
-  const entitySel = document.getElementById('entity-select');
-  const hiddenKit = document.getElementById('hidden-kit-id');
 
   function toSafetyObj(raw){
     try {
@@ -968,27 +970,14 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     }
   }
 
-  async function updateKitSafetyFromCurrent(){
-    const kid = hiddenKit && hiddenKit.value ? parseInt(hiddenKit.value, 10) : 0;
-    if (!kid) { renderKitSafetyPanel(null); return; }
-    const seg = await fetchKitSafetyById(kid);
-    renderKitSafetyPanel(seg);
-    // Also refresh KIT_SLUG via API for robustness
-    try {
-      const res = await fetch('/api/kit-get.php?id=' + encodeURIComponent(String(kid)));
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.ok && data.kit) {
-          KIT_SLUG = data.kit.slug || KIT_SLUG;
-          console.log('🔍 [ManualsEdit] KIT_SLUG actualizado:', KIT_SLUG);
-        }
-      }
-    } catch(e) { console.log('⚠️ [ManualsEdit] Error obteniendo KIT_SLUG:', e.message); }
-  }
-
-  if (ambSel && entitySel) {
-    ambSel.addEventListener('change', function(){ updateKitSafetyFromCurrent(); });
-    entitySel.addEventListener('change', function(){ updateKitSafetyFromCurrent(); });
+  if (kitSelect) {
+    kitSelect.addEventListener('change', async function(){
+      const id = this.value ? parseInt(this.value, 10) : 0;
+      if (!id) { renderKitSafetyPanel(null); return; }
+      const seg = await fetchKitSafetyById(id);
+      renderKitSafetyPanel(seg);
+    });
+    console.log('🔍 [ManualsEdit] Observando cambios de kit_id');
   }
 
   if (useKitSafety) {
