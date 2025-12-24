@@ -113,6 +113,8 @@ $status_key = strtolower((string)($manual['status'] ?? ''));
 $status_labels = ['draft' => 'Borrador', 'approved' => 'Aprobado', 'published' => 'Publicado', 'discontinued' => 'Descontinuado'];
 $status_label = $status_labels[$status_key] ?? '';
 $state_text_raw = ($status_key !== '' && $status_key !== 'published') ? ('(' . $status_label . ')') : '';
+// Flag para descontinuado
+$is_discontinued = ($status_key === 'discontinued');
 // Formato: Manual de [Tipo] [Entidad] [versión] [(Estado no publicado)]
 $display_title_raw = 'Manual de ' . $tipo_label . ' ' . $entity_name_raw
   . ($version_text_raw ? (' ' . $version_text_raw) : '')
@@ -136,7 +138,7 @@ include 'includes/header.php';
     <div class="manual-head">
       <div class="manual-emoji" aria-hidden="true"><?= $tipo_emoji ?></div>
       <div class="manual-title-wrap">
-        <h1><?= h($display_title_raw) ?></h1>
+        <h1><?= h($display_title_raw) ?><?php if ($is_discontinued): ?><span class="badge badge-danger" style="margin-left:8px;">⚠️ Descontinuado</span><?php endif; ?></h1>
         <div class="manual-meta">
           <span class="badge"><?= h($tipo_label) ?></span>
           <span class="badge">Versión <?= h($manual['version']) ?></span>
@@ -287,9 +289,13 @@ include 'includes/header.php';
           </nav>
         </div>
       <?php endif; ?>
-      <?php if ($hasAnySafety): ?>
+      <?php $renderSafety = ($hasAnySafety || $is_discontinued); ?>
+      <?php if ($renderSafety): ?>
         <section class="safety-info">
           <h2>⚠️ Seguridad</h2>
+          <?php if ($is_discontinued): ?>
+            <div class="kit-safety-notes-public"><strong>⚠️ Este manual ha sido descontinuado.</strong></div>
+          <?php endif; ?>
           <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
             <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
           <?php endif; ?>
@@ -358,7 +364,7 @@ include 'includes/header.php';
           <ol class="manual-steps">
             <?php foreach ($pasos as $idx => $p): ?>
               <li class="manual-step" id="paso-<?= (int)($idx + 1) ?>">
-                <div class="step-head"><strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong></div>
+                <div class="step-head"><strong><?= h($p['titulo'] ?? ('Paso ' . ($idx + 1))) ?></strong><?php if ($is_discontinued): ?><span class="badge badge-danger" style="margin-left:6px;">⚠️ Descontinuado</span><?php endif; ?></div>
                 <div class="step-body">
                   <?php if (!empty($p['html'])): ?>
                     <?= $p['html'] ?>
