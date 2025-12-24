@@ -278,10 +278,9 @@ if (!$kit) {
     <div class="form-group">
       <label>Slug</label>
       <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="ej. armado-basico" style="flex:1;" />
-        <button type="button" class="btn" id="btn-generar-slug">⚡ Generar</button>
+        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required readonly aria-readonly="true" placeholder="se genera automáticamente" style="flex:1; background:#f7f7f7; color:#555;" />
       </div>
-      <small>El formato sugerido es <strong>manual-{tipo}-{version}-{dd-mm-yy}</strong>. Los puntos de versión se convierten a guiones.</small>
+      <small>Se genera automáticamente como <strong>manual-{tipo}-{version}-{dd-mm-yy}-{kit|componente}</strong> y está bloqueado.</small>
     </div>
 
     <div class="form-group">
@@ -530,7 +529,6 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 // --- Slug Generator & Normalizer ---
 (function(){
   const slugInput = document.getElementById('manual-slug');
-  const genBtn = document.getElementById('btn-generar-slug');
   const tipoSel = document.querySelector('select[name="tipo_manual"]');
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemSel = document.querySelector('select[name="item_id"]');
@@ -618,55 +616,23 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     return s;
   }
 
-  function applySuggestionIfEmpty(){
+  function updateSlug(){
     if (!slugInput) return;
-    const cur = (slugInput.value || '').trim();
-    if (cur === '') {
-      slugInput.value = buildSuggestion();
-    }
+    slugInput.value = buildSuggestion();
+    console.log('✅ [ManualsEdit] Slug actualizado automáticamente:', slugInput.value);
   }
 
-  if (genBtn) {
-    genBtn.addEventListener('click', function(){
-      if (!slugInput) return;
-      slugInput.value = buildSuggestion();
-      console.log('✅ [ManualsEdit] Slug generado:', slugInput.value);
-    });
-  }
-
-  // Autogenerar cuando cambie tipo/ámbito/componente si el campo está vacío
-  if (tipoSel) tipoSel.addEventListener('change', applySuggestionIfEmpty);
-  if (ambSel) ambSel.addEventListener('change', applySuggestionIfEmpty);
-  if (itemSel) itemSel.addEventListener('change', applySuggestionIfEmpty);
+  // Autogenerar en cambios relevantes
+  const verInput = document.querySelector('input[name="version"]');
+  if (tipoSel) tipoSel.addEventListener('change', updateSlug);
+  if (ambSel) ambSel.addEventListener('change', updateSlug);
+  if (itemSel) itemSel.addEventListener('change', updateSlug);
+  if (verInput) verInput.addEventListener('input', updateSlug);
 
   // Normalizar mientras escribe (suave): al perder foco
   if (slugInput) {
-    // Prefill on focus if empty
-    slugInput.addEventListener('focus', function(){
-      if ((slugInput.value || '').trim() === '') {
-        slugInput.value = 'manual-';
-        console.log('ℹ️ [ManualsEdit] Prefill slug con manual-');
-      }
-    });
-    // Enforce prefix and normalization on input without duplicating manual-
-    slugInput.addEventListener('input', function(){
-      const val = slugInput.value || '';
-      if (!val.toLowerCase().startsWith('manual-')) {
-        const norm = normalizeManualSlug(val);
-        if (norm !== slugInput.value) {
-          slugInput.value = norm;
-          console.log('ℹ️ [ManualsEdit] Forzando prefijo manual-');
-        }
-      }
-    });
-    // Final normalization on blur
-    slugInput.addEventListener('blur', function(){
-      const norm = normalizeManualSlug(slugInput.value);
-      if (norm !== slugInput.value) {
-        console.log('ℹ️ [ManualsEdit] Normalizando slug a:', norm);
-        slugInput.value = norm;
-      }
-    });
+    // Inicial: compute immediately
+    updateSlug();
   }
 })();
 
@@ -976,6 +942,20 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       if (!id) { renderKitSafetyPanel(null); return; }
       const seg = await fetchKitSafetyById(id);
       renderKitSafetyPanel(seg);
+      // Fetch full kit to obtain slug and refresh automatic slug
+      try {
+        const res = await fetch('/api/kit-get.php?id=' + encodeURIComponent(String(id)));
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.ok && data.kit) {
+            KIT_SLUG = data.kit.slug || KIT_SLUG;
+            console.log('🔍 [ManualsEdit] KIT_SLUG actualizado:', KIT_SLUG);
+            // Recompute manual slug
+            const slugInputEl = document.getElementById('manual-slug');
+            if (slugInputEl) { slugInputEl.value = buildSuggestion(); }
+          }
+        }
+      } catch(e) { console.log('⚠️ [ManualsEdit] Error obteniendo KIT_SLUG:', e.message); }
     });
     console.log('🔍 [ManualsEdit] Observando cambios de kit_id');
   }
