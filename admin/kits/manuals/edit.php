@@ -552,6 +552,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemSel = document.querySelector('select[name="item_id"]');
   const verInput = document.querySelector('input[name="version"]');
+  const statusSel = document.querySelector('select[name="status"]');
+  let LAST_AUTO_SLUG = (slugInput ? slugInput.value : '');
 
   function baseSlugify(str){
     if (!str) return '';
@@ -647,16 +649,27 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   if (genBtn) {
     genBtn.addEventListener('click', function(){
       if (!slugInput) return;
-      slugInput.value = buildSuggestion();
-      console.log('✅ [ManualsEdit] Slug generado:', slugInput.value);
+      const s = buildSuggestion();
+      slugInput.value = s;
+      LAST_AUTO_SLUG = s;
+      console.log('✅ [ManualsEdit] Slug generado:', s);
     });
   }
 
   // Autogenerar cuando cambie tipo/ámbito/componente si el campo está vacío
-  if (tipoSel) tipoSel.addEventListener('change', applySuggestionIfEmpty);
-  if (ambSel) ambSel.addEventListener('change', applySuggestionIfEmpty);
-  if (itemSel) itemSel.addEventListener('change', applySuggestionIfEmpty);
-  if (verInput) verInput.addEventListener('change', applySuggestionIfEmpty);
+  function autoUpdate(reason){
+    if (!slugInput) return;
+    const s = buildSuggestion();
+    slugInput.value = s;
+    LAST_AUTO_SLUG = s;
+    console.log('✅ [ManualsEdit] Slug auto-actualizado por', reason, '→', s);
+  }
+
+  if (tipoSel) tipoSel.addEventListener('change', function(){ autoUpdate('tipo'); });
+  if (ambSel) ambSel.addEventListener('change', function(){ autoUpdate('ambito'); });
+  if (itemSel) itemSel.addEventListener('change', function(){ autoUpdate('componente'); });
+  if (verInput) verInput.addEventListener('input', function(){ autoUpdate('version'); });
+  if (statusSel) statusSel.addEventListener('change', function(){ autoUpdate('status'); });
 
   // Normalizar mientras escribe (suave): al perder foco
   if (slugInput) {
