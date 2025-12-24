@@ -717,6 +717,19 @@ if ($is_edit) {
   } catch (PDOException $e) {}
 }
 
+// Cargar lista de manuales del kit (vista previa en la ficha)
+$kit_manuals = [];
+if ($is_edit) {
+  try {
+    $stmM = $pdo->prepare('SELECT id, slug, version, status, idioma, time_minutes, dificultad_ensamble, updated_at, published_at FROM kit_manuals WHERE kit_id = ? ORDER BY idioma, version DESC, id DESC');
+    $stmM->execute([$id]);
+    $kit_manuals = $stmM->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    echo '<script>console.log("🔍 [KitsEdit] Manuales cargados:",' . (int)count($kit_manuals) . ');</script>';
+  } catch (PDOException $e) {
+    echo '<script>console.log("❌ [KitsEdit] Error cargando manuales:",' . json_encode($e->getMessage()) . ');</script>';
+  }
+}
+
 // Lista de kit_items para agregar
 try {
   $items_stmt = $pdo->query('SELECT id, nombre_comun, sku, unidad FROM kit_items ORDER BY nombre_comun ASC');
@@ -1673,6 +1686,52 @@ include '../header.php';
     <div id="clases-hidden"></div>
   </div>
 </div>
+  <!-- Manuales del Kit (Preview + Acciones) -->
+  <div class="card" style="margin-top:2rem;">
+    <h3>Manuales del Kit</h3>
+    <small class="hint" style="display:block; margin-bottom:6px;">Crea y gestiona los manuales de armado para este kit.</small>
+    <?php if ($is_edit): ?>
+      <div style="display:flex; gap:8px; align-items:center; margin: 8px 0; flex-wrap: wrap;">
+        <a class="btn" href="/admin/kits/manuals/edit.php?kit_id=<?= (int)$id ?>">+ Nuevo Manual</a>
+        <a class="btn btn-secondary" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$id ?>">Ver todos</a>
+      </div>
+      <?php if (!empty($kit_manuals)): ?>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Slug</th>
+              <th>Idioma</th>
+              <th>Versión</th>
+              <th>Status</th>
+              <th>Actualizado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($kit_manuals as $m): ?>
+              <tr>
+                <td><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($m['version'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars($m['status'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= !empty($m['updated_at']) ? htmlspecialchars(date('Y-m-d H:i', strtotime($m['updated_at'])), ENT_QUOTES, 'UTF-8') : '' ?></td>
+                <td>
+                  <a class="btn btn-sm" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>">Editar</a>
+                  <?php if (!empty($kit['slug']) && ($m['status'] ?? '') === 'published'): ?>
+                    <a class="btn btn-sm" target="_blank" href="/kit-manual.php?kit=<?= urlencode($kit['slug']) ?>&slug=<?= urlencode($m['slug']) ?>">Ver público</a>
+                  <?php endif; ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      <?php else: ?>
+        <p class="muted">Aún no hay manuales. Crea el primero con “+ Nuevo Manual”.</p>
+      <?php endif; ?>
+    <?php else: ?>
+      <p class="muted">Guarda el kit para crear manuales.</p>
+    <?php endif; ?>
+  </div>
 <?php if ($is_edit): ?>
 <!-- Modales para editar y agregar componentes -->
 <style>
