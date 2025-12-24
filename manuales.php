@@ -54,49 +54,65 @@ $tipo_map = [
 
 include 'includes/header.php';
 ?>
-<div class="container">
+<div class="container library-page">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / <strong>Manuales</strong>
   </div>
 
-  <header>
-    <h1>Manuales publicados</h1>
-    <p class="muted">Todos los manuales de kits y componentes disponibles públicamente.</p>
-  </header>
+  <h1>Manuales publicados</h1>
+  <div class="library-layout">
+    <aside class="filters-sidebar">
+      <h2>Filtrar</h2>
+      <form method="get" action="/manuales.php" class="filters-form">
+        <div class="filter-group">
+          <label class="filter-title" for="tipo">Tipo</label>
+          <select id="tipo" name="tipo">
+            <option value="">(Todos)</option>
+            <?php foreach ($tipo_map as $key => $def): ?>
+              <option value="<?= h($key) ?>" <?= $tipo === $key ? 'selected' : '' ?>><?= h($def['label']) ?></option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-title" for="ambito">Ámbito</label>
+          <select id="ambito" name="ambito">
+            <option value="">(Todos)</option>
+            <option value="kit" <?= $ambito === 'kit' ? 'selected' : '' ?>>Kit</option>
+            <option value="componente" <?= $ambito === 'componente' ? 'selected' : '' ?>>Componente</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-title" for="idioma">Idioma</label>
+          <input type="text" id="idioma" name="idioma" value="<?= h($idioma) ?>" placeholder="ES, EN..." />
+        </div>
+        <div class="filter-actions">
+          <button type="submit" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            Filtrar
+          </button>
+          <a href="/manuales.php" class="btn btn-secondary">Limpiar</a>
+        </div>
+      </form>
+    </aside>
 
-  <section class="filters">
-    <form method="get" class="filter-form">
-      <label>
-        Tipo:
-        <select name="tipo">
-          <option value="">(Todos)</option>
-          <?php foreach ($tipo_map as $key => $def): ?>
-            <option value="<?= h($key) ?>" <?= $tipo === $key ? 'selected' : '' ?>><?= h($def['label']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </label>
-      <label>
-        Ámbito:
-        <select name="ambito">
-          <option value="">(Todos)</option>
-          <option value="kit" <?= $ambito === 'kit' ? 'selected' : '' ?>>Kit</option>
-          <option value="componente" <?= $ambito === 'componente' ? 'selected' : '' ?>>Componente</option>
-        </select>
-      </label>
-      <label>
-        Idioma:
-        <input type="text" name="idioma" value="<?= h($idioma) ?>" placeholder="ES, EN..." />
-      </label>
-      <button type="submit" class="btn">Filtrar</button>
-    </form>
-  </section>
+    <div class="library-content">
+      <div class="results-header">
+        <p class="results-count">
+          Mostrando <?= count($items) ?> manuales
+        </p>
+      </div>
 
-  <section class="manuales-grid">
-    <?php if (empty($items)): ?>
-      <p class="muted">No hay manuales publicados con estos filtros.</p>
-    <?php else: ?>
-      <div class="grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
-        <?php foreach ($items as $m): ?>
+      <?php if (empty($items)): ?>
+        <div class="no-results">
+          <p>No hay manuales publicados con estos filtros.</p>
+          <a href="/manuales.php" class="btn btn-secondary">Ver todos</a>
+        </div>
+      <?php else: ?>
+        <div class="articles-grid">
+          <?php foreach ($items as $m): ?>
           <?php
             $tk = strtolower((string)($m['tipo_manual'] ?? ''));
             $emoji = '📘'; $label = 'Manual';
@@ -104,28 +120,30 @@ include 'includes/header.php';
             elseif (strpos(strtolower($m['slug']), 'arm') !== false) { $emoji = '🛠️'; $label = 'Armado'; }
             $href = '/' . h($m['slug']);
           ?>
-          <a class="manual-card" href="<?= h($href) ?>" style="display:block; border:1px solid #e3e8f3; border-radius:8px; padding:10px; background:#fff; text-decoration:none;">
-            <div style="display:flex; gap:10px; align-items:center;">
-              <div style="font-size:36px; line-height:1;"><?= $emoji ?></div>
-              <div>
-                <div style="font-weight:600; color:#1f3c88;"><?= h(ucwords(str_replace('-', ' ', (string)$m['slug']))) ?></div>
-                <div style="color:#5f6368; font-size:0.9rem;">
-                  <?= h($label) ?> · <?= h($m['ambito']) ?> · <?= !empty($m['idioma']) ? h($m['idioma']) : '—' ?>
+          <article class="article-card" data-href="<?= h($href) ?>">
+            <a class="card-link" href="<?= h($href) ?>">
+              <div class="card-content">
+                <div class="card-meta">
+                  <span class="section-badge">Manual</span>
+                  <span class="badge"><?= h($label) ?></span>
+                  <?php if (!empty($m['idioma'])): ?><span class="badge"><?= h($m['idioma']) ?></span><?php endif; ?>
                 </div>
-                <div style="margin-top:4px; display:flex; gap:8px; flex-wrap:wrap; color:#5f6368; font-size:0.85rem;">
-                  <span>📦 <?= h($m['kit_nombre']) ?></span>
-                  <?php if (!empty($m['time_minutes'])): ?><span>⏱️ <?= (int)$m['time_minutes'] ?> min</span><?php endif; ?>
-                  <?php if (!empty($m['version'])): ?><span>🔢 v<?= h($m['version']) ?></span><?php endif; ?>
-                  <?php if (!empty($m['dificultad_ensamble'])): ?><span>🛠️ <?= h($m['dificultad_ensamble']) ?></span><?php endif; ?>
-                  <?php if (!empty($m['published_at'])): ?><span>🗓️ <?= h(date('d/m/Y', strtotime($m['published_at']))) ?></span><?php endif; ?>
+                <h3><?= h(ucwords(str_replace('-', ' ', (string)$m['slug']))) ?></h3>
+                <div class="card-footer">
+                  <span class="area">📦 <?= h($m['kit_nombre']) ?></span>
+                  <?php if (!empty($m['time_minutes'])): ?><span class="age">⏱️ <?= (int)$m['time_minutes'] ?> min</span><?php endif; ?>
+                  <?php if (!empty($m['version'])): ?><span class="badge">v<?= h($m['version']) ?></span><?php endif; ?>
+                  <?php if (!empty($m['dificultad_ensamble'])): ?><span class="badge">🛠️ <?= h($m['dificultad_ensamble']) ?></span><?php endif; ?>
+                  <?php if (!empty($m['published_at'])): ?><span class="muted">Publicado: <?= h(date('d/m/Y', strtotime($m['published_at']))) ?></span><?php endif; ?>
                 </div>
               </div>
-            </div>
-          </a>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </section>
+            </a>
+          </article>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </div>
 </div>
 <script>
 console.log('🔍 [Manuales] Total:', <?= count($items) ?>);

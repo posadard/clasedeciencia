@@ -13,6 +13,9 @@
                     <ul>
                         <li><a href="/">Inicio</a></li>
                         <li><a href="/clases">Clases</a></li>
+                        <li><a href="/kits">Kits</a></li>
+                        <li><a href="/componentes">Componentes</a></li>
+                        <li><a href="/manuales.php">Manuales</a></li>
                         <li><a href="/contact.php">Contacto</a></li>
                     </ul>
                 </div>

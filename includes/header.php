@@ -96,6 +96,7 @@
                         <li><a href="/clases">Clases</a></li>
                         <li><a href="/kits">Kits</a></li>
                         <li><a href="/componentes">Componentes</a></li>
+                        <li><a href="/manuales.php">Manuales</a></li>
                     </ul>
                 </nav>
             </div>
