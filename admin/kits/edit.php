@@ -779,8 +779,8 @@ if ($is_edit && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!empty($to_unpublish)) {
       $ph = implode(',', array_fill(0, count($to_unpublish), '?'));
-      // Fallback conservador: approved (mantiene que está listo pero oculto)
-      $sqlU = "UPDATE kit_manuals SET status = 'approved' WHERE id IN ($ph) AND kit_id = ?";
+      // Política solicitada: al despublicar, marcar como 'discontinued'
+      $sqlU = "UPDATE kit_manuals SET status = 'discontinued' WHERE id IN ($ph) AND kit_id = ?";
       $paramsU = array_merge($to_unpublish, [(int)$id]);
       $pdo->prepare($sqlU)->execute($paramsU);
     }
@@ -1812,6 +1812,24 @@ include '../header.php';
           document.getElementById('man-selected-count').textContent = `(${s})`;
           console.log('🔍 [Manuales] Disponibles:', a, 'Publicados:', s);
         }
+        function addStatusBadge(el, status) {
+          const code = el.querySelector('.comp-codigo');
+          if (!code) return;
+          let badge = code.querySelector('.status-badge');
+          if (!badge) {
+            badge = document.createElement('em');
+            badge.className = 'status-badge';
+            code.appendChild(badge);
+          }
+          badge.className = 'status-badge status-' + status;
+          badge.textContent = status;
+        }
+        function removeStatusBadge(el) {
+          const code = el.querySelector('.comp-codigo');
+          if (!code) return;
+          const badge = code.querySelector('.status-badge');
+          if (badge) badge.remove();
+        }
         function addManualHidden(id) {
           const wrap = document.getElementById('manuales-hidden');
           if (!wrap.querySelector(`input[name="manuals_published[]"][value="${id}"]`)) {
@@ -1833,6 +1851,8 @@ include '../header.php';
           removeBtn.type = 'button'; removeBtn.className = 'remove-btn'; removeBtn.textContent = '×';
           removeBtn.onclick = function(ev){ ev.stopPropagation(); deselectManualItem(el); };
           el.appendChild(removeBtn);
+          el.dataset.status = 'published';
+          removeStatusBadge(el);
           target.appendChild(el);
           addManualHidden(id);
           updateManualCounts();
@@ -1843,6 +1863,8 @@ include '../header.php';
           el.classList.remove('selected');
           el.querySelectorAll('.remove-btn').forEach(b => b.remove());
           el.onclick = function(){ selectManualItem(el); };
+          el.dataset.status = 'discontinued';
+          addStatusBadge(el, 'discontinued');
           target.appendChild(el);
           removeManualHidden(id);
           updateManualCounts();
