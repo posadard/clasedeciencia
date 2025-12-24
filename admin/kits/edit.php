@@ -769,6 +769,10 @@ if ($is_edit && $_SERVER['REQUEST_METHOD'] === 'POST') {
       if (!isset($selected_set[$pid])) { $to_unpublish[] = $pid; }
     }
 
+    // Debug: imprimir selección y estado actual
+    echo '<script>console.log("🔍 [KitsEdit] manuals_published POST:",' . json_encode($selected_ids) . ');</script>';
+    echo '<script>console.log("🔍 [KitsEdit] currently_published:",' . json_encode(array_keys($currently_published)) . ');</script>';
+
     // Aplicar cambios en transacción
     $pdo->beginTransaction();
     if (!empty($to_publish)) {
