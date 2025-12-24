@@ -75,14 +75,14 @@ try {
     <p><a href="/admin/kits/edit.php?id=<?= (int)$kit['id'] ?>">Volver al Kit</a></p>
   <?php endif; ?>
 
-  <?php if ($error_msg): ?><div class="alert alert-danger"><?= htmlspecialchars($error_msg) ?></div><?php endif; ?>
-  <?php if ($success_msg): ?><div class="alert alert-success"><?= htmlspecialchars($success_msg) ?></div><?php endif; ?>
+  <?php if ($error_msg): ?><div class="message error"><?= htmlspecialchars($error_msg) ?></div><?php endif; ?>
+  <?php if ($success_msg): ?><div class="message success"><?= htmlspecialchars($success_msg) ?></div><?php endif; ?>
 
   <div style="margin: 12px 0;">
-    <a class="btn btn-primary" href="/admin/kits/manuals/edit.php?<?= $kit ? 'kit_id=' . (int)$kit['id'] : '' ?>">+ Nuevo Manual</a>
+    <a class="btn" href="/admin/kits/manuals/edit.php?<?= $kit ? 'kit_id=' . (int)$kit['id'] : '' ?>">+ Nuevo Manual</a>
   </div>
 
-  <table class="table" border="1" cellpadding="8" cellspacing="0" width="100%">
+  <table class="data-table">
     <thead>
       <tr>
         <?php if (!$kit): ?><th>Kit</th><?php endif; ?>
