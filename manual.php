@@ -431,35 +431,92 @@ include 'includes/header.php';
       <?php endif; ?>
 
       <?php if (!empty($herr)): ?>
-        <section class="kits-section">
+        <section class="kits-section manual-tools">
           <div class="kit-card">
             <h4>Herramientas (no incluido)</h4>
+            <?php // Helper local para truncar a 10 palabras con '…'
+            $words_preview = function($text, $limit = 10){
+              $t = trim(strip_tags((string)$text));
+              if ($t === '') return '';
+              $parts = preg_split('/\s+/u', $t, -1, PREG_SPLIT_NO_EMPTY);
+              if (!$parts) return '';
+              if (count($parts) <= (int)$limit) return implode(' ', $parts);
+              return implode(' ', array_slice($parts, 0, (int)$limit)) . '…';
+            }; ?>
             <ul class="materials-list">
               <?php foreach ($herr as $hitem): ?>
                 <?php if (is_array($hitem) && (isset($hitem['nombre']) || isset($hitem['cantidad']) || isset($hitem['nota']) || isset($hitem['seguridad']))): ?>
-                  <li class="material-item">
+                  <?php
+                    $tool_name = $hitem['nombre'] ?? '(sin nombre)';
+                    $tool_qty = (isset($hitem['cantidad']) && $hitem['cantidad'] !== '' && $hitem['cantidad'] !== null)
+                      ? (is_numeric($hitem['cantidad']) ? (string)(int)$hitem['cantidad'] : (string)$hitem['cantidad'])
+                      : '';
+                    $tool_note_full = isset($hitem['nota']) ? (string)$hitem['nota'] : '';
+                    $tool_sec_full = isset($hitem['seguridad']) ? (string)$hitem['seguridad'] : '';
+                    $tool_note_prev = $words_preview($tool_note_full, 10);
+                    $tool_sec_prev = $words_preview($tool_sec_full, 10);
+                  ?>
+                  <li class="material-item"
+                      data-name="<?= h($tool_name, ENT_QUOTES, 'UTF-8') ?>"
+                      data-cantidad="<?= h($tool_qty, ENT_QUOTES, 'UTF-8') ?>"
+                      data-notafull="<?= h($tool_note_full, ENT_QUOTES, 'UTF-8') ?>"
+                      data-seguridadfull="<?= h($tool_sec_full, ENT_QUOTES, 'UTF-8') ?>"
+                      tabindex="0">
                     <span class="material-name">
-                      <?= h($hitem['nombre'] ?? '(sin nombre)') ?>
-                      <?php if (isset($hitem['cantidad']) && $hitem['cantidad'] !== '' && $hitem['cantidad'] !== null): ?>
-                        <span class="badge" style="margin-left:6px;"><?= h(is_numeric($hitem['cantidad']) ? (int)$hitem['cantidad'] : $hitem['cantidad']) ?></span>
+                      <?= h($tool_name) ?>
+                      <?php if ($tool_qty !== ''): ?>
+                        <span class="badge" style="margin-left:6px;"><?= h($tool_qty) ?></span>
                       <?php endif; ?>
                     </span>
-                    <?php if (!empty($hitem['seguridad'])): ?>
-                      <small class="material-warning" style="margin-left:8px;">⚠️ <?= h($hitem['seguridad']) ?></small>
+                    <?php if ($tool_sec_prev !== ''): ?>
+                      <small class="material-warning" style="margin-left:8px;">⚠️ <?= h($tool_sec_prev) ?></small>
                     <?php endif; ?>
-                    <?php if (!empty($hitem['nota'])): ?>
-                      <small class="material-notes"><?= h($hitem['nota']) ?></small>
+                    <?php if ($tool_note_prev !== ''): ?>
+                      <small class="material-notes"><?= h($tool_note_prev) ?></small>
                     <?php endif; ?>
                   </li>
                 <?php else: ?>
-                  <li class="material-item">
+                  <li class="material-item" tabindex="0"
+                      data-name="<?= h(is_array($hitem) ? json_encode($hitem, JSON_UNESCAPED_UNICODE) : (string)$hitem, ENT_QUOTES, 'UTF-8') ?>"
+                      data-cantidad=""
+                      data-notafull=""
+                      data-seguridadfull="">
                     <span class="material-name"><?= h(is_array($hitem) ? json_encode($hitem, JSON_UNESCAPED_UNICODE) : $hitem) ?></span>
                   </li>
                 <?php endif; ?>
               <?php endforeach; ?>
             </ul>
             <script>
-              console.log('🔧 [Manual] Herramientas renderizadas:', <?= count($herr) ?>);
+              (function(){
+                try {
+                  var items = document.querySelectorAll('.manual-tools .materials-list li.material-item');
+                  console.log('🔧 [Manual] Herramientas clicables:', items.length);
+                  items.forEach(function(li){
+                    function openModal(){
+                      var name = li.getAttribute('data-name') || '';
+                      var qty = li.getAttribute('data-cantidad') || '';
+                      var noteFull = li.getAttribute('data-notafull') || '';
+                      var secFull = li.getAttribute('data-seguridadfull') || '';
+                      window.cdcToolModalOpen({ name: name, qty: qty, note: noteFull, sec: secFull });
+                    }
+                    li.addEventListener('click', function(ev){
+                      var target = ev.target;
+                      if (target && target.closest('a')) return;
+                      console.log('✅ [Manual] Abrir modal herramienta →', li.getAttribute('data-name'));
+                      openModal();
+                    });
+                    li.addEventListener('keypress', function(ev){
+                      if (ev.key === 'Enter' || ev.key === ' '){
+                        console.log('✅ [Manual] Abrir modal herramienta (tecla) →', li.getAttribute('data-name'));
+                        openModal();
+                        ev.preventDefault();
+                      }
+                    });
+                  });
+                } catch(e) {
+                  console.log('❌ [Manual] Error preparando modal de herramientas:', e && e.message ? e.message : e);
+                }
+              })();
             </script>
           </div>
         </section>
@@ -545,5 +602,56 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
   .manual-step { page-break-inside: avoid; }
   .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }
 }
+</style>
+<div id="toolModal" class="cdc-modal" aria-hidden="true" style="display:none;">
+  <div class="cdc-modal-backdrop"></div>
+  <div class="cdc-modal-content" role="dialog" aria-modal="true" aria-labelledby="toolModalTitle">
+    <button type="button" class="cdc-modal-close" aria-label="Cerrar">×</button>
+    <h3 id="toolModalTitle">Herramienta</h3>
+    <div class="cdc-modal-body">
+      <p><strong>Cantidad:</strong> <span id="toolModalQty"></span></p>
+      <div id="toolModalSafety"></div>
+      <div id="toolModalNote"></div>
+    </div>
+  </div>
+</div>
+<script>
+// Modal sencillo para mostrar información completa de herramientas
+(function(){
+  var modal = document.getElementById('toolModal');
+  if (!modal) return;
+  var backdrop = modal.querySelector('.cdc-modal-backdrop');
+  var closeBtn = modal.querySelector('.cdc-modal-close');
+  var titleEl = document.getElementById('toolModalTitle');
+  var qtyEl = document.getElementById('toolModalQty');
+  var safetyEl = document.getElementById('toolModalSafety');
+  var noteEl = document.getElementById('toolModalNote');
+
+  function close(){ modal.style.display = 'none'; modal.setAttribute('aria-hidden','true'); }
+  function open(){ modal.style.display = 'block'; modal.setAttribute('aria-hidden','false'); }
+  function esc(e){ if (e.key === 'Escape') { close(); } }
+
+  window.cdcToolModalOpen = function(data){
+    try {
+      titleEl.textContent = data.name || 'Herramienta';
+      qtyEl.textContent = data.qty || '—';
+      safetyEl.innerHTML = data.sec ? ('<p><strong>Seguridad:</strong> ' + data.sec.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>') : '';
+      noteEl.innerHTML = data.note ? ('<p><strong>Nota:</strong> ' + data.note.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</p>') : '';
+      open();
+      console.log('✅ [Manual] Modal herramienta abierto:', data.name);
+    } catch(e) {
+      console.log('❌ [Manual] Error abriendo modal herramienta:', e && e.message ? e.message : e);
+    }
+  };
+  closeBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  window.addEventListener('keydown', esc);
+})();
+</script>
+<style>
+.cdc-modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.35); }
+.cdc-modal-content{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); background:#fff; border:1px solid #e3e8f3; border-radius:10px; box-shadow:var(--shadow-lg); width: min(560px, 90vw); max-height: 80vh; overflow:auto; padding:14px 16px; }
+.cdc-modal-close{ position:absolute; right:10px; top:8px; background:transparent; border:none; font-size:22px; line-height:1; cursor:pointer; }
+.cdc-modal-body p{ margin:8px 0; }
 </style>
 <?php include 'includes/footer.php'; ?>
