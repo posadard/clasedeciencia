@@ -87,6 +87,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Slug inválido: usa a-z, 0-9 y guiones.';
     }
 
+    // Normalizar slug (minúsculas, guiones únicos, sin bordes)
+    if (!$error_msg && $slug !== '') {
+      $slug = strtolower($slug);
+      $slug = preg_replace('/[^a-z0-9\-]+/', '-', $slug);
+      $slug = preg_replace('/-+/', '-', $slug);
+      $slug = trim($slug, '-');
+      echo '<script>console.log("🔍 [ManualsEdit] Slug normalizado:", ' . json_encode($slug) . ');</script>';
+      if ($slug === '') { $error_msg = 'Slug requerido.'; }
+    }
+
+    // Verificar unicidad por (kit_id, idioma, slug)
+    if (!$error_msg && $kit_id > 0 && $slug !== '') {
+      try {
+        if ($manual_id > 0) {
+          $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND idioma = ? AND slug = ? AND id <> ?');
+          $chk->execute([$kit_id, $idioma, $slug, $manual_id]);
+        } else {
+          $chk = $pdo->prepare('SELECT COUNT(*) FROM kit_manuals WHERE kit_id = ? AND idioma = ? AND slug = ?');
+          $chk->execute([$kit_id, $idioma, $slug]);
+        }
+        $exists = (int)$chk->fetchColumn();
+        if ($exists > 0) {
+          $error_msg = 'El slug ya existe para este kit e idioma. Elige otro.';
+          echo '<script>console.log("⚠️ [ManualsEdit] Slug duplicado para kit_id=' . (int)$kit_id . ' idioma=' . htmlspecialchars($idioma, ENT_QUOTES, 'UTF-8') . '");</script>';
+        }
+      } catch (PDOException $e) {
+        echo '<script>console.log("⚠️ [ManualsEdit] Error verificando unicidad:", ' . json_encode($e->getMessage()) . ');</script>';
+      }
+    }
+
     // Validate JSON fields (optional empty allowed)
     $jsonErrors = [];
     $validateJson = function($raw, $label) use (&$jsonErrors) {
@@ -206,8 +236,11 @@ if (!$kit) {
 
     <div class="form-group">
       <label>Slug</label>
-      <input type="text" name="slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="ej. armado-basico" />
-      <small>Usa a-z, 0-9 y guiones.</small>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="ej. armado-basico" style="flex:1;" />
+        <button type="button" class="btn" id="btn-generar-slug">⚡ Generar</button>
+      </div>
+      <small>Usa a-z, 0-9 y guiones. Se sugiere según tipo/ámbito.</small>
     </div>
 
     <div class="form-group">
@@ -279,7 +312,7 @@ if (!$kit) {
         <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
           <option value="">-- Selecciona --</option>
           <?php foreach ($kit_items as $it): ?>
-            <option value="<?= (int)$it['id'] ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+            <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
           <?php endforeach; ?>
         </select>
         <?php if (!$has_item_id_column): ?>
@@ -447,6 +480,98 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     console.log('🔍 [ManualsEdit] Ámbito:', v);
   }
   if (ambSel) { ambSel.addEventListener('change', applyAmb); applyAmb(); }
+})();
+
+// --- Slug Generator & Normalizer ---
+(function(){
+  const slugInput = document.getElementById('manual-slug');
+  const genBtn = document.getElementById('btn-generar-slug');
+  const tipoSel = document.querySelector('select[name="tipo_manual"]');
+  const ambSel = document.querySelector('select[name="ambito"]');
+  const itemSel = document.querySelector('select[name="item_id"]');
+
+  function slugify(str){
+    if (!str) return '';
+    try { str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); } catch(e) {}
+    return String(str)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function getItemNombre(){
+    if (!itemSel) return '';
+    const opt = itemSel.options[itemSel.selectedIndex];
+    if (!opt) return '';
+    const nombre = opt.getAttribute('data-nombre') || opt.textContent || '';
+    return nombre.replace(/\s*\(SKU.*\)$/i, '').trim();
+  }
+
+  function buildSuggestion(){
+    const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
+    const amb = (ambSel ? ambSel.value : 'kit') || 'kit';
+    let base = '';
+    if (amb === 'componente') {
+      const nombreItem = getItemNombre();
+      if (nombreItem) {
+        base = tipo + '-' + nombreItem;
+      } else {
+        base = tipo + '-componente';
+      }
+    } else {
+      // Mapear sugerencias por tipo para ámbito kit
+      const map = {
+        'armado': 'armado-basico',
+        'uso': 'uso-general',
+        'calibracion': 'calibracion',
+        'mantenimiento': 'mantenimiento',
+        'seguridad': 'seguridad',
+        'teoria': 'teoria',
+        'experimento': 'experimento',
+        'solucion': 'solucion',
+        'evaluacion': 'evaluacion',
+        'docente': 'docente',
+        'referencia': 'referencia'
+      };
+      base = map[tipo] || tipo;
+    }
+    const s = slugify(base);
+    console.log('🔍 [ManualsEdit] Sugerencia de slug:', base, '→', s);
+    return s;
+  }
+
+  function applySuggestionIfEmpty(){
+    if (!slugInput) return;
+    const cur = (slugInput.value || '').trim();
+    if (cur === '') {
+      slugInput.value = buildSuggestion();
+    }
+  }
+
+  if (genBtn) {
+    genBtn.addEventListener('click', function(){
+      if (!slugInput) return;
+      slugInput.value = buildSuggestion();
+      console.log('✅ [ManualsEdit] Slug generado:', slugInput.value);
+    });
+  }
+
+  // Autogenerar cuando cambie tipo/ámbito/componente si el campo está vacío
+  if (tipoSel) tipoSel.addEventListener('change', applySuggestionIfEmpty);
+  if (ambSel) ambSel.addEventListener('change', applySuggestionIfEmpty);
+  if (itemSel) itemSel.addEventListener('change', applySuggestionIfEmpty);
+
+  // Normalizar mientras escribe (suave): al perder foco
+  if (slugInput) {
+    slugInput.addEventListener('blur', function(){
+      const norm = slugify(slugInput.value);
+      if (norm !== slugInput.value) {
+        console.log('ℹ️ [ManualsEdit] Normalizando slug a:', norm);
+        slugInput.value = norm;
+      }
+    });
+  }
 })();
 
 (function(){
