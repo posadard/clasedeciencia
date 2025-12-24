@@ -381,14 +381,6 @@ include 'includes/header.php';
     </section>
     <?php endif; ?>
 
-    <section class="article-content">
-    <?php if (!empty($kit['contenido_html'])): ?>
-      <div class="article-body">
-      <?= $kit['contenido_html'] ?>
-      </div>
-    <?php endif; ?>
-    </section>
-
     <section class="kit-manuals">
       <h2>🛠️ Manuales Disponibles</h2>
       <?php if (!empty($manuales)): ?>
@@ -508,6 +500,14 @@ include 'includes/header.php';
       <?php else: ?>
         <p class="muted">Aún no hay manuales publicados para este kit.</p>
       <?php endif; ?>
+    </section>
+
+    <section class="article-content">
+    <?php if (!empty($kit['contenido_html'])): ?>
+      <div class="article-body">
+      <?= $kit['contenido_html'] ?>
+      </div>
+    <?php endif; ?>
     </section>
 
     <?php // Ficha técnica ya precomputada como $ficha_inline arriba ?>
