@@ -79,10 +79,24 @@ $tipo_map = [
   'referencia' => ['emoji' => '📚', 'label' => 'Referencia']
 ];
 $tipo_key = isset($manual['tipo_manual']) ? strtolower((string)$manual['tipo_manual']) : '';
+// Robust fallback: derive tipo from slug (manual-{tipo}-...) when DB field is missing
+if ($tipo_key === '' && !empty($manual['slug'])) {
+  $slug_low = strtolower((string)$manual['slug']);
+  $parts = explode('-', $slug_low);
+  if (!empty($parts) && $parts[0] === 'manual' && isset($parts[1]) && $parts[1] !== '') {
+    $tipo_key = $parts[1];
+  }
+}
 $tipo_emoji = '📘';
 $tipo_label = 'Manual';
-if ($tipo_key && isset($tipo_map[$tipo_key])) { $tipo_emoji = $tipo_map[$tipo_key]['emoji']; $tipo_label = $tipo_map[$tipo_key]['label']; }
-elseif (strpos(strtolower($manual['slug']), 'arm') !== false) { $tipo_emoji = '🛠️'; $tipo_label = 'Armado'; }
+if ($tipo_key && isset($tipo_map[$tipo_key])) {
+  $tipo_emoji = $tipo_map[$tipo_key]['emoji'];
+  $tipo_label = $tipo_map[$tipo_key]['label'];
+} elseif ($tipo_key !== '') {
+  // Fallback: use slug-derived tipo as label, capitalized
+  $tipo_label = ucfirst($tipo_key);
+  if (strpos($tipo_key, 'arm') !== false) { $tipo_emoji = '🛠️'; }
+}
 
 $ambito = isset($manual['ambito']) && $manual['ambito'] === 'componente' ? 'componente' : 'kit';
 $comp = null;
