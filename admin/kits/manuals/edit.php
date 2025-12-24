@@ -30,6 +30,10 @@ if ($kit_id > 0) {
 
 // Detect optional column 'render_mode' in kit_manuals
 $has_render_mode_column = false;
+$has_tipo_manual_column = false;
+$has_ambito_column = false;
+$has_item_id_column = false;
+$has_resumen_column = false;
 try {
   $pdo->query('SELECT render_mode FROM kit_manuals LIMIT 1');
   $has_render_mode_column = true;
@@ -37,6 +41,10 @@ try {
 } catch (PDOException $e) {
   echo '<script>console.log("⚠️ [ManualsEdit] Column render_mode: ausente");</script>';
 }
+try { $pdo->query('SELECT tipo_manual FROM kit_manuals LIMIT 1'); $has_tipo_manual_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column tipo_manual: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column tipo_manual: ausente");</script>'; }
+try { $pdo->query('SELECT ambito FROM kit_manuals LIMIT 1'); $has_ambito_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column ambito: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column ambito: ausente");</script>'; }
+try { $pdo->query('SELECT item_id FROM kit_manuals LIMIT 1'); $has_item_id_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column item_id: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column item_id: ausente");</script>'; }
+try { $pdo->query('SELECT resumen FROM kit_manuals LIMIT 1'); $has_resumen_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column resumen: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column resumen: ausente");</script>'; }
 
 // Handle form submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -53,6 +61,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idioma = trim($_POST['idioma'] ?? 'es-CO');
     $time_minutes = ($_POST['time_minutes'] !== '' ? intval($_POST['time_minutes']) : null);
     $dificultad = trim($_POST['dificultad_ensamble'] ?? '');
+    // Manual type and scope
+    $allowed_tipos = ['seguridad','armado','calibracion','uso','mantenimiento','teoria','experimento','solucion','evaluacion','docente','referencia'];
+    $tipo_manual = trim($_POST['tipo_manual'] ?? 'armado');
+    if (!in_array($tipo_manual, $allowed_tipos, true)) { $tipo_manual = 'armado'; }
+    $ambito = trim($_POST['ambito'] ?? 'kit');
+    $ambito = ($ambito === 'componente') ? 'componente' : 'kit';
+    $item_id = isset($_POST['item_id']) && $_POST['item_id'] !== '' ? intval($_POST['item_id']) : null;
+    if ($ambito !== 'componente') { $item_id = null; }
+    $resumen = isset($_POST['resumen']) ? trim((string)$_POST['resumen']) : '';
+    if ($resumen !== '') { $resumen = mb_substr($resumen, 0, 255, 'UTF-8'); }
     $pasos_json = trim($_POST['pasos_json'] ?? '');
     $herr_json = trim($_POST['herramientas_json'] ?? '');
     $seg_json = trim($_POST['seguridad_json'] ?? '');
@@ -94,34 +112,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($manual_id > 0) {
           $was_published = ($manual && ($manual['status'] ?? '') === 'published');
           $becomes_published = ($status === 'published');
-          if ($has_render_mode_column) {
-            if ($becomes_published && !$was_published) {
-              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ?, published_at = IFNULL(published_at, NOW()) WHERE id = ?');
-              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $manual_id]);
-            } else {
-              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ? WHERE id = ?');
-              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $manual_id]);
-            }
-          } else {
-            if ($becomes_published && !$was_published) {
-              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, published_at = IFNULL(published_at, NOW()) WHERE id = ?');
-              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
-            } else {
-              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ? WHERE id = ?');
-              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
-            }
-          }
+          // Build dynamic UPDATE with available columns
+          $setParts = [
+            'slug = ?', 'version = ?', 'status = ?', 'idioma = ?', 'time_minutes = ?', 'dificultad_ensamble = ?',
+            'pasos_json = ?', 'herramientas_json = ?', 'seguridad_json = ?', 'html = ?'
+          ];
+          $params = [$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          if ($has_render_mode_column) { $setParts[] = 'render_mode = ?'; $params[] = $render_mode_post; }
+          if ($has_tipo_manual_column) { $setParts[] = 'tipo_manual = ?'; $params[] = $tipo_manual; }
+          if ($has_ambito_column) { $setParts[] = 'ambito = ?'; $params[] = $ambito; }
+          if ($has_item_id_column) { $setParts[] = 'item_id = ?'; $params[] = $item_id; }
+          if ($has_resumen_column) { $setParts[] = 'resumen = ?'; $params[] = ($resumen !== '' ? $resumen : null); }
+          if ($becomes_published && !$was_published) { $setParts[] = 'published_at = IFNULL(published_at, NOW())'; }
+          $sqlU = 'UPDATE kit_manuals SET ' . implode(', ', $setParts) . ' WHERE id = ?';
+          $params[] = $manual_id;
+          $stmtU = $pdo->prepare($sqlU);
+          $stmtU->execute($params);
           $success_msg = 'Manual actualizado.';
           echo '<script>console.log("✅ [ManualsEdit] Actualizado ID=' . $manual_id . '");</script>';
         } else {
           $published_at_insert = ($status === 'published') ? date('Y-m-d H:i:s') : null;
-          if ($has_render_mode_column) {
-            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, render_mode, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $published_at_insert]);
-          } else {
-            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $published_at_insert]);
-          }
+          // Build dynamic INSERT
+          $fields = ['kit_id','slug','version','status','idioma','time_minutes','dificultad_ensamble','pasos_json','herramientas_json','seguridad_json','html'];
+          $place = array_fill(0, count($fields), '?');
+          $vals = [$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          if ($has_render_mode_column) { $fields[]='render_mode'; $place[]='?'; $vals[]=$render_mode_post; }
+          if ($has_tipo_manual_column) { $fields[]='tipo_manual'; $place[]='?'; $vals[]=$tipo_manual; }
+          if ($has_ambito_column) { $fields[]='ambito'; $place[]='?'; $vals[]=$ambito; }
+          if ($has_item_id_column) { $fields[]='item_id'; $place[]='?'; $vals[]=$item_id; }
+          if ($has_resumen_column) { $fields[]='resumen'; $place[]='?'; $vals[] = ($resumen !== '' ? $resumen : null); }
+          $fields[]='published_at'; $place[]='?'; $vals[]=$published_at_insert; // always safe; column exists in schema
+          $sqlI = 'INSERT INTO kit_manuals (' . implode(',', $fields) . ') VALUES (' . implode(',', $place) . ')';
+          $stmtI = $pdo->prepare($sqlI);
+          $stmtI->execute($vals);
           $manual_id = intval($pdo->lastInsertId());
           $success_msg = 'Manual creado.';
           echo '<script>console.log("✅ [ManualsEdit] Creado ID=' . $manual_id . '");</script>';
@@ -190,6 +213,85 @@ if (!$kit) {
     <div class="form-group">
       <label>Idioma</label>
       <input type="text" name="idioma" value="<?= htmlspecialchars($manual['idioma'] ?? 'es-CO') ?>" />
+    </div>
+
+    <?php
+    // Load kit items for component scope selector (prefer items in this kit)
+    $kit_items = [];
+    if ($kit_id > 0) {
+      try {
+        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.sku FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
+        $q->execute([$kit_id]);
+        $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
+      } catch (PDOException $e) { $kit_items = []; }
+    }
+    if (empty($kit_items)) {
+      try {
+        $q = $pdo->query('SELECT id, nombre_comun, sku FROM kit_items ORDER BY nombre_comun ASC');
+        $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
+      } catch (PDOException $e) { $kit_items = []; }
+    }
+    $amb_val = $manual['ambito'] ?? 'kit';
+    $item_val = isset($manual['item_id']) ? (int)$manual['item_id'] : 0;
+    $tipo_val = $manual['tipo_manual'] ?? 'armado';
+    ?>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo de manual</label>
+        <select name="tipo_manual" <?= $has_tipo_manual_column ? '' : 'disabled' ?>>
+          <?php
+            $tipos = [
+              'seguridad' => '🛡️ Seguridad',
+              'armado' => '🛠️ Armado',
+              'calibracion' => '🎛️ Calibración',
+              'uso' => '▶️ Uso',
+              'mantenimiento' => '🧰 Mantenimiento',
+              'teoria' => '📘 Teoría',
+              'experimento' => '🧪 Experimento',
+              'solucion' => '🩺 Solución de problemas',
+              'evaluacion' => '✅ Evaluación',
+              'docente' => '👩‍🏫 Docente',
+              'referencia' => '📚 Referencia'
+            ];
+            foreach ($tipos as $k => $label) {
+              $sel = ($tipo_val === $k) ? 'selected' : '';
+              echo '<option value="' . htmlspecialchars($k, ENT_QUOTES, 'UTF-8') . '" ' . $sel . '>' . $label . '</option>';
+            }
+          ?>
+        </select>
+        <?php if (!$has_tipo_manual_column): ?>
+          <small class="help-note">Ejecuta la migración para habilitar el tipo.</small>
+        <?php endif; ?>
+      </div>
+      <div class="form-group">
+        <label>Ámbito</label>
+        <select name="ambito" <?= $has_ambito_column ? '' : 'disabled' ?>>
+          <option value="kit" <?= ($amb_val === 'kit') ? 'selected' : '' ?>>Kit</option>
+          <option value="componente" <?= ($amb_val === 'componente') ? 'selected' : '' ?>>Componente</option>
+        </select>
+        <?php if (!$has_ambito_column): ?>
+          <small class="help-note">Ejecuta la migración para habilitar el ámbito.</small>
+        <?php endif; ?>
+      </div>
+      <div class="form-group" id="ambito-item-wrap" style="min-width:280px; display:none;">
+        <label>Componente (si ámbito = componente)</label>
+        <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
+          <option value="">-- Selecciona --</option>
+          <?php foreach ($kit_items as $it): ?>
+            <option value="<?= (int)$it['id'] ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+          <?php endforeach; ?>
+        </select>
+        <?php if (!$has_item_id_column): ?>
+          <small class="help-note">Ejecuta la migración para habilitar el vínculo con componentes.</small>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Resumen (opcional)</label>
+      <input type="text" name="resumen" maxlength="255" value="<?= htmlspecialchars($manual['resumen'] ?? '') ?>" <?= $has_resumen_column ? '' : 'disabled' ?> />
+      <small class="help-note">Breve extracto (≤255). Útil para tarjetas en el frontend.</small>
     </div>
 
     <div class="form-row">
@@ -334,7 +436,20 @@ var KIT_SAFETY = <?= json_encode(isset($kit_seg_obj) ? $kit_seg_obj : null, JSON
 console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
-(function() {
+(function(){
+  // Toggle ambito → item selector
+  const ambSel = document.querySelector('select[name="ambito"]');
+  const itemWrap = document.getElementById('ambito-item-wrap');
+  function applyAmb(){
+    if (!ambSel || !itemWrap) return;
+    const v = ambSel.value;
+    itemWrap.style.display = (v === 'componente') ? '' : 'none';
+    console.log('🔍 [ManualsEdit] Ámbito:', v);
+  }
+  if (ambSel) { ambSel.addEventListener('change', applyAmb); applyAmb(); }
+})();
+
+(function(){
   // Mode toggle logic
   const modeRadios = Array.from(document.querySelectorAll('input[name="ui_mode"]'));
   const htmlGroup = document.getElementById('html-group');

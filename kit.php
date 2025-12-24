@@ -400,20 +400,83 @@ include 'includes/header.php';
           $tiempo = isset($man['time_minutes']) && $man['time_minutes'] ? ((int)$man['time_minutes']) . 'm' : null;
           $version = !empty($man['version']) ? (string)$man['version'] : null;
           $dif = !empty($man['dificultad_ensamble']) ? (string)$man['dificultad_ensamble'] : null;
+          // Icono por tipo de manual (si existe) o heurística por slug
+          $icon = '📘';
+          $tipo = isset($man['tipo_manual']) ? (string)$man['tipo_manual'] : '';
+          $tipo_l = mb_strtolower($tipo);
+          $slug_l = mb_strtolower((string)$man['slug']);
+          $map = [
+            'seguridad' => '🛡️',
+            'armado' => '🛠️',
+            'calibracion' => '🎛️',
+            'uso' => '▶️',
+            'mantenimiento' => '🧰',
+            'teoria' => '📘',
+            'experimento' => '🧪',
+            'solucion' => '🩺',
+            'evaluacion' => '✅',
+            'docente' => '👩‍🏫',
+            'referencia' => '📚'
+          ];
+          if (!empty($tipo_l) && isset($map[$tipo_l])) {
+            $icon = $map[$tipo_l];
+          } else {
+            if (strpos($slug_l, 'segur') !== false) $icon = '🛡️';
+            elseif (strpos($slug_l, 'arm') !== false) $icon = '🛠️';
+            elseif (strpos($slug_l, 'calib') !== false) $icon = '🎛️';
+            elseif (strpos($slug_l, 'uso') !== false) $icon = '▶️';
+            elseif (strpos($slug_l, 'mant') !== false) $icon = '🧰';
+            elseif (strpos($slug_l, 'teori') !== false) $icon = '📘';
+            elseif (strpos($slug_l, 'exper') !== false) $icon = '🧪';
+            elseif (strpos($slug_l, 'solu') !== false) $icon = '🩺';
+            elseif (strpos($slug_l, 'eval') !== false) $icon = '✅';
+            elseif (strpos($slug_l, 'docen') !== false) $icon = '👩‍🏫';
+            elseif (strpos($slug_l, 'ref') !== false) $icon = '📚';
+          }
+          // Extracto del manual: resumen -> primer paso -> HTML plano
+          $excerpt = '';
+          try {
+            $full = cdc_get_kit_manual_by_slug($pdo, (int)$kit['id'], (string)$man['slug'], true);
+            if ($full) {
+              if (!empty($full['resumen'])) {
+                $excerpt = (string)$full['resumen'];
+              } else {
+                // Pasos JSON
+                $firstText = '';
+                if (!empty($full['pasos_json'])) {
+                  $tmp = json_decode($full['pasos_json'], true);
+                  if (is_array($tmp)) {
+                    foreach ($tmp as $p) {
+                      if (is_array($p)) {
+                        if (!empty($p['html'])) { $firstText = strip_tags($p['html']); }
+                        elseif (!empty($p['descripcion'])) { $firstText = (string)$p['descripcion']; }
+                        elseif (!empty($p['texto'])) { $firstText = (string)$p['texto']; }
+                      } elseif (is_string($p)) {
+                        $firstText = $p;
+                      }
+                      if ($firstText !== '') break;
+                    }
+                  }
+                }
+                if ($firstText === '' && !empty($full['html'])) {
+                  $firstText = strip_tags($full['html']);
+                }
+                if ($firstText !== '') {
+                  $excerpt = mb_substr(trim(preg_replace('/\s+/', ' ', $firstText)), 0, 160);
+                  if (mb_strlen($firstText) > 160) { $excerpt .= '…'; }
+                }
+              }
+            }
+          } catch (Exception $e) {
+            error_log('Error excerpt manual ' . (string)$man['slug'] . ': ' . $e->getMessage());
+          }
         ?>
           <section class="kit-inline-card" role="link" tabindex="0" aria-label="Manual <?= h($man['slug']) ?>"
                    onclick="if(!event.target.closest('a')){ console.log('📘 [Kit] Click manual →','<?= h($man['slug']) ?>'); window.location.href='<?= h($href) ?>'; }"
                    onkeypress="if(event.key==='Enter' || event.key===' '){ if(!event.target.closest('a')){ window.location.href='<?= h($href) ?>'; event.preventDefault(); } }">
             <div class="kit-inline-wrap">
               <div class="kit-inline-left">
-                <div class="kit-inline-thumb" style="display:block;width:100%;height:100%;">
-                  <?php if (!empty($kit['imagen_portada'])): ?>
-                    <img src="<?= h($kit['imagen_portada']) ?>" alt="Thumb manual <?= h($man['slug']) ?>" style="width:100%;height:100%;object-fit:cover;"
-                         onerror="this.onerror=null; console.log('❌ [Kit] Thumb manual falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📘'; p.appendChild(s); this.replaceWith(p);" />
-                  <?php else: ?>
-                    <div class="summary-placeholder"><span class="placeholder-icon">📘</span></div>
-                  <?php endif; ?>
-                </div>
+                <div class="summary-placeholder"><span class="placeholder-icon"><?= $icon ?></span></div>
               </div>
               <div class="kit-inline-right">
                 <h3 class="kit-inline-title">
@@ -425,14 +488,18 @@ include 'includes/header.php';
                     <?= $version ? ' · 🔢 v' . h($version) : '' ?>
                   </span>
                 </h3>
-                <div class="kit-inline-manuales">
-                  <span class="man-label">Abrir:</span>
-                  <div class="man-pills">
-                    <a class="tag-pill" href="<?= h($href) ?>" title="Ver manual <?= h($man['slug']) ?>">
-                      <?= h($man['slug']) ?> · <?= h($idioma) ?><?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
-                    </a>
+                <?php if ($excerpt !== ''): ?>
+                  <p class="man-excerpt"><?= h($excerpt) ?></p>
+                <?php else: ?>
+                  <div class="kit-inline-manuales">
+                    <span class="man-label">Abrir:</span>
+                    <div class="man-pills">
+                      <a class="tag-pill" href="<?= h($href) ?>" title="Ver manual <?= h($man['slug']) ?>">
+                        <?= h($man['slug']) ?> · <?= h($idioma) ?><?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
+                      </a>
+                    </div>
                   </div>
-                </div>
+                <?php endif; ?>
               </div>
             </div>
           </section>
