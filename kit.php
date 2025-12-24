@@ -576,6 +576,12 @@ console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 .kit-inline-card .kit-inline-wrap { display:flex; gap:12px; align-items:center; }
 .kit-inline-card .kit-inline-left { flex: 0 0 72px; width:72px; display:flex; align-items:center; justify-content:center; }
 .kit-inline-card .manual-type-emoji { font-size:56px; line-height:1; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
+/* Subtle hover animation similar to componentes */
+.kit-inline-card { border:1px solid var(--color-border-light); border-radius:8px; padding:12px; background:#fff; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.kit-inline-card:hover, .kit-inline-card:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-accent); }
+.kit-inline-card .manual-type-emoji { transition: transform .15s ease; }
+.kit-inline-card:hover .manual-type-emoji, .kit-inline-card:focus-within .manual-type-emoji { transform: scale(1.08) rotate(-2deg); }
+.kit-inline-card:hover .kit-inline-title span:first-child, .kit-inline-card:focus-within .kit-inline-title span:first-child { text-decoration: underline; }
 @media (max-width: 600px) {
   .kit-inline-card .kit-inline-left { flex-basis:56px; width:56px; }
   .kit-inline-card .manual-type-emoji { font-size:44px; }
