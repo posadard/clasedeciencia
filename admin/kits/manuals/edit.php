@@ -47,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kit_id = intval($_POST['kit_id'] ?? 0);
     $slug = trim($_POST['slug'] ?? '');
     $version = trim($_POST['version'] ?? '1.0');
-    $status = ($_POST['status'] ?? 'draft') === 'published' ? 'published' : 'draft';
+    $status_raw = trim($_POST['status'] ?? 'draft');
+    $allowed_statuses = ['draft','approved','published','discontinued'];
+    $status = in_array($status_raw, $allowed_statuses, true) ? $status_raw : 'draft';
     $idioma = trim($_POST['idioma'] ?? 'es-CO');
     $time_minutes = ($_POST['time_minutes'] !== '' ? intval($_POST['time_minutes']) : null);
     $dificultad = trim($_POST['dificultad_ensamble'] ?? '');
@@ -90,22 +92,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$error_msg) {
       try {
         if ($manual_id > 0) {
+          $was_published = ($manual && ($manual['status'] ?? '') === 'published');
+          $becomes_published = ($status === 'published');
           if ($has_render_mode_column) {
-            $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ? WHERE id = ?');
-            $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $manual_id]);
+            if ($becomes_published && !$was_published) {
+              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ?, published_at = IFNULL(published_at, NOW()) WHERE id = ?');
+              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $manual_id]);
+            } else {
+              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, render_mode = ? WHERE id = ?');
+              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $manual_id]);
+            }
           } else {
-            $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ? WHERE id = ?');
-            $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
+            if ($becomes_published && !$was_published) {
+              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ?, published_at = IFNULL(published_at, NOW()) WHERE id = ?');
+              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
+            } else {
+              $stmtU = $pdo->prepare('UPDATE kit_manuals SET slug = ?, version = ?, status = ?, idioma = ?, time_minutes = ?, dificultad_ensamble = ?, pasos_json = ?, herramientas_json = ?, seguridad_json = ?, html = ? WHERE id = ?');
+              $stmtU->execute([$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $manual_id]);
+            }
           }
           $success_msg = 'Manual actualizado.';
           echo '<script>console.log("✅ [ManualsEdit] Actualizado ID=' . $manual_id . '");</script>';
         } else {
+          $published_at_insert = ($status === 'published') ? date('Y-m-d H:i:s') : null;
           if ($has_render_mode_column) {
-            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, render_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post]);
+            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, render_mode, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $render_mode_post, $published_at_insert]);
           } else {
-            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html]);
+            $stmtI = $pdo->prepare('INSERT INTO kit_manuals (kit_id, slug, version, status, idioma, time_minutes, dificultad_ensamble, pasos_json, herramientas_json, seguridad_json, html, published_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $stmtI->execute([$kit_id, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html, $published_at_insert]);
           }
           $manual_id = intval($pdo->lastInsertId());
           $success_msg = 'Manual creado.';
@@ -187,8 +202,11 @@ if (!$kit) {
         <select name="status">
           <?php $st = $manual['status'] ?? 'draft'; ?>
           <option value="draft" <?= ($st === 'draft') ? 'selected' : '' ?>>Borrador</option>
+          <option value="approved" <?= ($st === 'approved') ? 'selected' : '' ?>>Aprobado</option>
           <option value="published" <?= ($st === 'published') ? 'selected' : '' ?>>Publicado</option>
+          <option value="discontinued" <?= ($st === 'discontinued') ? 'selected' : '' ?>>Descontinuado</option>
         </select>
+        <small>Usa Aprobado cuando esté listo para publicar; Publicado lo hace visible en la web.</small>
       </div>
       <div class="form-group">
         <label>Manual visible en la web</label>
