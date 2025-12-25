@@ -694,25 +694,45 @@ include 'includes/header.php';
     } catch (Exception $e) { $clases = []; }
   ?>
 
-  <?php if ($ambito === 'componente' && $comp): ?>
+  <?php if ($ambito === 'componente'): ?>
     <section class="manual-entity">
       <h2>🔧 Componente vinculado</h2>
-      <a href="/<?= h($comp['slug']) ?>" class="related-card" title="Ver componente <?= h($comp['nombre_comun']) ?>">
-        <?php if (!empty($comp['imagen_portada'])): ?>
-          <img src="<?= h($comp['imagen_portada']) ?>" alt="<?= h($comp['nombre_comun']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura componente falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
-        <?php else: ?>
-          <div class="thumbnail-placeholder"><span class="placeholder-icon">🔧</span></div>
-          <script>console.log('⚠️ [Manual] Componente sin imagen, usando placeholder');</script>
-        <?php endif; ?>
-        <div class="related-info">
-          <h4><?= h($comp['nombre_comun']) ?></h4>
-          <div class="related-meta">
-            <?php if (!empty($comp['sku'])): ?><span class="badge">SKU <?= h($comp['sku']) ?></span><?php endif; ?>
+      <?php if ($comp && !empty($comp['slug'])): ?>
+        <a href="/<?= h($comp['slug']) ?>" class="related-card" title="Ver componente <?= h($comp['nombre_comun'] ?? 'Componente') ?>">
+          <?php if (!empty($comp['imagen_portada'])): ?>
+            <img src="<?= h($comp['imagen_portada']) ?>" alt="<?= h($comp['nombre_comun']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura componente falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
+          <?php else: ?>
+            <div class="thumbnail-placeholder"><span class="placeholder-icon">🔧</span></div>
+            <script>console.log('⚠️ [Manual] Componente sin imagen, usando placeholder');</script>
+          <?php endif; ?>
+          <div class="related-info">
+            <h4><?= h($comp['nombre_comun'] ?? 'Componente') ?></h4>
+            <div class="related-meta">
+              <?php if (!empty($comp['sku'])): ?><span class="badge">SKU <?= h($comp['sku']) ?></span><?php endif; ?>
+            </div>
           </div>
+          <span class="card-magnify" aria-hidden="true">🔎</span>
+        </a>
+        <script>console.log('✅ [Manual] Tarjeta componente renderizada:', '<?= h($comp['slug']) ?>');</script>
+      <?php elseif (!empty($entitySlugFromManual)): ?>
+        <a href="/<?= h($entitySlugFromManual) ?>" class="related-card" title="Ver componente <?= h(ucwords(str_replace('-', ' ', $entitySlugFromManual))) ?>">
+          <div class="thumbnail-placeholder"><span class="placeholder-icon">🔧</span></div>
+          <div class="related-info">
+            <h4><?= h(ucwords(str_replace('-', ' ', $entitySlugFromManual))) ?></h4>
+          </div>
+          <span class="card-magnify" aria-hidden="true">🔎</span>
+        </a>
+        <script>console.log('ℹ️ [Manual] Tarjeta componente por slug derivado:', '<?= h($entitySlugFromManual) ?>');</script>
+      <?php else: ?>
+        <div class="related-card" title="Componente">
+          <div class="thumbnail-placeholder"><span class="placeholder-icon">🔧</span></div>
+          <div class="related-info">
+            <h4>Componente</h4>
+          </div>
+          <span class="card-magnify" aria-hidden="true">🔎</span>
         </div>
-        <span class="card-magnify" aria-hidden="true">🔎</span>
-      </a>
-      <script>console.log('✅ [Manual] Tarjeta componente renderizada:', '<?= h($comp['slug']) ?>');</script>
+        <script>console.log('⚠️ [Manual] Componente vinculado sin datos disponibles');</script>
+      <?php endif; ?>
     </section>
   <?php else: ?>
     <section class="manual-entity">
