@@ -98,16 +98,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_msg = 'Slug inválido: usa a-z, 0-9 y guiones.';
     }
 
+    // Refrescar contexto de kit según POST antes de reconstruir slug
+    try {
+      if ($ambito === 'kit' && $kit_id > 0) {
+        $stmtKp = $pdo->prepare('SELECT id, nombre, codigo, slug FROM kits WHERE id = ? LIMIT 1');
+        $stmtKp->execute([$kit_id]);
+        $kit = $stmtKp->fetch(PDO::FETCH_ASSOC) ?: null;
+        echo '<script>console.log("🔍 [ManualsEdit] Kit refrescado para slug:",' . json_encode($kit) . ');</script>';
+      } else {
+        // En ámbito componente no usamos kit para el slug
+        $kit = null;
+      }
+    } catch (PDOException $e) {
+      echo '<script>console.log("⚠️ [ManualsEdit] Error refrescando kit para slug:",' . json_encode($e->getMessage()) . ');</script>';
+    }
+
     // Deterministic slug build: manual-{tipo}-{entidad}-{dd-mm-yy}-V{version}
     if (!$error_msg) {
       // Normalize version: keep digits and dots; convert dots to underscores and prefix with 'V'
       $ver_clean = strtolower(preg_replace('/[^0-9\.]+/', '', (string)$version));
       $ver_norm_underscore = $ver_clean !== '' ? str_replace('.', '_', $ver_clean) : '';
       $ver_part = $ver_norm_underscore !== '' ? ('V' . $ver_norm_underscore) : '';
-      // Date dd-mm-yy from published_at if present, else now
+      // Date dd-mm-yy: si existe published_at del manual (update), usarlo; de lo contrario, ahora
       $date_src = null;
       if ($manual_id > 0 && $manual && !empty($manual['published_at'])) { $date_src = $manual['published_at']; }
-      if (!$date_src && $status === 'published' && !empty($published_at)) { $date_src = $published_at; }
       if (!$date_src) { $date_src = date('Y-m-d H:i:s'); }
       $date_part = date('d-m-y', strtotime($date_src));
       // Entity slug
@@ -123,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $entity_slug = preg_replace('/-+/', '-', trim($tmp, '-'));
           }
         } catch (PDOException $e) { $entity_slug = ''; }
-      } else if ($kit && !empty($kit['slug'])) {
+      } else if ($ambito === 'kit' && $kit && !empty($kit['slug'])) {
         $entity_slug = (string)$kit['slug'];
       }
       // Build parts (order): manual-{tipo}-{entidad}-{dd-mm-yy}-{Vversion}
