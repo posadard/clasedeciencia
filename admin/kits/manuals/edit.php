@@ -275,14 +275,14 @@ try {
   <?php if ($error_msg): ?><div class="alert alert-danger"><?= htmlspecialchars($error_msg) ?></div><?php endif; ?>
   <?php if ($success_msg): ?><div class="alert alert-success"><?= htmlspecialchars($success_msg) ?></div><?php endif; ?>
 
-  <form method="post">
+  <form method="post" class="compact-form">
     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
 
 
     <div class="form-group">
       <label>Slug</label>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="se genera automáticamente" style="flex:1;" readonly />
+      <div class="inline-row">
+        <input type="text" name="slug" id="manual-slug" value="<?= htmlspecialchars($manual['slug'] ?? '') ?>" required placeholder="se genera automáticamente" class="flex-1" readonly />
       </div>
       <small>Se actualiza automáticamente: <strong>manual-{tipo}-{entidad}-{dd-mm-yy}-V{version}</strong>. No editable.</small>
     </div>
@@ -361,7 +361,7 @@ try {
       <small class="help-note">Solo se guardará cuando el ámbito sea Kit.</small>
     </div>
 
-    <div class="form-group" id="ambito-item-wrap" style="min-width:280px; display:none;">
+    <div class="form-group min-280 hidden" id="ambito-item-wrap">
       <label>Componente (si ámbito = componente)</label>
       <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
         <option value="">-- Selecciona --</option>
@@ -451,7 +451,7 @@ try {
         <ul id="steps-list" class="steps-list"></ul>
         <p class="help-note">Los pasos se guardan como bloques HTML ordenados. Se serializan a JSON antes de enviar.</p>
       </div>
-      <textarea name="pasos_json" id="pasos_json" rows="8" style="display:none;" placeholder='[ {"orden":1, "titulo":"Paso 1", "html":"<p>...</p>"} ]'><?= htmlspecialchars($manual['pasos_json'] ?? '') ?></textarea>
+      <textarea name="pasos_json" id="pasos_json" rows="8" class="hidden" placeholder='[ {"orden":1, "titulo":"Paso 1", "html":"<p>...</p>"} ]'><?= htmlspecialchars($manual['pasos_json'] ?? '') ?></textarea>
     </div>
     <div class="form-group">
       <label>Herramientas</label>
@@ -462,7 +462,7 @@ try {
         <ul id="tools-list" class="tools-list"></ul>
         <p class="help-note">Añade herramientas una por una. Se guardan como objetos con nombre, cantidad y notas. Se serializan a JSON antes de enviar.</p>
       </div>
-      <textarea name="herramientas_json" id="herramientas_json" rows="4" style="display:none;" placeholder='[ {"nombre":"tijeras","cantidad":1,"nota":"pequeñas","seguridad":"Usar con cuidado"} ]'><?= htmlspecialchars($manual['herramientas_json'] ?? '') ?></textarea>
+      <textarea name="herramientas_json" id="herramientas_json" rows="4" class="hidden" placeholder='[ {"nombre":"tijeras","cantidad":1,"nota":"pequeñas","seguridad":"Usar con cuidado"} ]'><?= htmlspecialchars($manual['herramientas_json'] ?? '') ?></textarea>
     </div>
     <div class="form-group">
       <label>Seguridad</label>
@@ -476,7 +476,7 @@ try {
         <div id="kit-safety-panel" class="kit-safety-panel<?= $kit_seg_obj ? '' : ' muted' ?>">
           <div class="kit-safety-head"><strong>Medidas del kit</strong></div>
           <div class="kit-safety-body">
-            <div id="kit-security-chip" class="kit-security-chip" style="display: <?= (!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])) ? '' : 'none' ?>;">
+            <div id="kit-security-chip" class="kit-security-chip <?= (!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])) ? '' : 'hidden' ?>">
               Edad del kit: <?= !empty($kit_seg_obj['edad_min']) ? (int)$kit_seg_obj['edad_min'] : '?' ?>–<?= !empty($kit_seg_obj['edad_max']) ? (int)$kit_seg_obj['edad_max'] : '?' ?> años
             </div>
             <div id="kit-safety-notes" class="kit-safety-notes">
@@ -509,7 +509,7 @@ try {
         <ul id="security-list" class="security-list"></ul>
         <p class="help-note">Añade notas de seguridad una por una. Si defines edad segura, se guardará junto a las notas.</p>
       </div>
-      <textarea name="seguridad_json" id="seguridad_json" rows="4" style="display:none;" placeholder='{"edad":{"min":10,"max":14},"notas":[{"nota":"Usar gafas","categoria":"protección"}]}' ><?= htmlspecialchars($manual['seguridad_json'] ?? '') ?></textarea>
+      <textarea name="seguridad_json" id="seguridad_json" rows="4" class="hidden" placeholder='{"edad":{"min":10,"max":14},"notas":[{"nota":"Usar gafas","categoria":"protección"}]}' ><?= htmlspecialchars($manual['seguridad_json'] ?? '') ?></textarea>
     </div>
 
 
@@ -518,7 +518,7 @@ try {
       <textarea name="html" id="html-textarea" rows="10" placeholder="Contenido enriquecido del manual (opcional)"><?= htmlspecialchars($manual['html'] ?? '') ?></textarea>
     </div>
 
-    <div style="margin-top:12px;">
+    <div class="mt-md">
       <button type="submit" class="btn btn-primary">Guardar</button>
       <?php if ($manual): ?>
         <a class="btn" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>">Cancelar</a>
@@ -1072,15 +1072,16 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     const options = Array.from(catSelect.options).map(o => o.value);
     if (options.includes(catVal)) {
       catSelect.value = catVal;
-      customWrap.style.display = (catVal === 'otro') ? '' : 'none';
+      if (catVal === 'otro') { customWrap.classList.remove('hidden'); }
+      else { customWrap.classList.add('hidden'); }
       if (catVal !== 'otro') catInput.value = '';
     } else if (catVal) {
       catSelect.value = 'otro';
-      customWrap.style.display = '';
+      customWrap.classList.remove('hidden');
       catInput.value = initial?.categoria || '';
     } else {
       catSelect.value = '';
-      customWrap.style.display = 'none';
+      customWrap.classList.add('hidden');
       catInput.value = '';
     }
     const modal = document.getElementById('sec-modal');
@@ -1205,7 +1206,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
             <option value="residuos/reciclaje">Residuos/Reciclaje</option>
             <option value="otro">Otro…</option>
           </select>
-          <div id="sec-note-cat-custom-wrap" style="display:none;">
+          <div id="sec-note-cat-custom-wrap" class="hidden">
             <label>Otro (especifica)</label>
             <input type="text" id="sec-note-cat" />
           </div>
@@ -1220,7 +1221,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       const catSelect = document.getElementById('sec-note-cat-select');
       const customWrap = document.getElementById('sec-note-cat-custom-wrap');
       catSelect.addEventListener('change', function(){
-        customWrap.style.display = (catSelect.value === 'otro') ? '' : 'none';
+        const isOther = (catSelect.value === 'otro');
+        customWrap.classList.toggle('hidden', !isOther);
       });
       console.log('✅ [ManualsEdit] Security modal creado');
     }
@@ -1383,58 +1385,4 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 })();
 </script>
 
-<style>
-/* Step Builder styles - compact, admin-friendly */
-.steps-toolbar { display:flex; gap:4px; margin-bottom:4px; }
-.steps-list { list-style:none; padding:0; margin:0; }
-.step-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
-.step-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
-.step-order { font-weight:bold; margin-right:8px; }
-.step-title { flex:1; }
-.step-actions { display:flex; gap:6px; }
-.step-body { padding:6px; background:#fff; }
-.help-note { color:#666; font-size:11px; margin-top:4px; }
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:9999; }
-.modal-content { background:#fff; width:min(900px, 92vw); max-height:90vh; overflow:auto; padding:16px; border-radius:8px; }
-.modal-actions { display:flex; gap:8px; margin-top:8px; }
-
-/* Tools Builder styles */
-.tools-toolbar { display:flex; gap:4px; margin-bottom:4px; }
-.tools-list { list-style:none; padding:0; margin:0; }
-.tool-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
-.tool-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
-.tool-title { flex:1; }
-.tool-actions { display:flex; gap:6px; }
-.tool-body { padding:6px; background:#fff; color:#444; }
-.mode-toggle { display:flex; gap:8px; align-items:center; }
-.disabled-block { opacity:0.5; pointer-events:none; }
-.hidden-block { display:none; }
-.kit-safety-panel { border:1px solid #ddd; padding:6px; border-radius:6px; background:#f9fafb; margin-bottom:6px; }
-.kit-safety-head { font-weight:600; margin-bottom:4px; }
-.kit-safety-notes { color:#444; }
-.sec-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
-.sec-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
-.sec-actions { display:flex; gap:6px; }
-.sec-body { padding:6px; background:#fff; color:#444; }
-.badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.8rem; font-weight:600; background:#e7e7e7; color:#333; margin-left:6px; }
-/* Highlight security section */
-#security-builder { background: #fffbe6; border: 1px solid #e9df9a; border-radius: 6px; padding: 8px; }
-.sec-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
-.sec-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
-.sec-actions { display:flex; gap:6px; }
-.sec-body { padding:6px; background:#fff; color:#444; }
-.badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.8rem; font-weight:600; background:#e7e7e7; color:#333; margin-left:6px; }
-</style>
-<style>
-/* Compact form controls */
-.form-group { margin-bottom:8px; }
-.form-row { display:flex; flex-wrap:wrap; gap:8px; }
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group select,
-textarea { padding: 6px; font-size: 0.9rem; }
-
-/* Compact buttons */
-.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.85rem; line-height: 1.1; }
-</style>
 </script>
