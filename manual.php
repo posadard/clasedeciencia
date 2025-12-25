@@ -43,8 +43,8 @@ if (!empty($manual['kit_id'])) {
 // Precisión de relación: no derivar kit desde item_id cuando el manual es de componente.
 // Para ámbito 'kit', solo se usa kits.id = kit_manuals.kit_id; para ámbito 'componente', kit puede ser NULL.
 if (!$kit) {
-  // Si es ámbito componente y hay item_id, continuamos sin kit (manual anclado al componente)
-  $is_component_scope = (isset($manual['ambito']) && $manual['ambito'] === 'componente' && !empty($manual['item_id']));
+  // Si hay item_id, continuamos sin kit (manual anclado al componente)
+  $is_component_scope = !empty($manual['item_id']);
   if (!$is_component_scope) {
     // Sin kit activo asociado y no es ámbito componente: 404 amigable
     header('HTTP/1.0 404 Not Found');
@@ -94,7 +94,7 @@ if ($tipo_key && isset($tipo_map[$tipo_key])) {
   if (strpos($tipo_key, 'arm') !== false) { $tipo_emoji = '🛠️'; }
 }
 
-$ambito = isset($manual['ambito']) && $manual['ambito'] === 'componente' ? 'componente' : 'kit';
+$ambito = (!empty($manual['item_id'])) ? 'componente' : 'kit';
 $comp = null;
 // Pre-parse component slug from manual slug for fallback display/linking
 $entitySlugFromManual = null;
@@ -301,9 +301,10 @@ include 'includes/header.php';
         $compWarnIsObj = false;
         if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])) {
           $compWarnRaw = (string)$comp['advertencias_seguridad'];
-          $first = substr($compWarnRaw, 0, 1);
+          $compWarnTrim = ltrim($compWarnRaw);
+          $first = substr($compWarnTrim, 0, 1);
           if ($first === '{' || $first === '[') {
-            try { $tmpCW = json_decode($compWarnRaw, true); if (is_array($tmpCW)) { $compWarnObj = $tmpCW; $compWarnIsObj = (array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)); } } catch(Exception $e) { $compWarnObj = null; $compWarnIsObj = false; }
+            try { $tmpCW = json_decode($compWarnTrim, true); if (is_array($tmpCW)) { $compWarnObj = $tmpCW; $compWarnIsObj = (array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)); } } catch(Exception $e) { $compWarnObj = null; $compWarnIsObj = false; }
           }
           if ($compWarnObj && $compWarnIsObj) {
             if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $extAge['min'] = (int)$compWarnObj['edad_min']; }
