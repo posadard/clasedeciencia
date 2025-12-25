@@ -921,7 +921,7 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .related-card { display:block; border:1px solid var(--color-border-light); border-radius:8px; background:#fff; overflow:hidden; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; position:relative; }
 .related-card:hover, .related-card:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-accent); }
 .related-thumbnail { width:100%; height:140px; object-fit:cover; display:block; }
-.thumbnail-placeholder { height:140px; display:flex; align-items:center; justify-content:center; background:#f5f7fb; border-bottom:1px solid var(--color-border-light); }
+.thumbnail-placeholder { height:140px; display:flex; align-items:center; justify-content:center; }
 .placeholder-icon { font-size:36px; }
 .related-info { padding:10px 12px; }
 .related-excerpt { color:#555; margin-top:4px; }
