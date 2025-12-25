@@ -175,6 +175,150 @@ include 'includes/header.php';
 
 
     <?php
+    // Manuales asociados al componente (ambito = componente)
+    $manuales = [];
+    try {
+        $stmtM = $pdo->prepare("SELECT id, slug, tipo_manual, idioma, time_minutes, dificultad_ensamble, version, status, resumen, pasos_json, html
+                                 FROM kit_manuals
+                                 WHERE ambito = 'componente' AND item_id = ?
+                                 ORDER BY tipo_manual, idioma, version DESC, id DESC");
+        $stmtM->execute([(int)$material['id']]);
+        $manuales = $stmtM->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        echo "<script>console.log('🔍 [Componente] Manuales cargados:', " . (int)count($manuales) . ");</script>";
+    } catch (PDOException $e) {
+        echo "<script>console.log('❌ [Componente] Error cargando manuales:', " . json_encode($e->getMessage()) . ");</script>";
+        $manuales = [];
+    }
+    ?>
+
+    <section class="kit-manuals">
+        <h2>🛠️ Manuales Disponibles</h2>
+        <?php if (!empty($manuales)): ?>
+            <?php foreach ($manuales as $man):
+                $href = '/' . h($man['slug']);
+                $man_title = str_replace('-', ' ', (string)$man['slug']);
+                $man_title = mb_convert_case($man_title, MB_CASE_TITLE, 'UTF-8');
+                $idioma = !empty($man['idioma']) ? $man['idioma'] : 'es';
+                $tiempo = isset($man['time_minutes']) && $man['time_minutes'] ? ((int)$man['time_minutes']) . 'm' : null;
+                $version = !empty($man['version']) ? (string)$man['version'] : null;
+                $dif = !empty($man['dificultad_ensamble']) ? (string)$man['dificultad_ensamble'] : null;
+                $is_disc = isset($man['status']) && strtolower((string)$man['status']) === 'discontinued';
+                // Icono por tipo
+                $icon = '📘';
+                $tipo = isset($man['tipo_manual']) ? (string)$man['tipo_manual'] : '';
+                $tipo_l = mb_strtolower($tipo);
+                $slug_l = mb_strtolower((string)$man['slug']);
+                $map = [
+                    'seguridad' => '🛡️',
+                    'armado' => '🛠️',
+                    'calibracion' => '🎛️',
+                    'uso' => '▶️',
+                    'mantenimiento' => '🧰',
+                    'teoria' => '📘',
+                    'experimento' => '🧪',
+                    'solucion' => '🩺',
+                    'evaluacion' => '✅',
+                    'docente' => '👩‍🏫',
+                    'referencia' => '📚'
+                ];
+                if (!empty($tipo_l) && isset($map[$tipo_l])) {
+                    $icon = $map[$tipo_l];
+                } else {
+                    if (strpos($slug_l, 'segur') !== false) $icon = '🛡️';
+                    elseif (strpos($slug_l, 'arm') !== false) $icon = '🛠️';
+                    elseif (strpos($slug_l, 'calib') !== false) $icon = '🎛️';
+                    elseif (strpos($slug_l, 'uso') !== false) $icon = '▶️';
+                    elseif (strpos($slug_l, 'mant') !== false) $icon = '🧰';
+                    elseif (strpos($slug_l, 'teori') !== false) $icon = '📘';
+                    elseif (strpos($slug_l, 'exper') !== false) $icon = '🧪';
+                    elseif (strpos($slug_l, 'solu') !== false) $icon = '🩺';
+                    elseif (strpos($slug_l, 'eval') !== false) $icon = '✅';
+                    elseif (strpos($slug_l, 'docen') !== false) $icon = '👩‍🏫';
+                    elseif (strpos($slug_l, 'ref') !== false) $icon = '📚';
+                }
+                // Extracto
+                $excerpt = '';
+                try {
+                    if (!empty($man['resumen'])) {
+                        $excerpt = (string)$man['resumen'];
+                    } else {
+                        $firstText = '';
+                        if (!empty($man['pasos_json'])) {
+                            $tmp = json_decode($man['pasos_json'], true);
+                            if (is_array($tmp)) {
+                                foreach ($tmp as $p) {
+                                    if (is_array($p)) {
+                                        if (!empty($p['html'])) { $firstText = strip_tags($p['html']); }
+                                        elseif (!empty($p['descripcion'])) { $firstText = (string)$p['descripcion']; }
+                                        elseif (!empty($p['texto'])) { $firstText = (string)$p['texto']; }
+                                    } elseif (is_string($p)) {
+                                        $firstText = $p;
+                                    }
+                                    if ($firstText !== '') break;
+                                }
+                            }
+                        }
+                        if ($firstText === '' && !empty($man['html'])) {
+                            $firstText = strip_tags($man['html']);
+                        }
+                        if ($firstText !== '') {
+                            $excerpt = mb_substr(trim(preg_replace('/\s+/', ' ', $firstText)), 0, 160);
+                            if (mb_strlen($firstText) > 160) { $excerpt .= '…'; }
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Error excerpt manual componente ' . (string)$man['slug'] . ': ' . $e->getMessage());
+                }
+            ?>
+                <section class="kit-inline-card" role="link" tabindex="0" aria-label="Manual <?= h($man['slug']) ?>"
+                         onclick="if(!event.target.closest('a')){ console.log('📘 [Componente] Click manual →','<?= h($man['slug']) ?>'); window.location.href='<?= h($href) ?>'; }"
+                         onkeypress="if(event.key==='Enter' || event.key===' '){ if(!event.target.closest('a')){ window.location.href='<?= h($href) ?>'; event.preventDefault(); } }">
+                    <div class="kit-inline-wrap">
+                        <div class="kit-inline-left">
+                            <div class="manual-type-emoji" aria-hidden="true"><?= $icon ?></div>
+                        </div>
+                        <div class="kit-inline-right">
+                            <h3 class="kit-inline-title">
+                                <span><?= h($man_title) ?></span>
+                                <?php if ($is_disc): ?><span class="badge badge-danger" style="margin-left:8px;">⚠️ Descontinuado</span><?php endif; ?>
+                                <span class="kit-inline-byline">
+                                    🌐 <?= h($idioma) ?>
+                                    <?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
+                                    <?= $dif ? ' · 🛠️ ' . h(ucfirst($dif)) : '' ?>
+                                    <?= $version ? ' · 🔢 v' . h($version) : '' ?>
+                                </span>
+                            </h3>
+                            <?php if ($excerpt !== ''): ?>
+                                <p class="man-excerpt"><?= h($excerpt) ?></p>
+                            <?php else: ?>
+                                <div class="kit-inline-manuales">
+                                    <span class="man-label">Abrir:</span>
+                                    <div class="man-pills">
+                                        <a class="tag-pill" href="<?= h($href) ?>" title="Ver manual <?= h($man['slug']) ?>">
+                                            <?= h($man['slug']) ?> · <?= h($idioma) ?><?= $tiempo ? ' · ⏱️ ' . h($tiempo) : '' ?>
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </section>
+            <?php endforeach; ?>
+            <script>
+                (function(){
+                    var total = <?= count($manuales) ?>;
+                    var discontinued = <?= json_encode(array_values(array_filter(array_map(function($m){ return strtolower((string)($m['status'] ?? '')) === 'discontinued'; }, $manuales)))) ?>.length;
+                    console.log('✅ [Componente] Manuales renderizados:', total);
+                    console.log('⚠️ [Componente] Manuales descontinuados:', discontinued);
+                })();
+            </script>
+        <?php else: ?>
+            <p class="muted">Aún no hay manuales publicados para este componente.</p>
+        <?php endif; ?>
+    </section>
+
+
+    <?php
     // Kits que incluyen este componente
     $kits_rel = [];
     try {
@@ -275,4 +419,19 @@ console.log('🔬 [componente] Ficha inline:', <?= json_encode($ficha_inline !==
 console.log('🧰 [componente] Kits relacionados:', <?= isset($kits_rel) ? count($kits_rel) : 0 ?>);
 console.log('📚 [componente] Clases relacionadas:', <?= isset($clases_rel) ? count($clases_rel) : 0 ?>);
 </script>
+<style>
+/* Reutilizar estilo de tarjetas de manuales de kit */
+.kit-inline-card .kit-inline-wrap { display:flex; gap:12px; align-items:center; }
+.kit-inline-card .kit-inline-left { flex: 0 0 72px; width:72px; display:flex; align-items:center; justify-content:center; }
+.kit-inline-card .manual-type-emoji { font-size:56px; line-height:1; filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06)); }
+.kit-inline-card { border:1px solid var(--color-border-light); border-radius:8px; padding:12px; background:#fff; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+.kit-inline-card:hover, .kit-inline-card:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-accent); }
+.kit-inline-card .manual-type-emoji { transition: transform .15s ease; }
+.kit-inline-card:hover .manual-type-emoji, .kit-inline-card:focus-within .manual-type-emoji { transform: scale(1.08) rotate(-2deg); }
+.kit-inline-card:hover .kit-inline-title span:first-child, .kit-inline-card:focus-within .kit-inline-title span:first-child { text-decoration: underline; }
+@media (max-width: 600px) {
+    .kit-inline-card .kit-inline-left { flex-basis:56px; width:56px; }
+    .kit-inline-card .manual-type-emoji { font-size:44px; }
+}
+</style>
 <?php include 'includes/footer.php'; ?>
