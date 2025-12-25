@@ -670,6 +670,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     console.log('🔍 [ManualsEdit] Sugerencia de slug:', base, '→', s);
     return s;
   }
+  // Expose builder for cross-IIFE usage (kit change handler)
+  try { window.buildSuggestion = buildSuggestion; } catch(e) {}
 
   function applySuggestionIfEmpty(){
     if (!slugInput) return;
@@ -1031,21 +1033,11 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       const optSlug = opt ? (opt.getAttribute('data-slug') || '') : '';
       KIT_SLUG = optSlug || KIT_SLUG;
       console.log('🔍 [ManualsEdit] KIT_SLUG actualizado:', KIT_SLUG || '(vacío)');
-      // Forzar regeneración inmediata del slug usando los listeners existentes
-      try {
-        const ambSel = document.querySelector('select[name="ambito"]');
-        if (ambSel && ambSel.value === 'kit') {
-          ambSel.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log('✅ [ManualsEdit] Slug actualizado vía cambio de ámbito (kit)');
-        } else {
-          const tipoSel = document.querySelector('select[name="tipo_manual"]');
-          if (tipoSel) {
-            tipoSel.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log('✅ [ManualsEdit] Slug actualizado vía cambio de tipo');
-          }
-        }
-      } catch(e) {
-        console.log('⚠️ [ManualsEdit] No se pudo forzar regeneración de slug:', e && e.message);
+      // Regenerar slug inmediatamente al cambiar el kit
+      const slugInput = document.getElementById('manual-slug');
+      if (slugInput) {
+        slugInput.value = (typeof buildSuggestion === 'function') ? buildSuggestion() : slugInput.value;
+        console.log('✅ [ManualsEdit] Slug regenerado tras cambio de kit:', slugInput.value);
       }
       if (!id) { renderKitSafetyPanel(null); return; }
       const seg = await fetchKitSafetyById(id);
