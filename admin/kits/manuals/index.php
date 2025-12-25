@@ -9,6 +9,7 @@ if (!isset($_SESSION['csrf_token'])) {
 }
 
 $kit_id = isset($_GET['kit_id']) ? intval($_GET['kit_id']) : 0;
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 $error_msg = '';
 $success_msg = '';
 
@@ -56,10 +57,34 @@ if ($kit_id > 0) {
 $manuals = [];
 try {
   if ($kit_id > 0) {
-    $stmt = $pdo->prepare('SELECT * FROM kit_manuals WHERE kit_id = ? ORDER BY idioma, version DESC, id DESC');
-    $stmt->execute([$kit_id]);
+    $params = [$kit_id];
+    $sql = 'SELECT km.*, k.nombre AS kit_nombre, ki.nombre_comun AS item_nombre 
+            FROM kit_manuals km 
+            LEFT JOIN kits k ON k.id = km.kit_id 
+            LEFT JOIN kit_items ki ON ki.id = km.item_id 
+            WHERE km.kit_id = ?';
+    if ($search !== '') {
+      $sql .= ' AND (km.slug LIKE ? OR km.resumen LIKE ? OR km.idioma LIKE ? OR km.tipo_manual LIKE ?)';
+      $term = '%' . $search . '%';
+      array_push($params, $term, $term, $term, $term);
+    }
+    $sql .= ' ORDER BY km.idioma, km.version DESC, km.id DESC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
   } else {
-    $stmt = $pdo->query('SELECT km.*, k.nombre AS kit_nombre FROM kit_manuals km JOIN kits k ON k.id = km.kit_id ORDER BY km.id DESC');
+    $params = [];
+    $sql = 'SELECT km.*, k.nombre AS kit_nombre, ki.nombre_comun AS item_nombre 
+            FROM kit_manuals km 
+            LEFT JOIN kits k ON k.id = km.kit_id 
+            LEFT JOIN kit_items ki ON ki.id = km.item_id';
+    if ($search !== '') {
+      $sql .= ' WHERE (km.slug LIKE ? OR km.resumen LIKE ? OR km.idioma LIKE ? OR km.tipo_manual LIKE ?)';
+      $term = '%' . $search . '%';
+      array_push($params, $term, $term, $term, $term);
+    }
+    $sql .= ' ORDER BY km.id DESC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
   }
   $manuals = $stmt->fetchAll(PDO::FETCH_ASSOC);
   echo '<script>console.log("🔍 [ManualsIndex] Cargados ' . count($manuals) . ' manuales");</script>';
@@ -78,6 +103,25 @@ try {
   <?php if ($error_msg): ?><div class="message error"><?= htmlspecialchars($error_msg) ?></div><?php endif; ?>
   <?php if ($success_msg): ?><div class="message success"><?= htmlspecialchars($success_msg) ?></div><?php endif; ?>
 
+  <div class="filters-bar">
+    <form method="GET" class="filters-form">
+      <?php if ($kit_id > 0): ?>
+        <input type="hidden" name="kit_id" value="<?= (int)$kit_id ?>" />
+      <?php endif; ?>
+      <div class="filter-group search-group">
+        <label for="search">Buscar:</label>
+        <input type="text" name="search" id="search" value="<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>" placeholder="Slug, resumen, idioma o tipo..." />
+        <button type="submit" class="btn btn-sm">🔍 Buscar</button>
+        <?php if ($search !== ''): ?>
+          <a href="/admin/kits/manuals/index.php<?= $kit_id ? ('?kit_id=' . (int)$kit_id) : '' ?>" class="btn btn-sm btn-secondary">Limpiar</a>
+        <?php endif; ?>
+      </div>
+    </form>
+    <script>
+      console.log('🔍 [ManualsIndex] Filtro búsqueda:', '<?= htmlspecialchars($search, ENT_QUOTES, 'UTF-8') ?>');
+    </script>
+  </div>
+
   <div style="margin: 12px 0;">
     <a class="btn" href="/admin/kits/manuals/edit.php?<?= $kit ? 'kit_id=' . (int)$kit['id'] : '' ?>">+ Nuevo Manual</a>
   </div>
@@ -85,10 +129,9 @@ try {
   <table class="data-table">
     <thead>
       <tr>
-        <?php if (!$kit): ?><th>Kit</th><?php endif; ?>
-        <th>ID</th>
-        <th>Slug</th>
+        <th>Entidad</th>
         <th>Idioma</th>
+        <th>Tipo de Manual</th>
         <th>Versión</th>
         <th>Status</th>
         <th>Actualizado</th>
@@ -98,10 +141,21 @@ try {
     <tbody>
       <?php foreach ($manuals as $m): ?>
         <tr>
-          <?php if (!$kit): ?><td><?= htmlspecialchars($m['kit_nombre'] ?? '') ?></td><?php endif; ?>
-          <td><?= (int)$m['id'] ?></td>
-          <td><?= htmlspecialchars($m['slug']) ?></td>
+          <td>
+            <?php
+              $ambito = $m['ambito'] ?? 'kit';
+              $entidad = '';
+              if ($ambito === 'componente') {
+                $entidad = $m['item_nombre'] ?? '';
+              } else {
+                // Prefer kit context name if available
+                $entidad = $kit ? ($kit['nombre'] ?? '') : ($m['kit_nombre'] ?? '');
+              }
+              echo htmlspecialchars($entidad, ENT_QUOTES, 'UTF-8');
+            ?>
+          </td>
           <td><?= htmlspecialchars($m['idioma']) ?></td>
+          <td><span class="badge"><?= htmlspecialchars($m['tipo_manual']) ?></span></td>
           <td><?= htmlspecialchars($m['version']) ?></td>
           <td><?= htmlspecialchars($m['status']) ?></td>
           <td><?= htmlspecialchars($m['updated_at']) ?></td>
@@ -130,3 +184,15 @@ try {
 <script>
 console.log('🔍 [ManualsIndex] Kit ID:', <?= $kit ? (int)$kit['id'] : 0 ?>);
 </script>
+
+<style>
+.filters-bar { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin: 1rem 0 2rem; }
+.filters-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-group label { font-weight: bold; font-size: 0.9rem; }
+.filter-group select, .filter-group input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; min-width: 200px; }
+.search-group { flex-direction: row; align-items: center; flex: 1; }
+.search-group input { flex: 1; }
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.875rem; }
+.badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: bold; background: #e7e7e7; color: #333; }
+</style>
