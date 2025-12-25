@@ -447,8 +447,6 @@ try {
       <div id="steps-builder">
         <div class="steps-toolbar">
           <button type="button" class="btn btn-sm btn-primary" id="add-step-btn" title="Añadir Paso">+ Añadir Paso</button>
-          <button type="button" class="btn btn-sm" id="expand-all-btn" title="Expandir todo">▾▾</button>
-          <button type="button" class="btn btn-sm" id="collapse-all-btn" title="Colapsar todo">▴▴</button>
         </div>
         <ul id="steps-list" class="steps-list"></ul>
         <p class="help-note">Los pasos se guardan como bloques HTML ordenados. Se serializan a JSON antes de enviar.</p>
@@ -746,8 +744,6 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const pasosTextarea = document.getElementById('pasos_json');
   const stepsList = document.getElementById('steps-list');
   const addBtn = document.getElementById('add-step-btn');
-  const expandBtn = document.getElementById('expand-all-btn');
-  const collapseBtn = document.getElementById('collapse-all-btn');
 
   let steps = [];
   let editorInstance = null;
@@ -821,16 +817,10 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <button type="button" class="btn btn-sm" data-action="down" title="Mover abajo">↓</button>
           <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
           <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
-          <button type="button" class="btn btn-sm" data-action="toggle" title="Mostrar/Ocultar">👁️</button>
         </div>
       `;
 
-      const body = document.createElement('div');
-      body.className = 'step-body';
-      body.innerHTML = s.html || '<p class="muted">(Sin contenido)</p>';
-
       li.appendChild(header);
-      li.appendChild(body);
       stepsList.appendChild(li);
     });
     console.log('✅ [ManualsEdit] Renderizados', steps.length, 'pasos');
@@ -896,15 +886,10 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       if (confirm('¿Eliminar este paso?')) { steps.splice(idx, 1); renumber(); renderSteps(); console.log('✅ [ManualsEdit] Paso eliminado idx', idx); }
     } else if (action === 'edit') {
       openEditorModal(steps[idx].titulo, steps[idx].html, 'edit', idx);
-    } else if (action === 'toggle') {
-      const body = li.querySelector('.step-body');
-      body.style.display = (body.style.display === 'none') ? '' : 'none';
     }
   });
 
   addBtn.addEventListener('click', function() { openEditorModal('', '', 'create', -1); });
-  expandBtn.addEventListener('click', function(){ document.querySelectorAll('.step-body').forEach(el => el.style.display = ''); });
-  collapseBtn.addEventListener('click', function(){ document.querySelectorAll('.step-body').forEach(el => el.style.display = 'none'); });
 
   // Before submit: serialize steps -> textarea
   const form = document.querySelector('form');
@@ -1290,15 +1275,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
           <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
         </div>`;
-      const body = document.createElement('div');
-      body.className = 'tool-body';
-      const qty = (t.cantidad !== undefined && t.cantidad !== null && String(t.cantidad).trim() !== '') ? `Cantidad: ${escapeHTML(String(t.cantidad))}` : '';
-      const nota = (t.nota ? `Nota: ${escapeHTML(t.nota)}` : '');
-      const seg = (t.seguridad ? `⚠️ Seguridad: ${escapeHTML(t.seguridad)}` : '');
-      const parts = [qty, nota, seg].filter(Boolean);
-      body.innerHTML = parts.length ? parts.map(p => `<div>${p}</div>`).join('') : '<div class="muted">(sin detalles)</div>';
       li.appendChild(header);
-      li.appendChild(body);
       toolsList.appendChild(li);
     });
     console.log('✅ [ManualsEdit] Renderizadas', tools.length, 'herramientas');
