@@ -1768,8 +1768,10 @@ strong, b {
     align-items:center;
     justify-content:center;
     height:100%;
-    color:var(--color-text-muted);
+    color:white;
     font-size:0.95rem;
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    border-radius: 6px;
 }
 
 /* Error state styling for component image fallback */

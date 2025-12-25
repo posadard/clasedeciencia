@@ -74,15 +74,22 @@ include 'includes/header.php';
             <?php endif; ?>
         </div>
 
-        <aside class="product-card">
-            <div class="product-image">
-                <?php
-                  $comp_img_fallback = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg';
-                  $comp_img = !empty($material['foto_url']) ? $material['foto_url'] : $comp_img_fallback;
-                ?>
-                <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); this.style.display='none';" />
-            </div>
-        </aside>
+                <aside class="product-card">
+                        <div class="product-image">
+                                <?php
+                                    $comp_img_fallback = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg';
+                                    $has_custom_img = !empty($material['foto_url']);
+                                ?>
+                                <?php if (!$has_custom_img): ?>
+                                    <div class="product-image-fallback">
+                                        <span class="placeholder-icon">📦</span>
+                                    </div>
+                                <?php else: ?>
+                                    <img src="<?= h($material['foto_url']) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy"
+                                             onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+                                <?php endif; ?>
+                        </div>
+                </aside>
     </div>
 
     <?php if (!empty($material['descripcion_html'])): ?>
