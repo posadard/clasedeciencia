@@ -125,7 +125,7 @@ $canonical_url = SITE_URL . '/' . urlencode($manual['slug']);
 
 include 'includes/header.php';
 ?>
-<div class="container">
+<div class="container article-page">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / 
     <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
