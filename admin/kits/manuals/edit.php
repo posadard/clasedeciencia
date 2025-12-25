@@ -1310,8 +1310,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     const max = maxRaw === '' ? null : parseInt(maxRaw,10);
     const extras = notes.map(n => ({ nota: n.nota, categoria: n.categoria }));
     let payload = null;
-    const amb = ambSel ? ambSel.value : 'kit';
-    if (useKitSafety && useKitSafety.checked && amb === 'kit') {
+    if (useKitSafety && useKitSafety.checked) {
       payload = { usar_seguridad_kit: true };
       const kitHas = hasKitAge();
       if (!kitHas && (min !== null || max !== null)) {
@@ -1324,19 +1323,6 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       }
       if (extras.length) { payload.notas_extra = extras; }
       console.log('ℹ️ [ManualsEdit] Merge: incluir seguridad del kit');
-    } else if (amb === 'componente' && compSafetyCheckbox && compSafetyCheckbox.checked) {
-      payload = { usar_seguridad_componente: true };
-      const compHasAge = compHasAgeFromWarn(getSelectedComponentWarn());
-      if (!compHasAge && (min !== null || max !== null)) {
-        payload.edad = {};
-        if (min !== null) payload.edad.min = min;
-        if (max !== null) payload.edad.max = max;
-        console.log('ℹ️ [ManualsEdit] Merge: componente sin edad, usando edad propia');
-      } else if (compHasAge) {
-        console.log('ℹ️ [ManualsEdit] Merge: edad del componente presente, no se serializa edad propia');
-      }
-      if (extras.length) { payload.notas_extra = extras; }
-      console.log('ℹ️ [ManualsEdit] Merge: incluir advertencias del componente');
     } else {
       if (min !== null || max !== null) {
         payload = { edad: { }, notas: extras };
