@@ -536,6 +536,17 @@ include 'includes/header.php';
                 try {
                   var items = document.querySelectorAll('.manual-tools .materials-list li.material-item');
                   console.log('🔧 [Manual] Herramientas clicables:', items.length);
+                  // Añadir icono de lupa a cada elemento de herramienta
+                  items.forEach(function(li){
+                    if (!li.querySelector('.card-magnify')) {
+                      var magnify = document.createElement('span');
+                      magnify.className = 'card-magnify';
+                      magnify.textContent = '🔎';
+                      magnify.setAttribute('aria-hidden', 'true');
+                      li.appendChild(magnify);
+                      console.log('🔍 [Manual] Lupa añadida a herramienta →', li.getAttribute('data-name'));
+                    }
+                  });
                   items.forEach(function(li){
                     function openModal(){
                       var name = li.getAttribute('data-name') || '';
