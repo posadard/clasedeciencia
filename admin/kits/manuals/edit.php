@@ -34,6 +34,7 @@ $has_tipo_manual_column = false;
 $has_ambito_column = false;
 $has_item_id_column = false;
 $has_resumen_column = false;
+$has_autor_column = false;
 try {
   $pdo->query('SELECT render_mode FROM kit_manuals LIMIT 1');
   $has_render_mode_column = true;
@@ -45,6 +46,7 @@ try { $pdo->query('SELECT tipo_manual FROM kit_manuals LIMIT 1'); $has_tipo_manu
 try { $pdo->query('SELECT ambito FROM kit_manuals LIMIT 1'); $has_ambito_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column ambito: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column ambito: ausente");</script>'; }
 try { $pdo->query('SELECT item_id FROM kit_manuals LIMIT 1'); $has_item_id_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column item_id: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column item_id: ausente");</script>'; }
 try { $pdo->query('SELECT resumen FROM kit_manuals LIMIT 1'); $has_resumen_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column resumen: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column resumen: ausente");</script>'; }
+try { $pdo->query('SELECT autor FROM kit_manuals LIMIT 1'); $has_autor_column = true; echo '<script>console.log("🔍 [ManualsEdit] Column autor: presente");</script>'; } catch(PDOException $e){ echo '<script>console.log("⚠️ [ManualsEdit] Column autor: ausente");</script>'; }
 
 // Handle form submit
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -61,6 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idioma = trim($_POST['idioma'] ?? 'es-CO');
     $time_minutes = ($_POST['time_minutes'] !== '' ? intval($_POST['time_minutes']) : null);
     $dificultad = trim($_POST['dificultad_ensamble'] ?? '');
+    $autor = isset($_POST['autor']) ? trim((string)$_POST['autor']) : '';
+    if ($autor !== '') { $autor = mb_substr($autor, 0, 255, 'UTF-8'); }
     // Manual type and scope
     $allowed_tipos = ['seguridad','armado','calibracion','uso','mantenimiento','teoria','experimento','solucion','evaluacion','docente','referencia'];
     $tipo_manual = trim($_POST['tipo_manual'] ?? 'armado');
@@ -216,6 +220,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($has_ambito_column) { $setParts[] = 'ambito = ?'; $params[] = $ambito; }
           if ($has_item_id_column) { $setParts[] = 'item_id = ?'; $params[] = $item_id; }
           if ($has_resumen_column) { $setParts[] = 'resumen = ?'; $params[] = ($resumen !== '' ? $resumen : null); }
+          if ($has_autor_column) { $setParts[] = 'autor = ?'; $params[] = ($autor !== '' ? $autor : null); }
           if ($becomes_published && !$was_published) { $setParts[] = 'published_at = IFNULL(published_at, NOW())'; }
           $sqlU = 'UPDATE kit_manuals SET ' . implode(', ', $setParts) . ' WHERE id = ?';
           $params[] = $manual_id;
@@ -235,6 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           if ($has_ambito_column) { $fields[]='ambito'; $place[]='?'; $vals[]=$ambito; }
           if ($has_item_id_column) { $fields[]='item_id'; $place[]='?'; $vals[]=$item_id; }
           if ($has_resumen_column) { $fields[]='resumen'; $place[]='?'; $vals[] = ($resumen !== '' ? $resumen : null); }
+          if ($has_autor_column) { $fields[]='autor'; $place[]='?'; $vals[] = ($autor !== '' ? $autor : null); }
           $fields[]='published_at'; $place[]='?'; $vals[]=$published_at_insert; // always safe; column exists in schema
           $sqlI = 'INSERT INTO kit_manuals (' . implode(',', $fields) . ') VALUES (' . implode(',', $place) . ')';
           $stmtI = $pdo->prepare($sqlI);
@@ -396,6 +402,13 @@ try {
       <div class="form-group">
         <label>Dificultad de Ensamble</label>
         <input type="text" name="dificultad_ensamble" value="<?= htmlspecialchars($manual['dificultad_ensamble'] ?? '') ?>" />
+      </div>
+      <div class="form-group">
+        <label>Autor</label>
+        <input type="text" name="autor" value="<?= htmlspecialchars($manual['autor'] ?? '') ?>" <?= $has_autor_column ? '' : 'disabled' ?> />
+        <?php if (!$has_autor_column): ?>
+          <small class="help-note">Ejecuta la migración SQL para habilitar el campo autor.</small>
+        <?php endif; ?>
       </div>
     </div>
 
