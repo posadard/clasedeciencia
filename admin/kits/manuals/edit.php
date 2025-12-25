@@ -72,9 +72,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ambito = trim($_POST['ambito'] ?? 'kit');
     $ambito = ($ambito === 'componente') ? 'componente' : 'kit';
     $item_id = isset($_POST['item_id']) && $_POST['item_id'] !== '' ? intval($_POST['item_id']) : null;
-    // Exclusividad actualizada: si es kit → item_id NULL; si es componente → kit_id NULL
+    // Exclusividad parcial: si es kit → item_id NULL. Nota: kit_id debe existir SIEMPRE (FK NOT NULL)
     if ($ambito === 'kit') { $item_id = null; }
-    if ($ambito === 'componente') { $kit_id = null; }
     $resumen = isset($_POST['resumen']) ? trim((string)$_POST['resumen']) : '';
     if ($resumen !== '') { $resumen = mb_substr($resumen, 0, 255, 'UTF-8'); }
     $pasos_json = trim($_POST['pasos_json'] ?? '');
@@ -84,12 +83,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
     $render_mode_post = ($_POST['render_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
 
-    // Basic validations (depende de ámbito) — kit_id requerido SIEMPRE por FK NOT NULL
-    if ($kit_id <= 0) { $error_msg = 'Kit requerido.'; }
-    if (!$error_msg) {
-      if ($ambito === 'componente') {
-        if (!$item_id || $item_id <= 0) { $error_msg = 'Componente requerido.'; }
-      }
+    // Validaciones básicas según ámbito
+    // Ámbito kit: requiere kit_id
+    if ($ambito === 'kit' && $kit_id <= 0) { $error_msg = 'Kit requerido.'; }
+    // Ámbito componente: requiere item_id; kit_id es opcional (se guarda NULL)
+    if (!$error_msg && $ambito === 'componente') {
+      if (!$item_id || $item_id <= 0) { $error_msg = 'Componente requerido.'; }
+      // En ámbito componente, no forzamos kit_id
+      if ($kit_id <= 0) { $kit_id = null; }
     }
     if (!$error_msg && $slug === '') {
       $error_msg = 'Slug requerido.';
@@ -213,10 +214,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'pasos_json = ?', 'herramientas_json = ?', 'seguridad_json = ?', 'html = ?'
           ];
           $params = [$slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
-          // Persist exclusivity of entity
-          // kit_id puede ser NULL si ámbito = componente
-          $setParts[] = 'kit_id = ?';
-          $params[] = ($ambito === 'componente') ? null : (($kit_id > 0) ? $kit_id : null);
+          // Persistencia de entidad: en ámbito componente, kit_id puede ser NULL
+          $setParts[] = 'kit_id = ?'; $params[] = ($ambito === 'kit' && $kit_id > 0) ? $kit_id : null;
           if ($has_render_mode_column) { $setParts[] = 'render_mode = ?'; $params[] = $render_mode_post; }
           if ($has_tipo_manual_column) { $setParts[] = 'tipo_manual = ?'; $params[] = $tipo_manual; }
           if ($has_ambito_column) { $setParts[] = 'ambito = ?'; $params[] = $ambito; }
@@ -235,8 +234,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           // Build dynamic INSERT
           $fields = ['kit_id','slug','version','status','idioma','time_minutes','dificultad_ensamble','pasos_json','herramientas_json','seguridad_json','html'];
           $place = array_fill(0, count($fields), '?');
-          // kit_id puede ser NULL si ámbito = componente
-          $vals = [($ambito === 'componente' ? null : (($kit_id > 0) ? $kit_id : null)), $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
+          // En ámbito componente, kit_id se inserta como NULL
+          $vals = [($ambito === 'kit' && $kit_id > 0) ? $kit_id : null, $slug, $version, $status, $idioma, $time_minutes, ($dificultad !== '' ? $dificultad : null), $pasos_json_db, $herr_json_db, $seg_json_db, $html];
           if ($has_render_mode_column) { $fields[]='render_mode'; $place[]='?'; $vals[]=$render_mode_post; }
           if ($has_tipo_manual_column) { $fields[]='tipo_manual'; $place[]='?'; $vals[]=$tipo_manual; }
           if ($has_ambito_column) { $fields[]='ambito'; $place[]='?'; $vals[]=$ambito; }
@@ -268,16 +267,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$manual_id]);
     $manual = $stmt->fetch(PDO::FETCH_ASSOC);
     $kit_id = intval($manual['kit_id']);
-    // Recargar kit en base al kit_id actualizado (puede ser NULL)
-    if ($kit_id > 0) {
-      try {
-        $stmtK = $pdo->prepare('SELECT id, nombre, codigo, slug, seguridad FROM kits WHERE id = ? LIMIT 1');
-        $stmtK->execute([$kit_id]);
-        $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
-      } catch (PDOException $e) { $kit = null; }
-    } else {
-      $kit = null;
-    }
   }
 }
 

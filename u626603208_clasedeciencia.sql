@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Dec 25, 2025 at 12:49 AM
+-- Generation Time: Dec 25, 2025 at 02:36 AM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -197,7 +197,8 @@ INSERT INTO `atributos_contenidos` (`id`, `tipo_entidad`, `entidad_id`, `atribut
 (40, 'componente', 1, 1, 'rojo', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-23 03:19:07', '2025-12-23 03:19:07'),
 (42, 'clase', 6, 24, 'peedro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-23 03:19:35', '2025-12-23 03:19:35'),
 (43, 'clase', 6, 22, 'toda', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-23 03:20:11', '2025-12-23 03:20:11'),
-(73, 'kit', 6, 2, 'rojo', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-23 04:20:05', '2025-12-23 04:20:05');
+(73, 'kit', 6, 2, 'rojo', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-23 04:20:05', '2025-12-23 04:20:05'),
+(75, 'componente', 16, 1, 'plastico', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'es-CO', 1, 'manual', '2025-12-25 01:20:44', '2025-12-25 01:20:44');
 
 -- --------------------------------------------------------
 
@@ -1088,6 +1089,8 @@ CREATE TABLE `kit_items` (
   `slug` varchar(191) DEFAULT NULL,
   `categoria_id` int(11) DEFAULT NULL,
   `advertencias_seguridad` text DEFAULT NULL,
+  `descripcion_html` mediumtext DEFAULT NULL COMMENT 'Descripción en HTML del componente',
+  `foto_url` varchar(255) DEFAULT NULL COMMENT 'URL de imagen representativa',
   `unidad` varchar(32) DEFAULT NULL,
   `sku` varchar(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1096,39 +1099,39 @@ CREATE TABLE `kit_items` (
 -- Dumping data for table `kit_items`
 --
 
-INSERT INTO `kit_items` (`id`, `nombre_comun`, `slug`, `categoria_id`, `advertencias_seguridad`, `unidad`, `sku`) VALUES
-(1, 'Lente plástico 10x', 'componente-lente-plastico-10x', 3, 'Frágil, manipular con cuidado', 'pcs', 'BIO-LEN-10X'),
-(2, 'Cartón rígido', 'componente-carton-rigido', 5, NULL, 'pcs', 'TEC-CAR-RIG'),
-(3, 'Banda elástica', 'componente-banda-elastica', 5, NULL, 'pcs', 'TEC-BAN-ELA'),
-(4, 'Globo de látex', 'componente-globo-de-latex', 3, 'Riesgo de asfixia, no apto <8 años', 'pcs', 'BIO-GLO-LAT'),
-(5, 'Botella plástica 500ml', 'componente-botella-plastica-500ml', 5, NULL, 'pcs', 'TEC-BOT-500'),
-(6, 'Bomba de aire manual', 'componente-bomba-de-aire-manual', 6, NULL, 'pcs', 'HER-BOM-AIR'),
-(7, 'Pila AA', 'componente-pila-aa', 1, '⚠️ No cortocircuitar', 'pcs', 'ELE-PIL-AA'),
-(8, 'Porta baterías AA', 'componente-porta-baterias-aa', 1, NULL, 'pcs', 'ELE-POR-AA'),
-(9, 'Cable conductor', 'componente-cable-conductor', 1, NULL, 'm', 'ELE-CAB-CON'),
-(10, 'Interruptor mini', 'componente-interruptor-mini', 1, NULL, 'pcs', 'ELE-INT-MIN'),
-(11, 'Bombillo LED 3V', 'componente-bombillo-led-3v', 1, NULL, 'pcs', 'ELE-LED-3V'),
-(12, 'Papel filtro', 'componente-papel-filtro', 4, 'Material frágil', 'pcs', 'QUI-PAP-FIL'),
-(13, 'Embudo plástico', 'componente-embudo-plastico', 4, NULL, 'pcs', 'QUI-EMB-PLA'),
-(14, 'Vaso precipitado plástico', 'componente-vaso-precipitado-plastico', 4, NULL, 'pcs', 'QUI-VAS-PLA'),
-(15, 'Tiras de pH', 'componente-tiras-de-ph', 4, NULL, 'pcs', 'QUI-TIR-PH'),
-(16, 'Diode germanio', 'componente-diode-germanio', 1, 'Material frágil', 'pcs', 'ELE-DIO-GER'),
-(17, 'Auricular cristal', 'componente-auricular-cristal', 1, NULL, 'pcs', 'ELE-AUR-CRI'),
-(18, 'Alambre esmaltado 28AWG', 'componente-alambre-esmaltado-28awg', 1, NULL, 'm', 'ELE-ALM-28'),
-(19, 'Imán neodimio', 'componente-iman-neodimio', 2, '⚠️ Mantener lejos de dispositivos', 'pcs', 'MAG-IMA-NEO'),
-(20, 'Clavo de hierro', 'componente-clavo-de-hierro', 2, NULL, 'pcs', 'MAG-CLA-HIE'),
-(21, 'Trampa de ratón', 'componente-trampa-de-raton', 5, '⚠️ Riesgo de pellizco', 'pcs', 'TEC-TRA-RAT'),
-(22, 'Rueda plástica 50mm', 'componente-rueda-plastica-50mm', 5, NULL, 'pcs', 'TEC-RUE-50'),
-(23, 'Eje metálico', 'componente-eje-metalico', 5, NULL, 'pcs', 'TEC-EJE-MET'),
-(24, 'Motor DC 3-6V', 'componente-motor-dc-3-6v', 1, NULL, 'pcs', 'ELE-MOT-DC'),
-(25, 'Manivela plástica', 'componente-manivela-plastica', 5, NULL, 'pcs', 'TEC-MAN-PLA'),
-(26, 'Panel solar 5V', 'componente-panel-solar-5v', 5, NULL, 'pcs', 'TEC-PAN-5V'),
-(27, 'Hélice plástica', 'componente-helice-plastica', 5, NULL, 'pcs', 'TEC-HEL-PLA'),
-(28, 'Carbón activado', 'componente-carbon-activado', NULL, NULL, 'g', 'AMB-CAR-ACT'),
-(29, 'Arena fina', 'componente-arena-fina', NULL, NULL, 'g', 'AMB-ARE-FIN'),
-(30, 'Grava', 'componente-grava', NULL, NULL, 'g', 'AMB-GRA-STD'),
-(31, 'Sal de mesa', 'componente-sal-de-mesa', 4, NULL, 'g', 'QUI-SAL-MES'),
-(32, 'Rodaja de papa', 'componente-rodaja-de-papa', 3, NULL, 'pcs', 'BIO-ROD-PAP');
+INSERT INTO `kit_items` (`id`, `nombre_comun`, `slug`, `categoria_id`, `advertencias_seguridad`, `descripcion_html`, `foto_url`, `unidad`, `sku`) VALUES
+(1, 'Lente plástico 10x', 'componente-lente-plastico-10x', 3, 'Frágil, manipular con cuidado', NULL, NULL, 'pcs', 'BIO-LEN-10X'),
+(2, 'Cartón rígido', 'componente-carton-rigido', 5, NULL, NULL, NULL, 'pcs', 'TEC-CAR-RIG'),
+(3, 'Banda elástica', 'componente-banda-elastica', 5, NULL, NULL, NULL, 'pcs', 'TEC-BAN-ELA'),
+(4, 'Globo de látex', 'componente-globo-de-latex', 3, 'Riesgo de asfixia, no apto <8 años', NULL, NULL, 'pcs', 'BIO-GLO-LAT'),
+(5, 'Botella plástica 500ml', 'componente-botella-plastica-500ml', 5, NULL, NULL, NULL, 'pcs', 'TEC-BOT-500'),
+(6, 'Bomba de aire manual', 'componente-bomba-de-aire-manual', 6, NULL, NULL, NULL, 'pcs', 'HER-BOM-AIR'),
+(7, 'Pila AA', 'componente-pila-aa', 1, '⚠️ No cortocircuitar', NULL, NULL, 'pcs', 'ELE-PIL-AA'),
+(8, 'Porta baterías AA', 'componente-porta-baterias-aa', 1, NULL, NULL, NULL, 'pcs', 'ELE-POR-AA'),
+(9, 'Cable conductor', 'componente-cable-conductor', 1, NULL, NULL, NULL, 'm', 'ELE-CAB-CON'),
+(10, 'Interruptor mini', 'componente-interruptor-mini', 1, NULL, NULL, NULL, 'pcs', 'ELE-INT-MIN'),
+(11, 'Bombillo LED 3V', 'componente-bombillo-led-3v', 1, NULL, NULL, NULL, 'pcs', 'ELE-LED-3V'),
+(12, 'Papel filtro', 'componente-papel-filtro', 4, 'Material frágil', NULL, NULL, 'pcs', 'QUI-PAP-FIL'),
+(13, 'Embudo plástico', 'componente-embudo-plastico', 4, NULL, NULL, NULL, 'pcs', 'QUI-EMB-PLA'),
+(14, 'Vaso precipitado plástico', 'componente-vaso-precipitado-plastico', 4, NULL, NULL, NULL, 'pcs', 'QUI-VAS-PLA'),
+(15, 'Tiras de pH', 'componente-tiras-de-ph', 4, NULL, NULL, NULL, 'pcs', 'QUI-TIR-PH'),
+(16, 'Diode germanio', 'componente-diode-germanio', 1, 'Material frágil', '<h2>&iquest;Qu&eacute; es el diodo de germanio?</h2>\r\n\r\n<p>El diodo de germanio es un componente semiconductor que permite el paso de corriente en una direcci&oacute;n y la bloquea en la contraria. Se caracteriza por una <strong>baja tensi&oacute;n umbral</strong> (&asymp;0.2&ndash;0.3&nbsp;V), ideal para detecci&oacute;n de se&ntilde;ales d&eacute;biles como en radios de cristal.</p>\r\n\r\n<h3>Usos comunes</h3>\r\n\r\n<ul>\r\n	<li>Detector de AM en <em>radios de cristal</em>.</li>\r\n	<li>Rectificaci&oacute;n de se&ntilde;ales de baja amplitud.</li>\r\n	<li>Etapas de medici&oacute;n y prototipos educativos.</li>\r\n</ul>\r\n\r\n<h3>Especificaciones t&iacute;picas</h3>\r\n\r\n<table>\r\n	<thead>\r\n		<tr>\r\n			<th>Par&aacute;metro</th>\r\n			<th>Valor orientativo</th>\r\n		</tr>\r\n	</thead>\r\n	<tbody>\r\n		<tr>\r\n			<td>Tensi&oacute;n umbral</td>\r\n			<td>0.2&ndash;0.3&nbsp;V</td>\r\n		</tr>\r\n		<tr>\r\n			<td>Corriente m&aacute;x. (se&ntilde;al)</td>\r\n			<td>10&ndash;50&nbsp;mA</td>\r\n		</tr>\r\n		<tr>\r\n			<td>Polaridad</td>\r\n			<td>&Aacute;nodo (+) &rarr; C&aacute;todo (&ndash;)</td>\r\n		</tr>\r\n	</tbody>\r\n</table>\r\n\r\n<blockquote>⚠️ <strong>Nota de seguridad:</strong> componente <em>fr&aacute;gil</em>. Evita doblar las patillas en exceso y no excedas la corriente recomendada.</blockquote>\r\n\r\n<p>Ejemplos: 1N34A, OA90 (modelos cl&aacute;sicos para detecci&oacute;n).</p>\r\n', NULL, 'pcs', 'ELE-DIO-GER'),
+(17, 'Auricular cristal', 'componente-auricular-cristal', 1, NULL, NULL, NULL, 'pcs', 'ELE-AUR-CRI'),
+(18, 'Alambre esmaltado 28AWG', 'componente-alambre-esmaltado-28awg', 1, NULL, NULL, NULL, 'm', 'ELE-ALM-28'),
+(19, 'Imán neodimio', 'componente-iman-neodimio', 2, '⚠️ Mantener lejos de dispositivos', NULL, NULL, 'pcs', 'MAG-IMA-NEO'),
+(20, 'Clavo de hierro', 'componente-clavo-de-hierro', 2, NULL, NULL, NULL, 'pcs', 'MAG-CLA-HIE'),
+(21, 'Trampa de ratón', 'componente-trampa-de-raton', 5, '⚠️ Riesgo de pellizco', NULL, NULL, 'pcs', 'TEC-TRA-RAT'),
+(22, 'Rueda plástica 50mm', 'componente-rueda-plastica-50mm', 5, NULL, NULL, NULL, 'pcs', 'TEC-RUE-50'),
+(23, 'Eje metálico', 'componente-eje-metalico', 5, NULL, NULL, NULL, 'pcs', 'TEC-EJE-MET'),
+(24, 'Motor DC 3-6V', 'componente-motor-dc-3-6v', 1, NULL, NULL, NULL, 'pcs', 'ELE-MOT-DC'),
+(25, 'Manivela plástica', 'componente-manivela-plastica', 5, NULL, NULL, NULL, 'pcs', 'TEC-MAN-PLA'),
+(26, 'Panel solar 5V', 'componente-panel-solar-5v', 5, NULL, NULL, NULL, 'pcs', 'TEC-PAN-5V'),
+(27, 'Hélice plástica', 'componente-helice-plastica', 5, NULL, NULL, NULL, 'pcs', 'TEC-HEL-PLA'),
+(28, 'Carbón activado', 'componente-carbon-activado', NULL, NULL, NULL, NULL, 'g', 'AMB-CAR-ACT'),
+(29, 'Arena fina', 'componente-arena-fina', NULL, NULL, NULL, NULL, 'g', 'AMB-ARE-FIN'),
+(30, 'Grava', 'componente-grava', NULL, NULL, NULL, NULL, 'g', 'AMB-GRA-STD'),
+(31, 'Sal de mesa', 'componente-sal-de-mesa', 4, NULL, NULL, NULL, 'g', 'QUI-SAL-MES'),
+(32, 'Rodaja de papa', 'componente-rodaja-de-papa', 3, NULL, NULL, NULL, 'pcs', 'BIO-ROD-PAP');
 
 -- --------------------------------------------------------
 
@@ -1138,9 +1141,10 @@ INSERT INTO `kit_items` (`id`, `nombre_comun`, `slug`, `categoria_id`, `adverten
 
 CREATE TABLE `kit_manuals` (
   `id` int(11) NOT NULL,
-  `kit_id` int(11) NOT NULL,
+  `kit_id` int(11) DEFAULT NULL,
   `slug` varchar(120) NOT NULL COMMENT 'Slug del manual (por kit/idioma)',
   `version` varchar(32) NOT NULL DEFAULT '1.0',
+  `autor` varchar(255) DEFAULT NULL COMMENT 'Nombre del autor del manual',
   `status` enum('draft','approved','published','discontinued') NOT NULL DEFAULT 'draft',
   `tipo_manual` enum('seguridad','armado','calibracion','uso','mantenimiento','teoria','experimento','solucion','evaluacion','docente','referencia') NOT NULL DEFAULT 'armado',
   `ambito` enum('kit','componente') NOT NULL DEFAULT 'kit',
@@ -1163,8 +1167,8 @@ CREATE TABLE `kit_manuals` (
 -- Dumping data for table `kit_manuals`
 --
 
-INSERT INTO `kit_manuals` (`id`, `kit_id`, `slug`, `version`, `status`, `tipo_manual`, `ambito`, `item_id`, `idioma`, `resumen`, `time_minutes`, `dificultad_ensamble`, `pasos_json`, `herramientas_json`, `seguridad_json`, `html`, `render_mode`, `published_at`, `created_at`, `updated_at`) VALUES
-(1, 6, 'manual-armado-kit-radio-de-cristal-23-12-25-v1-0', '1.0', 'published', 'armado', 'kit', NULL, 'es-CO', NULL, 45, 'media', '[{\"orden\":1,\"titulo\":\"Preparar antena y tierra\",\"html\":\"<p>Desenrolla 10–20 m de alambre para la antena y conecta una buena tierra (por ejemplo, tubería metálica).<\\/p>\"},{\"orden\":2,\"titulo\":\"Enrollar la bobina\",\"html\":\"<p>Haz ~80–120 espiras de alambre esmaltado sobre un tubo; deja derivaciones para sintonía.<\\/p>\"},{\"orden\":3,\"titulo\":\"Conectar LC y diodo\",\"html\":\"<p>Conecta la bobina al capacitor variable (si aplica) y el diodo de germanio como detector AM.<\\/p>\"},{\"orden\":4,\"titulo\":\"Auricular y prueba\",\"html\":\"<p>Conecta el auricular de alta impedancia, ajusta la sintonía y busca estaciones AM.<\\/p>\"}]', '[{\"nombre\":\"Alicates de corte\",\"cantidad\":1,\"nota\":\"para alambre\",\"seguridad\":\"peligroso\"},{\"nombre\":\"Cúter\",\"cantidad\":1,\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Cinta aislante\",\"cantidad\":\"1 rollo\",\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Regla\",\"cantidad\":1,\"nota\":\"medir longitudes de antena\",\"seguridad\":\"\"},{\"nombre\":\"Lija fina\",\"cantidad\":1,\"nota\":\"retirar esmalte de alambre\",\"seguridad\":\"\"}]', '{\"usar_seguridad_kit\":true,\"notas_extra\":[{\"nota\":\"No conectes el circuito a la red eléctrica.\",\"categoria\":\"eléctrico\"},{\"nota\":\"Usa antena y tierra con supervisión docente.\",\"categoria\":\"supervisión adulta\"}]}', '', 'legacy', '2025-12-23 22:50:18', '2025-12-24 01:02:33', '2025-12-24 04:56:38');
+INSERT INTO `kit_manuals` (`id`, `kit_id`, `slug`, `version`, `autor`, `status`, `tipo_manual`, `ambito`, `item_id`, `idioma`, `resumen`, `time_minutes`, `dificultad_ensamble`, `pasos_json`, `herramientas_json`, `seguridad_json`, `html`, `render_mode`, `published_at`, `created_at`, `updated_at`) VALUES
+(1, 6, 'manual-armado-kit-radio-de-cristal-23-12-25-v1-0', '1.0', 'Clase de Ciencia', 'published', 'armado', 'kit', NULL, 'es-CO', NULL, 45, 'media', '[{\"orden\":1,\"titulo\":\"Preparar antena y tierra\",\"html\":\"<p>Desenrolla 10–20 m de alambre para la antena y conecta una buena tierra (por ejemplo, tubería metálica).<\\/p>\"},{\"orden\":2,\"titulo\":\"Enrollar la bobina\",\"html\":\"<p>Haz ~80–120 espiras de alambre esmaltado sobre un tubo; deja derivaciones para sintonía.<\\/p>\"},{\"orden\":3,\"titulo\":\"Conectar LC y diodo\",\"html\":\"<p>Conecta la bobina al capacitor variable (si aplica) y el diodo de germanio como detector AM.<\\/p>\"},{\"orden\":4,\"titulo\":\"Auricular y prueba\",\"html\":\"<p>Conecta el auricular de alta impedancia, ajusta la sintonía y busca estaciones AM.<\\/p>\"}]', '[{\"nombre\":\"Alicates de corte\",\"cantidad\":1,\"nota\":\"para alambre\",\"seguridad\":\"peligroso\"},{\"nombre\":\"Cúter\",\"cantidad\":1,\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Cinta aislante\",\"cantidad\":\"1 rollo\",\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Regla\",\"cantidad\":1,\"nota\":\"medir longitudes de antena\",\"seguridad\":\"\"},{\"nombre\":\"Lija fina\",\"cantidad\":1,\"nota\":\"retirar esmalte de alambre\",\"seguridad\":\"\"}]', '{\"usar_seguridad_kit\":true,\"notas_extra\":[{\"nota\":\"No conectes el circuito a la red eléctrica.\",\"categoria\":\"eléctrico\"},{\"nota\":\"Usa antena y tierra con supervisión docente.\",\"categoria\":\"supervisión adulta\"}]}', '', 'legacy', '2025-12-23 22:50:18', '2025-12-24 01:02:33', '2025-12-25 02:35:41');
 
 --
 -- Triggers `kit_manuals`
@@ -1615,7 +1619,7 @@ ALTER TABLE `areas`
 -- AUTO_INCREMENT for table `atributos_contenidos`
 --
 ALTER TABLE `atributos_contenidos`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
 -- AUTO_INCREMENT for table `atributos_definiciones`

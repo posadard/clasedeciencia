@@ -48,14 +48,18 @@ if (!$kit && isset($manual['ambito']) && $manual['ambito'] === 'componente' && !
   } catch (Exception $e) { $kit = null; }
 }
 if (!$kit) {
-  // Sin kit activo asociado: mostrar 404 amigable
-  header('HTTP/1.0 404 Not Found');
-  $page_title = 'Kit no encontrado';
-  $page_description = 'No se pudo determinar el kit asociado a este manual.';
-  include 'includes/header.php';
-  echo '<div class="container"><div class="breadcrumb"><a href="/">Inicio</a> / <strong>Manual</strong></div><h1>Kit no encontrado</h1></div>';
-  include 'includes/footer.php';
-  exit;
+  // Si es ámbito componente y hay item_id, continuamos sin kit (manual anclado al componente)
+  $is_component_scope = (isset($manual['ambito']) && $manual['ambito'] === 'componente' && !empty($manual['item_id']));
+  if (!$is_component_scope) {
+    // Sin kit activo asociado y no es ámbito componente: 404 amigable
+    header('HTTP/1.0 404 Not Found');
+    $page_title = 'Kit no encontrado';
+    $page_description = 'No se pudo determinar el kit asociado a este manual.';
+    include 'includes/header.php';
+    echo '<div class="container"><div class="breadcrumb"><a href="/">Inicio</a> / <strong>Manual</strong></div><h1>Kit no encontrado</h1></div>';
+    include 'includes/footer.php';
+    exit;
+  }
 }
 
 // Delay display title build until ambito, tipo_label and comp are resolved
@@ -128,7 +132,13 @@ include 'includes/header.php';
 <div class="container">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / 
-    <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
+    <?php if (!empty($kit) && !empty($kit['slug'])): ?>
+      <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
+    <?php elseif ($ambito === 'componente' && $comp && !empty($comp['slug'])): ?>
+      <a href="/<?= h($comp['slug']) ?>"><?= h($comp['nombre_comun']) ?></a> / 
+    <?php else: ?>
+      
+    <?php endif; ?>
     <strong><?= h($display_title_raw) ?></strong>
   </div>
 
