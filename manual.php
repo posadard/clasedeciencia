@@ -751,7 +751,7 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .article-byline { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:#555; border-top:1px solid var(--color-border-light); padding-top:8px; margin-top:12px; }
 .article-byline .author, .article-byline .date, .article-byline .updated, .article-byline .ficha { font-size:0.95rem; }
 /* Related cards nicer hover/shadow */
-.related-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
+.related-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; }
 .related-card { display:block; border:1px solid var(--color-border-light); border-radius:8px; background:#fff; overflow:hidden; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; position:relative; }
 .related-card:hover, .related-card:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-accent); }
 .related-thumbnail { width:100%; height:140px; object-fit:cover; display:block; }
