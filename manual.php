@@ -125,7 +125,7 @@ $canonical_url = SITE_URL . '/' . urlencode($manual['slug']);
 
 include 'includes/header.php';
 ?>
-<div class="container article-page">
+<div class="container">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / 
     <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
@@ -747,9 +747,14 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
+.manual-content { margin-bottom: var(--spacing-lg); }
 /* Byline (similar a clase.php) */
-.article-byline { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:#555; border-top:1px solid var(--color-border-light); padding-top:8px; margin-top:12px; }
+.article-byline { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:#555; border-top:1px solid var(--color-border-light); padding-top: var(--spacing-sm); margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md); }
 .article-byline .author, .article-byline .date, .article-byline .updated, .article-byline .ficha { font-size:0.95rem; }
+/* Entity and classes spacing */
+.manual-entity { margin-top: var(--spacing-lg); }
+.kit-classes { margin-top: var(--spacing-lg); }
+.manual-entity + .kit-classes { margin-top: var(--spacing-lg); }
 /* Related cards nicer hover/shadow */
 .related-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; }
 .related-card { display:block; border:1px solid var(--color-border-light); border-radius:8px; background:#fff; overflow:hidden; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; position:relative; }
