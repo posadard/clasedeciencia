@@ -295,19 +295,36 @@ include 'includes/header.php';
       <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued'): ?>
         <div class="manual-toc-row" style="display:flex; align-items:flex-start; gap:12px;">
           <aside class="manual-toc-aside">
-            <?php $img_id = ($ambito === 'componente' && !empty($manual['item_id'])) ? ('comp-' . (int)$manual['item_id']) : ('kit-' . (int)$kit['id']); ?>
-            <?php if (!empty($kit['imagen_portada'])): ?>
-              <img id="<?= h($img_id) ?>"
-                   src="<?= h($kit['imagen_portada']) ?>"
-                   alt="Imagen del kit <?= h($kit['nombre']) ?>"
-                   class="manual-toc-image"
-                   onerror="this.onerror=null; console.log('❌ [Manual] Imagen portada kit falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
-              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
-              <script>console.log('✅ [Manual] Imagen portada mostrada junto al índice');</script>
+            <?php if ($ambito === 'componente' && $comp): ?>
+              <?php $img_id = 'comp-' . (int)$manual['item_id']; ?>
+              <?php if (!empty($comp['imagen_portada'])): ?>
+                <img id="<?= h($img_id) ?>"
+                     src="<?= h($comp['imagen_portada']) ?>"
+                     alt="Imagen del componente <?= h($comp['nombre_comun']) ?>"
+                     class="manual-toc-image"
+                     onerror="this.onerror=null; console.log('❌ [Manual] Imagen portada componente falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
+                <div class="manual-toc-caption"><?= h($comp['nombre_comun']) ?></div>
+                <script>console.log('✅ [Manual] Imagen portada componente mostrada junto al índice');</script>
+              <?php else: ?>
+                <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de componente"><span class="placeholder-icon">🔧</span></div>
+                <div class="manual-toc-caption"><?= h($comp['nombre_comun']) ?></div>
+                <script>console.log('⚠️ [Manual] Componente sin imagen, usando placeholder en índice');</script>
+              <?php endif; ?>
             <?php else: ?>
-              <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit"><span class="placeholder-icon">📦</span></div>
-              <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
-              <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder en índice');</script>
+              <?php $img_id = 'kit-' . (int)$kit['id']; ?>
+              <?php if (!empty($kit['imagen_portada'])): ?>
+                <img id="<?= h($img_id) ?>"
+                     src="<?= h($kit['imagen_portada']) ?>"
+                     alt="Imagen del kit <?= h($kit['nombre']) ?>"
+                     class="manual-toc-image"
+                     onerror="this.onerror=null; console.log('❌ [Manual] Imagen portada kit falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+                <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
+                <script>console.log('✅ [Manual] Imagen portada kit mostrada junto al índice');</script>
+              <?php else: ?>
+                <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de kit"><span class="placeholder-icon">📦</span></div>
+                <div class="manual-toc-caption"><?= h($kit['nombre']) ?></div>
+                <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder en índice');</script>
+              <?php endif; ?>
             <?php endif; ?>
           </aside>
           <div class="manual-toc-right" style="flex:1; min-width:0;">
@@ -365,7 +382,7 @@ include 'includes/header.php';
                   $components_line = '';
                   $tools_line = '';
                   try {
-                    $comp_list = cdc_get_kit_componentes($pdo, (int)$kit['id']);
+                    $comp_list = ($ambito === 'componente' || empty($kit) || empty($kit['id'])) ? [] : cdc_get_kit_componentes($pdo, (int)$kit['id']);
                   } catch (Exception $e) { $comp_list = []; }
                   $comp_pairs = [];
                   if (!empty($comp_list)) {
@@ -416,7 +433,7 @@ include 'includes/header.php';
       <?php
         // Bloque de componentes del kit: mostrar después del índice y antes de herramientas
         try {
-          $man_components = cdc_get_kit_componentes($pdo, (int)$kit['id']);
+          $man_components = ($ambito === 'componente' || empty($kit) || empty($kit['id'])) ? [] : cdc_get_kit_componentes($pdo, (int)$kit['id']);
         } catch (Exception $e) { $man_components = []; }
       ?>
       <?php if (!empty($man_components)): ?>
@@ -628,7 +645,9 @@ include 'includes/header.php';
   <script>console.log('✅ [Manual] Byline renderizada');</script>
   <?php
     // Tarjeta del Kit o Componente y Clases relacionadas (al final)
-    try { $clases = cdc_get_kit_clases($pdo, (int)$kit['id']); } catch (Exception $e) { $clases = []; }
+    try {
+      $clases = (!empty($kit) && !empty($kit['id'])) ? cdc_get_kit_clases($pdo, (int)$kit['id']) : [];
+    } catch (Exception $e) { $clases = []; }
   ?>
 
   <?php if ($ambito === 'componente' && $comp): ?>
@@ -708,7 +727,10 @@ include 'includes/header.php';
   <?php endif; ?>
 </div>
 <script>
-console.log('🔍 [Manual] Kit:', <?= json_encode(['id'=>$kit['id'],'slug'=>$kit['slug'],'nombre'=>$kit['nombre']]) ?>);
+var KIT_INFO = <?= json_encode(!empty($kit) ? ['id'=>$kit['id'],'slug'=>$kit['slug'],'nombre'=>$kit['nombre']] : null) ?>;
+var COMP_INFO = <?= json_encode(($ambito === 'componente' && $comp) ? ['id'=>$comp['id'],'slug'=>$comp['slug'],'nombre'=>$comp['nombre_comun']] : null) ?>;
+if (KIT_INFO) console.log('🔍 [Manual] Kit:', KIT_INFO);
+if (COMP_INFO) console.log('🔍 [Manual] Componente:', COMP_INFO);
 console.log('🔍 [Manual] Slug manual:', '<?= h($manual_slug) ?>');
 console.log('✅ [Manual] Cargado:', <?= json_encode(['id'=>$manual['id'],'version'=>$manual['version'],'idioma'=>$manual['idioma'],'status'=>$manual['status']]) ?>);
 console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? count($pasos) : 0 ?>);
