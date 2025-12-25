@@ -628,6 +628,16 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     return baseSlugify(getItemNombre());
   }
 
+  function getKitSlug(){
+    // Leer directamente el kit seleccionado para evitar depender de KIT_SLUG global
+    const kitSelect = document.querySelector('select[name="kit_id"]');
+    if (!kitSelect) return '';
+    const opt = kitSelect.options[kitSelect.selectedIndex];
+    if (!opt) return '';
+    const s = opt.getAttribute('data-slug') || '';
+    return s;
+  }
+
   function buildSuggestion(){
     const tipo = (tipoSel ? tipoSel.value : 'armado') || 'armado';
     const verInput = document.querySelector('input[name="version"]');
@@ -660,7 +670,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     if (amb === 'componente') {
       entitySlug = getItemSlug();
     } else {
-      entitySlug = KIT_SLUG || '';
+      // Intentar tomar el slug del kit seleccionado en tiempo real; si no, usar KIT_SLUG
+      entitySlug = getKitSlug() || KIT_SLUG || '';
     }
     if (entitySlug) parts.push(entitySlug);
     parts.push(dateStr);
