@@ -264,9 +264,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $categoria_id = (int)($_POST['categoria_id'] ?? 0);
     $advertencias_seguridad = trim($_POST['advertencias_seguridad'] ?? '');
     $unidad = trim($_POST['unidad'] ?? 'pcs');
+    $descripcion_html = isset($_POST['descripcion_html']) ? (string)$_POST['descripcion_html'] : null;
+    $foto_url = trim($_POST['foto_url'] ?? '');
 
     if ($nombre_comun === '') $errores[] = 'El nombre común es obligatorio';
     if ($categoria_id <= 0) $errores[] = 'La categoría es obligatoria';
+    if ($foto_url !== '' && !preg_match('/^https?:\/\//i', $foto_url)) { $errores[] = 'La URL de la foto debe iniciar con http:// o https://'; }
+    if ($foto_url !== '' && strlen($foto_url) > 255) { $errores[] = 'La URL de la foto supera 255 caracteres'; }
 
     if ($sku === '') {
       $sku = strtoupper(preg_replace('/[^A-Z0-9]+/i', '-', $nombre_comun));
@@ -289,13 +293,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errores)) {
       try {
         if ($is_edit) {
-          $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ? WHERE id = ?";
+          $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ? WHERE id = ?";
           $stmt = $pdo->prepare($sql);
-          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $id]);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
         } else {
-          $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad) VALUES (?, ?, ?, ?, ?)";
+          $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad, descripcion_html, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
           $stmt = $pdo->prepare($sql);
-          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad]);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
           $id = (int)$pdo->lastInsertId();
         }
         echo "<script>console.log('✅ [Admin] Componente guardado');</script>";
@@ -361,6 +365,16 @@ include '../header.php';
     <label for="unidad">Unidad</label>
     <input type="text" id="unidad" name="unidad" value="<?= htmlspecialchars($material['unidad'] ?? 'pcs', ENT_QUOTES, 'UTF-8') ?>" placeholder="Ej: pcs, g, ml" />
   </div>
+  <div class="form-group">
+    <label for="descripcion_html">Descripción HTML</label>
+    <textarea id="descripcion_html" name="descripcion_html" rows="6" placeholder="Se renderiza como HTML en la página del componente."><?= htmlspecialchars($material['descripcion_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <small class="help-text">Usa etiquetas básicas; se mostrará tal cual.</small>
+  </div>
+  <div class="form-group">
+    <label for="foto_url">URL de la foto</label>
+    <input type="text" id="foto_url" name="foto_url" value="<?= htmlspecialchars($material['foto_url'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="https://..." />
+    <small class="help-text">Enlace http(s) a la imagen representativa del componente.</small>
+  </div>
   <div class="form-actions">
     <button type="submit" class="btn" onclick="this.form.action.value='';"><?= $is_edit ? 'Actualizar' : 'Crear' ?></button>
     <a href="/admin/componentes/index.php" class="btn btn-secondary">Cancelar</a>
@@ -390,7 +404,7 @@ if ($is_edit) {
 }
 ?>
 <?php if ($is_edit): ?>
-<div class="card" style="margin-top:2rem;">
+<div class="card mt-xl">
   <h3>Ficha técnica (chips)</h3>
   <div class="form-group">
     <label for="attr_search_cmp">Agregar atributo</label>
@@ -750,10 +764,6 @@ if ($is_edit) {
     });
   })();
 </script>
-<style>
-  /* Reusar estilos globales para modales en admin; utilidades mínimas */
-  .muted { color: #666; font-size: 0.9rem; }
-</style>
 <?php endif; ?>
 
 <?php include '../footer.php'; ?>
