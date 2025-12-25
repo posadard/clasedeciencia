@@ -101,6 +101,15 @@ if ($tipo_key && isset($tipo_map[$tipo_key])) {
 
 $ambito = isset($manual['ambito']) && $manual['ambito'] === 'componente' ? 'componente' : 'kit';
 $comp = null;
+// Pre-parse component slug from manual slug for fallback display/linking
+$entitySlugFromManual = null;
+if (!empty($manual['slug'])) {
+  $slug_low_pre = strtolower((string)$manual['slug']);
+  $parts_pre = explode('-', $slug_low_pre);
+  if (count($parts_pre) >= 4 && $parts_pre[0] === 'manual' && $parts_pre[2] === 'componente') {
+    $entitySlugFromManual = $parts_pre[3];
+  }
+}
 if ($ambito === 'componente' && !empty($manual['item_id'])) {
   try {
     $stmtC = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada FROM kit_items WHERE id = ? LIMIT 1');
@@ -124,7 +133,19 @@ if ($ambito === 'componente' && !$comp && !empty($manual['slug'])) {
 }
 
 // Build friendly display title now that tipo, ambito and entity are known
-$entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
+if ($ambito === 'componente') {
+  if ($comp && !empty($comp['nombre_comun'])) {
+    $entity_name_raw = (string)$comp['nombre_comun'];
+  } else {
+    $slug_human = '';
+    if (!empty($entitySlugFromManual)) {
+      $slug_human = ucwords(str_replace('-', ' ', $entitySlugFromManual));
+    }
+    $entity_name_raw = $slug_human !== '' ? $slug_human : 'Componente';
+  }
+} else {
+  $entity_name_raw = (string)$kit['nombre'];
+}
 $version_text_raw = !empty($manual['version']) ? ('versión ' . (string)$manual['version']) : '';
 // Estado al final si no es publicado
 $status_key = strtolower((string)($manual['status'] ?? ''));
@@ -146,8 +167,12 @@ include 'includes/header.php';
 <div class="container">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / 
-    <?php if ($ambito === 'componente' && $comp && !empty($comp['slug'])): ?>
-      <a href="/<?= h($comp['slug']) ?>"><?= h($comp['nombre_comun']) ?></a> / 
+    <?php if ($ambito === 'componente'): ?>
+      <?php if ($comp && !empty($comp['slug'])): ?>
+        <a href="/<?= h($comp['slug']) ?>"><?= h($comp['nombre_comun']) ?></a> / 
+      <?php elseif (!empty($entitySlugFromManual)): ?>
+        <a href="/<?= h($entitySlugFromManual) ?>"><?= h(ucwords(str_replace('-', ' ', $entitySlugFromManual))) ?></a> / 
+      <?php endif; ?>
     <?php elseif (!empty($kit) && !empty($kit['slug'])): ?>
       <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
     <?php endif; ?>
@@ -307,7 +332,8 @@ include 'includes/header.php';
       <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued'): ?>
         <div class="manual-toc-row" style="display:flex; align-items:flex-start; gap:12px;">
           <aside class="manual-toc-aside">
-            <?php if ($ambito === 'componente' && $comp): ?>
+            <?php if ($ambito === 'componente'): ?>
+              <?php if ($comp): ?>
               <?php $img_id = 'comp-' . (int)$manual['item_id']; ?>
               <?php if (!empty($comp['imagen_portada'])): ?>
                 <img id="<?= h($img_id) ?>"
@@ -321,6 +347,12 @@ include 'includes/header.php';
                 <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Sin imagen de componente"><span class="placeholder-icon">🔧</span></div>
                 <div class="manual-toc-caption"><?= h($comp['nombre_comun']) ?></div>
                 <script>console.log('⚠️ [Manual] Componente sin imagen, usando placeholder en índice');</script>
+              <?php endif; ?>
+              <?php else: ?>
+                <?php $img_id = 'comp-unknown'; ?>
+                <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Componente"><span class="placeholder-icon">🔧</span></div>
+                <div class="manual-toc-caption"><?= h(!empty($entitySlugFromManual) ? ucwords(str_replace('-', ' ', $entitySlugFromManual)) : 'Componente') ?></div>
+                <script>console.log('ℹ️ [Manual] Índice usando nombre derivado del slug para componente');</script>
               <?php endif; ?>
             <?php else: ?>
               <?php $img_id = 'kit-' . (int)$kit['id']; ?>
