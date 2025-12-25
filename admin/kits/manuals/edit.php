@@ -306,14 +306,14 @@ try {
     $kit_items = [];
     if ($kit_id > 0) {
       try {
-        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.slug, ki.sku FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
+        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.slug, ki.sku, ki.advertencias_seguridad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
         $q->execute([$kit_id]);
         $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
       } catch (PDOException $e) { $kit_items = []; }
     }
     if (empty($kit_items)) {
       try {
-        $q = $pdo->query('SELECT id, nombre_comun, slug, sku FROM kit_items ORDER BY nombre_comun ASC');
+        $q = $pdo->query('SELECT id, nombre_comun, slug, sku, advertencias_seguridad FROM kit_items ORDER BY nombre_comun ASC');
         $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
       } catch (PDOException $e) { $kit_items = []; }
     }
@@ -379,7 +379,13 @@ try {
       <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
         <option value="">-- Selecciona --</option>
         <?php foreach ($kit_items as $it): ?>
-          <option value="<?= (int)$it['id'] ?>" data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>" data-slug="<?= htmlspecialchars($it['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>><?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)</option>
+          <option value="<?= (int)$it['id'] ?>"
+                  data-nombre="<?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?>"
+                  data-slug="<?= htmlspecialchars($it['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+                  data-safety='<?= htmlspecialchars($it['advertencias_seguridad'] ?? '', ENT_QUOTES, 'UTF-8') ?>'
+                  <?= ($item_val === (int)$it['id']) ? 'selected' : '' ?>>
+            <?= htmlspecialchars($it['nombre_comun'], ENT_QUOTES, 'UTF-8') ?> (SKU <?= htmlspecialchars($it['sku'], ENT_QUOTES, 'UTF-8') ?>)
+          </option>
         <?php endforeach; ?>
       </select>
       <?php if (!$has_item_id_column): ?>
@@ -942,52 +948,66 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
   const kitSelect = document.querySelector('select[name="kit_id"]');
+  const itemSelect = document.querySelector('select[name="item_id"]');
+  const ambitoSelect = document.querySelector('select[name="ambito"]');
+  const safetyHeadEl = document.querySelector('.kit-safety-head');
+  const safetyChooseLabel = document.querySelector('.kit-safety-choose');
+  let COMPONENT_SAFETY = null;
+  let CURRENT_SAFETY = null;
+  let CURRENT_TYPE = 'kit'; // 'kit' | 'componente'
   const securityAgeWrap = document.querySelector('.security-age');
 
-  function toSafetyObj(raw){
-    try {
-      if (!raw) return null;
-      if (typeof raw === 'string') return JSON.parse(raw);
+  function renderSafetyPanel(obj, type){
+    CURRENT_TYPE = (type === 'componente') ? 'componente' : 'kit';
+    CURRENT_SAFETY = toSafetyObj(obj);
+    if (!kitSafetyPanel) return;
+    if (safetyHeadEl) { safetyHeadEl.innerHTML = '<strong>' + (CURRENT_TYPE === 'componente' ? 'Medidas del componente' : 'Medidas del kit') + '</strong>'; }
+    if (safetyChooseLabel) {
+      const lab = safetyChooseLabel.querySelector('label');
+      const cb = safetyChooseLabel.querySelector('input[type="checkbox"]');
+      if (lab && cb) { lab.lastChild && lab.removeChild(lab.lastChild); lab.appendChild(document.createTextNode(' Incluir seguridad del ' + (CURRENT_TYPE === 'componente' ? 'componente' : 'kit') + ' en este manual')); }
+    }
+    if (!CURRENT_SAFETY) {
       if (typeof raw === 'object') return raw;
       return null;
     } catch(e) {
       console.log('⚠️ [ManualsEdit] Error parse seguridad kit:', e.message);
       return null;
     }
-  }
-
-  function renderKitSafetyPanel(obj){
+    kitSafetyPanel.classList.remove('muted');
+    const min = (typeof CURRENT_SAFETY.edad_min !== 'undefined') ? parseInt(CURRENT_SAFETY.edad_min,10) : null;
+    const max = (typeof CURRENT_SAFETY.edad_max !== 'undefined') ? parseInt(CURRENT_SAFETY.edad_max,10) : null;
     KIT_SAFETY = toSafetyObj(obj);
     if (!kitSafetyPanel) return;
     if (!KIT_SAFETY) {
-      kitSafetyPanel.classList.add('muted');
+        kitSafetyChip.textContent = 'Edad del ' + (CURRENT_TYPE==='componente'?'componente':'kit') + ': ' + (min !== null ? min : '?') + '–' + (max !== null ? max : '?') + ' años';
       if (kitSafetyChip) kitSafetyChip.style.display = 'none';
       if (kitSafetyNotes) kitSafetyNotes.innerHTML = '<span class="muted">(El kit no tiene notas de seguridad textuales)</span>';
       console.log('⚠️ [ManualsEdit] Panel seguridad kit: vacío');
       return;
     }
-    kitSafetyPanel.classList.remove('muted');
+      const notas = (CURRENT_SAFETY.notas ? String(CURRENT_SAFETY.notas) : '');
     const min = (typeof KIT_SAFETY.edad_min !== 'undefined') ? parseInt(KIT_SAFETY.edad_min,10) : null;
     const max = (typeof KIT_SAFETY.edad_max !== 'undefined') ? parseInt(KIT_SAFETY.edad_max,10) : null;
-    if (kitSafetyChip) {
+    console.log('✅ [ManualsEdit] Panel seguridad ' + CURRENT_TYPE + ' actualizado');
       if (min !== null || max !== null) {
         kitSafetyChip.style.display = '';
         kitSafetyChip.textContent = 'Edad del kit: ' + (min !== null ? min : '?') + '–' + (max !== null ? max : '?') + ' años';
-      } else {
-        kitSafetyChip.style.display = 'none';
-      }
-    }
-    if (kitSafetyNotes) {
+  function hasCurrentAge(){
+    if (!CURRENT_SAFETY) return false;
+    const hasMin = typeof CURRENT_SAFETY.edad_min !== 'undefined' && CURRENT_SAFETY.edad_min !== null && String(CURRENT_SAFETY.edad_min) !== '';
+    const hasMax = typeof CURRENT_SAFETY.edad_max !== 'undefined' && CURRENT_SAFETY.edad_max !== null && String(CURRENT_SAFETY.edad_max) !== '';
+    return !!(hasMin || hasMax);
       const notas = (KIT_SAFETY.notas ? String(KIT_SAFETY.notas) : '');
       kitSafetyNotes.innerHTML = notas ? notas.replace(/\n/g,'<br>') : '<span class="muted">(El kit no tiene notas de seguridad textuales)</span>';
     }
     console.log('✅ [ManualsEdit] Panel seguridad kit actualizado');
-    updateAgeVisibility();
-  }
+    const hasAge = hasCurrentAge();
+    if (inherit && hasAge) {
 
   function hasKitAge(){
     if (!KIT_SAFETY) return false;
-    const hasMin = typeof KIT_SAFETY.edad_min !== 'undefined' && KIT_SAFETY.edad_min !== null && String(KIT_SAFETY.edad_min) !== '';
+      console.log('ℹ️ [ManualsEdit] Usando edad del ' + CURRENT_TYPE + ': ocultando campos de edad propia');
     const hasMax = typeof KIT_SAFETY.edad_max !== 'undefined' && KIT_SAFETY.edad_max !== null && String(KIT_SAFETY.edad_max) !== '';
     return !!(hasMin || hasMax);
   }
@@ -1041,9 +1061,45 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       }
       if (!id) { renderKitSafetyPanel(null); return; }
       const seg = await fetchKitSafetyById(id);
-      renderKitSafetyPanel(seg);
+      renderSafetyPanel(seg, 'kit');
     });
     console.log('🔍 [ManualsEdit] Observando cambios de kit_id');
+  }
+
+  function getSelectedItemSafety(){
+    if (!itemSelect) return null;
+    const opt = itemSelect.options[itemSelect.selectedIndex];
+    if (!opt) return null;
+    const raw = opt.getAttribute('data-safety') || '';
+    try {
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      return obj;
+    } catch(e) {
+      return raw ? { notas: raw } : null;
+    }
+  }
+
+  if (itemSelect) {
+    itemSelect.addEventListener('change', function(){
+      COMPONENT_SAFETY = getSelectedItemSafety();
+      renderSafetyPanel(COMPONENT_SAFETY, 'componente');
+    });
+  }
+
+  function applyAmbitoSafety(){
+    const amb = ambitoSelect ? ambitoSelect.value : 'kit';
+    if (amb === 'componente') {
+      COMPONENT_SAFETY = getSelectedItemSafety();
+      renderSafetyPanel(COMPONENT_SAFETY, 'componente');
+    } else {
+      renderSafetyPanel(KIT_SAFETY, 'kit');
+    }
+  }
+  if (ambitoSelect) {
+    ambitoSelect.addEventListener('change', applyAmbitoSafety);
+    // Initial apply
+    applyAmbitoSafety();
   }
 
   if (useKitSafety) {
