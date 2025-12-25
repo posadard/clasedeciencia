@@ -33,6 +33,70 @@ if (!empty($material['descripcion_html'])) {
 $page_description = generate_excerpt($raw_desc, 160);
 $canonical_url = SITE_URL . '/' . urlencode($material['slug']);
 
+// Ficha técnica del componente (resumen compacto similar a kit.php)
+$ficha_inline = '';
+try {
+    $stmt = $pdo->prepare("SELECT c.atributo_id, c.valor_string, c.valor_numero, c.valor_entero, c.valor_booleano, c.valor_fecha, c.valor_datetime, c.valor_json, c.unidad_codigo, c.orden,
+                                   d.etiqueta, d.tipo_dato, d.unidad_defecto,
+                                   COALESCE(m.orden, 9999) AS map_orden
+                              FROM atributos_contenidos c
+                              JOIN atributos_definiciones d ON d.id = c.atributo_id
+                              LEFT JOIN atributos_mapeo m ON m.atributo_id = c.atributo_id AND m.tipo_entidad = 'componente'
+                             WHERE c.tipo_entidad = 'componente' AND c.entidad_id = ?
+                             ORDER BY map_orden ASC, c.atributo_id ASC, c.orden ASC, c.id ASC");
+    $stmt->execute([(int)$material['id']]);
+    $ficha_rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $ficha_attrs = [];
+    foreach ($ficha_rows as $r) {
+        $aid = (int)$r['atributo_id'];
+        if (!isset($ficha_attrs[$aid])) {
+            $ficha_attrs[$aid] = [
+                'label' => $r['etiqueta'],
+                'tipo' => $r['tipo_dato'],
+                'unidad_def' => $r['unidad_defecto'] ?? '',
+                'values' => []
+            ];
+        }
+        $tipo = $r['tipo_dato'];
+        $unit = $r['unidad_codigo'] ?: '';
+        $val = '';
+        if ($tipo === 'number') { $val = $r['valor_numero'] !== null ? rtrim(rtrim((string)$r['valor_numero'], '0'), '.') : ''; }
+        elseif ($tipo === 'integer') { $val = $r['valor_entero'] !== null ? (string)$r['valor_entero'] : ''; }
+        elseif ($tipo === 'boolean') { $val = ((int)$r['valor_booleano'] === 1 ? 'Sí' : 'No'); }
+        elseif ($tipo === 'date') { $val = $r['valor_fecha'] ?: ''; }
+        elseif ($tipo === 'datetime') { $val = $r['valor_datetime'] ?: ''; }
+        elseif ($tipo === 'json') { $val = $r['valor_json'] ?: ''; }
+        else { $val = $r['valor_string'] ?: ''; }
+        if ($val === '' || $val === null) continue;
+        $ficha_attrs[$aid]['values'][] = [ 'text' => (string)$val, 'unit' => $unit ];
+    }
+    if (!empty($ficha_attrs)) {
+        $parts = [];
+        $count = 0; $max = 5;
+        foreach ($ficha_attrs as $attr) {
+            if ($count >= $max) { break; }
+            $vals = $attr['values'];
+            $units = array_values(array_unique(array_filter(array_map(function($v){ return $v['unit'] ?? ''; }, $vals))));
+            $singleUnit = count($units) === 1 ? $units[0] : '';
+            $texts = array_map(function($v) use ($singleUnit){
+                $t = (string)$v['text'];
+                if ($singleUnit === '' && !empty($v['unit'])) $t .= ' ' . $v['unit'];
+                return $t;
+            }, $vals);
+            $display = implode(', ', $texts);
+            if ($singleUnit) { $display .= ' ' . $singleUnit; }
+            $parts[] = ($attr['label'] . ': ' . $display);
+            $count++;
+        }
+        if (!empty($parts)) {
+            $ficha_inline = implode(' · ', $parts);
+            if (count($ficha_attrs) > $max) { $ficha_inline .= '…'; }
+        }
+    }
+} catch (PDOException $e) {
+    error_log('Error ficha tecnica componente (precompute): ' . $e->getMessage());
+}
+
 include 'includes/header.php';
 ?>
 <div class="container material-detail">
@@ -72,6 +136,13 @@ include 'includes/header.php';
                             <span class="spec-value mono"><?= h($material['slug']) ?></span>
                         </div>
                         <?php endif; ?>
+                        <?php if (!empty($ficha_inline)): ?>
+                        <div class="spec-item spec-item-full">
+                            <span class="spec-label">🧪 Ficha</span>
+                            <?php $ficha_short = $ficha_inline; if (mb_strlen($ficha_short) > 100) { $ficha_short = mb_substr($ficha_short, 0, 100) . '…'; } ?>
+                            <span class="spec-value"><?= h($ficha_short) ?></span>
+                        </div>
+                        <?php endif; ?>
                     </div>
                     <?php if (!empty($material['description'])): ?>
                     <section class="safety-info summary-safety">
@@ -93,6 +164,12 @@ include 'includes/header.php';
         <div class="article-body">
             <?= $material['descripcion_html'] ?>
         </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($ficha_inline !== ''): ?>
+    <div class="article-byline">
+        <span class="ficha">🧪 <?= h($ficha_inline) ?></span>
     </div>
     <?php endif; ?>
 
@@ -194,6 +271,7 @@ console.log('🔍 [componente] Slug:', <?= json_encode($slug) ?>);
 console.log('✅ [componente] Cargado:', <?= json_encode(['slug'=>$material['slug'],'nombre'=>$material['common_name']]) ?>);
 console.log('🖼️ [componente] Foto URL:', <?= json_encode($material['foto_url'] ?? null) ?>);
 console.log('📝 [componente] HTML presente:', <?= json_encode(!empty($material['descripcion_html'])) ?>);
+console.log('🔬 [componente] Ficha inline:', <?= json_encode($ficha_inline !== '' ? true : false) ?>);
 console.log('🧰 [componente] Kits relacionados:', <?= isset($kits_rel) ? count($kits_rel) : 0 ?>);
 console.log('📚 [componente] Clases relacionadas:', <?= isset($clases_rel) ? count($clases_rel) : 0 ?>);
 </script>
