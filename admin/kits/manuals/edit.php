@@ -514,7 +514,8 @@ try {
               <?php endif; ?>
             </div>
           </div>
-          <label class="kit-safety-choose"<?= ($amb_val === 'componente') ? ' style="display:none;"' : '' ?>><input type="checkbox" id="use-kit-safety" /> Incluir seguridad del kit en este manual</label>
+          <label id="kit-safety-choose" class="kit-safety-choose"<?= ($amb_val === 'componente') ? ' style="display:none;"' : '' ?>><input type="checkbox" id="use-kit-safety" /> Incluir seguridad del kit en este manual</label>
+          <label id="comp-safety-choose" class="kit-safety-choose"<?= ($amb_val === 'componente') ? '' : ' style="display:none;"' ?>><input type="checkbox" id="use-comp-warn" checked /> Mostrar advertencias del componente</label>
           <div class="help-note"><?= ($amb_val === 'componente') ? 'Puedes añadir notas específicas del manual y una edad propia.' : 'Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.' ?></div>
         </div>
         <div class="security-age">
@@ -952,7 +953,9 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemSel = document.querySelector('select[name="item_id"]');
   const kitSafetyHeadStrong = (function(){ var h = document.querySelector('.kit-safety-head strong'); return h; })();
-  const kitSafetyChooseRow = document.querySelector('.kit-safety-choose');
+  const kitSafetyChooseRow = document.getElementById('kit-safety-choose');
+  const compSafetyChooseRow = document.getElementById('comp-safety-choose');
+  const compSafetyCheckbox = document.getElementById('use-comp-warn');
   const kitSafetyHelpNote = (function(){ var panel = document.getElementById('kit-safety-panel'); return panel ? panel.querySelector('.help-note') : null; })();
   const securityAgeWrap = document.querySelector('.security-age');
 
@@ -1004,9 +1007,15 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     if (kitSafetyChip) kitSafetyChip.style.display = 'none';
     if (kitSafetyNotes) {
       const txt = (warnText || '').trim();
-      kitSafetyNotes.innerHTML = txt ? txt.replace(/\n/g,'<br>') : '<span class="muted">(El componente no tiene advertencias de seguridad textuales)</span>';
+      const shown = (!compSafetyCheckbox || compSafetyCheckbox.checked);
+      if (!shown) {
+        kitSafetyNotes.innerHTML = '<span class="muted">(Advertencias del componente ocultas)</span>';
+      } else {
+        kitSafetyNotes.innerHTML = txt ? txt.replace(/\n/g,'<br>') : '<span class="muted">(El componente no tiene advertencias de seguridad textuales)</span>';
+      }
     }
     if (kitSafetyChooseRow) kitSafetyChooseRow.style.display = 'none';
+    if (compSafetyChooseRow) compSafetyChooseRow.style.display = '';
     if (kitSafetyHelpNote) kitSafetyHelpNote.textContent = 'Puedes añadir notas específicas del manual y una edad propia.';
     // Ensure age controls visible in componente ambit
     if (securityAgeWrap) securityAgeWrap.classList.remove('hidden-block');
@@ -1029,6 +1038,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     } else {
       if (kitSafetyHeadStrong) kitSafetyHeadStrong.textContent = 'Medidas del kit';
       if (kitSafetyChooseRow) kitSafetyChooseRow.style.display = '';
+      if (compSafetyChooseRow) compSafetyChooseRow.style.display = 'none';
       if (kitSafetyHelpNote) kitSafetyHelpNote.textContent = 'Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.';
       renderKitSafetyPanel(KIT_SAFETY);
     }
@@ -1105,6 +1115,14 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
   if (itemSel) {
     itemSel.addEventListener('change', function(){
+      if (ambSel && ambSel.value === 'componente') {
+        renderSafetyPanelForAmbito();
+      }
+    });
+  }
+
+  if (compSafetyCheckbox) {
+    compSafetyCheckbox.addEventListener('change', function(){
       if (ambSel && ambSel.value === 'componente') {
         renderSafetyPanelForAmbito();
       }
