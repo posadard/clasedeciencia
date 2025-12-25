@@ -510,6 +510,18 @@ try {
           <label class="kit-safety-choose"><input type="checkbox" id="use-kit-safety" /> Incluir seguridad del kit en este manual</label>
           <div class="help-note">Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.</div>
         </div>
+        <div id="component-safety-panel" class="component-safety-panel hidden-block">
+          <div class="kit-safety-head"><strong>Medidas del componente</strong></div>
+          <div class="kit-safety-body">
+            <div id="component-security-chip" class="kit-security-chip hidden">
+              Edad del componente: ?–? años
+            </div>
+            <div id="component-safety-notes" class="kit-safety-notes">
+              <span class="muted">(Sin medidas de seguridad del componente)</span>
+            </div>
+          </div>
+          <div class="help-note">Se muestran las medidas del componente seleccionado; actualiza al cambiar el componente.</div>
+        </div>
         <div class="security-age">
           <strong>Edad segura (opcional)</strong>
           <div class="age-fields">
@@ -959,6 +971,9 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
   const kitSafetyPanel = document.getElementById('kit-safety-panel');
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
+  const compSafetyPanel = document.getElementById('component-safety-panel');
+  const compSafetyChip = document.getElementById('component-security-chip');
+  const compSafetyNotes = document.getElementById('component-safety-notes');
   const kitSelect = document.querySelector('select[name="kit_id"]');
   const itemSelect = document.querySelector('select[name="item_id"]');
   const ambSel = document.querySelector('select[name="ambito"]');
@@ -981,12 +996,14 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
     if (!kitSafetyPanel) return;
     if (!KIT_SAFETY) {
       kitSafetyPanel.classList.add('muted');
+      kitSafetyPanel.style.display = 'none';
       if (kitSafetyChip) kitSafetyChip.style.display = 'none';
       if (kitSafetyNotes) kitSafetyNotes.innerHTML = '<span class="muted">(El kit no tiene notas de seguridad textuales)</span>';
       console.log('⚠️ [ManualsEdit] Panel seguridad kit: vacío');
       return;
     }
     kitSafetyPanel.classList.remove('muted');
+    kitSafetyPanel.style.display = '';
     const min = (typeof KIT_SAFETY.edad_min !== 'undefined') ? parseInt(KIT_SAFETY.edad_min,10) : null;
     const max = (typeof KIT_SAFETY.edad_max !== 'undefined') ? parseInt(KIT_SAFETY.edad_max,10) : null;
     if (kitSafetyChip) {
@@ -1003,6 +1020,34 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
     }
     console.log('✅ [ManualsEdit] Panel seguridad kit actualizado');
     updateAgeVisibility();
+  }
+
+  function renderComponentSafetyPanel(obj){
+    const O = toSafetyObj(obj);
+    if (!compSafetyPanel) return;
+    if (!O) {
+      compSafetyPanel.style.display = 'none';
+      if (compSafetyChip) compSafetyChip.classList.add('hidden');
+      if (compSafetyNotes) compSafetyNotes.innerHTML = '<span class="muted">(Sin medidas de seguridad del componente)</span>';
+      console.log('⚠️ [ManualsEdit] Panel seguridad componente: vacío');
+      return;
+    }
+    compSafetyPanel.style.display = '';
+    const cmin = (typeof O.edad_min !== 'undefined') ? parseInt(O.edad_min, 10) : null;
+    const cmax = (typeof O.edad_max !== 'undefined') ? parseInt(O.edad_max, 10) : null;
+    if (compSafetyChip) {
+      if (cmin !== null || cmax !== null) {
+        compSafetyChip.classList.remove('hidden');
+        compSafetyChip.textContent = 'Edad del componente: ' + (cmin !== null ? cmin : '?') + '–' + (cmax !== null ? cmax : '?') + ' años';
+      } else {
+        compSafetyChip.classList.add('hidden');
+      }
+    }
+    if (compSafetyNotes) {
+      const notas = (O.notas ? String(O.notas) : '');
+      compSafetyNotes.innerHTML = notas ? notas.replace(/\n/g,'<br>') : '<span class="muted">(Sin medidas de seguridad del componente)</span>';
+    }
+    console.log('✅ [ManualsEdit] Panel seguridad componente actualizado');
   }
 
   function hasKitAge(){
@@ -1060,7 +1105,7 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
         console.log('✅ [ManualsEdit] Slug regenerado tras cambio de kit:', slugInput.value);
       }
       const amb = (ambSel ? ambSel.value : 'kit');
-      if (amb !== 'kit') { console.log('ℹ️ [ManualsEdit] Ámbito no es kit, panel kit muted'); renderKitSafetyPanel(null); return; }
+      if (amb !== 'kit') { console.log('ℹ️ [ManualsEdit] Ámbito no es kit, ocultando panel kit'); renderKitSafetyPanel(null); return; }
       if (!id) { renderKitSafetyPanel(null); return; }
       const seg = await fetchKitSafetyById(id);
       renderKitSafetyPanel(seg);
@@ -1236,6 +1281,8 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
           const exists = notes.some(n => (String(n.nota||'').trim() === cnotes));
           if (!exists) { notes.push({ nota: cnotes, categoria: '' }); }
         }
+        // Mostrar panel del componente con datos iniciales
+        renderComponentSafetyPanel(COMPONENT_SAFETY);
         console.log('✅ [ManualsEdit] Merge seguridad componente (edad/notas)');
       }
     } catch (e) {
@@ -1300,6 +1347,7 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
       if (amb !== 'componente' || !itemId) return;
       const obj = await fetchComponentSafetyById(itemId);
       mergeComponentSafetyObj(obj);
+      renderComponentSafetyPanel(obj);
     } catch(e) {
       console.log('❌ [ManualsEdit] maybeUpdateComponentSafety error:', e && e.message ? e.message : e);
     }
@@ -1316,12 +1364,15 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
       const v = ambSel.value;
       console.log('🔍 [ManualsEdit] Cambio de ámbito →', v);
       if (v === 'componente') {
-        // Mutear panel del kit y desmarcar uso de seguridad del kit
+        // Ocultar panel del kit y desmarcar uso de seguridad del kit
         renderKitSafetyPanel(null);
+        if (kitSafetyPanel) kitSafetyPanel.style.display = 'none';
         if (useKitSafety) { useKitSafety.checked = false; updateAgeVisibility(); }
+        if (compSafetyPanel) compSafetyPanel.style.display = '';
         await maybeUpdateComponentSafety('ambito change');
       } else {
-        // Rehidratar panel del kit desde selección actual
+        // Ocultar panel componente y rehidratar panel del kit desde selección actual
+        if (compSafetyPanel) compSafetyPanel.style.display = 'none';
         const id = (kitSelect && kitSelect.value) ? parseInt(kitSelect.value, 10) : 0;
         if (id) {
           const seg = await fetchKitSafetyById(id);
