@@ -101,8 +101,17 @@ $entitySlugFromManual = null;
 if (!empty($manual['slug'])) {
   $slug_low_pre = strtolower((string)$manual['slug']);
   $parts_pre = explode('-', $slug_low_pre);
-  if (count($parts_pre) >= 4 && $parts_pre[0] === 'manual' && $parts_pre[2] === 'componente') {
-    $entitySlugFromManual = $parts_pre[3];
+  // Support both formats:
+  // - legacy: manual-{tipo}-componente-{entidad}-{fecha}-V{ver}
+  // - new:    manual-{tipo}-{entidad}-{fecha}-V{ver} (without explicit 'componente')
+  if (!empty($parts_pre) && $parts_pre[0] === 'manual') {
+    if (isset($parts_pre[2])) {
+      if ($parts_pre[2] === 'componente' && isset($parts_pre[3])) {
+        $entitySlugFromManual = $parts_pre[3];
+      } else {
+        $entitySlugFromManual = $parts_pre[2];
+      }
+    }
   }
 }
 if ($ambito === 'componente' && !empty($manual['item_id'])) {
@@ -116,14 +125,23 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
 if ($ambito === 'componente' && (empty($manual['item_id']) || (int)$manual['item_id'] <= 0) && !$comp && !empty($manual['slug'])) {
   $slug_low = strtolower((string)$manual['slug']);
   $parts = explode('-', $slug_low);
-  // Expect: manual-{tipo}-componente-{entidad}-{fecha}-V{ver}
-  if (count($parts) >= 4 && $parts[0] === 'manual' && $parts[2] === 'componente') {
-    $entity_slug = $parts[3];
-    try {
-      $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada, advertencias_seguridad FROM kit_items WHERE slug = ? LIMIT 1');
-      $stmtC2->execute([$entity_slug]);
-      $comp = $stmtC2->fetch(PDO::FETCH_ASSOC) ?: null;
-    } catch (Exception $e) { /* ignore */ }
+  // Support both formats for fallback:
+  // - legacy: manual-{tipo}-componente-{entidad}-{fecha}-V{ver}
+  // - new:    manual-{tipo}-{entidad}-{fecha}-V{ver}
+  if (!empty($parts) && $parts[0] === 'manual') {
+    $entity_slug = null;
+    if (isset($parts[2]) && $parts[2] === 'componente' && isset($parts[3])) {
+      $entity_slug = $parts[3];
+    } elseif (isset($parts[2])) {
+      $entity_slug = $parts[2];
+    }
+    if (!empty($entity_slug)) {
+      try {
+        $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada, advertencias_seguridad FROM kit_items WHERE slug = ? LIMIT 1');
+        $stmtC2->execute([$entity_slug]);
+        $comp = $stmtC2->fetch(PDO::FETCH_ASSOC) ?: null;
+      } catch (Exception $e) { /* ignore */ }
+    }
   }
 }
 
@@ -292,6 +310,7 @@ include 'includes/header.php';
         // Kit notes are free text; include if directive says so (solo ámbito kit)
         if ($ambito === 'kit' && $useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
         $hasAnySafety = $useKitSafety || !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null);
+        $hasComponentWarnings = ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']));
       ?>
       <?php
         $toc_items = [];
@@ -324,7 +343,7 @@ include 'includes/header.php';
           }
         }
       ?>
-      <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued'): ?>
+      <?php if (!empty($toc_items) || $hasAnySafety || $hasComponentWarnings || $status_key === 'discontinued'): ?>
         <div class="manual-toc-row" style="display:flex; align-items:flex-start; gap:12px;">
           <aside class="manual-toc-aside">
             <?php if ($ambito === 'componente'): ?>
@@ -373,11 +392,14 @@ include 'includes/header.php';
             <?php endif; ?>
           </aside>
           <div class="manual-toc-right" style="flex:1; min-width:0;">
-            <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
+            <?php if ($hasAnySafety || $hasComponentWarnings || $status_key === 'discontinued'): ?>
               <section class="safety-info">
                 <h2><?= ($ambito === 'componente' ? '⚠️ Seguridad del Componente' : '⚠️ Seguridad') ?></h2>
                 <?php if ($status_key === 'discontinued'): ?>
                   <div class="badge badge-danger" style="margin:4px 0;">⚠️ Este manual ha sido descontinuado</div>
+                <?php endif; ?>
+                <?php if (!$hasAnySafety && $hasComponentWarnings): ?>
+                  <script>console.log('🔧 [Manual] Mostrando advertencias del componente sin seguridad del manual');</script>
                 <?php endif; ?>
                 <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
                   <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
