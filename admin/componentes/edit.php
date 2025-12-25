@@ -21,23 +21,6 @@ if ($is_edit) {
   }
 }
 
-// Seguridad (estructurada) soporte: detectar columna JSON y prellenar
-$has_seguridad_col = false;
-$cmp_seguridad = ['edad_min' => null, 'edad_max' => null, 'notas' => null];
-try {
-  $colChk = $pdo->query("SHOW COLUMNS FROM kit_items LIKE 'seguridad'");
-  $has_seguridad_col = (bool)$colChk->fetch(PDO::FETCH_ASSOC);
-  if ($material && isset($material['seguridad']) && $material['seguridad'] !== null) {
-    $tmp = json_decode($material['seguridad'], true);
-    if (is_array($tmp)) { $cmp_seguridad = array_merge($cmp_seguridad, $tmp); }
-  }
-  if (!$has_seguridad_col) {
-    echo "<script>console.log('⚠️ [ComponentesEdit] kit_items.seguridad (JSON) no disponible');</script>";
-  }
-} catch (PDOException $e) {
-  echo "<script>console.log('⚠️ [ComponentesEdit] Error verificando columna seguridad:', " . json_encode($e->getMessage()) . ");</script>";
-}
-
 $categorias = get_material_categories($pdo);
 
 // Cargar manuales del componente para UI de publicación (solo en edición)
@@ -293,19 +276,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sku = trim($_POST['slug'] ?? '');
     $categoria_id = (int)($_POST['categoria_id'] ?? 0);
     $advertencias_seguridad = trim($_POST['advertencias_seguridad'] ?? '');
-    // Seguridad estructurada (similar a Kits)
-    $seg_edad_min = (isset($_POST['seg_edad_min']) && $_POST['seg_edad_min'] !== '') ? (int)$_POST['seg_edad_min'] : null;
-    $seg_edad_max = (isset($_POST['seg_edad_max']) && $_POST['seg_edad_max'] !== '') ? (int)$_POST['seg_edad_max'] : null;
-    $seg_notas = isset($_POST['seg_notas']) ? trim((string)$_POST['seg_notas']) : '';
-    if ($seg_notas === '') { $seg_notas = null; }
-    $seguridad_json = null;
-    if ($seg_edad_min !== null || $seg_edad_max !== null || $seg_notas !== null) {
-      $seguridad_json = json_encode([
-        'edad_min' => $seg_edad_min,
-        'edad_max' => $seg_edad_max,
-        'notas' => $seg_notas
-      ], JSON_UNESCAPED_UNICODE);
-    }
     $unidad = trim($_POST['unidad'] ?? 'pcs');
     $descripcion_html = isset($_POST['descripcion_html']) ? (string)$_POST['descripcion_html'] : null;
     $foto_url = trim($_POST['foto_url'] ?? '');
@@ -336,27 +306,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errores)) {
       try {
         if ($is_edit) {
-          if ($has_seguridad_col) {
-            $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ?, seguridad = ? WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $seguridad_json, $id]);
-          } else {
-            $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ? WHERE id = ?";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
-            echo "<script>console.log('⚠️ [ComponentesEdit] Seguridad JSON no guardada (columna faltante)');</script>";
-          }
+          $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ? WHERE id = ?";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
         } else {
-          if ($has_seguridad_col) {
-            $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad, descripcion_html, foto_url, seguridad) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $seguridad_json]);
-          } else {
-            $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad, descripcion_html, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
-            echo "<script>console.log('⚠️ [ComponentesEdit] Seguridad JSON omitida en INSERT (columna faltante)');</script>";
-          }
+          $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad, descripcion_html, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
+          $stmt = $pdo->prepare($sql);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
           $id = (int)$pdo->lastInsertId();
         }
         echo "<script>console.log('✅ [Admin] Componente guardado');</script>";
@@ -448,31 +404,6 @@ include '../header.php';
   <div class="form-group">
     <label for="advertencias_seguridad">Advertencias de seguridad</label>
     <textarea id="advertencias_seguridad" name="advertencias_seguridad" rows="4"><?= htmlspecialchars($material['advertencias_seguridad'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
-  </div>
-  <div class="card" style="margin:12px 0; padding:12px;">
-    <h3>Seguridad (estructurada)</h3>
-    <?php if (!$has_seguridad_col): ?>
-      <small class="help-text">Requiere columna <strong>seguridad (JSON)</strong> en <em>kit_items</em>. Ejecuta el ALTER TABLE antes de usar estos campos.</small>
-    <?php else: ?>
-      <small class="help-text">Campos similares al editor de Kits (edad mínima/máxima y notas).</small>
-    <?php endif; ?>
-    <div class="field-inline">
-      <div class="form-group">
-        <label for="seg_edad_min">Edad mínima</label>
-        <input type="number" id="seg_edad_min" name="seg_edad_min" min="0" value="<?= htmlspecialchars(($cmp_seguridad['edad_min'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-      <div class="form-group">
-        <label for="seg_edad_max">Edad máxima</label>
-        <input type="number" id="seg_edad_max" name="seg_edad_max" min="0" value="<?= htmlspecialchars(($cmp_seguridad['edad_max'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="seg_notas">Notas de seguridad</label>
-      <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y recomendaciones adicionales del componente"><?= htmlspecialchars(($cmp_seguridad['notas'] ?? ''), ENT_QUOTES, 'UTF-8') ?></textarea>
-    </div>
-    <script>
-      console.log('🔍 [ComponentesEdit] Seguridad JSON soportada:', <?= $has_seguridad_col ? 'true' : 'false' ?>);
-    </script>
   </div>
   <div class="form-group">
     <label for="unidad">Unidad</label>

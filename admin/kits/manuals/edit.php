@@ -492,23 +492,6 @@ try {
           if (!empty($kit['seguridad'])) {
             try { $tmp = json_decode($kit['seguridad'], true); if (is_array($tmp)) { $kit_seg_obj = $tmp; } } catch(Exception $e) {}
           }
-          // Seguridad del componente (si aplica)
-          $cmp_seg_obj = null;
-          $cmp_warn_text = '';
-          try {
-            $item_id_for_seg = isset($manual['item_id']) ? (int)$manual['item_id'] : 0;
-            if ($item_id_for_seg > 0) {
-              $stmC = $pdo->prepare('SELECT seguridad, advertencias_seguridad FROM kit_items WHERE id = ? LIMIT 1');
-              $stmC->execute([$item_id_for_seg]);
-              $rowC = $stmC->fetch(PDO::FETCH_ASSOC);
-              if ($rowC) {
-                if (!empty($rowC['seguridad'])) { try { $tmpC = json_decode($rowC['seguridad'], true); if (is_array($tmpC)) { $cmp_seg_obj = $tmpC; } } catch(Exception $e) {} }
-                $cmp_warn_text = (string)($rowC['advertencias_seguridad'] ?? '');
-              }
-            }
-          } catch (PDOException $e) {
-            // Silent: panel quedará en estado muted
-          }
         ?>
         <div id="kit-safety-panel" class="kit-safety-panel<?= $kit_seg_obj ? '' : ' muted' ?>">
           <div class="kit-safety-head"><strong>Medidas del kit</strong></div>
@@ -525,29 +508,6 @@ try {
             </div>
           </div>
           <label class="kit-safety-choose"><input type="checkbox" id="use-kit-safety" /> Incluir seguridad del kit en este manual</label>
-          <div class="help-note">Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.</div>
-        </div>
-        <?php $is_cmp_scope = (($manual['ambito'] ?? 'kit') === 'componente'); ?>
-        <div id="cmp-safety-panel" class="cmp-safety-panel<?= $cmp_seg_obj ? '' : ' muted' ?><?= $is_cmp_scope ? '' : ' hidden' ?>" style="margin-top:12px;">
-          <div class="cmp-safety-head"><strong>Medidas del componente</strong></div>
-          <div class="cmp-safety-body">
-            <div id="cmp-security-chip" class="cmp-security-chip <?= (!empty($cmp_seg_obj['edad_min']) || !empty($cmp_seg_obj['edad_max'])) ? '' : 'hidden' ?>">
-              Edad del componente: <?= !empty($cmp_seg_obj['edad_min']) ? (int)$cmp_seg_obj['edad_min'] : '?' ?>–<?= !empty($cmp_seg_obj['edad_max']) ? (int)$cmp_seg_obj['edad_max'] : '?' ?> años
-            </div>
-            <div id="cmp-safety-notes" class="cmp-safety-notes">
-              <?php if ($cmp_seg_obj && !empty($cmp_seg_obj['notas'])): ?>
-                <?= nl2br(h($cmp_seg_obj['notas'])) ?>
-              <?php else: ?>
-                <span class="muted">(El componente no tiene notas de seguridad estructuradas)</span>
-              <?php endif; ?>
-            </div>
-            <div id="cmp-warnings" class="cmp-warnings">
-              <?php if (!empty($cmp_warn_text)): ?>
-                <em class="muted">Advertencias:</em> <?= nl2br(h($cmp_warn_text)) ?>
-              <?php endif; ?>
-            </div>
-          </div>
-          <label class="cmp-safety-choose"><input type="checkbox" id="use-cmp-safety" /> Incluir seguridad del componente en este manual</label>
           <div class="help-note">Si la incluyes, puedes además añadir notas específicas del manual y una edad propia.</div>
         </div>
         <div class="security-age">
@@ -596,12 +556,7 @@ var MANUAL_PUBLISHED_AT = <?= json_encode(isset($manual['published_at']) ? $manu
 var KIT_SLUG = <?= json_encode(isset($kit['slug']) ? $kit['slug'] : null) ?>;
 // Kit safety data for merge
 var KIT_SAFETY = <?= json_encode(isset($kit_seg_obj) ? $kit_seg_obj : null, JSON_UNESCAPED_UNICODE) ?>;
-// Componente safety data for merge
-var CMP_SAFETY = <?= json_encode(isset($cmp_seg_obj) ? $cmp_seg_obj : null, JSON_UNESCAPED_UNICODE) ?>;
-var CMP_WARNINGS = <?= json_encode(isset($cmp_warn_text) ? $cmp_warn_text : '', JSON_UNESCAPED_UNICODE) ?>;
 console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
-console.log('🔍 [ManualsEdit] CMP_SAFETY:', CMP_SAFETY ? 'sí' : 'no');
-console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function(){
@@ -617,12 +572,6 @@ console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
     if (v === 'componente') { show(itemWrap); hide(kitWrap); }
     else { hide(itemWrap); show(kitWrap); }
     console.log('🔍 [ManualsEdit] Ámbito:', v);
-    try {
-      const kitPanel = document.getElementById('kit-safety-panel');
-      const cmpPanel = document.getElementById('cmp-safety-panel');
-      if (v === 'componente') { if (kitPanel) kitPanel.classList.add('hidden'); if (cmpPanel) cmpPanel.classList.remove('hidden'); }
-      else { if (cmpPanel) cmpPanel.classList.add('hidden'); if (kitPanel) kitPanel.classList.remove('hidden'); }
-    } catch(e) { console.log('⚠️ [ManualsEdit] Toggle safety panel error:', e && e.message); }
   }
   if (ambSel) { ambSel.addEventListener('change', applyAmb); applyAmb(); }
 })();
@@ -987,14 +936,9 @@ console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
   const ageMinInput = document.getElementById('sec-age-min');
   const ageMaxInput = document.getElementById('sec-age-max');
   const useKitSafety = document.getElementById('use-kit-safety');
-  const useCmpSafety = document.getElementById('use-cmp-safety');
   const kitSafetyPanel = document.getElementById('kit-safety-panel');
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
-  const cmpSafetyPanel = document.getElementById('cmp-safety-panel');
-  const cmpSafetyChip = document.getElementById('cmp-security-chip');
-  const cmpSafetyNotes = document.getElementById('cmp-safety-notes');
-  const cmpWarningsText = document.getElementById('cmp-warnings');
   const kitSelect = document.querySelector('select[name="kit_id"]');
   const securityAgeWrap = document.querySelector('.security-age');
 
@@ -1039,35 +983,6 @@ console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
     updateAgeVisibility();
   }
 
-  function renderCmpSafetyPanel(obj){
-    CMP_SAFETY = toSafetyObj(obj);
-    if (!cmpSafetyPanel) return;
-    if (!CMP_SAFETY) {
-      cmpSafetyPanel.classList.add('muted');
-      if (cmpSafetyChip) cmpSafetyChip.style.display = 'none';
-      if (cmpSafetyNotes) cmpSafetyNotes.innerHTML = '<span class="muted">(El componente no tiene notas de seguridad estructuradas)</span>';
-    } else {
-      cmpSafetyPanel.classList.remove('muted');
-      const min = (typeof CMP_SAFETY.edad_min !== 'undefined') ? parseInt(CMP_SAFETY.edad_min,10) : null;
-      const max = (typeof CMP_SAFETY.edad_max !== 'undefined') ? parseInt(CMP_SAFETY.edad_max,10) : null;
-      if (cmpSafetyChip) {
-        if (min !== null || max !== null) {
-          cmpSafetyChip.style.display = '';
-          cmpSafetyChip.textContent = 'Edad del componente: ' + (min !== null ? min : '?') + '–' + (max !== null ? max : '?') + ' años';
-        } else { cmpSafetyChip.style.display = 'none'; }
-      }
-      if (cmpSafetyNotes) {
-        const notas = (CMP_SAFETY.notas ? String(CMP_SAFETY.notas) : '');
-        cmpSafetyNotes.innerHTML = notas ? notas.replace(/\n/g,'<br>') : '<span class="muted">(El componente no tiene notas de seguridad estructuradas)</span>';
-      }
-    }
-    if (cmpWarningsText) {
-      cmpWarningsText.style.display = CMP_WARNINGS ? '' : 'none';
-    }
-    console.log('✅ [ManualsEdit] Panel seguridad componente actualizado');
-    updateAgeVisibility();
-  }
-
   function hasKitAge(){
     if (!KIT_SAFETY) return false;
     const hasMin = typeof KIT_SAFETY.edad_min !== 'undefined' && KIT_SAFETY.edad_min !== null && String(KIT_SAFETY.edad_min) !== '';
@@ -1075,19 +990,10 @@ console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
     return !!(hasMin || hasMax);
   }
 
-  function hasCmpAge(){
-    if (!CMP_SAFETY) return false;
-    const hasMin = typeof CMP_SAFETY.edad_min !== 'undefined' && CMP_SAFETY.edad_min !== null && String(CMP_SAFETY.edad_min) !== '';
-    const hasMax = typeof CMP_SAFETY.edad_max !== 'undefined' && CMP_SAFETY.edad_max !== null && String(CMP_SAFETY.edad_max) !== '';
-    return !!(hasMin || hasMax);
-  }
-
   function updateAgeVisibility(){
     const inherit = !!(useKitSafety && useKitSafety.checked);
     const kitHas = hasKitAge();
-    const inheritCmp = !!(useCmpSafety && useCmpSafety.checked);
-    const cmpHas = hasCmpAge();
-    if ((inherit && kitHas) || (inheritCmp && cmpHas)) {
+    if (inherit && kitHas) {
       if (securityAgeWrap) securityAgeWrap.classList.add('hidden-block');
       if (ageMinInput) ageMinInput.disabled = true;
       if (ageMaxInput) ageMaxInput.disabled = true;
@@ -1142,9 +1048,6 @@ console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
     useKitSafety.addEventListener('change', function(){
       updateAgeVisibility();
     });
-  }
-  if (useCmpSafety) {
-    useCmpSafety.addEventListener('change', function(){ updateAgeVisibility(); });
   }
 
   let notes = [];
@@ -1296,8 +1199,6 @@ console.log('🔍 [ManualsEdit] CMP_WARNINGS:', CMP_WARNINGS ? 'sí' : 'no');
     }
     render();
     updateAgeVisibility();
-    // Inicializar paneles según datos pre-renderizados
-    renderCmpSafetyPanel(CMP_SAFETY);
   })();
 
   function ensureSecModal(){
