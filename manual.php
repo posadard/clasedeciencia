@@ -605,6 +605,17 @@ include 'includes/header.php';
       <?php endif; ?>
     <?php endif; ?>
   </article>
+  <div class="article-byline">
+    <span class="author">✍️ Clase de Ciencia SAS</span>
+    <?php if (!empty($manual['published_at'])): ?>
+      <span class="date">📅 Publicado: <?= h(date('d/m/Y', strtotime($manual['published_at']))) ?></span>
+    <?php endif; ?>
+    <?php if (!empty($manual['updated_at'])): ?>
+      <span class="updated">🔄 Actualizado: <?= h(date('d/m/Y', strtotime($manual['updated_at']))) ?></span>
+    <?php endif; ?>
+    <span class="ficha">🧪 Tipo: <?= h($tipo_label) ?> · Ámbito: <?= h($ambito === 'componente' ? 'Componente' : 'Kit') ?><?php if (!empty($manual['idioma'])): ?> · Idioma: <?= h($manual['idioma']) ?><?php endif; ?><?php if (!empty($manual['version'])): ?> · v<?= h($manual['version']) ?><?php endif; ?></span>
+  </div>
+  <script>console.log('✅ [Manual] Byline renderizada');</script>
   <?php
     // Tarjeta del Kit o Componente y Clases relacionadas (al final)
     try { $clases = cdc_get_kit_clases($pdo, (int)$kit['id']); } catch (Exception $e) { $clases = []; }
@@ -736,6 +747,19 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
+/* Byline (similar a clase.php) */
+.article-byline { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:#555; border-top:1px solid var(--color-border-light); padding-top:8px; margin-top:12px; }
+.article-byline .author, .article-byline .date, .article-byline .updated, .article-byline .ficha { font-size:0.95rem; }
+/* Related cards nicer hover/shadow */
+.related-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
+.related-card { display:block; border:1px solid var(--color-border-light); border-radius:8px; background:#fff; overflow:hidden; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; position:relative; }
+.related-card:hover, .related-card:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-accent); }
+.related-thumbnail { width:100%; height:140px; object-fit:cover; display:block; }
+.thumbnail-placeholder { height:140px; display:flex; align-items:center; justify-content:center; background:#f5f7fb; border-bottom:1px solid var(--color-border-light); }
+.placeholder-icon { font-size:36px; }
+.related-info { padding:10px 12px; }
+.related-excerpt { color:#555; margin-top:4px; }
+.related-meta .badge { margin-right:6px; }
 @media print {
   .manual-step { page-break-inside: avoid; }
   .kit-security-chip { background:#fff; border-color:#aaa; color:#000; }
