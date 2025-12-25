@@ -724,10 +724,13 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 })();
 </script>
 <style>
-/* Print-friendly tweaks for manual steps */
-.manual-steps { padding-left: 18px; }
-.manual-step { margin-bottom: 12px; }
+/* Manual steps - align rhythm with clase.php */
+.manual-steps { padding-left: 22px; margin: var(--spacing-lg) 0 var(--spacing-md) 0; list-style: decimal; }
+.manual-step { background:#fff; border:1px solid var(--color-border-light); border-radius: var(--border-radius-sm); padding: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-sm); box-shadow: var(--shadow-sm); transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease; }
+.manual-step:hover { box-shadow: var(--shadow-md); border-color: var(--color-border); transform: translateY(-1px); }
 .manual-step .step-head { margin-bottom: 6px; }
+.manual-step .step-head strong { font-weight: 600; }
+.manual-step .step-body p { margin: 0; color: var(--color-text); }
 .kit-security-chip { display:inline-block; background:#fffbe6; border:1px solid #ffe58f; color:#8c6d1f; padding:4px 8px; border-radius:6px; margin:4px 0; }
 /* Tools list styles */
 .tools-list { padding-left: 18px; }
