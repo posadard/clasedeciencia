@@ -336,7 +336,7 @@ include 'includes/header.php';
           }
         }
       ?>
-      <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued' || ($ambito === 'componente' && $useCompSafety && $comp && !empty($comp['advertencias_seguridad']))): ?>
+      <?php if (!empty($toc_items) || $hasAnySafety || $status_key === 'discontinued' || ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']))): ?>
         <div class="manual-toc-row" style="display:flex; align-items:flex-start; gap:12px;">
           <aside class="manual-toc-aside">
             <?php if ($ambito === 'componente'): ?>
@@ -385,7 +385,7 @@ include 'includes/header.php';
             <?php endif; ?>
           </aside>
           <div class="manual-toc-right" style="flex:1; min-width:0;">
-            <?php if ($hasAnySafety || $status_key === 'discontinued' || ($ambito === 'componente' && $useCompSafety && $comp && !empty($comp['advertencias_seguridad']))): ?>
+            <?php if ($hasAnySafety || $status_key === 'discontinued' || ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']))): ?>
               <section class="safety-info">
                 <h2><?= ($ambito === 'componente' ? '⚠️ Seguridad del Componente' : '⚠️ Seguridad') ?></h2>
                 <?php if ($status_key === 'discontinued'): ?>
@@ -426,7 +426,7 @@ include 'includes/header.php';
                     <?php endforeach; ?>
                   </ul>
                 <?php endif; ?>
-                <?php if ($ambito === 'componente' && $useCompSafety && $comp && !empty($comp['advertencias_seguridad'])): ?>
+                <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
                   <?php
                     $compWarnRaw = (string)$comp['advertencias_seguridad'];
                     $compWarnObj = null;
@@ -511,7 +511,7 @@ include 'includes/header.php';
                   <script>console.log('🧪 [Manual] Notas seguridad concat (kit):', { componentes: <?= json_encode($comp_pairs) ?>, herramientas: <?= json_encode($tool_pairs) ?> });</script>
                 <?php endif; ?>
               </section>
-              <script>console.log('🔍 [Manual] Bloque de seguridad mostrado (gating):', { hasAnySafety: <?= json_encode($hasAnySafety) ?>, discontinued: <?= json_encode($status_key === 'discontinued') ?>, ambito: '<?= h($ambito) ?>', useCompSafety: <?= json_encode($useCompSafety) ?>, compWarn: <?= json_encode(($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']))) ?> });</script>
+              <script>console.log('🔍 [Manual] Bloque de seguridad mostrado (gating):', { hasAnySafety: <?= json_encode($hasAnySafety) ?>, discontinued: <?= json_encode($status_key === 'discontinued') ?>, ambito: '<?= h($ambito) ?>', compWarn: <?= json_encode(($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']))) ?> });</script>
             <?php endif; ?>
           </div>
         </div>
