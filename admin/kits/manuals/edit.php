@@ -80,10 +80,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $ui_mode = ($_POST['ui_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
     $render_mode_post = ($_POST['render_mode'] ?? '') === 'fullhtml' ? 'fullhtml' : 'legacy';
 
-    // Basic validations
-    if ($kit_id <= 0) {
-      $error_msg = 'Kit requerido.';
-    } elseif ($slug === '') {
+    // Basic validations (depende de ámbito)
+    if ($ambito === 'kit') {
+      if ($kit_id <= 0) { $error_msg = 'Kit requerido.'; }
+    } else { // componente
+      if (!$item_id || $item_id <= 0) { $error_msg = 'Componente requerido.'; }
+    }
+    if (!$error_msg && $slug === '') {
       $error_msg = 'Slug requerido.';
     } elseif (!preg_match('/^[a-z0-9\-]+$/', $slug)) {
       $error_msg = 'Slug inválido: usa a-z, 0-9 y guiones.';
@@ -350,7 +353,8 @@ try {
       </div>
     </div>
 
-    <div class="form-group" id="ambito-kit-wrap">
+    <?php $init_kit_hidden_class = ($amb_val === 'componente') ? ' hidden' : ''; ?>
+    <div class="form-group<?= $init_kit_hidden_class ?>" id="ambito-kit-wrap">
       <label>Kit</label>
       <select name="kit_id" id="kit-select">
         <option value="">-- Selecciona --</option>
@@ -360,8 +364,8 @@ try {
       </select>
       <small class="help-note">Solo se guardará cuando el ámbito sea Kit.</small>
     </div>
-
-    <div class="form-group min-280 hidden" id="ambito-item-wrap">
+    <?php $init_item_hidden_class = ($amb_val === 'componente') ? '' : ' hidden'; ?>
+    <div class="form-group min-280<?= $init_item_hidden_class ?>" id="ambito-item-wrap">
       <label>Componente (si ámbito = componente)</label>
       <select name="item_id" <?= $has_item_id_column ? '' : 'disabled' ?>>
         <option value="">-- Selecciona --</option>
@@ -540,15 +544,17 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function(){
-  // Toggle ambito → item selector
+  // Toggle ambito → mostrar/ocultar selectores con clase/estilo
   const ambSel = document.querySelector('select[name="ambito"]');
   const itemWrap = document.getElementById('ambito-item-wrap');
   const kitWrap = document.getElementById('ambito-kit-wrap');
+  function show(el){ if (!el) return; el.classList.remove('hidden'); el.style.display=''; }
+  function hide(el){ if (!el) return; el.classList.add('hidden'); el.style.display='none'; }
   function applyAmb(){
-    if (!ambSel || !itemWrap) return;
+    if (!ambSel) return;
     const v = ambSel.value;
-    itemWrap.style.display = (v === 'componente') ? '' : 'none';
-    if (kitWrap) { kitWrap.style.display = (v === 'componente') ? 'none' : ''; }
+    if (v === 'componente') { show(itemWrap); hide(kitWrap); }
+    else { hide(itemWrap); show(kitWrap); }
     console.log('🔍 [ManualsEdit] Ámbito:', v);
   }
   if (ambSel) { ambSel.addEventListener('change', applyAmb); applyAmb(); }
