@@ -75,16 +75,12 @@ include 'includes/header.php';
         </div>
 
         <aside class="product-card">
-            <div class="product-badges">
-                <span class="material-badge">Componente</span>
-                <?php if (!empty($material['category_name'])): ?><span class="material-badge" style="background:#e9ecef;color:#333"><?= h($material['category_name']) ?></span><?php endif; ?>
-            </div>
             <div class="product-image">
                 <?php
                   $comp_img_fallback = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg';
                   $comp_img = !empty($material['foto_url']) ? $material['foto_url'] : $comp_img_fallback;
                 ?>
-                <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" data-category="<?= h($material['category_name'] ?? '') ?>" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; var t=this.dataset.category||''; p.textContent='📦 ' + t; this.replaceWith(p);" />
+                <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); this.style.display='none';" />
             </div>
         </aside>
     </div>
