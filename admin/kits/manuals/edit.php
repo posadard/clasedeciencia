@@ -503,14 +503,18 @@ try {
         <div id="kit-safety-panel" class="kit-safety-panel<?= $kit_seg_obj ? '' : ' muted' ?>">
           <div class="kit-safety-head"><strong><?= ($amb_val === 'componente') ? 'Advertencias del componente' : 'Medidas del kit' ?></strong></div>
           <div class="kit-safety-body">
-            <div id="kit-security-chip" class="kit-security-chip <?= (!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])) ? '' : 'hidden' ?>">
+            <div id="kit-security-chip" class="kit-security-chip" style="<?= ($amb_val === 'componente') ? 'display:none;' : ((!empty($kit_seg_obj['edad_min']) || !empty($kit_seg_obj['edad_max'])) ? '' : 'display:none;') ?>">
               Edad del kit: <?= !empty($kit_seg_obj['edad_min']) ? (int)$kit_seg_obj['edad_min'] : '?' ?>–<?= !empty($kit_seg_obj['edad_max']) ? (int)$kit_seg_obj['edad_max'] : '?' ?> años
             </div>
             <div id="kit-safety-notes" class="kit-safety-notes">
-              <?php if ($kit_seg_obj && !empty($kit_seg_obj['notas'])): ?>
-                <?= nl2br(h($kit_seg_obj['notas'])) ?>
+              <?php if ($amb_val === 'componente'): ?>
+                <span class="muted">(Selecciona un componente para ver las advertencias)</span>
               <?php else: ?>
-                <span class="muted">(El kit no tiene notas de seguridad textuales)</span>
+                <?php if ($kit_seg_obj && !empty($kit_seg_obj['notas'])): ?>
+                  <?= nl2br(h($kit_seg_obj['notas'])) ?>
+                <?php else: ?>
+                  <span class="muted">(El kit no tiene notas de seguridad textuales)</span>
+                <?php endif; ?>
               <?php endif; ?>
             </div>
           </div>
@@ -958,6 +962,33 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   const compSafetyCheckbox = document.getElementById('use-comp-warn');
   const kitSafetyHelpNote = (function(){ var panel = document.getElementById('kit-safety-panel'); return panel ? panel.querySelector('.help-note') : null; })();
   const securityAgeWrap = document.querySelector('.security-age');
+  function decodeHtmlEntities(str){
+    if (!str) return '';
+    return String(str)
+      .replace(/&quot;/g, '"')
+      .replace(/&#039;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+  }
+
+  function tryParseJSON(raw){
+    if (!raw) return null;
+    try {
+      const txt = decodeHtmlEntities(raw).trim();
+      if (!txt) return null;
+      if (txt[0] !== '{' && txt[0] !== '[') return null;
+      return JSON.parse(txt);
+    } catch(e){ console.log('⚠️ [ManualsEdit] No se pudo parsear JSON de componente:', e && e.message ? e.message : e); return null; }
+  }
+
+  function compHasAgeFromWarn(raw){
+    const obj = tryParseJSON(raw);
+    if (!obj || Array.isArray(obj)) return false;
+    const hasMin = typeof obj.edad_min !== 'undefined' && obj.edad_min !== null && String(obj.edad_min) !== '';
+    const hasMax = typeof obj.edad_max !== 'undefined' && obj.edad_max !== null && String(obj.edad_max) !== '';
+    return !!(hasMin || hasMax);
+  }
 
   function toSafetyObj(raw){
     try {
@@ -1004,13 +1035,47 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     if (!kitSafetyPanel) return;
     kitSafetyPanel.classList.remove('muted');
     if (kitSafetyHeadStrong) kitSafetyHeadStrong.textContent = 'Advertencias del componente';
-    if (kitSafetyChip) kitSafetyChip.style.display = 'none';
+    // Render age chip for component if JSON has edad_min/max
+    const parsed = tryParseJSON(warnText);
+    if (kitSafetyChip) {
+      if (parsed && !Array.isArray(parsed)) {
+        const min = (typeof parsed.edad_min !== 'undefined') ? parseInt(parsed.edad_min,10) : null;
+        const max = (typeof parsed.edad_max !== 'undefined') ? parseInt(parsed.edad_max,10) : null;
+        if (min !== null || max !== null) {
+          kitSafetyChip.style.display = '';
+          kitSafetyChip.textContent = 'Edad del componente: ' + (min !== null ? min : '?') + '–' + (max !== null ? max : '?') + ' años';
+        } else {
+          kitSafetyChip.style.display = 'none';
+        }
+      } else {
+        kitSafetyChip.style.display = 'none';
+      }
+    }
+    // Render notes: array -> list; string -> text; else fallback
     if (kitSafetyNotes) {
-      const txt = (warnText || '').trim();
       const shown = (!compSafetyCheckbox || compSafetyCheckbox.checked);
       if (!shown) {
         kitSafetyNotes.innerHTML = '<span class="muted">(Advertencias del componente ocultas)</span>';
+      } else if (parsed && !Array.isArray(parsed)) {
+        if (Array.isArray(parsed.notas)) {
+          var html = '<ul class="security-list">';
+          parsed.notas.forEach(function(n){
+            var notaTxt = (typeof n === 'string') ? n : (n && typeof n === 'object' ? (n.nota || '') : '');
+            var catTxt = (n && typeof n === 'object' ? (n.categoria || '') : '');
+            html += '<li><span class="sec-note">' + notaTxt.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+            if (catTxt) html += ' <span class="sec-cat">' + catTxt.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+            html += '</li>';
+          });
+          html += '</ul>';
+          kitSafetyNotes.innerHTML = html;
+        } else if (typeof parsed.notas === 'string') {
+          kitSafetyNotes.innerHTML = parsed.notas.replace(/\n/g,'<br>');
+        } else {
+          // Show entire object stringified compactly
+          kitSafetyNotes.innerHTML = '<span class="muted">(No hay notas formateadas; mostrando texto crudo)</span>';
+        }
       } else {
+        const txt = (warnText || '').trim();
         kitSafetyNotes.innerHTML = txt ? txt.replace(/\n/g,'<br>') : '<span class="muted">(El componente no tiene advertencias de seguridad textuales)</span>';
       }
     }
@@ -1053,13 +1118,16 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   }
 
   function updateAgeVisibility(){
-    const inherit = !!(useKitSafety && useKitSafety.checked);
+    const amb = ambSel ? ambSel.value : 'kit';
+    const inheritKit = !!(useKitSafety && useKitSafety.checked);
     const kitHas = hasKitAge();
-    if (inherit && kitHas) {
+    const inheritComp = !!(amb === 'componente' && compSafetyCheckbox && compSafetyCheckbox.checked);
+    const compHas = amb === 'componente' ? compHasAgeFromWarn(getSelectedComponentWarn()) : false;
+    if ((inheritKit && kitHas) || (inheritComp && compHas)) {
       if (securityAgeWrap) securityAgeWrap.classList.add('hidden-block');
       if (ageMinInput) ageMinInput.disabled = true;
       if (ageMaxInput) ageMaxInput.disabled = true;
-      console.log('ℹ️ [ManualsEdit] Usando edad del kit: ocultando campos de edad propia');
+      console.log('ℹ️ [ManualsEdit] Usando edad heredada:', amb === 'componente' ? 'componente' : 'kit');
     } else {
       if (securityAgeWrap) securityAgeWrap.classList.remove('hidden-block');
       if (ageMinInput) ageMinInput.disabled = false;

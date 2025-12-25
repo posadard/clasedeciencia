@@ -415,10 +415,43 @@ include 'includes/header.php';
                   </ul>
                 <?php endif; ?>
                 <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
+                  <?php
+                    $compWarnRaw = (string)$comp['advertencias_seguridad'];
+                    $compWarnObj = null;
+                    $compWarnIsJson = false;
+                    if ($compWarnRaw !== '' && ($compWarnRaw[0] === '{' || $compWarnRaw[0] === '[')) {
+                      try { $tmpCW = json_decode($compWarnRaw, true); if (is_array($tmpCW)) { $compWarnObj = $tmpCW; $compWarnIsJson = true; } } catch(Exception $e) { $compWarnObj = null; $compWarnIsJson = false; }
+                    }
+                    // Derive component age into effectiveAge if manual age missing
+                    if ($compWarnIsJson && is_array($compWarnObj) && array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)) {
+                      if (($effectiveAge['min'] === null || $effectiveAge['max'] === null)) {
+                        if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $effectiveAge['min'] = (int)$compWarnObj['edad_min']; }
+                        if (isset($compWarnObj['edad_max']) && $compWarnObj['edad_max'] !== '') { $effectiveAge['max'] = (int)$compWarnObj['edad_max']; }
+                      }
+                    }
+                  ?>
                   <div class="component-warning-inline">
-                    <div class="component-warning-text"><?= nl2br(h($comp['advertencias_seguridad'])) ?></div>
+                    <?php if ($compWarnIsJson && is_array($compWarnObj) && array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)): ?>
+                      <?php if (!empty($compWarnObj['notas']) && is_array($compWarnObj['notas'])): ?>
+                        <ul class="security-list">
+                          <?php foreach ($compWarnObj['notas'] as $nota): ?>
+                            <?php $cat = is_array($nota) ? ($nota['categoria'] ?? '') : ''; $icon = '⚠️'; ?>
+                            <li>
+                              <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
+                              <?php if (!empty($cat)): ?><span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span><?php endif; ?>
+                            </li>
+                          <?php endforeach; ?>
+                        </ul>
+                      <?php elseif (!empty($compWarnObj['notas']) && is_string($compWarnObj['notas'])): ?>
+                        <div class="component-warning-text"><?= nl2br(h($compWarnObj['notas'])) ?></div>
+                      <?php else: ?>
+                        <div class="component-warning-text"><span class="muted">(El componente no tiene notas de seguridad textuales)</span></div>
+                      <?php endif; ?>
+                    <?php else: ?>
+                      <div class="component-warning-text"><?= nl2br(h($compWarnRaw)) ?></div>
+                    <?php endif; ?>
                   </div>
-                  <script>console.log('🔧 [Manual] Advertencias del componente integradas en Seguridad');</script>
+                  <script>console.log('🔧 [Manual] Advertencias del componente integradas (JSON:', <?= json_encode($compWarnIsJson) ?>, ')');</script>
                 <?php endif; ?>
                 <?php
                   // Concatenar notas de seguridad de componentes y herramientas (10 palabras) con el nombre
