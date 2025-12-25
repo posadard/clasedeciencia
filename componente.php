@@ -45,52 +45,47 @@ include 'includes/header.php';
         <strong><?= h($material['common_name']) ?></strong>
     </div>
 
-    <div class="material-top">
-        <div class="material-main">
-            <h1><?= h($material['common_name']) ?></h1>
-            <table class="material-specs" aria-labelledby="material-specs-title">
-                <caption id="material-specs-title" class="sr-only">Datos del componente <?= h($material['common_name']) ?></caption>
-                <tbody>
-                    <tr>
-                        <th scope="row">Categoría</th>
-                        <td><?= h($material['category_name']) ?></td>
-                    </tr>
-                    <?php if (!empty($material['slug'])): ?>
-                    <tr>
-                        <th scope="row">SKU</th>
-                        <td class="mono"><?= h($material['slug']) ?></td>
-                    </tr>
+        <div class="clase-summary-card">
+            <div class="summary-content">
+                <div class="summary-left">
+                    <?php if (!empty($material['foto_url'])): ?>
+                        <img src="<?= h($material['foto_url']) ?>" alt="<?= h($material['common_name']) ?>" class="summary-image"
+                                 onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+                    <?php else: ?>
+                        <div class="summary-placeholder">
+                            <span class="placeholder-icon">📦</span>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
-            <?php if (!empty($material['description'])): ?>
-            <section class="safety-info">
-              <h2 class="safety-title">⚠️ Información de Seguridad</h2>
-              <div class="safety-content">
-                <div class="safety-notes"><?= nl2br(h($material['description'])) ?></div>
-                <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
-              </div>
-            </section>
-            <?php endif; ?>
+                </div>
+                <div class="summary-right">
+                    <div class="summary-header">
+                        <h1 class="summary-title"><?= h($material['common_name']) ?></h1>
+                    </div>
+                    <div class="summary-specs">
+                        <div class="spec-item">
+                            <span class="spec-label">📂 Categoría</span>
+                            <span class="spec-value"><?= h($material['category_name']) ?></span>
+                        </div>
+                        <?php if (!empty($material['slug'])): ?>
+                        <div class="spec-item">
+                            <span class="spec-label">🏷️ SKU</span>
+                            <span class="spec-value mono"><?= h($material['slug']) ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
         </div>
 
-                <aside class="product-card">
-                        <div class="product-image">
-                                <?php
-                                    $comp_img_fallback = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg';
-                                    $has_custom_img = !empty($material['foto_url']);
-                                ?>
-                                <?php if (!$has_custom_img): ?>
-                                    <div class="product-image-fallback">
-                                        <span class="placeholder-icon">📦</span>
-                                    </div>
-                                <?php else: ?>
-                                    <img src="<?= h($material['foto_url']) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy"
-                                             onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
-                                <?php endif; ?>
-                        </div>
-                </aside>
-    </div>
+        <?php if (!empty($material['description'])): ?>
+        <section class="safety-info">
+            <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+            <div class="safety-content">
+                <div class="safety-notes"><?= nl2br(h($material['description'])) ?></div>
+                <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
+            </div>
+        </section>
+        <?php endif; ?>
 
     <?php if (!empty($material['descripcion_html'])): ?>
     <div class="content-section">
