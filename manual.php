@@ -708,7 +708,42 @@ include 'includes/header.php';
   <?php
     // Tarjeta del Kit o Componente y Clases relacionadas (al final)
     try {
-      $clases = (!empty($kit) && !empty($kit['id'])) ? cdc_get_kit_clases($pdo, (int)$kit['id']) : [];
+      if ($ambito === 'kit' && !empty($kit) && !empty($kit['id'])) {
+        $clases = cdc_get_kit_clases($pdo, (int)$kit['id']);
+      } else {
+        // Ámbito componente: obtener kits que incluyen este item y luego las clases de esos kits
+        $clases = [];
+        if (!empty($manual['item_id'])) {
+          // 1) Kits que incluyen el componente
+          $kits_rel = [];
+          try {
+            $stmtK = $pdo->prepare("SELECT k.id
+                                     FROM kit_componentes kc
+                                     JOIN kits k ON k.id = kc.kit_id
+                                     WHERE kc.item_id = ? AND k.activo = 1
+                                     ORDER BY k.updated_at DESC, k.id DESC");
+            $stmtK->execute([(int)$manual['item_id']]);
+            $kits_rel = $stmtK->fetchAll(PDO::FETCH_ASSOC) ?: [];
+          } catch (Exception $e2) { $kits_rel = []; }
+          // 2) Clases asociadas a esos kits
+          if (!empty($kits_rel)) {
+            $kitIds = array_values(array_filter(array_map(function($r){ return isset($r['id']) ? (int)$r['id'] : null; }, $kits_rel), function($v){ return !empty($v); }));
+            if (!empty($kitIds)) {
+              $ph = implode(',', array_fill(0, count($kitIds), '?'));
+              try {
+                $sqlC = "SELECT DISTINCT c.*
+                         FROM clases c
+                         JOIN clase_kits ck ON ck.clase_id = c.id
+                         WHERE ck.kit_id IN ($ph) AND c.activo = 1
+                         ORDER BY c.destacado DESC, c.updated_at DESC";
+                $stmtC = $pdo->prepare($sqlC);
+                $stmtC->execute($kitIds);
+                $clases = $stmtC->fetchAll(PDO::FETCH_ASSOC) ?: [];
+              } catch (Exception $e3) { $clases = []; }
+            }
+          }
+        }
+      }
     } catch (Exception $e) { $clases = []; }
   ?>
 
@@ -804,7 +839,7 @@ include 'includes/header.php';
           </a>
         <?php endforeach; ?>
       </div>
-      <script>console.log('📚 [Manual] Clases vinculadas:', <?= count($clases) ?>);</script>
+      <script>console.log('📚 [Manual] Clases vinculadas:', <?= count($clases) ?>, '· ámbito:', '<?= h($ambito) ?>');</script>
     </section>
   <?php endif; ?>
 </div>
