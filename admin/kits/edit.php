@@ -783,6 +783,30 @@ try {
 
 include '../header.php';
 ?>
+<style>
+  /* Compact layout tweaks specific to Kits Edit */
+  .page-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .page-header h2 { margin: 0; }
+  .page-header .help-text { margin: 0; font-size: 0.9rem; color: #666; }
+  .form-group { margin-bottom: 10px; }
+  .field-inline { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+  .card { margin-top: 1.5rem !important; }
+  .listbox-header { margin-bottom: 4px; }
+  .listbox-search { margin-bottom: 6px; }
+  .competencia-item { padding: 6px 8px; }
+  .component-selector-container { margin-top: 8px; }
+  .component-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; margin: 4px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; }
+  .component-chip .edit-component, .component-chip .remove-component { padding: 2px 6px; font-size: 0.9rem; }
+  .chip-pill { margin-left: 6px; }
+  #security-section { background: #fffbe6; border: 1px solid #f5e29f; border-radius: 6px; padding: 8px 10px; }
+  /* Center modals and compact paddings */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); }
+  .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+  .modal-content { background: #fff; border-radius: 8px; min-width: 300px; max-width: 720px; width: 90%; box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+  .modal-header, .modal-footer { padding: 10px 12px; }
+  .modal-body { padding: 8px 12px; }
+  .modal-header h4 { margin: 0; }
+</style>
 <div class="page-header">
   <h2><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></h2>
   <span class="help-text">Completa los campos del kit y gestiona sus componentes.</span>
@@ -831,7 +855,7 @@ include '../header.php';
 <form method="POST" id="kit-form">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
   <input type="hidden" name="action" value="save" />
-  <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+  <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
     <label class="switch-label">
       <input type="checkbox" name="activo" class="switch-input" <?= ((int)$kit['activo']) ? 'checked' : '' ?> />
       <span class="switch-slider"></span>
@@ -846,7 +870,7 @@ include '../header.php';
     <label for="slug">Slug</label>
     <div style="display:flex; gap:8px; align-items:center;">
       <input type="text" id="slug" name="slug" value="<?= htmlspecialchars($kit['slug'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="se genera automáticamente" style="flex:1;" />
-      <button type="button" id="btn_generar_slug" style="padding:8px 16px; background:#0066cc; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">⚡ Generar</button>
+      <button type="button" id="btn_generar_slug" style="padding:6px 10px; background:#0066cc; color:white; border:none; border-radius:4px; cursor:pointer; white-space:nowrap;">⚡ Generar</button>
     </div>
     <small class="hint">URL amigable. Ejemplo: kit-carro-solar</small>
   </div>
@@ -917,19 +941,21 @@ include '../header.php';
   </div>
   <div class="form-group">
     <h4>Seguridad</h4>
-    <div class="field-inline">
-      <div class="form-group">
-        <label for="seg_edad_min">Edad mínima</label>
-        <input type="number" id="seg_edad_min" name="seg_edad_min" min="0" step="1" value="<?= htmlspecialchars($seg_edad_min_val, ENT_QUOTES, 'UTF-8') ?>" />
+    <div id="security-section">
+      <div class="field-inline">
+        <div class="form-group">
+          <label for="seg_edad_min">Edad mínima</label>
+          <input type="number" id="seg_edad_min" name="seg_edad_min" min="0" step="1" value="<?= htmlspecialchars($seg_edad_min_val, ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
+        <div class="form-group">
+          <label for="seg_edad_max">Edad máxima</label>
+          <input type="number" id="seg_edad_max" name="seg_edad_max" min="0" step="1" value="<?= htmlspecialchars($seg_edad_max_val, ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
       </div>
       <div class="form-group">
-        <label for="seg_edad_max">Edad máxima</label>
-        <input type="number" id="seg_edad_max" name="seg_edad_max" min="0" step="1" value="<?= htmlspecialchars($seg_edad_max_val, ENT_QUOTES, 'UTF-8') ?>" />
+        <label for="seg_notas">Notas de seguridad</label>
+        <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
       </div>
-    </div>
-    <div class="form-group">
-      <label for="seg_notas">Notas de seguridad</label>
-      <textarea id="seg_notas" name="seg_notas" rows="3" placeholder="Advertencias y precauciones generales."><?= htmlspecialchars($seg_notas_val, ENT_QUOTES, 'UTF-8') ?></textarea>
     </div>
   </div>
   <div class="form-group">
@@ -938,7 +964,7 @@ include '../header.php';
     <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
   </div>
   <?php if ($is_edit): ?>
-  <div class="form-group" style="margin-top:2rem;">
+  <div class="form-group" style="margin-top:1.5rem;">
     <h3>Componentes del Kit</h3>
 
     <div class="form-group">
@@ -1004,7 +1030,7 @@ include '../header.php';
   ?>
   
   <?php if ($is_edit): ?>
-  <div class="card" style="margin-top:2rem;">
+  <div class="card" style="margin-top:1.5rem;">
     <h3>Ficha técnica</h3>
     <small class="hint" style="display:block; margin-bottom:6px;">Selecciona atributos y define sus valores. Los ya definidos aparecen a la derecha.</small>
     <div class="dual-listbox-container">
@@ -1098,7 +1124,7 @@ include '../header.php';
         <label for="seo_title">SEO Title (≤60)</label>
         <div style="display: flex; gap: 8px; align-items: center;">
           <input type="text" id="seo_title" name="seo_title" maxlength="160" value="<?= htmlspecialchars($kit['seo_title'] ?? '', ENT_QUOTES, 'UTF-8') ?>" style="flex: 1;" />
-          <button type="button" id="btn_generar_seo" style="padding: 8px 16px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar SEO</button>
+          <button type="button" id="btn_generar_seo" style="padding: 6px 10px; background: #2e7d32; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">⚡ Generar SEO</button>
         </div>
       </div>
       <div class="form-group">
@@ -1676,7 +1702,7 @@ include '../header.php';
   })();
 </script>
 <!-- Clases vinculadas al Kit (Transfer List) -->
-<div class="card" style="margin-top:2rem;">
+<div class="card" style="margin-top:1.5rem;">
   <h3>Clases vinculadas al Kit</h3>
   <small class="hint" style="display:block; margin-bottom:6px;">Selecciona una o varias clases. La primera será la principal.</small>
   <div class="dual-listbox-container">
@@ -1730,7 +1756,7 @@ include '../header.php';
   </div>
 </div>
   <!-- Manuales del Kit (Dual-list: Publicar/Despublicar) -->
-  <div class="card" style="margin-top:2rem;">
+  <div class="card" style="margin-top:1.5rem;">
     <h3>Manuales del Kit</h3>
     <small class="hint" style="display:block; margin-bottom:6px;">Publica o despublica manuales. Crea nuevos desde aquí.</small>
     <?php if ($is_edit): ?>
@@ -1888,7 +1914,7 @@ include '../header.php';
 <style>
   /* Reusar estilos globales para modales; mantener utilidades locales */
   .muted { color: #666; font-size: 0.9rem; }
-  .field-inline { display:flex; gap:12px; }
+  .field-inline { display:flex; gap:8px; }
   .field-inline > div { flex:1; }
   /* Combo box styles */
   .combo { position: relative; }
