@@ -158,22 +158,6 @@ include 'includes/header.php';
         </div>
 
 
-    <?php if (!empty($material['descripcion_html'])): ?>
-    <div class="content-section">
-        <h2>Descripción</h2>
-        <div class="article-body">
-            <?= $material['descripcion_html'] ?>
-        </div>
-    </div>
-    <?php endif; ?>
-
-    <?php if ($ficha_inline !== ''): ?>
-    <div class="article-byline">
-        <span class="ficha">🧪 <?= h($ficha_inline) ?></span>
-    </div>
-    <?php endif; ?>
-
-
     <?php
     // Manuales asociados al componente (ambito = componente)
     $manuales = [];
@@ -316,6 +300,22 @@ include 'includes/header.php';
             <p class="muted">Aún no hay manuales publicados para este componente.</p>
         <?php endif; ?>
     </section>
+
+    <?php if (!empty($material['descripcion_html'])): ?>
+    <div class="content-section">
+        <h2>Descripción</h2>
+        <div class="article-body">
+            <?= $material['descripcion_html'] ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if ($ficha_inline !== ''): ?>
+    <div class="article-byline">
+        <span class="ficha">🧪 <?= h($ficha_inline) ?></span>
+    </div>
+    <?php endif; ?>
+
 
 
     <?php
