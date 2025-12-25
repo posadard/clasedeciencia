@@ -276,18 +276,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sku = trim($_POST['slug'] ?? '');
     $categoria_id = (int)($_POST['categoria_id'] ?? 0);
     $advertencias_seguridad = trim($_POST['advertencias_seguridad'] ?? '');
-    // Seguridad del componente (JSON similar a kits.seguridad)
-    $edad_segura_min = isset($_POST['edad_segura_min']) && $_POST['edad_segura_min'] !== '' && is_numeric($_POST['edad_segura_min']) ? (int)$_POST['edad_segura_min'] : null;
-    $edad_segura_max = isset($_POST['edad_segura_max']) && $_POST['edad_segura_max'] !== '' && is_numeric($_POST['edad_segura_max']) ? (int)$_POST['edad_segura_max'] : null;
-    $seguridad_notas = isset($_POST['seguridad_notas']) ? trim((string)$_POST['seguridad_notas']) : '';
-    $seguridad_json = null;
-    try {
-      $segArr = [];
-      if ($edad_segura_min !== null) { $segArr['edad_min'] = $edad_segura_min; }
-      if ($edad_segura_max !== null) { $segArr['edad_max'] = $edad_segura_max; }
-      if ($seguridad_notas !== '') { $segArr['notas'] = $seguridad_notas; }
-      $seguridad_json = !empty($segArr) ? json_encode($segArr, JSON_UNESCAPED_UNICODE) : null;
-    } catch (Exception $e) { $seguridad_json = null; }
     $unidad = trim($_POST['unidad'] ?? 'pcs');
     $descripcion_html = isset($_POST['descripcion_html']) ? (string)$_POST['descripcion_html'] : null;
     $foto_url = trim($_POST['foto_url'] ?? '');
@@ -318,13 +306,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($errores)) {
       try {
         if ($is_edit) {
-          $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ? WHERE id = ?";
+          $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ? WHERE id = ?";
           $stmt = $pdo->prepare($sql);
-          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $seguridad_json, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
         } else {
-          $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, seguridad, unidad, descripcion_html, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+          $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad, descripcion_html, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
           $stmt = $pdo->prepare($sql);
-          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $seguridad_json, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
           $id = (int)$pdo->lastInsertId();
         }
         echo "<script>console.log('✅ [Admin] Componente guardado');</script>";
@@ -417,41 +405,6 @@ include '../header.php';
     <label for="advertencias_seguridad">Advertencias de seguridad</label>
     <textarea id="advertencias_seguridad" name="advertencias_seguridad" rows="4"><?= htmlspecialchars($material['advertencias_seguridad'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
-  <?php
-    $cmpSeg = [];
-    if (!empty($material['seguridad'])) {
-      $tmp = json_decode($material['seguridad'], true);
-      if (is_array($tmp)) { $cmpSeg = $tmp; }
-    }
-    $edadMinVal = isset($cmpSeg['edad_min']) ? (int)$cmpSeg['edad_min'] : '';
-    $edadMaxVal = isset($cmpSeg['edad_max']) ? (int)$cmpSeg['edad_max'] : '';
-    $notasVal = isset($cmpSeg['notas']) ? (string)$cmpSeg['notas'] : '';
-  ?>
-  <fieldset class="form-group" style="border:1px solid #ddd;padding:12px;border-radius:6px;margin-top:8px;">
-    <legend style="font-weight:600;">Seguridad del componente</legend>
-    <div class="grid two-cols">
-      <div>
-        <label for="edad_segura_min">Edad segura mínima</label>
-        <input type="number" id="edad_segura_min" name="edad_segura_min" min="5" max="25" value="<?= htmlspecialchars($edadMinVal, ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-      <div>
-        <label for="edad_segura_max">Edad segura máxima</label>
-        <input type="number" id="edad_segura_max" name="edad_segura_max" min="5" max="25" value="<?= htmlspecialchars($edadMaxVal, ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-    </div>
-    <div class="form-group" style="margin-top:8px;">
-      <label for="seguridad_notas">Notas de seguridad</label>
-      <textarea id="seguridad_notas" name="seguridad_notas" rows="3" placeholder="Ej.: Uso bajo supervisión docente. Evita cortocircuitos, no exceder corriente."><?= htmlspecialchars($notasVal, ENT_QUOTES, 'UTF-8') ?></textarea>
-      <small class="help-text">Se guarda en kit_items.seguridad (JSON: edad_min, edad_max, notas). Continúa usando advertencias para avisos breves.</small>
-    </div>
-    <script>
-      console.log('🔍 [ComponentesEdit] Seguridad JSON precargada:', {
-        edad_min: <?= $edadMinVal !== '' ? (int)$edadMinVal : 'null' ?>,
-        edad_max: <?= $edadMaxVal !== '' ? (int)$edadMaxVal : 'null' ?>,
-        notas: <?= json_encode($notasVal) ?>
-      });
-    </script>
-  </fieldset>
   <div class="form-group">
     <label for="unidad">Unidad</label>
     <input type="text" id="unidad" name="unidad" value="<?= htmlspecialchars($material['unidad'] ?? 'pcs', ENT_QUOTES, 'UTF-8') ?>" placeholder="Ej: pcs, g, ml" />
