@@ -1326,7 +1326,6 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       if (extras.length) { payload.notas_extra = extras; }
       console.log('ℹ️ [ManualsEdit] Merge: usar advertencias del componente');
     } else if (useKitSafety && useKitSafety.checked) {
-    if (useKitSafety && useKitSafety.checked) {
       payload = { usar_seguridad_kit: true };
       const kitHas = hasKitAge();
       if (!kitHas && (min !== null || max !== null)) {
@@ -1581,6 +1580,4 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
   s.onerror = function(){ console.log('❌ [ManualsEdit] Error cargando CKEditor CDN'); };
   document.head.appendChild(s);
 })();
-</script>
-
 </script>
