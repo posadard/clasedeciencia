@@ -292,10 +292,6 @@ include 'includes/header.php';
         // Kit notes are free text; include if directive says so (solo ámbito kit)
         if ($ambito === 'kit' && $useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
         $hasAnySafety = $useKitSafety || !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null);
-        // Para ámbito componente: si existen advertencias del componente, mostrar bloque Seguridad aunque el manual no tenga edad/notas
-        if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])) {
-          $hasAnySafety = true;
-        }
       ?>
       <?php
         $toc_items = [];
@@ -419,32 +415,10 @@ include 'includes/header.php';
                   </ul>
                 <?php endif; ?>
                 <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
-                  <?php
-                    $compWarnRaw = (string)$comp['advertencias_seguridad'];
-                    $compWarnJson = null;
-                    try {
-                      $tmpCW = json_decode($compWarnRaw, true);
-                      if (is_array($tmpCW)) { $compWarnJson = $tmpCW; }
-                    } catch (Exception $e) { $compWarnJson = null; }
-                  ?>
                   <div class="component-warning-inline">
-                    <?php if (is_array($compWarnJson) && (isset($compWarnJson['edad_min']) || isset($compWarnJson['edad_max']) || isset($compWarnJson['notas']))): ?>
-                      <?php
-                        $cMin = isset($compWarnJson['edad_min']) && $compWarnJson['edad_min'] !== '' ? (int)$compWarnJson['edad_min'] : null;
-                        $cMax = isset($compWarnJson['edad_max']) && $compWarnJson['edad_max'] !== '' ? (int)$compWarnJson['edad_max'] : null;
-                        $cNotas = isset($compWarnJson['notas']) ? (string)$compWarnJson['notas'] : '';
-                      ?>
-                      <?php if ($cMin !== null || $cMax !== null): ?>
-                        <div class="kit-security-chip">Edad segura del componente: <?= ($cMin !== null ? $cMin : '?') ?>–<?= ($cMax !== null ? $cMax : '?') ?> años</div>
-                      <?php endif; ?>
-                      <?php if ($cNotas !== ''): ?>
-                        <div class="component-warning-text"><?= nl2br(h($cNotas)) ?></div>
-                      <?php endif; ?>
-                    <?php else: ?>
-                      <div class="component-warning-text"><?= nl2br(h($compWarnRaw)) ?></div>
-                    <?php endif; ?>
+                    <div class="component-warning-text"><?= nl2br(h($comp['advertencias_seguridad'])) ?></div>
                   </div>
-                  <script>console.log('🔧 [Manual] Advertencias del componente integradas (JSON/Texto)');</script>
+                  <script>console.log('🔧 [Manual] Advertencias del componente integradas en Seguridad');</script>
                 <?php endif; ?>
                 <?php
                   // Concatenar notas de seguridad de componentes y herramientas (10 palabras) con el nombre
