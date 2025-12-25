@@ -233,11 +233,6 @@ include 'includes/header.php';
         $pasos = [];
         $herr = [];
         $seg = [];
-        // Kit safety (solo aplica en ámbito kit)
-        $kitSeg = null;
-        if ($ambito === 'kit' && !empty($kit['seguridad'])) {
-          try { $tmpKit = json_decode($kit['seguridad'], true); if (is_array($tmpKit)) { $kitSeg = $tmpKit; } } catch(Exception $e) {}
-        }
         if (!empty($manual['pasos_json'])) {
             $tmp = json_decode($manual['pasos_json'], true);
             if (is_array($tmp)) { $pasos = $tmp; }
@@ -252,46 +247,35 @@ include 'includes/header.php';
             if (is_array($tmp)) { $seg = $tmp; $manualSegRaw = $tmp; }
         }
       ?>
-      <?php /* Advertencias del componente: ahora se integran dentro del bloque de seguridad */ ?>
+      <?php /* Seguridad: solo medidas del manual (edad + notas). No se heredan del kit ni del componente. */ ?>
       <?php
-        // Compute effective safety by merging manual directives with kit safety (age + free-text notes)
-        $hasManualSafety = !empty($manualSegRaw);
-        $useKitSafety = false;
+        // Seguridad efectiva: solo edad y notas del manual
         $effectiveAge = ['min' => null, 'max' => null];
         $manualNotes = [];
-        $kitNotesText = '';
+        $hasManualSafety = !empty($manualSegRaw);
         if ($hasManualSafety) {
-            $isAssoc = is_array($manualSegRaw) && array_keys($manualSegRaw) !== range(0, count($manualSegRaw)-1);
-            if ($isAssoc) {
-                if (isset($manualSegRaw['usar_seguridad_kit'])) { $useKitSafety = !!$manualSegRaw['usar_seguridad_kit']; }
-                if (!empty($manualSegRaw['edad']) && is_array($manualSegRaw['edad'])) {
-                    $effectiveAge['min'] = isset($manualSegRaw['edad']['min']) ? (int)$manualSegRaw['edad']['min'] : null;
-                    $effectiveAge['max'] = isset($manualSegRaw['edad']['max']) ? (int)$manualSegRaw['edad']['max'] : null;
-                }
-                if (!empty($manualSegRaw['notas_extra']) && is_array($manualSegRaw['notas_extra'])) { $manualNotes = $manualSegRaw['notas_extra']; }
-                elseif (!empty($manualSegRaw['notas']) && is_array($manualSegRaw['notas'])) { $manualNotes = $manualSegRaw['notas']; }
-            } else {
-                // Old shapes: array of notes or [{edad,notas}]
-                if (is_array($manualSegRaw) && isset($manualSegRaw[0]) && is_array($manualSegRaw[0]) && (isset($manualSegRaw[0]['edad']) || isset($manualSegRaw[0]['notas']))) {
-                    $obj = $manualSegRaw[0];
-                    if (!empty($obj['edad'])) {
-                        $effectiveAge['min'] = isset($obj['edad']['min']) ? (int)$obj['edad']['min'] : null;
-                        $effectiveAge['max'] = isset($obj['edad']['max']) ? (int)$obj['edad']['max'] : null;
-                    }
-                    if (!empty($obj['notas']) && is_array($obj['notas'])) { $manualNotes = $obj['notas']; }
-                } else {
-                    $manualNotes = $manualSegRaw;
-                }
+          $isAssoc = is_array($manualSegRaw) && array_keys($manualSegRaw) !== range(0, count($manualSegRaw)-1);
+          if ($isAssoc) {
+            if (!empty($manualSegRaw['edad']) && is_array($manualSegRaw['edad'])) {
+              $effectiveAge['min'] = isset($manualSegRaw['edad']['min']) ? (int)$manualSegRaw['edad']['min'] : null;
+              $effectiveAge['max'] = isset($manualSegRaw['edad']['max']) ? (int)$manualSegRaw['edad']['max'] : null;
             }
+            if (!empty($manualSegRaw['notas']) && is_array($manualSegRaw['notas'])) { $manualNotes = $manualSegRaw['notas']; }
+            elseif (!empty($manualSegRaw['notas_extra']) && is_array($manualSegRaw['notas_extra'])) { $manualNotes = $manualSegRaw['notas_extra']; }
+          } else {
+            if (is_array($manualSegRaw) && isset($manualSegRaw[0]) && is_array($manualSegRaw[0]) && (isset($manualSegRaw[0]['edad']) || isset($manualSegRaw[0]['notas']))) {
+              $obj = $manualSegRaw[0];
+              if (!empty($obj['edad'])) {
+                $effectiveAge['min'] = isset($obj['edad']['min']) ? (int)$obj['edad']['min'] : null;
+                $effectiveAge['max'] = isset($obj['edad']['max']) ? (int)$obj['edad']['max'] : null;
+              }
+              if (!empty($obj['notas']) && is_array($obj['notas'])) { $manualNotes = $obj['notas']; }
+            } else {
+              $manualNotes = $manualSegRaw;
+            }
+          }
         }
-        // If manual age not set, use kit age if available (solo ámbito kit)
-        if ($ambito === 'kit' && ($effectiveAge['min'] === null || $effectiveAge['max'] === null) && $kitSeg) {
-          if ($effectiveAge['min'] === null && !empty($kitSeg['edad_min'])) $effectiveAge['min'] = (int)$kitSeg['edad_min'];
-          if ($effectiveAge['max'] === null && !empty($kitSeg['edad_max'])) $effectiveAge['max'] = (int)$kitSeg['edad_max'];
-        }
-        // Kit notes are free text; include if directive says so (solo ámbito kit)
-        if ($ambito === 'kit' && $useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
-        $hasAnySafety = $useKitSafety || !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null);
+        $hasAnySafety = !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null) || ($status_key === 'discontinued');
       ?>
       <?php
         $toc_items = [];
@@ -373,17 +357,14 @@ include 'includes/header.php';
             <?php endif; ?>
           </aside>
           <div class="manual-toc-right" style="flex:1; min-width:0;">
-            <?php if ($hasAnySafety || $status_key === 'discontinued' || ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']))): ?>
+            <?php if ($hasAnySafety): ?>
               <section class="safety-info">
-                <h2><?= ($ambito === 'componente' ? '⚠️ Seguridad del Componente' : '⚠️ Seguridad') ?></h2>
+                <h2>⚠️ Seguridad</h2>
                 <?php if ($status_key === 'discontinued'): ?>
                   <div class="badge badge-danger" style="margin:4px 0;">⚠️ Este manual ha sido descontinuado</div>
                 <?php endif; ?>
                 <?php if ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null): ?>
                   <div class="kit-security-chip">Edad segura: <?= ($effectiveAge['min'] !== null ? (int)$effectiveAge['min'] : '?') ?>–<?= ($effectiveAge['max'] !== null ? (int)$effectiveAge['max'] : '?') ?> años</div>
-                <?php endif; ?>
-                <?php if (!empty($kitNotesText)): ?>
-                  <div class="kit-safety-notes-public"><?= nl2br(h($kitNotesText)) ?></div>
                 <?php endif; ?>
                 <?php if (!empty($manualNotes)): ?>
                   <ul class="security-list">
@@ -414,101 +395,8 @@ include 'includes/header.php';
                     <?php endforeach; ?>
                   </ul>
                 <?php endif; ?>
-                <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
-                  <?php
-                    $compWarnRaw = (string)$comp['advertencias_seguridad'];
-                    $compWarnObj = null;
-                    $compWarnIsJson = false;
-                    if ($compWarnRaw !== '' && ($compWarnRaw[0] === '{' || $compWarnRaw[0] === '[')) {
-                      try { $tmpCW = json_decode($compWarnRaw, true); if (is_array($tmpCW)) { $compWarnObj = $tmpCW; $compWarnIsJson = true; } } catch(Exception $e) { $compWarnObj = null; $compWarnIsJson = false; }
-                    }
-                    // Prefer component age when editor marked component warnings; otherwise use as fallback
-                    if ($compWarnIsJson && is_array($compWarnObj) && array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)) {
-                      $preferCompAge = false;
-                      if (!empty($manualSegRaw) && is_array($manualSegRaw) && array_keys($manualSegRaw) !== range(0, count($manualSegRaw)-1)) {
-                        $preferCompAge = !empty($manualSegRaw['usar_seguridad_componente']);
-                      }
-                      if ($preferCompAge) {
-                        if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $effectiveAge['min'] = (int)$compWarnObj['edad_min']; }
-                        if (isset($compWarnObj['edad_max']) && $compWarnObj['edad_max'] !== '') { $effectiveAge['max'] = (int)$compWarnObj['edad_max']; }
-                      } else {
-                        if (($effectiveAge['min'] === null || $effectiveAge['max'] === null)) {
-                          if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $effectiveAge['min'] = (int)$compWarnObj['edad_min']; }
-                          if (isset($compWarnObj['edad_max']) && $compWarnObj['edad_max'] !== '') { $effectiveAge['max'] = (int)$compWarnObj['edad_max']; }
-                        }
-                      }
-                    }
-                  ?>
-                  <div class="component-warning-inline">
-                    <?php if ($compWarnIsJson && is_array($compWarnObj) && array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)): ?>
-                      <?php if (!empty($compWarnObj['notas']) && is_array($compWarnObj['notas'])): ?>
-                        <ul class="security-list">
-                          <?php foreach ($compWarnObj['notas'] as $nota): ?>
-                            <?php $cat = is_array($nota) ? ($nota['categoria'] ?? '') : ''; $icon = '⚠️'; ?>
-                            <li>
-                              <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
-                              <?php if (!empty($cat)): ?><span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span><?php endif; ?>
-                            </li>
-                          <?php endforeach; ?>
-                        </ul>
-                      <?php elseif (!empty($compWarnObj['notas']) && is_string($compWarnObj['notas'])): ?>
-                        <div class="component-warning-text"><?= nl2br(h($compWarnObj['notas'])) ?></div>
-                      <?php else: ?>
-                        <div class="component-warning-text"><span class="muted">(El componente no tiene notas de seguridad textuales)</span></div>
-                      <?php endif; ?>
-                    <?php else: ?>
-                      <div class="component-warning-text"><?= nl2br(h($compWarnRaw)) ?></div>
-                    <?php endif; ?>
-                  </div>
-                  <script>console.log('🔧 [Manual] Advertencias del componente integradas (JSON:', <?= json_encode($compWarnIsJson) ?>, ')');</script>
-                <?php endif; ?>
-                <?php
-                  // Concatenar notas de seguridad de componentes y herramientas (10 palabras) con el nombre
-                  $wp = function($text, $limit = 10){
-                    $t = trim(strip_tags((string)$text));
-                    if ($t === '') return '';
-                    $parts = preg_split('/\s+/u', $t, -1, PREG_SPLIT_NO_EMPTY);
-                    if (!$parts || !count($parts)) return '';
-                    if (count($parts) <= (int)$limit) return implode(' ', $parts);
-                    return implode(' ', array_slice($parts, 0, (int)$limit)) . '…';
-                  };
-                  $components_line = '';
-                  $tools_line = '';
-                  try {
-                    $comp_list = ($ambito === 'componente' || empty($kit) || empty($kit['id'])) ? [] : cdc_get_kit_componentes($pdo, (int)$kit['id']);
-                  } catch (Exception $e) { $comp_list = []; }
-                  $comp_pairs = [];
-                  if (!empty($comp_list)) {
-                    foreach ($comp_list as $cm) {
-                      if (!empty($cm['advertencias_seguridad'])) {
-                        $name = (string)($cm['nombre_comun'] ?? '');
-                        $prev = $wp($cm['advertencias_seguridad'], 10);
-                        if ($name !== '' && $prev !== '') { $comp_pairs[] = $name . ': ' . $prev; }
-                      }
-                    }
-                  }
-                  if (!empty($comp_pairs)) { $components_line = implode(' - ', $comp_pairs); }
-                  $tool_pairs = [];
-                  if (!empty($herr)) {
-                    foreach ($herr as $ht) {
-                      if (is_array($ht) && !empty($ht['seguridad'])) {
-                        $tname = (string)($ht['nombre'] ?? '');
-                        $tprev = $wp($ht['seguridad'], 10);
-                        if ($tname !== '' && $tprev !== '') { $tool_pairs[] = $tname . ': ' . $tprev; }
-                      }
-                    }
-                  }
-                  if (!empty($tool_pairs)) { $tools_line = implode(' - ', $tool_pairs); }
-                ?>
-                <?php if ($ambito === 'kit' && ($components_line !== '' || $tools_line !== '')): ?>
-                  <div class="safety-concat" aria-label="Notas adicionales de seguridad">
-                    <?php if ($components_line !== ''): ?><div class="safety-concat-line"><?= h($components_line) ?></div><?php endif; ?>
-                    <?php if ($tools_line !== ''): ?><div class="safety-concat-line"><?= h($tools_line) ?></div><?php endif; ?>
-                  </div>
-                  <script>console.log('🧪 [Manual] Notas seguridad concat (kit):', { componentes: <?= json_encode($comp_pairs) ?>, herramientas: <?= json_encode($tool_pairs) ?> });</script>
-                <?php endif; ?>
               </section>
-              <script>console.log('🔍 [Manual] Bloque de seguridad mostrado (gating):', { hasAnySafety: <?= json_encode($hasAnySafety) ?>, discontinued: <?= json_encode($status_key === 'discontinued') ?>, ambito: '<?= h($ambito) ?>', compWarn: <?= json_encode(($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad']))) ?> });</script>
+              <script>console.log('🔍 [Manual] Bloque de seguridad mostrado (solo manual):', { hasAnySafety: <?= json_encode($hasAnySafety) ?> });</script>
             <?php endif; ?>
           </div>
         </div>
