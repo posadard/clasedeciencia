@@ -960,6 +960,8 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
   const kitSafetyChip = document.getElementById('kit-security-chip');
   const kitSafetyNotes = document.getElementById('kit-safety-notes');
   const kitSelect = document.querySelector('select[name="kit_id"]');
+  const itemSelect = document.querySelector('select[name="item_id"]');
+  const ambSel = document.querySelector('select[name="ambito"]');
   const securityAgeWrap = document.querySelector('.security-age');
 
   function toSafetyObj(raw){
@@ -1071,6 +1073,7 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
   }
 
   let notes = [];
+  let autoCompNoteText = '';
 
   function safeParse(raw){ try { return raw ? JSON.parse(raw) : null; } catch(e){ console.log('⚠️ [ManualsEdit] JSON seguridad inválido:', e.message); return null; } }
   function escapeHTML(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -1239,6 +1242,78 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
     render();
     updateAgeVisibility();
   })();
+
+  // --- Component Safety AJAX ---
+  async function fetchComponentSafetyById(id){
+    try {
+      const res = await fetch('/api/component-get.php?id=' + encodeURIComponent(String(id)));
+      console.log('📡 [ManualsEdit] component-get status:', res.status);
+      if (!res.ok) return null;
+      const data = await res.json();
+      console.log('📡 [ManualsEdit] component-get respuesta:', data);
+      if (data && data.ok && data.item) {
+        if (data.item.advertencias_is_json && data.item.advertencias_json) {
+          return data.item.advertencias_json;
+        }
+        // Fallback plain text → convert to notes string
+        return { edad_min: null, edad_max: null, notas: String(data.item.advertencias_seguridad || '') };
+      }
+      return null;
+    } catch(e) {
+      console.log('❌ [ManualsEdit] Error fetch component-get:', e && e.message ? e.message : e);
+      return null;
+    }
+  }
+
+  function mergeComponentSafetyObj(obj){
+    if (!obj) return;
+    try {
+      const cmin = (typeof obj.edad_min !== 'undefined' && obj.edad_min !== null && obj.edad_min !== '') ? parseInt(obj.edad_min, 10) : null;
+      const cmax = (typeof obj.edad_max !== 'undefined' && obj.edad_max !== null && obj.edad_max !== '') ? parseInt(obj.edad_max, 10) : null;
+      if ((!ageMinInput.value || ageMinInput.value.trim() === '') && cmin !== null && !isNaN(cmin)) { ageMinInput.value = String(cmin); }
+      if ((!ageMaxInput.value || ageMaxInput.value.trim() === '') && cmax !== null && !isNaN(cmax)) { ageMaxInput.value = String(cmax); }
+      const cnotes = (obj.notas ? String(obj.notas).trim() : '');
+      if (cnotes) {
+        // Remove previous auto component note if any
+        if (autoCompNoteText) {
+          const prevIdx = notes.findIndex(n => String(n.nota||'').trim() === autoCompNoteText);
+          if (prevIdx >= 0) { notes.splice(prevIdx, 1); }
+        }
+        // Add new note if not present
+        const exists = notes.some(n => (String(n.nota||'').trim() === cnotes));
+        if (!exists) { notes.push({ nota: cnotes, categoria: '' }); autoCompNoteText = cnotes; }
+      }
+      render();
+      console.log('✅ [ManualsEdit] Merge seguridad componente (AJAX)');
+    } catch(e) {
+      console.log('❌ [ManualsEdit] Error merge componente:', e && e.message ? e.message : e);
+    }
+  }
+
+  async function maybeUpdateComponentSafety(reason){
+    try {
+      const amb = (ambSel ? ambSel.value : 'kit');
+      const itemId = (itemSelect && itemSelect.value) ? parseInt(itemSelect.value, 10) : 0;
+      console.log('🔍 [ManualsEdit] Check comp safety (', reason, ') → amb:', amb, 'itemId:', itemId);
+      if (amb !== 'componente' || !itemId) return;
+      const obj = await fetchComponentSafetyById(itemId);
+      mergeComponentSafetyObj(obj);
+    } catch(e) {
+      console.log('❌ [ManualsEdit] maybeUpdateComponentSafety error:', e && e.message ? e.message : e);
+    }
+  }
+
+  if (itemSelect) {
+    itemSelect.addEventListener('change', function(){
+      maybeUpdateComponentSafety('item change');
+    });
+    console.log('🔍 [ManualsEdit] Observando cambios de item_id');
+  }
+  if (ambSel) {
+    ambSel.addEventListener('change', function(){
+      maybeUpdateComponentSafety('ambito change');
+    });
+  }
 
   function ensureSecModal(){
     let modal = document.getElementById('sec-modal');
