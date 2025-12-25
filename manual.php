@@ -606,7 +606,7 @@ include 'includes/header.php';
     <?php endif; ?>
   </article>
   <div class="article-byline">
-    <span class="author">✍️ Clase de Ciencia SAS</span>
+    <span class="author">✍️ <?= h(!empty($manual['autor']) ? $manual['autor'] : 'Clase de Ciencia SAS') ?></span>
     <?php if (!empty($manual['published_at'])): ?>
       <span class="date">📅 Publicado: <?= h(date('d/m/Y', strtotime($manual['published_at']))) ?></span>
     <?php endif; ?>
