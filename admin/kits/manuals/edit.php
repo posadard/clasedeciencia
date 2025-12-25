@@ -1417,6 +1417,13 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 .sec-actions { display:flex; gap:6px; }
 .sec-body { padding:6px; background:#fff; color:#444; }
 .badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.8rem; font-weight:600; background:#e7e7e7; color:#333; margin-left:6px; }
+/* Highlight security section */
+#security-builder { background: #fffbe6; border: 1px solid #e9df9a; border-radius: 6px; padding: 8px; }
+.sec-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
+.sec-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
+.sec-actions { display:flex; gap:6px; }
+.sec-body { padding:6px; background:#fff; color:#444; }
+.badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.8rem; font-weight:600; background:#e7e7e7; color:#333; margin-left:6px; }
 </style>
 <style>
 /* Compact form controls */
