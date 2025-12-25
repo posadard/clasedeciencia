@@ -605,6 +605,86 @@ include 'includes/header.php';
       <?php endif; ?>
     <?php endif; ?>
   </article>
+  <?php
+    // Tarjeta del Kit o Componente y Clases relacionadas (al final)
+    try { $clases = cdc_get_kit_clases($pdo, (int)$kit['id']); } catch (Exception $e) { $clases = []; }
+  ?>
+
+  <?php if ($ambito === 'componente' && $comp): ?>
+    <section class="manual-entity">
+      <h2>🔧 Componente vinculado</h2>
+      <a href="/<?= h($comp['slug']) ?>" class="related-card" title="Ver componente <?= h($comp['nombre_comun']) ?>">
+        <?php if (!empty($comp['imagen_portada'])): ?>
+          <img src="<?= h($comp['imagen_portada']) ?>" alt="<?= h($comp['nombre_comun']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura componente falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
+        <?php else: ?>
+          <div class="thumbnail-placeholder"><span class="placeholder-icon">🔧</span></div>
+          <script>console.log('⚠️ [Manual] Componente sin imagen, usando placeholder');</script>
+        <?php endif; ?>
+        <div class="related-info">
+          <h4><?= h($comp['nombre_comun']) ?></h4>
+          <div class="related-meta">
+            <?php if (!empty($comp['sku'])): ?><span class="badge">SKU <?= h($comp['sku']) ?></span><?php endif; ?>
+          </div>
+        </div>
+        <span class="card-magnify" aria-hidden="true">🔎</span>
+      </a>
+      <script>console.log('✅ [Manual] Tarjeta componente renderizada:', '<?= h($comp['slug']) ?>');</script>
+    </section>
+  <?php else: ?>
+    <section class="manual-entity">
+      <h2>📦 Kit vinculado</h2>
+      <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>" class="related-card" title="Ver kit <?= h($kit['nombre']) ?>">
+        <?php if (!empty($kit['imagen_portada'])): ?>
+          <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura kit falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+        <?php else: ?>
+          <div class="thumbnail-placeholder"><span class="placeholder-icon">📦</span></div>
+          <script>console.log('⚠️ [Manual] Kit sin imagen, usando placeholder');</script>
+        <?php endif; ?>
+        <div class="related-info">
+          <h4><?= h($kit['nombre']) ?></h4>
+          <div class="related-meta">
+            <?php if (!empty($kit['codigo'])): ?><span class="badge">Código <?= h($kit['codigo']) ?></span><?php endif; ?>
+            <?php if (!empty($kit['version'])): ?><span class="badge">v<?= h($kit['version']) ?></span><?php endif; ?>
+          </div>
+          <?php if (!empty($kit['resumen'])): ?>
+            <p class="related-excerpt"><?= h(mb_substr($kit['resumen'], 0, 100)) ?>...</p>
+          <?php endif; ?>
+        </div>
+        <span class="card-magnify" aria-hidden="true">🔎</span>
+      </a>
+      <script>console.log('✅ [Manual] Tarjeta kit renderizada:', '<?= h($kit['slug']) ?>');</script>
+    </section>
+  <?php endif; ?>
+
+  <?php if (!empty($clases)): ?>
+    <section class="kit-classes">
+      <h2>📚 Clases Relacionadas</h2>
+      <div class="related-grid">
+        <?php foreach ($clases as $c): ?>
+          <a href="/<?= h($c['slug']) ?>" class="related-card">
+            <?php if (!empty($c['imagen_portada'])): ?>
+              <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura clase falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+            <?php else: ?>
+              <div class="thumbnail-placeholder"><span class="placeholder-icon">🔬</span></div>
+              <script>console.log('⚠️ [Manual] Clase sin imagen, usando placeholder');</script>
+            <?php endif; ?>
+            <div class="related-info">
+              <h4><?= h($c['nombre']) ?></h4>
+              <div class="related-meta">
+                <span class="badge">Ciclo <?= h($c['ciclo']) ?></span>
+                <span class="badge"><?= h(ucfirst($c['dificultad'] ?? '')) ?></span>
+              </div>
+              <?php if (!empty($c['resumen'])): ?>
+                <p class="related-excerpt"><?= h(mb_substr($c['resumen'], 0, 100)) ?>...</p>
+              <?php endif; ?>
+            </div>
+            <span class="card-magnify" aria-hidden="true">🔎</span>
+          </a>
+        <?php endforeach; ?>
+      </div>
+      <script>console.log('📚 [Manual] Clases vinculadas:', <?= count($clases) ?>);</script>
+    </section>
+  <?php endif; ?>
 </div>
 <script>
 console.log('🔍 [Manual] Kit:', <?= json_encode(['id'=>$kit['id'],'slug'=>$kit['slug'],'nombre'=>$kit['nombre']]) ?>);
