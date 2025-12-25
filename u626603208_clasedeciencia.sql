@@ -1089,6 +1089,7 @@ CREATE TABLE `kit_items` (
   `slug` varchar(191) DEFAULT NULL,
   `categoria_id` int(11) DEFAULT NULL,
   `advertencias_seguridad` text DEFAULT NULL,
+  `seguridad` longtext DEFAULT NULL CHECK (json_valid(`seguridad`)),
   `descripcion_html` mediumtext DEFAULT NULL COMMENT 'Descripción en HTML del componente',
   `foto_url` varchar(255) DEFAULT NULL COMMENT 'URL de imagen representativa',
   `unidad` varchar(32) DEFAULT NULL,
