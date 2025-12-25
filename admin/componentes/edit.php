@@ -764,6 +764,45 @@ if ($is_edit) {
     });
   })();
 </script>
+<!-- Editor: CKEditor 4 for Componente descripcion_html (match Kits) -->
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
+<script>
+  (function initCKEComponent(){
+    try {
+      if (window.CKEDITOR) {
+        CKEDITOR.replace('descripcion_html', {
+          height: 500,
+          removePlugins: 'elementspath',
+          resize_enabled: true,
+          contentsCss: ['/assets/css/style.css', '/assets/css/article-content.css'],
+          bodyClass: 'article-body'
+        });
+        console.log('✅ [ComponentesEdit] CKEditor 4 cargado');
+      } else {
+        console.log('⚠️ [ComponentesEdit] CKEditor no disponible, usando textarea simple');
+      }
+    } catch(e) {
+      console.log('❌ [ComponentesEdit] Error iniciando CKEditor:', e && e.message);
+    }
+  })();
+  (function hideCkeWarningsCss(){
+    try {
+      const style = document.createElement('style');
+      style.setAttribute('data-cke-warn-hide','1');
+      style.textContent = '
+        .cke_notification.cke_notification_warning,
+        .cke_upgrade_notice,
+        .cke_browser_warning,
+        .cke_panel_warning,
+        .cke_warning { display: none !important; }
+      ';
+      document.head.appendChild(style);
+      console.log('✅ [ComponentesEdit] CKEditor warnings ocultos por CSS');
+    } catch(e) {
+      console.log('⚠️ [ComponentesEdit] No se pudo inyectar CSS para warnings:', e && e.message);
+    }
+  })();
+</script>
 <?php endif; ?>
 
 <?php include '../footer.php'; ?>
