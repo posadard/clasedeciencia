@@ -23,6 +23,19 @@ if ($is_edit) {
 
 $categorias = get_material_categories($pdo);
 
+// Cargar manuales del componente para UI de publicación (solo en edición)
+$cmp_manuals = [];
+if ($is_edit) {
+  try {
+    $stmM = $pdo->prepare('SELECT id, slug, version, status, idioma, time_minutes, dificultad_ensamble, updated_at, published_at FROM kit_manuals WHERE item_id = ? ORDER BY idioma, version DESC, id DESC');
+    $stmM->execute([$id]);
+    $cmp_manuals = $stmM->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    echo "<script>console.log('🔍 [ComponentesEdit] Manuales cargados:', " . (int)count($cmp_manuals) . ");</script>";
+  } catch (PDOException $e) {
+    echo "<script>console.log('❌ [ComponentesEdit] Error cargando manuales:', " . json_encode($e->getMessage()) . ");</script>";
+  }
+}
+
 $errores = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
@@ -303,6 +316,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           $id = (int)$pdo->lastInsertId();
         }
         echo "<script>console.log('✅ [Admin] Componente guardado');</script>";
+
+        // Sincronizar publicación de manuales del componente (dual-list) antes de redirigir
+        try {
+          $posted_manuals = isset($_POST['manuals_published']) ? (array)$_POST['manuals_published'] : [];
+          $selected_ids = array_values(array_filter(array_map(function($v){ return ctype_digit((string)$v) ? (int)$v : null; }, $posted_manuals)));
+          echo "<script>console.log('🔍 [ComponentesEdit] manuals_published POST:', " . json_encode($selected_ids) . ");</script>";
+          // Obtener todos los manuales actuales del componente
+          $stmC = $pdo->prepare('SELECT id FROM kit_manuals WHERE item_id = ?');
+          $stmC->execute([$id]);
+          $all = $stmC->fetchAll(PDO::FETCH_ASSOC) ?: [];
+          $all_ids = array_map(function($r){ return (int)$r['id']; }, $all);
+          // Publicar seleccionados
+          if (!empty($selected_ids)) {
+            $ph = implode(',', array_fill(0, count($selected_ids), '?'));
+            $sqlP = "UPDATE kit_manuals SET status = 'published', published_at = IFNULL(published_at, NOW()) WHERE id IN ($ph) AND item_id = ?";
+            $params = array_merge($selected_ids, [$id]);
+            $pdo->prepare($sqlP)->execute($params);
+          }
+          // Despublicar los no seleccionados
+          $to_unpub = array_values(array_diff($all_ids, $selected_ids));
+          if (!empty($to_unpub)) {
+            $ph2 = implode(',', array_fill(0, count($to_unpub), '?'));
+            $sqlU = "UPDATE kit_manuals SET status = 'discontinued' WHERE id IN ($ph2) AND item_id = ?";
+            $params2 = array_merge($to_unpub, [$id]);
+            $pdo->prepare($sqlU)->execute($params2);
+          }
+          echo "<script>console.log('✅ [ComponentesEdit] Manuales sincronizados');</script>";
+        } catch (Exception $e) {
+          echo "<script>console.log('❌ [ComponentesEdit] Error sincronizando manuales:', " . json_encode($e->getMessage()) . ");</script>";
+        }
+
         header('Location: /admin/componentes/index.php');
         exit;
       } catch (PDOException $e) {
@@ -334,7 +378,7 @@ include '../header.php';
 </div>
 <?php endif; ?>
 
-<form method="POST">
+<form method="POST" id="cmp-form" class="compact-form">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
   <input type="hidden" name="action" value="" />
   <div class="form-group">
@@ -465,6 +509,127 @@ if ($is_edit) {
     </div>
     <small>Escribe para buscar atributos. Al seleccionar, edita su valor en el modal.</small>
   </div>
+</div>
+
+<!-- Manuales del Componente (Dual-list publicar/despublicar) -->
+<div class="card mt-xl">
+  <h3>Manuales del Componente</h3>
+  <small class="help-text">Publica o despublica manuales; crea nuevos desde aquí.</small>
+  <div class="inline-row" style="flex-wrap: wrap; gap:8px; margin:8px 0;">
+    <a class="btn" href="/admin/kits/manuals/edit.php?item_id=<?= (int)$id ?>">+ Nuevo Manual</a>
+    <a class="btn btn-secondary" href="/admin/kits/manuals/index.php?item_id=<?= (int)$id ?>">Ver todos</a>
+  </div>
+  <div class="dual-listbox-container">
+    <div class="listbox-panel">
+      <div class="listbox-header"><strong>Disponibles</strong> <span id="man-available-count" class="counter">(0)</span></div>
+      <input type="text" id="search-manuales" class="listbox-search" placeholder="🔍 Buscar manuales...">
+      <div class="listbox-content" id="available-manuales">
+        <?php foreach ($cmp_manuals as $m): ?>
+          <?php if (strtolower($m['status'] ?? '') !== 'published'): ?>
+            <div class="competencia-item" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" data-status="<?= htmlspecialchars($m['status'] ?? 'draft', ENT_QUOTES, 'UTF-8') ?>" onclick="selectManualItem(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo">
+                <?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?>
+                <em class="status-badge status-<?= htmlspecialchars(strtolower($m['status'] ?? 'draft'), ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($m['status'] ?? 'draft', ENT_QUOTES, 'UTF-8') ?></em>
+              </span>
+              <a class="edit-component" title="Editar" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>" onclick="event.stopPropagation();">✏️</a>
+            </div>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <div class="listbox-buttons">
+      <button type="button" onclick="moveAllManuales(true)" title="Publicar todos">➡️</button>
+      <button type="button" onclick="moveAllManuales(false)" title="Quitar publicación de todos">⬅️</button>
+    </div>
+    <div class="listbox-panel">
+      <div class="listbox-header"><strong>Publicados</strong> <span id="man-selected-count" class="counter">(0)</span></div>
+      <div class="listbox-content" id="selected-manuales">
+        <?php foreach ($cmp_manuals as $m): ?>
+          <?php if (strtolower($m['status'] ?? '') === 'published'): ?>
+            <div class="competencia-item selected" data-id="<?= (int)$m['id'] ?>" data-slug="<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" data-idioma="<?= htmlspecialchars($m['idioma'] ?? '', ENT_QUOTES, 'UTF-8') ?>" data-status="published" onclick="deselectManualItem(this)">
+              <span class="comp-nombre"><?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?></span>
+              <span class="comp-codigo"><?= htmlspecialchars(($m['idioma'] ?? 'es') . ' · v' . ($m['version'] ?? '1'), ENT_QUOTES, 'UTF-8') ?></span>
+              <button type="button" class="remove-btn" onclick="event.stopPropagation(); deselectManualItem(this.parentElement)">×</button>
+              <a class="edit-component" title="Editar" href="/admin/kits/manuals/edit.php?id=<?= (int)$m['id'] ?>" onclick="event.stopPropagation();">✏️</a>
+              <?php if (!empty($material['slug'])): ?>
+                <a class="edit-component" title="Ver público" target="_blank" href="/<?= htmlspecialchars($m['slug'], ENT_QUOTES, 'UTF-8') ?>" onclick="event.stopPropagation();">🔗</a>
+              <?php endif; ?>
+            </div>
+          <?php endif; ?>
+        <?php endforeach; ?>
+      </div>
+      <small class="hint">Haz clic para quitar publicación. Usa × para quitar.</small>
+    </div>
+    <!-- Hidden inputs (fuera del form) apuntan a cmp-form -->
+    <div id="manuales-hidden">
+      <?php foreach ($cmp_manuals as $m): if (strtolower($m['status'] ?? '') === 'published'): ?>
+        <input type="hidden" name="manuals_published[]" value="<?= (int)$m['id'] ?>" form="cmp-form">
+      <?php endif; endforeach; ?>
+    </div>
+  </div>
+  <script>
+    function updateManualCounts(){
+      const a = document.querySelectorAll('#available-manuales .competencia-item:not(.hidden)').length;
+      const s = document.querySelectorAll('#selected-manuales .competencia-item').length;
+      document.getElementById('man-available-count').textContent = `(${a})`;
+      document.getElementById('man-selected-count').textContent = `(${s})`;
+      console.log('🔍 [ManualesCmp] Disponibles:', a, 'Publicados:', s);
+    }
+    function addManualHidden(id){
+      const wrap = document.getElementById('manuales-hidden');
+      if (!wrap.querySelector(`input[name="manuals_published[]"][value="${id}"]`)){
+        const i = document.createElement('input'); i.type='hidden'; i.name='manuals_published[]'; i.value=id; i.setAttribute('form','cmp-form'); wrap.appendChild(i);
+      }
+    }
+    function removeManualHidden(id){
+      const wrap = document.getElementById('manuales-hidden');
+      wrap.querySelectorAll(`input[name="manuals_published[]"][value="${id}"]`).forEach(n => n.remove());
+    }
+    function removeStatusBadge(el){ const code = el.querySelector('.comp-codigo'); const b = code && code.querySelector('.status-badge'); if (b) b.remove(); }
+    function addStatusBadge(el, status){ const code = el.querySelector('.comp-codigo'); if (!code) return; let b = code.querySelector('.status-badge'); if (!b){ b=document.createElement('em'); b.className='status-badge'; code.appendChild(b);} b.className='status-badge status-'+status; b.textContent=status; }
+    function selectManualItem(el){
+      const id = el.getAttribute('data-id');
+      el.classList.add('selected'); el.dataset.status='published';
+      el.onclick = function(){ deselectManualItem(el); };
+      const rm = document.createElement('button'); rm.type='button'; rm.className='remove-btn'; rm.textContent='×'; rm.onclick=function(ev){ ev.stopPropagation(); deselectManualItem(el); }; el.appendChild(rm);
+      removeStatusBadge(el);
+      document.getElementById('selected-manuales').appendChild(el);
+      addManualHidden(id);
+      updateManualCounts();
+      console.log('✅ [ManualesCmp] Publicado manual', id);
+    }
+    function deselectManualItem(el){
+      const id = el.getAttribute('data-id');
+      el.classList.remove('selected'); el.dataset.status='discontinued';
+      el.querySelectorAll('.remove-btn').forEach(b => b.remove());
+      el.onclick = function(){ selectManualItem(el); };
+      addStatusBadge(el, 'discontinued');
+      document.getElementById('available-manuales').appendChild(el);
+      removeManualHidden(id);
+      updateManualCounts();
+      console.log('⚠️ [ManualesCmp] Despublicado manual', id);
+    }
+    function moveAllManuales(add){
+      const from = add ? document.querySelectorAll('#available-manuales .competencia-item:not(.hidden)') : document.querySelectorAll('#selected-manuales .competencia-item');
+      Array.from(from).forEach(el => add ? selectManualItem(el) : deselectManualItem(el));
+      console.log(add ? '✅ [ManualesCmp] Publicados todos' : '⚠️ [ManualesCmp] Despublicados todos');
+    }
+    document.addEventListener('DOMContentLoaded', function(){
+      const search = document.getElementById('search-manuales');
+      if (search){
+        search.addEventListener('input', function(){
+          const q = (this.value||'').toLowerCase();
+          document.querySelectorAll('#available-manuales .competencia-item').forEach(el => {
+            const txt = (el.dataset.slug + ' ' + (el.dataset.idioma||'')).toLowerCase();
+            el.classList.toggle('hidden', !!q && !txt.includes(q));
+          });
+          updateManualCounts();
+        });
+      }
+      updateManualCounts();
+    });
+  </script>
 </div>
 
 <!-- Modal Editar Atributo (Componente) -->
