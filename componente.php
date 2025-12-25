@@ -284,6 +284,7 @@ include 'includes/header.php';
                                     </div>
                                 </div>
                             <?php endif; ?>
+                            <span class="card-magnify" aria-hidden="true">🔎</span>
                         </div>
                     </div>
                 </section>

@@ -296,6 +296,7 @@ include 'includes/header.php';
                         </div>
                     </div>
                     <?php endif; ?>
+                    <span class="card-magnify" aria-hidden="true">🔎</span>
                 </div>
             </div>
         </section>
@@ -581,6 +582,7 @@ include 'includes/header.php';
                             <?php endforeach; ?>
                         </ul>
                     <?php endif; ?>
+                    <span class="card-magnify" aria-hidden="true">🔎</span>
                 </div>
             <?php endforeach; ?>
         </section>
@@ -735,6 +737,7 @@ include 'includes/header.php';
                                 <p class="related-excerpt"><?= h(mb_substr($rel['resumen'], 0, 100)) ?>...</p>
                             <?php endif; ?>
                         </div>
+                        <span class="card-magnify" aria-hidden="true">🔎</span>
                     </a>
                 <?php endforeach; ?>
             </div>
@@ -823,4 +826,11 @@ console.log('🛡️ [Clase] Nota de seguridad aplicada por defecto');
 console.log('🏷️ [Clase] Tags:', <?= count($tags) ?>);
 console.log('🔗 [Clase] Relacionadas:', <?= count($clases_relacionadas) ?>);
 </script>
+<style>
+/* Magnifier icon for clickable cards */
+.card-magnify { position:absolute; right:8px; bottom:8px; font-size:18px; opacity:0.8; }
+.related-card { position:relative; }
+.kit-inline-card { position:relative; }
+.kit-card { position:relative; }
+</style>
 <?php include 'includes/footer.php'; ?>
