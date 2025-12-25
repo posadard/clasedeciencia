@@ -4080,6 +4080,25 @@ strong, b {
     line-height: 1.7;
 }
 
+/* Compact safety block variant for summary-right column */
+.safety-info.summary-safety {
+    margin: 0; /* sits inside summary-right */
+    padding: var(--spacing-md);
+    border-width: 1px;
+    border-left-width: 4px;
+}
+.safety-info.summary-safety .safety-title {
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-sm);
+}
+.safety-info.summary-safety .safety-notes {
+    padding: var(--spacing-sm);
+    line-height: 1.6;
+}
+.safety-info.summary-safety .safety-note {
+    font-size: 0.95rem;
+}
+
 /* Safety kit warnings box */
 .safety-kits {
     background: #fffdf5;

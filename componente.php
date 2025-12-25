@@ -73,19 +73,19 @@ include 'includes/header.php';
                         </div>
                         <?php endif; ?>
                     </div>
+                    <?php if (!empty($material['description'])): ?>
+                    <section class="safety-info summary-safety">
+                        <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+                        <div class="safety-content">
+                            <div class="safety-notes"><?= nl2br(h($material['description'])) ?></div>
+                            <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
+                        </div>
+                    </section>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
 
-        <?php if (!empty($material['description'])): ?>
-        <section class="safety-info">
-            <h2 class="safety-title">⚠️ Información de Seguridad</h2>
-            <div class="safety-content">
-                <div class="safety-notes"><?= nl2br(h($material['description'])) ?></div>
-                <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
-            </div>
-        </section>
-        <?php endif; ?>
 
     <?php if (!empty($material['descripcion_html'])): ?>
     <div class="content-section">
