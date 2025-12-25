@@ -407,6 +407,7 @@ include 'includes/header.php';
                             <p class="related-excerpt"><?= h(mb_substr($c['resumen'], 0, 100)) ?>...</p>
                         <?php endif; ?>
                     </div>
+                    <span class="card-magnify" aria-hidden="true">🔎</span>
                 </a>
             <?php endforeach; ?>
         </div>
@@ -438,5 +439,9 @@ console.log('📚 [componente] Clases relacionadas:', <?= isset($clases_rel) ? c
     .kit-inline-card .kit-inline-left { flex-basis:56px; width:56px; }
     .kit-inline-card .manual-type-emoji { font-size:44px; }
 }
+/* Magnifier icon for clickable cards */
+.card-magnify { position:absolute; right:8px; bottom:8px; font-size:18px; opacity:0.8; }
+.related-card { position:relative; }
+.kit-inline-card { position:relative; }
 </style>
 <?php include 'includes/footer.php'; ?>
