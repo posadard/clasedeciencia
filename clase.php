@@ -554,13 +554,14 @@ include 'includes/header.php';
                             <?php if ($kit_seguridad !== ''): ?>
                                 <p class="kit-security">⚠️ <?= h($kit_seguridad) ?></p>
                             <?php endif; ?>
+                            <span class="card-magnify" aria-hidden="true">🔎</span>
                         </div>
                     </div>
                     <?php if (!empty($materiales_por_kit[$kit['id']])): ?>
                         <h4>Componentes necesarios</h4>
                         <ul class="materials-list">
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
-                                <li <?php if (!empty($m['slug'])): ?>role="link" tabindex="0" onclick="event.stopPropagation(); console.log('🧪 [Clase] Click componente →','<?= h($m['slug']) ?>'); window.location.href='/<?= h($m['slug']) ?>';"<?php endif; ?>>
+                                    <li <?php if (!empty($m['slug'])): ?>role="link" tabindex="0" onclick="event.stopPropagation(); console.log('🧪 [Clase] Click componente →','<?= h($m['slug']) ?>'); window.location.href='/<?= h($m['slug']) ?>';"<?php endif; ?>>
                                     <span class="material-name"><?= h($m['nombre_comun']) ?></span>
                                     <?php if (!empty($m['advertencias_seguridad'])): ?>
                                         <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
@@ -578,11 +579,11 @@ include 'includes/header.php';
                                     <?php if (!empty($m['notas'])): ?>
                                         <small class="material-notes"><?= h($m['notas']) ?></small>
                                     <?php endif; ?>
+                                        <span class="card-magnify" aria-hidden="true">🔎</span>
                                 </li>
                             <?php endforeach; ?>
                         </ul>
                     <?php endif; ?>
-                    <span class="card-magnify" aria-hidden="true">🔎</span>
                 </div>
             <?php endforeach; ?>
         </section>
@@ -832,5 +833,8 @@ console.log('🔗 [Clase] Relacionadas:', <?= count($clases_relacionadas) ?>);
 .related-card { position:relative; }
 .kit-inline-card { position:relative; }
 .kit-card { position:relative; }
+.kit-top-content { position:relative; }
+.materials-list li { position:relative; }
+.materials-list li .card-magnify { font-size:16px; }
 </style>
 <?php include 'includes/footer.php'; ?>
