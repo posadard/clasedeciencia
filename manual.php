@@ -374,7 +374,7 @@ include 'includes/header.php';
           <div class="manual-toc-right" style="flex:1; min-width:0;">
             <?php if ($hasAnySafety || $status_key === 'discontinued'): ?>
               <section class="safety-info">
-                <h2>⚠️ Seguridad</h2>
+                <h2><?= ($ambito === 'componente' ? '⚠️ Seguridad del Componente' : '⚠️ Seguridad') ?></h2>
                 <?php if ($status_key === 'discontinued'): ?>
                   <div class="badge badge-danger" style="margin:4px 0;">⚠️ Este manual ha sido descontinuado</div>
                 <?php endif; ?>
@@ -451,12 +451,12 @@ include 'includes/header.php';
                   }
                   if (!empty($tool_pairs)) { $tools_line = implode(' - ', $tool_pairs); }
                 ?>
-                <?php if ($components_line !== '' || $tools_line !== ''): ?>
+                <?php if ($ambito === 'kit' && ($components_line !== '' || $tools_line !== '')): ?>
                   <div class="safety-concat" aria-label="Notas adicionales de seguridad">
                     <?php if ($components_line !== ''): ?><div class="safety-concat-line"><?= h($components_line) ?></div><?php endif; ?>
                     <?php if ($tools_line !== ''): ?><div class="safety-concat-line"><?= h($tools_line) ?></div><?php endif; ?>
                   </div>
-                  <script>console.log('🧪 [Manual] Notas seguridad concat:', { componentes: <?= json_encode($comp_pairs) ?>, herramientas: <?= json_encode($tool_pairs) ?> });</script>
+                  <script>console.log('🧪 [Manual] Notas seguridad concat (kit):', { componentes: <?= json_encode($comp_pairs) ?>, herramientas: <?= json_encode($tool_pairs) ?> });</script>
                 <?php endif; ?>
               </section>
             <?php endif; ?>
