@@ -1217,22 +1217,24 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
       const arr = Array.isArray(raw) ? raw : [];
       notes = arr.map(normalizeNote);
     }
-    // Prefill desde seguridad del componente si el ámbito es componente y no hay JSON manual aún
+    // Prefill/merge desde seguridad del componente si el ámbito es componente
     try {
-      const noManualJson = !secTextarea.value || secTextarea.value.trim() === '';
-      if (AMBITO === 'componente' && COMPONENT_SAFETY && noManualJson) {
+      if (AMBITO === 'componente' && COMPONENT_SAFETY) {
         const cmin = (typeof COMPONENT_SAFETY.edad_min !== 'undefined') ? parseInt(COMPONENT_SAFETY.edad_min, 10) : null;
         const cmax = (typeof COMPONENT_SAFETY.edad_max !== 'undefined') ? parseInt(COMPONENT_SAFETY.edad_max, 10) : null;
-        if (cmin !== null && !isNaN(cmin)) { ageMinInput.value = String(cmin); }
-        if (cmax !== null && !isNaN(cmax)) { ageMaxInput.value = String(cmax); }
+        // Solo llenar edad si no ha sido definida aún
+        if ((!ageMinInput.value || ageMinInput.value.trim() === '') && cmin !== null && !isNaN(cmin)) { ageMinInput.value = String(cmin); }
+        if ((!ageMaxInput.value || ageMaxInput.value.trim() === '') && cmax !== null && !isNaN(cmax)) { ageMaxInput.value = String(cmax); }
+        // Añadir nota del componente si no existe en la lista
         const cnotes = (COMPONENT_SAFETY.notas ? String(COMPONENT_SAFETY.notas).trim() : '');
         if (cnotes) {
-          notes.push({ nota: cnotes, categoria: '' });
+          const exists = notes.some(n => (String(n.nota||'').trim() === cnotes));
+          if (!exists) { notes.push({ nota: cnotes, categoria: '' }); }
         }
-        console.log('✅ [ManualsEdit] Prefill seguridad desde componente (edad/notas)');
+        console.log('✅ [ManualsEdit] Merge seguridad componente (edad/notas)');
       }
     } catch (e) {
-      console.log('⚠️ [ManualsEdit] Prefill componente error:', e && e.message);
+      console.log('⚠️ [ManualsEdit] Merge componente error:', e && e.message);
     }
     render();
     updateAgeVisibility();
