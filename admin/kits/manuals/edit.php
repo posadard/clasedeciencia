@@ -1310,6 +1310,22 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     const max = maxRaw === '' ? null : parseInt(maxRaw,10);
     const extras = notes.map(n => ({ nota: n.nota, categoria: n.categoria }));
     let payload = null;
+    const amb = ambSel ? ambSel.value : 'kit';
+    // Componente: si está marcada la visibilidad y el componente tiene edad, preferir edad del componente
+    if (amb === 'componente' && compSafetyCheckbox && compSafetyCheckbox.checked) {
+      const compHas = compHasAgeFromWarn(getSelectedComponentWarn());
+      payload = { usar_seguridad_componente: true };
+      if (!compHas && (min !== null || max !== null)) {
+        payload.edad = {};
+        if (min !== null) payload.edad.min = min;
+        if (max !== null) payload.edad.max = max;
+        console.log('ℹ️ [ManualsEdit] Componente sin edad JSON, usando edad propia');
+      } else if (compHas) {
+        console.log('ℹ️ [ManualsEdit] Merge: edad del componente presente, no se serializa edad propia');
+      }
+      if (extras.length) { payload.notas_extra = extras; }
+      console.log('ℹ️ [ManualsEdit] Merge: usar advertencias del componente');
+    } else if (useKitSafety && useKitSafety.checked) {
     if (useKitSafety && useKitSafety.checked) {
       payload = { usar_seguridad_kit: true };
       const kitHas = hasKitAge();

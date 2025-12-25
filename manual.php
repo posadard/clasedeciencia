@@ -422,11 +422,20 @@ include 'includes/header.php';
                     if ($compWarnRaw !== '' && ($compWarnRaw[0] === '{' || $compWarnRaw[0] === '[')) {
                       try { $tmpCW = json_decode($compWarnRaw, true); if (is_array($tmpCW)) { $compWarnObj = $tmpCW; $compWarnIsJson = true; } } catch(Exception $e) { $compWarnObj = null; $compWarnIsJson = false; }
                     }
-                    // Derive component age into effectiveAge if manual age missing
+                    // Prefer component age when editor marked component warnings; otherwise use as fallback
                     if ($compWarnIsJson && is_array($compWarnObj) && array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)) {
-                      if (($effectiveAge['min'] === null || $effectiveAge['max'] === null)) {
+                      $preferCompAge = false;
+                      if (!empty($manualSegRaw) && is_array($manualSegRaw) && array_keys($manualSegRaw) !== range(0, count($manualSegRaw)-1)) {
+                        $preferCompAge = !empty($manualSegRaw['usar_seguridad_componente']);
+                      }
+                      if ($preferCompAge) {
                         if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $effectiveAge['min'] = (int)$compWarnObj['edad_min']; }
                         if (isset($compWarnObj['edad_max']) && $compWarnObj['edad_max'] !== '') { $effectiveAge['max'] = (int)$compWarnObj['edad_max']; }
+                      } else {
+                        if (($effectiveAge['min'] === null || $effectiveAge['max'] === null)) {
+                          if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $effectiveAge['min'] = (int)$compWarnObj['edad_min']; }
+                          if (isset($compWarnObj['edad_max']) && $compWarnObj['edad_max'] !== '') { $effectiveAge['max'] = (int)$compWarnObj['edad_max']; }
+                        }
                       }
                     }
                   ?>
