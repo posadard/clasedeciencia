@@ -40,13 +40,8 @@ if (!empty($manual['kit_id'])) {
     $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
   } catch (Exception $e) { $kit = null; }
 }
-if (!$kit && isset($manual['ambito']) && $manual['ambito'] === 'componente' && !empty($manual['item_id'])) {
-  try {
-    $stmtK = $pdo->prepare('SELECT k.id, k.nombre, k.slug, k.codigo, k.version, k.resumen, k.contenido_html, k.imagen_portada, k.video_portada, k.time_minutes, k.dificultad_ensamble, k.seguridad, k.seo_title, k.seo_description, k.activo, k.updated_at FROM kits k JOIN kit_componentes kc ON kc.kit_id = k.id WHERE kc.item_id = ? AND k.activo = 1 LIMIT 1');
-    $stmtK->execute([(int)$manual['item_id']]);
-    $kit = $stmtK->fetch(PDO::FETCH_ASSOC);
-  } catch (Exception $e) { $kit = null; }
-}
+// Precisión de relación: no derivar kit desde item_id cuando el manual es de componente.
+// Para ámbito 'kit', solo se usa kits.id = kit_manuals.kit_id; para ámbito 'componente', kit puede ser NULL.
 if (!$kit) {
   // Si es ámbito componente y hay item_id, continuamos sin kit (manual anclado al componente)
   $is_component_scope = (isset($manual['ambito']) && $manual['ambito'] === 'componente' && !empty($manual['item_id']));
