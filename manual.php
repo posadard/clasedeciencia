@@ -107,7 +107,7 @@ if (!empty($manual['slug'])) {
 }
 if ($ambito === 'componente' && !empty($manual['item_id'])) {
   try {
-    $stmtC = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada, advertencias_seguridad FROM kit_items WHERE id = ? LIMIT 1');
+    $stmtC = $pdo->prepare('SELECT id, nombre_comun, slug, sku, foto_url AS imagen_portada, advertencias_seguridad FROM kit_items WHERE id = ? LIMIT 1');
     $stmtC->execute([(int)$manual['item_id']]);
     $comp = $stmtC->fetch(PDO::FETCH_ASSOC) ?: null;
   } catch (Exception $e) { $comp = null; }
@@ -120,7 +120,7 @@ if ($ambito === 'componente' && (empty($manual['item_id']) || (int)$manual['item
   if (count($parts) >= 4 && $parts[0] === 'manual' && $parts[2] === 'componente') {
     $entity_slug = $parts[3];
     try {
-      $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada, advertencias_seguridad FROM kit_items WHERE slug = ? LIMIT 1');
+      $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, foto_url AS imagen_portada, advertencias_seguridad FROM kit_items WHERE slug = ? LIMIT 1');
       $stmtC2->execute([$entity_slug]);
       $comp = $stmtC2->fetch(PDO::FETCH_ASSOC) ?: null;
     } catch (Exception $e) { /* ignore */ }
@@ -327,6 +327,17 @@ include 'includes/header.php';
         // ¿Hay algo para mostrar?
         $hasAnySafety = ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null) || !empty($manualNotes) || !empty($extNotesItems) || ($extNotesText !== '') || ($status_key === 'discontinued');
       ?>
+      <script>
+      console.log('🔍 [Manual] Safety debug →', {
+        ambito: '<?= h($ambito) ?>',
+        hasManualSafety: <?= json_encode($hasManualSafety) ?>,
+        manualNotesCount: <?= json_encode(is_array($manualNotes) ? count($manualNotes) : 0) ?>,
+        extAge: <?= json_encode(['min'=>$extAge['min'],'max'=>$extAge['max']]) ?>,
+        effectiveAge: <?= json_encode(['min'=>$effectiveAge['min'],'max'=>$effectiveAge['max']]) ?>,
+        extNotesItemsCount: <?= json_encode(is_array($extNotesItems) ? count($extNotesItems) : 0) ?>,
+        extNotesTextLen: <?= json_encode(strlen($extNotesText)) ?>
+      });
+      </script>
       <?php
         $toc_items = [];
         if (!empty($pasos)) {
@@ -802,6 +813,11 @@ var KIT_INFO = <?= json_encode(!empty($kit) ? ['id'=>$kit['id'],'slug'=>$kit['sl
 var COMP_INFO = <?= json_encode(($ambito === 'componente' && $comp) ? ['id'=>$comp['id'],'slug'=>$comp['slug'],'nombre'=>$comp['nombre_comun']] : null) ?>;
 if (KIT_INFO) console.log('🔍 [Manual] Kit:', KIT_INFO);
 if (COMP_INFO) console.log('🔍 [Manual] Componente:', COMP_INFO);
+var AMBITO = '<?= h($ambito) ?>';
+var MANUAL_ITEM_ID = <?= json_encode(isset($manual['item_id']) ? $manual['item_id'] : null) ?>;
+var COMP_WARN = <?= json_encode(($ambito === 'componente' && $comp && isset($comp['advertencias_seguridad'])) ? (string)$comp['advertencias_seguridad'] : '') ?>;
+console.log('🔍 [Manual] Ámbito:', AMBITO, '| item_id:', MANUAL_ITEM_ID);
+console.log('🔍 [Manual] Advertencias componente len:', COMP_WARN ? COMP_WARN.length : 0, '| head:', COMP_WARN ? COMP_WARN.slice(0, 80) : '');
 console.log('🔍 [Manual] Slug manual:', '<?= h($manual_slug) ?>');
 console.log('✅ [Manual] Cargado:', <?= json_encode(['id'=>$manual['id'],'version'=>$manual['version'],'idioma'=>$manual['idioma'],'status'=>$manual['status']]) ?>);
 console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? count($pasos) : 0 ?>);
