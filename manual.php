@@ -247,9 +247,9 @@ include 'includes/header.php';
             if (is_array($tmp)) { $seg = $tmp; $manualSegRaw = $tmp; }
         }
       ?>
-      <?php /* Seguridad: solo medidas del manual (edad + notas). No se heredan del kit ni del componente. */ ?>
+      <?php /* Seguridad: medidas del manual y, debajo, las del kit o componente según el ámbito. Edad externa reemplaza la del manual si está presente. */ ?>
       <?php
-        // Seguridad efectiva: solo edad y notas del manual
+        // 1) Medidas del manual
         $effectiveAge = ['min' => null, 'max' => null];
         $manualNotes = [];
         $hasManualSafety = !empty($manualSegRaw);
@@ -275,7 +275,56 @@ include 'includes/header.php';
             }
           }
         }
-        $hasAnySafety = !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null) || ($status_key === 'discontinued');
+
+        // 2) Medidas externas (kit o componente) y edad externa
+        $extAge = ['min' => null, 'max' => null];
+        $extNotesItems = []; // array of strings or objects {nota,categoria}
+        $extNotesText = '';
+
+        // Kit externo: seguridad JSON en kits.seguridad
+        $kitSeg = null;
+        if (!empty($kit) && !empty($kit['seguridad'])) {
+          try { $tmpKit = json_decode($kit['seguridad'], true); if (is_array($tmpKit)) { $kitSeg = $tmpKit; } } catch(Exception $e) { $kitSeg = null; }
+        }
+        if ($ambito === 'kit' && $kitSeg) {
+          if (isset($kitSeg['edad_min']) && $kitSeg['edad_min'] !== '') { $extAge['min'] = (int)$kitSeg['edad_min']; }
+          if (isset($kitSeg['edad_max']) && $kitSeg['edad_max'] !== '') { $extAge['max'] = (int)$kitSeg['edad_max']; }
+          if (isset($kitSeg['notas'])) {
+            if (is_array($kitSeg['notas'])) { $extNotesItems = $kitSeg['notas']; }
+            else { $extNotesText = (string)$kitSeg['notas']; }
+          }
+        }
+
+        // Componente externo: advertencias_seguridad en kit_items (puede ser JSON)
+        $compWarnRaw = '';
+        $compWarnObj = null;
+        $compWarnIsObj = false;
+        if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])) {
+          $compWarnRaw = (string)$comp['advertencias_seguridad'];
+          $first = substr($compWarnRaw, 0, 1);
+          if ($first === '{' || $first === '[') {
+            try { $tmpCW = json_decode($compWarnRaw, true); if (is_array($tmpCW)) { $compWarnObj = $tmpCW; $compWarnIsObj = (array_keys($compWarnObj) !== range(0, count($compWarnObj)-1)); } } catch(Exception $e) { $compWarnObj = null; $compWarnIsObj = false; }
+          }
+          if ($compWarnObj && $compWarnIsObj) {
+            if (isset($compWarnObj['edad_min']) && $compWarnObj['edad_min'] !== '') { $extAge['min'] = (int)$compWarnObj['edad_min']; }
+            if (isset($compWarnObj['edad_max']) && $compWarnObj['edad_max'] !== '') { $extAge['max'] = (int)$compWarnObj['edad_max']; }
+            if (isset($compWarnObj['notas'])) {
+              if (is_array($compWarnObj['notas'])) { $extNotesItems = $compWarnObj['notas']; }
+              else { $extNotesText = (string)$compWarnObj['notas']; }
+            }
+          } else {
+            // Texto plano en advertencias del componente
+            if (trim($compWarnRaw) !== '') { $extNotesText = $compWarnRaw; }
+          }
+        }
+
+        // 3) Edad efectiva: si edad externa presente, reemplaza la del manual
+        if ($extAge['min'] !== null || $extAge['max'] !== null) {
+          $effectiveAge = $extAge;
+        }
+
+        // ¿Hay algo para mostrar?
+        $hasAnySafety = ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null) || !empty($manualNotes) || !empty($extNotesItems) || ($extNotesText !== '') || ($status_key === 'discontinued');
       ?>
       <?php
         $toc_items = [];
@@ -395,8 +444,27 @@ include 'includes/header.php';
                     <?php endforeach; ?>
                   </ul>
                 <?php endif; ?>
+                <?php // Debajo: medidas externas del kit o componente, si existen ?>
+                <?php if (!empty($extNotesItems) || $extNotesText !== ''): ?>
+                  <div class="safety-extra" style="margin-top:8px;">
+                    <?php if (!empty($extNotesItems)): ?>
+                      <ul class="security-list">
+                        <?php foreach ($extNotesItems as $nota): ?>
+                          <?php $cat = is_array($nota) ? ($nota['categoria'] ?? '') : ''; $icon = '⚠️'; ?>
+                          <li>
+                            <span class="sec-note"><?= h(is_array($nota) ? ($nota['nota'] ?? '') : $nota) ?></span>
+                            <?php if (!empty($cat)): ?><span class="sec-cat"><span class="emoji"><?= $icon ?></span> <?= h($cat) ?></span><?php endif; ?>
+                          </li>
+                        <?php endforeach; ?>
+                      </ul>
+                    <?php elseif ($extNotesText !== ''): ?>
+                      <div class="component-warning-text"><?= nl2br(h($extNotesText)) ?></div>
+                    <?php endif; ?>
+                  </div>
+                  <script>console.log('🔍 [Manual] Medidas externas incluidas debajo (ámbito: <?= h($ambito) ?>)');</script>
+                <?php endif; ?>
               </section>
-              <script>console.log('🔍 [Manual] Bloque de seguridad mostrado (solo manual):', { hasAnySafety: <?= json_encode($hasAnySafety) ?> });</script>
+              <script>console.log('🔍 [Manual] Bloque de seguridad mostrado (manual + externo):', { hasAnySafety: <?= json_encode($hasAnySafety) ?>, ambito: '<?= h($ambito) ?>' });</script>
             <?php endif; ?>
           </div>
         </div>
