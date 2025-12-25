@@ -1059,6 +1059,8 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
         slugInput.value = (typeof buildSuggestion === 'function') ? buildSuggestion() : slugInput.value;
         console.log('✅ [ManualsEdit] Slug regenerado tras cambio de kit:', slugInput.value);
       }
+      const amb = (ambSel ? ambSel.value : 'kit');
+      if (amb !== 'kit') { console.log('ℹ️ [ManualsEdit] Ámbito no es kit, panel kit muted'); renderKitSafetyPanel(null); return; }
       if (!id) { renderKitSafetyPanel(null); return; }
       const seg = await fetchKitSafetyById(id);
       renderKitSafetyPanel(seg);
@@ -1310,8 +1312,24 @@ console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : '
     console.log('🔍 [ManualsEdit] Observando cambios de item_id');
   }
   if (ambSel) {
-    ambSel.addEventListener('change', function(){
-      maybeUpdateComponentSafety('ambito change');
+    ambSel.addEventListener('change', async function(){
+      const v = ambSel.value;
+      console.log('🔍 [ManualsEdit] Cambio de ámbito →', v);
+      if (v === 'componente') {
+        // Mutear panel del kit y desmarcar uso de seguridad del kit
+        renderKitSafetyPanel(null);
+        if (useKitSafety) { useKitSafety.checked = false; updateAgeVisibility(); }
+        await maybeUpdateComponentSafety('ambito change');
+      } else {
+        // Rehidratar panel del kit desde selección actual
+        const id = (kitSelect && kitSelect.value) ? parseInt(kitSelect.value, 10) : 0;
+        if (id) {
+          const seg = await fetchKitSafetyById(id);
+          renderKitSafetyPanel(seg);
+        } else {
+          renderKitSafetyPanel(null);
+        }
+      }
     });
   }
 
