@@ -789,13 +789,13 @@ if ($is_edit) {
     try {
       const style = document.createElement('style');
       style.setAttribute('data-cke-warn-hide','1');
-      style.textContent = '
+      style.textContent = `
         .cke_notification.cke_notification_warning,
         .cke_upgrade_notice,
         .cke_browser_warning,
         .cke_panel_warning,
         .cke_warning { display: none !important; }
-      ';
+      `;
       document.head.appendChild(style);
       console.log('✅ [ComponentesEdit] CKEditor warnings ocultos por CSS');
     } catch(e) {
