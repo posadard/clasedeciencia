@@ -446,9 +446,9 @@ try {
       <label>Pasos</label>
       <div id="steps-builder">
         <div class="steps-toolbar">
-          <button type="button" class="btn btn-primary btn-sm" id="add-step-btn" title="Añadir Paso">＋</button>
-          <button type="button" class="btn btn-sm" id="expand-all-btn" title="Expandir">⬇️</button>
-          <button type="button" class="btn btn-sm" id="collapse-all-btn" title="Colapsar">⬆️</button>
+          <button type="button" class="btn btn-sm btn-primary" id="add-step-btn" title="Añadir Paso">➕</button>
+          <button type="button" class="btn btn-sm" id="expand-all-btn" title="Expandir todo">▾▾</button>
+          <button type="button" class="btn btn-sm" id="collapse-all-btn" title="Colapsar todo">▴▴</button>
         </div>
         <ul id="steps-list" class="steps-list"></ul>
         <p class="help-note">Los pasos se guardan como bloques HTML ordenados. Se serializan a JSON antes de enviar.</p>
@@ -459,7 +459,7 @@ try {
       <label>Herramientas</label>
       <div id="tools-builder">
         <div class="tools-toolbar">
-          <button type="button" class="btn btn-primary btn-sm" id="add-tool-btn" title="Añadir Herramienta">＋</button>
+          <button type="button" class="btn btn-sm btn-primary" id="add-tool-btn" title="Añadir Herramienta">➕</button>
         </div>
         <ul id="tools-list" class="tools-list"></ul>
         <p class="help-note">Añade herramientas una por una. Se guardan como objetos con nombre, cantidad y notas. Se serializan a JSON antes de enviar.</p>
@@ -506,7 +506,7 @@ try {
           </div>
         </div>
         <div class="security-toolbar">
-          <button type="button" class="btn btn-primary btn-sm" id="add-sec-note-btn" title="Añadir Nota">＋</button>
+          <button type="button" class="btn btn-sm btn-primary" id="add-sec-note-btn" title="Añadir Nota de Seguridad">➕</button>
         </div>
         <ul id="security-list" class="security-list"></ul>
         <p class="help-note">Añade notas de seguridad una por una. Si defines edad segura, se guardará junto a las notas.</p>
@@ -521,9 +521,9 @@ try {
     </div>
 
     <div style="margin-top:12px;">
-      <button type="submit" class="btn btn-primary btn-sm" title="Guardar">💾</button>
+      <button type="submit" class="btn btn-sm btn-primary" title="Guardar">💾</button>
       <?php if ($manual): ?>
-        <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>" title="Cancelar">✖️</a>
+        <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>" title="Cancelar">↩️</a>
       <?php endif; ?>
     </div>
   </form>
@@ -772,8 +772,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <label>Contenido (HTML enriquecido)</label>
           <textarea id="modal-step-html" rows="10"></textarea>
           <div class="modal-actions">
-            <button type="button" class="btn btn-primary" id="modal-save-btn">Guardar Paso</button>
-            <button type="button" class="btn" id="modal-cancel-btn">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-primary" id="modal-save-btn" title="Guardar">💾</button>
+            <button type="button" class="btn btn-sm" id="modal-cancel-btn" title="Cancelar">✖️</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -817,11 +817,11 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
         <span class="step-order">#${s.orden}</span>
         <span class="step-title">${escapeHTML(s.titulo)}</span>
         <div class="step-actions">
-          <button type="button" class="btn btn-sm" data-action="up">↑</button>
-          <button type="button" class="btn btn-sm" data-action="down">↓</button>
-          <button type="button" class="btn btn-sm" data-action="edit">Editar</button>
-          <button type="button" class="btn btn-sm btn-danger" data-action="delete">Eliminar</button>
-          <button type="button" class="btn btn-sm" data-action="toggle">Mostrar/Ocultar</button>
+          <button type="button" class="btn btn-sm" data-action="up" title="Mover arriba">↑</button>
+          <button type="button" class="btn btn-sm" data-action="down" title="Mover abajo">↓</button>
+          <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
+          <button type="button" class="btn btn-sm" data-action="toggle" title="Mostrar/Ocultar">👁️</button>
         </div>
       `;
 
@@ -1065,10 +1065,10 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
         <span class="sec-title">${escapeHTML(n.nota || '(sin texto)')}</span>
         ${n.categoria ? `<span class="muted">(${escapeHTML(n.categoria)})</span>` : ''}
         <div class="sec-actions">
-          <button type="button" class="btn btn-sm" data-action="up">↑</button>
-          <button type="button" class="btn btn-sm" data-action="down">↓</button>
-          <button type="button" class="btn btn-sm" data-action="edit">Editar</button>
-          <button type="button" class="btn btn-sm btn-danger" data-action="delete">Eliminar</button>
+          <button type="button" class="btn btn-sm" data-action="up" title="Mover arriba">↑</button>
+          <button type="button" class="btn btn-sm" data-action="down" title="Mover abajo">↓</button>
+          <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
         </div>`;
       li.appendChild(header);
       secList.appendChild(li);
@@ -1224,8 +1224,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
             <input type="text" id="sec-note-cat" />
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn btn-primary" id="sec-save-btn">Guardar</button>
-            <button type="button" class="btn" id="sec-cancel-btn">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-primary" id="sec-save-btn" title="Guardar">💾</button>
+            <button type="button" class="btn btn-sm" id="sec-cancel-btn" title="Cancelar">✖️</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -1285,10 +1285,10 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       header.innerHTML = `
         <span class="tool-title">${escapeHTML(t.nombre || '(sin nombre)')}</span>
         <div class="tool-actions">
-          <button type="button" class="btn btn-sm" data-action="up">↑</button>
-          <button type="button" class="btn btn-sm" data-action="down">↓</button>
-          <button type="button" class="btn btn-sm" data-action="edit">Editar</button>
-          <button type="button" class="btn btn-sm btn-danger" data-action="delete">Eliminar</button>
+          <button type="button" class="btn btn-sm" data-action="up" title="Mover arriba">↑</button>
+          <button type="button" class="btn btn-sm" data-action="down" title="Mover abajo">↓</button>
+          <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
+          <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
         </div>`;
       const body = document.createElement('div');
       body.className = 'tool-body';
@@ -1380,8 +1380,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <label>Nota de Seguridad</label>
           <input type="text" id="tool-sec" />
           <div class="modal-actions">
-            <button type="button" class="btn btn-primary" id="tool-save-btn">Guardar</button>
-            <button type="button" class="btn" id="tool-cancel-btn">Cancelar</button>
+            <button type="button" class="btn btn-sm btn-primary" id="tool-save-btn" title="Guardar">💾</button>
+            <button type="button" class="btn btn-sm" id="tool-cancel-btn" title="Cancelar">✖️</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -1413,11 +1413,11 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 .step-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
 .step-order { font-weight:bold; margin-right:8px; }
 .step-title { flex:1; }
-.step-actions { display:flex; gap:4px; }
+.step-actions { display:flex; gap:6px; }
 .step-body { padding:6px; background:#fff; }
-.help-note { color:#666; font-size:12px; margin-top:6px; }
+.help-note { color:#666; font-size:11px; margin-top:4px; }
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:9999; }
-.modal-content { background:#fff; width:min(900px, 92vw); max-height:90vh; overflow:auto; padding:12px; border-radius:8px; }
+.modal-content { background:#fff; width:min(900px, 92vw); max-height:90vh; overflow:auto; padding:16px; border-radius:8px; }
 .modal-actions { display:flex; gap:8px; margin-top:8px; }
 
 /* Tools Builder styles */
@@ -1426,17 +1426,25 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 .tool-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
 .tool-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
 .tool-title { flex:1; }
-.tool-actions { display:flex; gap:4px; }
+.tool-actions { display:flex; gap:6px; }
 .tool-body { padding:6px; background:#fff; color:#444; }
-.mode-toggle { display:flex; gap:16px; align-items:center; }
+.mode-toggle { display:flex; gap:8px; align-items:center; }
 .disabled-block { opacity:0.5; pointer-events:none; }
 .hidden-block { display:none; }
 .kit-safety-panel { border:1px solid #ddd; padding:6px; border-radius:6px; background:#f9fafb; margin-bottom:6px; }
 .kit-safety-head { font-weight:600; margin-bottom:4px; }
 .kit-safety-notes { color:#444; }
+</style>
+<style>
+/* Compact form controls */
+.form-group { margin-bottom:8px; }
+.form-row { display:flex; flex-wrap:wrap; gap:8px; }
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select,
+textarea { padding: 6px; font-size: 0.9rem; }
 
-/* Compact small button styling */
-.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; line-height: 1.2; }
-.btn-icon { width: 2rem; text-align: center; padding: 0.2rem 0; }
+/* Compact buttons */
+.btn-sm { padding: 0.3rem 0.6rem; font-size: 0.85rem; line-height: 1.1; }
 </style>
 </script>

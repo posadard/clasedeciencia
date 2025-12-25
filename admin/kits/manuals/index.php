@@ -165,13 +165,13 @@ try {
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
               <input type="hidden" name="manual_id" value="<?= (int)$m['id'] ?>" />
               <input type="hidden" name="action" value="delete" />
-                <button class="btn btn-sm btn-danger btn-icon" type="submit" title="Eliminar">🗑️</button>
+              <button class="btn btn-sm btn-danger" type="submit">Eliminar</button>
             </form>
             <form method="post" style="display:inline;">
               <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
               <input type="hidden" name="manual_id" value="<?= (int)$m['id'] ?>" />
               <input type="hidden" name="action" value="toggle_status" />
-                <button class="btn btn-sm btn-icon" type="submit" title="Publicar/Despublicar">🔄</button>
+              <button class="btn btn-sm" type="submit">Alternar Estado</button>
             </form>
           </td>
         </tr>
@@ -186,15 +186,13 @@ console.log('🔍 [ManualsIndex] Kit ID:', <?= $kit ? (int)$kit['id'] : 0 ?>);
 </script>
 
 <style>
-.filters-bar { background: #f8f9fa; border: 1px solid #ddd; border-radius: 6px; padding: 0.75rem; margin: 0.5rem 0 1rem; }
-.filters-form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: flex-end; }
-.filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
-.filter-group label { font-weight: 600; font-size: 0.85rem; }
-.filter-group select, .filter-group input { padding: 0.35rem 0.5rem; border: 1px solid #ddd; border-radius: 4px; min-width: 150px; }
+.filters-bar { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; margin: 1rem 0 2rem; }
+.filters-form { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-group label { font-weight: bold; font-size: 0.9rem; }
+.filter-group select, .filter-group input { padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; min-width: 200px; }
 .search-group { flex-direction: row; align-items: center; flex: 1; }
 .search-group input { flex: 1; }
-.btn-sm { padding: 0.25rem 0.5rem; font-size: 0.8rem; line-height: 1.2; }
-.btn-icon { width: 2rem; text-align: center; padding: 0.2rem 0; }
-.badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.8rem; font-weight: 600; background: #e7e7e7; color: #333; }
-.data-table th, .data-table td { padding: 6px 8px; font-size: 0.9rem; }
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.875rem; }
+.badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: bold; background: #e7e7e7; color: #333; }
 </style>
