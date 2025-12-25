@@ -275,7 +275,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nombre_comun = trim($_POST['nombre_comun'] ?? '');
     $sku = trim($_POST['slug'] ?? '');
     $categoria_id = (int)($_POST['categoria_id'] ?? 0);
-    $advertencias_seguridad = trim($_POST['advertencias_seguridad'] ?? '');
+    // Seguridad del componente (JSON similar a kits.seguridad)
+    $adv_edad_min = isset($_POST['adv_edad_min']) ? trim((string)$_POST['adv_edad_min']) : '';
+    $adv_edad_max = isset($_POST['adv_edad_max']) ? trim((string)$_POST['adv_edad_max']) : '';
+    $adv_notas = isset($_POST['adv_notas']) ? trim((string)$_POST['adv_notas']) : '';
+    $adv_json_raw = isset($_POST['adv_json_raw']) ? trim((string)$_POST['adv_json_raw']) : '';
+    $advertencias_seguridad = null;
+    // Prioridad: JSON avanzado si es válido; si no, construir desde campos guiados; si vacíos, mantener NULL
+    if ($adv_json_raw !== '') {
+      $decoded = json_decode($adv_json_raw, true);
+      if (is_array($decoded)) {
+        $advertencias_seguridad = json_encode($decoded, JSON_UNESCAPED_UNICODE);
+        echo "<script>console.log('✅ [ComponentesEdit] Usando JSON avanzado para seguridad');</script>";
+      } else {
+        echo "<script>console.log('⚠️ [ComponentesEdit] JSON avanzado inválido, se construye desde campos');</script>";
+      }
+    }
+    if ($advertencias_seguridad === null) {
+      $obj = [];
+      if ($adv_edad_min !== '' && is_numeric($adv_edad_min)) { $obj['edad_min'] = (int)$adv_edad_min; }
+      if ($adv_edad_max !== '' && is_numeric($adv_edad_max)) { $obj['edad_max'] = (int)$adv_edad_max; }
+      if ($adv_notas !== '') { $obj['notas'] = mb_substr($adv_notas, 0, 2000, 'UTF-8'); }
+      if (!empty($obj)) { $advertencias_seguridad = json_encode($obj, JSON_UNESCAPED_UNICODE); }
+    }
     $unidad = trim($_POST['unidad'] ?? 'pcs');
     $descripcion_html = isset($_POST['descripcion_html']) ? (string)$_POST['descripcion_html'] : null;
     $foto_url = trim($_POST['foto_url'] ?? '');
@@ -308,11 +330,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($is_edit) {
           $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ?, descripcion_html = ?, foto_url = ? WHERE id = ?";
           $stmt = $pdo->prepare($sql);
-          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, ($advertencias_seguridad !== null ? $advertencias_seguridad : null), $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null), $id]);
         } else {
           $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad, descripcion_html, foto_url) VALUES (?, ?, ?, ?, ?, ?, ?)";
           $stmt = $pdo->prepare($sql);
-          $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
+          $stmt->execute([$nombre_comun, $sku, $categoria_id, ($advertencias_seguridad !== null ? $advertencias_seguridad : null), $unidad, $descripcion_html, ($foto_url !== '' ? $foto_url : null)]);
           $id = (int)$pdo->lastInsertId();
         }
         echo "<script>console.log('✅ [Admin] Componente guardado');</script>";
@@ -402,8 +424,48 @@ include '../header.php';
     </select>
   </div>
   <div class="form-group">
-    <label for="advertencias_seguridad">Advertencias de seguridad</label>
-    <textarea id="advertencias_seguridad" name="advertencias_seguridad" rows="4"><?= htmlspecialchars($material['advertencias_seguridad'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <?php
+      // Preparar valores de seguridad (JSON) similares a kits.seguridad
+      $adv_json_str = $material['advertencias_seguridad'] ?? null;
+      $adv_json = null;
+      if ($adv_json_str) {
+        $tmp = json_decode($adv_json_str, true);
+        if (is_array($tmp)) { $adv_json = $tmp; }
+      }
+      $adv_edad_min = ($adv_json && isset($adv_json['edad_min'])) ? (int)$adv_json['edad_min'] : '';
+      $adv_edad_max = ($adv_json && isset($adv_json['edad_max'])) ? (int)$adv_json['edad_max'] : '';
+      $adv_notas = ($adv_json && isset($adv_json['notas'])) ? (string)$adv_json['notas'] : '';
+    ?>
+    <label>Seguridad del componente</label>
+    <div class="field-inline">
+      <div class="form-group" style="min-width:120px;">
+        <label for="adv_edad_min">Edad mínima</label>
+        <input type="number" id="adv_edad_min" name="adv_edad_min" min="0" max="99" value="<?= htmlspecialchars($adv_edad_min, ENT_QUOTES, 'UTF-8') ?>" placeholder="Ej: 12" />
+      </div>
+      <div class="form-group" style="min-width:120px;">
+        <label for="adv_edad_max">Edad máxima</label>
+        <input type="number" id="adv_edad_max" name="adv_edad_max" min="0" max="99" value="<?= htmlspecialchars($adv_edad_max, ENT_QUOTES, 'UTF-8') ?>" placeholder="Ej: 18" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="adv_notas">Notas / advertencias</label>
+      <textarea id="adv_notas" name="adv_notas" rows="3" placeholder="Ej: Material frágil. Supervisión docente."><?= htmlspecialchars($adv_notas, ENT_QUOTES, 'UTF-8') ?></textarea>
+      <small class="help-text">Se guarda como JSON en <strong>kit_items.advertencias_seguridad</strong> usando claves: edad_min, edad_max, notas.</small>
+    </div>
+    <details class="advanced" id="adv_json_toggle">
+      <summary>Editar como JSON (avanzado)</summary>
+      <div class="form-group">
+        <label for="adv_json_raw">JSON de seguridad</label>
+        <textarea id="adv_json_raw" name="adv_json_raw" rows="6" placeholder='{"edad_min":12,"edad_max":18,"notas":"..."}'><?= htmlspecialchars($adv_json_str ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+        <small class="help-text">Si se proporciona JSON válido aquí, tendrá prioridad sobre los campos guiados.</small>
+      </div>
+    </details>
+    <script>
+      console.log('🔍 [ComponentesEdit] Seguridad (JSON) precargada:', {
+        edad_min: '<?= htmlspecialchars($adv_edad_min, ENT_QUOTES, 'UTF-8') ?>',
+        edad_max: '<?= htmlspecialchars($adv_edad_max, ENT_QUOTES, 'UTF-8') ?>'
+      });
+    </script>
   </div>
   <div class="form-group">
     <label for="unidad">Unidad</label>
