@@ -63,6 +63,15 @@ include 'includes/header.php';
                     <?php endif; ?>
                 </tbody>
             </table>
+            <?php if (!empty($material['description'])): ?>
+            <section class="safety-info">
+              <h2 class="safety-title">⚠️ Información de Seguridad</h2>
+              <div class="safety-content">
+                <div class="safety-notes"><?= nl2br(h($material['description'])) ?></div>
+                <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
+              </div>
+            </section>
+            <?php endif; ?>
         </div>
 
         <aside class="product-card">
@@ -89,12 +98,6 @@ include 'includes/header.php';
     </div>
     <?php endif; ?>
 
-    <?php if (!empty($material['description'])): ?>
-    <div class="content-section">
-        <h2>Descripción / Seguridad</h2>
-        <p><?= nl2br(h($material['description'])) ?></p>
-    </div>
-    <?php endif; ?>
 
     <?php
     // Kits que incluyen este componente
