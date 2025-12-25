@@ -446,7 +446,7 @@ try {
       <label>Pasos</label>
       <div id="steps-builder">
         <div class="steps-toolbar">
-          <button type="button" class="btn btn-sm btn-primary" id="add-step-btn" title="Añadir Paso">➕</button>
+          <button type="button" class="btn btn-sm btn-primary" id="add-step-btn" title="Añadir Paso">+ Añadir Paso</button>
           <button type="button" class="btn btn-sm" id="expand-all-btn" title="Expandir todo">▾▾</button>
           <button type="button" class="btn btn-sm" id="collapse-all-btn" title="Colapsar todo">▴▴</button>
         </div>
@@ -459,7 +459,7 @@ try {
       <label>Herramientas</label>
       <div id="tools-builder">
         <div class="tools-toolbar">
-          <button type="button" class="btn btn-sm btn-primary" id="add-tool-btn" title="Añadir Herramienta">➕</button>
+          <button type="button" class="btn btn-sm btn-primary" id="add-tool-btn" title="Añadir Herramienta">+ Añadir Herramienta</button>
         </div>
         <ul id="tools-list" class="tools-list"></ul>
         <p class="help-note">Añade herramientas una por una. Se guardan como objetos con nombre, cantidad y notas. Se serializan a JSON antes de enviar.</p>
@@ -506,7 +506,7 @@ try {
           </div>
         </div>
         <div class="security-toolbar">
-          <button type="button" class="btn btn-sm btn-primary" id="add-sec-note-btn" title="Añadir Nota de Seguridad">➕</button>
+          <button type="button" class="btn btn-sm btn-primary" id="add-sec-note-btn" title="Añadir Medida">+ Añadir Medida</button>
         </div>
         <ul id="security-list" class="security-list"></ul>
         <p class="help-note">Añade notas de seguridad una por una. Si defines edad segura, se guardará junto a las notas.</p>
@@ -521,9 +521,9 @@ try {
     </div>
 
     <div style="margin-top:12px;">
-      <button type="submit" class="btn btn-sm btn-primary" title="Guardar">💾</button>
+      <button type="submit" class="btn btn-primary">Guardar</button>
       <?php if ($manual): ?>
-        <a class="btn btn-sm" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>" title="Cancelar">↩️</a>
+        <a class="btn" href="/admin/kits/manuals/index.php?kit_id=<?= (int)$kit_id ?>">Cancelar</a>
       <?php endif; ?>
     </div>
   </form>
@@ -772,8 +772,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <label>Contenido (HTML enriquecido)</label>
           <textarea id="modal-step-html" rows="10"></textarea>
           <div class="modal-actions">
-            <button type="button" class="btn btn-sm btn-primary" id="modal-save-btn" title="Guardar">💾</button>
-            <button type="button" class="btn btn-sm" id="modal-cancel-btn" title="Cancelar">✖️</button>
+            <button type="button" class="btn btn-primary" id="modal-save-btn">Guardar</button>
+            <button type="button" class="btn" id="modal-cancel-btn">Cancelar</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -1069,13 +1069,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <button type="button" class="btn btn-sm" data-action="down" title="Mover abajo">↓</button>
           <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
           <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
-          <button type="button" class="btn btn-sm" data-action="toggle" title="Mostrar/Ocultar">👁️</button>
         </div>`;
-      const body = document.createElement('div');
-      body.className = 'sec-body';
-      body.innerHTML = '<div class="muted">(sin detalles)</div>';
       li.appendChild(header);
-      li.appendChild(body);
       secList.appendChild(li);
     });
     console.log('✅ [ManualsEdit] Renderizadas', notes.length, 'notas de seguridad');
@@ -1137,7 +1132,6 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     else if (action === 'down' && idx < notes.length - 1) { const tmp = notes[idx+1]; notes[idx+1] = notes[idx]; notes[idx] = tmp; render(); }
     else if (action === 'edit') { openModal(notes[idx], 'edit', idx); }
     else if (action === 'delete') { if (confirm('¿Eliminar nota?')) { notes.splice(idx,1); render(); } }
-    else if (action === 'toggle') { const body = li.querySelector('.sec-body'); if (body) body.style.display = (body.style.display === 'none') ? '' : 'none'; }
   });
 
   addBtn.addEventListener('click', function(){ openModal({ nota:'', categoria:'' }, 'create', -1); });
@@ -1230,8 +1224,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
             <input type="text" id="sec-note-cat" />
           </div>
           <div class="modal-actions">
-            <button type="button" class="btn btn-sm btn-primary" id="sec-save-btn" title="Guardar">💾</button>
-            <button type="button" class="btn btn-sm" id="sec-cancel-btn" title="Cancelar">✖️</button>
+            <button type="button" class="btn btn-primary" id="sec-save-btn">Guardar</button>
+            <button type="button" class="btn" id="sec-cancel-btn">Cancelar</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
@@ -1386,8 +1380,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
           <label>Nota de Seguridad</label>
           <input type="text" id="tool-sec" />
           <div class="modal-actions">
-            <button type="button" class="btn btn-sm btn-primary" id="tool-save-btn" title="Guardar">💾</button>
-            <button type="button" class="btn btn-sm" id="tool-cancel-btn" title="Cancelar">✖️</button>
+            <button type="button" class="btn btn-primary" id="tool-save-btn">Guardar</button>
+            <button type="button" class="btn" id="tool-cancel-btn">Cancelar</button>
           </div>
         </div>`;
       document.body.appendChild(modal);
