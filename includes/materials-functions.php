@@ -101,6 +101,8 @@ function get_material_by_slug($pdo, $slug) {
                 m.slug AS slug,
                 m.nombre_comun AS common_name,
                 m.advertencias_seguridad AS description,
+                m.descripcion_html AS descripcion_html,
+                m.foto_url AS foto_url,
                 m.categoria_id,
                 cm.nombre AS category_name, cm.slug AS category_slug
             FROM kit_items m

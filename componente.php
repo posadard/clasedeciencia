@@ -23,7 +23,14 @@ if (!$material) {
 }
 
 $page_title = $material['common_name'];
-$page_description = generate_excerpt($material['description'] ?? '', 160);
+// Preferir descripción desde HTML si existe; fallback a advertencias
+$raw_desc = '';
+if (!empty($material['descripcion_html'])) {
+    $raw_desc = strip_tags($material['descripcion_html']);
+} elseif (!empty($material['description'])) {
+    $raw_desc = (string)$material['description'];
+}
+$page_description = generate_excerpt($raw_desc, 160);
 $canonical_url = SITE_URL . '/' . urlencode($material['slug']);
 
 include 'includes/header.php';
@@ -64,11 +71,23 @@ include 'includes/header.php';
                 <?php if (!empty($material['category_name'])): ?><span class="material-badge" style="background:#e9ecef;color:#333"><?= h($material['category_name']) ?></span><?php endif; ?>
             </div>
             <div class="product-image">
-                <?php $comp_img = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg'; ?>
+                <?php
+                  $comp_img_fallback = '/assets/images/componentes/' . rawurlencode($material['slug']) . '.jpg';
+                  $comp_img = !empty($material['foto_url']) ? $material['foto_url'] : $comp_img_fallback;
+                ?>
                 <img src="<?= h($comp_img) ?>" alt="<?= h($material['common_name']) ?>" loading="lazy" data-category="<?= h($material['category_name'] ?? '') ?>" onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='product-image-fallback error'; var t=this.dataset.category||''; p.textContent='📦 ' + t; this.replaceWith(p);" />
             </div>
         </aside>
     </div>
+
+    <?php if (!empty($material['descripcion_html'])): ?>
+    <div class="content-section">
+        <h2>Descripción</h2>
+        <div class="article-body">
+            <?= $material['descripcion_html'] ?>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <?php if (!empty($material['description'])): ?>
     <div class="content-section">
@@ -172,6 +191,8 @@ include 'includes/header.php';
 <script>
 console.log('🔍 [componente] Slug:', <?= json_encode($slug) ?>);
 console.log('✅ [componente] Cargado:', <?= json_encode(['slug'=>$material['slug'],'nombre'=>$material['common_name']]) ?>);
+console.log('🖼️ [componente] Foto URL:', <?= json_encode($material['foto_url'] ?? null) ?>);
+console.log('📝 [componente] HTML presente:', <?= json_encode(!empty($material['descripcion_html'])) ?>);
 console.log('🧰 [componente] Kits relacionados:', <?= isset($kits_rel) ? count($kits_rel) : 0 ?>);
 console.log('📚 [componente] Clases relacionadas:', <?= isset($clases_rel) ? count($clases_rel) : 0 ?>);
 </script>
