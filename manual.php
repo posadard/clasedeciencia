@@ -118,7 +118,7 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
   } catch (Exception $e) { $comp = null; }
 }
 // Fallback: derive component from slug if ambito=componente but item_id missing
-if ($ambito === 'componente' && !$comp && !empty($manual['slug'])) {
+if ($ambito === 'componente' && (empty($manual['item_id']) || (int)$manual['item_id'] <= 0) && !$comp && !empty($manual['slug'])) {
   $slug_low = strtolower((string)$manual['slug']);
   $parts = explode('-', $slug_low);
   // Expect: manual-{tipo}-componente-{entidad}-{fecha}-V{ver}
@@ -137,11 +137,16 @@ if ($ambito === 'componente') {
   if ($comp && !empty($comp['nombre_comun'])) {
     $entity_name_raw = (string)$comp['nombre_comun'];
   } else {
-    $slug_human = '';
-    if (!empty($entitySlugFromManual)) {
-      $slug_human = ucwords(str_replace('-', ' ', $entitySlugFromManual));
+    // Prefer item_id authority: if item_id exists but no DB match, avoid slug fallback
+    if (!empty($manual['item_id'])) {
+      $entity_name_raw = 'Componente';
+    } else {
+      $slug_human = '';
+      if (!empty($entitySlugFromManual)) {
+        $slug_human = ucwords(str_replace('-', ' ', $entitySlugFromManual));
+      }
+      $entity_name_raw = $slug_human !== '' ? $slug_human : 'Componente';
     }
-    $entity_name_raw = $slug_human !== '' ? $slug_human : 'Componente';
   }
 } else {
   $entity_name_raw = (string)$kit['nombre'];
@@ -170,7 +175,7 @@ include 'includes/header.php';
     <?php if ($ambito === 'componente'): ?>
       <?php if ($comp && !empty($comp['slug'])): ?>
         <a href="/<?= h($comp['slug']) ?>"><?= h($comp['nombre_comun']) ?></a> / 
-      <?php elseif (!empty($entitySlugFromManual)): ?>
+      <?php elseif (empty($manual['item_id']) && !empty($entitySlugFromManual)): ?>
         <a href="/<?= h($entitySlugFromManual) ?>"><?= h(ucwords(str_replace('-', ' ', $entitySlugFromManual))) ?></a> / 
       <?php endif; ?>
     <?php elseif (!empty($kit) && !empty($kit['slug'])): ?>
@@ -345,9 +350,15 @@ include 'includes/header.php';
               <?php endif; ?>
               <?php else: ?>
                 <?php $img_id = 'comp-unknown'; ?>
-                <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Componente"><span class="placeholder-icon">🔧</span></div>
-                <div class="manual-toc-caption"><?= h(!empty($entitySlugFromManual) ? ucwords(str_replace('-', ' ', $entitySlugFromManual)) : 'Componente') ?></div>
-                <script>console.log('ℹ️ [Manual] Índice usando nombre derivado del slug para componente');</script>
+                  <div id="<?= h($img_id) ?>" class="manual-toc-placeholder" title="Componente"><span class="placeholder-icon">🔧</span></div>
+                  <div class="manual-toc-caption"><?php
+                    if (!empty($manual['item_id'])) {
+                      echo h('Componente');
+                    } else {
+                      echo h(!empty($entitySlugFromManual) ? ucwords(str_replace('-', ' ', $entitySlugFromManual)) : 'Componente');
+                    }
+                  ?></div>
+                  <script>console.log('ℹ️ [Manual] Índice componente sin DB; item_id:', <?= json_encode(!empty($manual['item_id'])) ?>);</script>
               <?php endif; ?>
             <?php else: ?>
               <?php $img_id = 'kit-' . (int)$kit['id']; ?>
