@@ -556,7 +556,27 @@ var MANUAL_PUBLISHED_AT = <?= json_encode(isset($manual['published_at']) ? $manu
 var KIT_SLUG = <?= json_encode(isset($kit['slug']) ? $kit['slug'] : null) ?>;
 // Kit safety data for merge
 var KIT_SAFETY = <?= json_encode(isset($kit_seg_obj) ? $kit_seg_obj : null, JSON_UNESCAPED_UNICODE) ?>;
+// Ámbito actual y seguridad del componente (prefill desde kit_items)
+var AMBITO = <?= json_encode(isset($amb_val) ? $amb_val : 'kit') ?>;
+<?php
+// Prefill de seguridad del componente desde kit_items.advertencias_seguridad cuando aplica
+$cmp_safety_obj = null;
+try {
+  if (isset($amb_val) && $amb_val === 'componente' && isset($item_val) && (int)$item_val > 0) {
+    $qCmp = $pdo->prepare('SELECT advertencias_seguridad FROM kit_items WHERE id = ? LIMIT 1');
+    $qCmp->execute([$item_val]);
+    $rowCmp = $qCmp->fetch(PDO::FETCH_ASSOC);
+    if ($rowCmp && !empty($rowCmp['advertencias_seguridad'])) {
+      $tmpCmp = json_decode($rowCmp['advertencias_seguridad'], true);
+      if (is_array($tmpCmp)) { $cmp_safety_obj = $tmpCmp; }
+    }
+  }
+} catch (PDOException $e) { /* silencioso */ }
+?>
+var COMPONENT_SAFETY = <?= json_encode($cmp_safety_obj, JSON_UNESCAPED_UNICODE) ?>;
 console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
+console.log('🔍 [ManualsEdit] AMBITO:', AMBITO);
+console.log('🔍 [ManualsEdit] COMPONENT_SAFETY:', COMPONENT_SAFETY ? 'sí' : 'no');
 
 // --- Step Builder (CKEditor via CDN, no installs) ---
 (function(){
@@ -1196,6 +1216,23 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     } else {
       const arr = Array.isArray(raw) ? raw : [];
       notes = arr.map(normalizeNote);
+    }
+    // Prefill desde seguridad del componente si el ámbito es componente y no hay JSON manual aún
+    try {
+      const noManualJson = !secTextarea.value || secTextarea.value.trim() === '';
+      if (AMBITO === 'componente' && COMPONENT_SAFETY && noManualJson) {
+        const cmin = (typeof COMPONENT_SAFETY.edad_min !== 'undefined') ? parseInt(COMPONENT_SAFETY.edad_min, 10) : null;
+        const cmax = (typeof COMPONENT_SAFETY.edad_max !== 'undefined') ? parseInt(COMPONENT_SAFETY.edad_max, 10) : null;
+        if (cmin !== null && !isNaN(cmin)) { ageMinInput.value = String(cmin); }
+        if (cmax !== null && !isNaN(cmax)) { ageMaxInput.value = String(cmax); }
+        const cnotes = (COMPONENT_SAFETY.notas ? String(COMPONENT_SAFETY.notas).trim() : '');
+        if (cnotes) {
+          notes.push({ nota: cnotes, categoria: '' });
+        }
+        console.log('✅ [ManualsEdit] Prefill seguridad desde componente (edad/notas)');
+      }
+    } catch (e) {
+      console.log('⚠️ [ManualsEdit] Prefill componente error:', e && e.message);
     }
     render();
     updateAgeVisibility();
