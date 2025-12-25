@@ -1063,14 +1063,19 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       header.className = 'sec-header';
       header.innerHTML = `
         <span class="sec-title">${escapeHTML(n.nota || '(sin texto)')}</span>
-        ${n.categoria ? `<span class="muted">(${escapeHTML(n.categoria)})</span>` : ''}
+        ${n.categoria ? `<span class="badge sec-cat">${escapeHTML(n.categoria)}</span>` : ''}
         <div class="sec-actions">
           <button type="button" class="btn btn-sm" data-action="up" title="Mover arriba">↑</button>
           <button type="button" class="btn btn-sm" data-action="down" title="Mover abajo">↓</button>
           <button type="button" class="btn btn-sm" data-action="edit" title="Editar">✏️</button>
           <button type="button" class="btn btn-sm btn-danger" data-action="delete" title="Eliminar">🗑️</button>
+          <button type="button" class="btn btn-sm" data-action="toggle" title="Mostrar/Ocultar">👁️</button>
         </div>`;
+      const body = document.createElement('div');
+      body.className = 'sec-body';
+      body.innerHTML = '<div class="muted">(sin detalles)</div>';
       li.appendChild(header);
+      li.appendChild(body);
       secList.appendChild(li);
     });
     console.log('✅ [ManualsEdit] Renderizadas', notes.length, 'notas de seguridad');
@@ -1132,6 +1137,7 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     else if (action === 'down' && idx < notes.length - 1) { const tmp = notes[idx+1]; notes[idx+1] = notes[idx]; notes[idx] = tmp; render(); }
     else if (action === 'edit') { openModal(notes[idx], 'edit', idx); }
     else if (action === 'delete') { if (confirm('¿Eliminar nota?')) { notes.splice(idx,1); render(); } }
+    else if (action === 'toggle') { const body = li.querySelector('.sec-body'); if (body) body.style.display = (body.style.display === 'none') ? '' : 'none'; }
   });
 
   addBtn.addEventListener('click', function(){ openModal({ nota:'', categoria:'' }, 'create', -1); });
@@ -1434,6 +1440,11 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
 .kit-safety-panel { border:1px solid #ddd; padding:6px; border-radius:6px; background:#f9fafb; margin-bottom:6px; }
 .kit-safety-head { font-weight:600; margin-bottom:4px; }
 .kit-safety-notes { color:#444; }
+.sec-item { border:1px solid #ddd; margin-bottom:6px; border-radius:6px; overflow:hidden; }
+.sec-header { display:flex; align-items:center; justify-content:space-between; background:#f7f7f7; padding:4px 6px; }
+.sec-actions { display:flex; gap:6px; }
+.sec-body { padding:6px; background:#fff; color:#444; }
+.badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.8rem; font-weight:600; background:#e7e7e7; color:#333; margin-left:6px; }
 </style>
 <style>
 /* Compact form controls */
