@@ -375,9 +375,10 @@ include 'includes/header.php';
             <?php if ($ambito === 'componente'): ?>
               <?php if ($comp): ?>
               <?php $img_id = 'comp-' . (int)$manual['item_id']; ?>
-              <?php if (!empty($comp['imagen_portada'])): ?>
+              <?php $comp_img_src = isset($comp['imagen_portada']) ? trim((string)$comp['imagen_portada']) : ''; ?>
+              <?php if ($comp_img_src !== ''): ?>
                 <img id="<?= h($img_id) ?>"
-                     src="<?= h($comp['imagen_portada']) ?>"
+                     src="<?= h($comp_img_src) ?>"
                      alt="Imagen del componente <?= h($comp['nombre_comun']) ?>"
                      class="manual-toc-image"
                      onerror="this.onerror=null; console.log('❌ [Manual] Imagen portada componente falló'); var p=document.createElement('div'); p.id='<?= h($img_id) ?>'; p.className='manual-toc-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
@@ -752,8 +753,9 @@ include 'includes/header.php';
       <h2>🔧 Componente vinculado</h2>
       <?php if ($comp && !empty($comp['slug'])): ?>
         <a href="/<?= h($comp['slug']) ?>" class="related-card" title="Ver componente <?= h($comp['nombre_comun'] ?? 'Componente') ?>">
-          <?php if (!empty($comp['imagen_portada'])): ?>
-            <img src="<?= h($comp['imagen_portada']) ?>" alt="<?= h($comp['nombre_comun']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura componente falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
+          <?php $comp_card_img = isset($comp['imagen_portada']) ? trim((string)$comp['imagen_portada']) : ''; ?>
+          <?php if ($comp_card_img !== ''): ?>
+            <img src="<?= h($comp_card_img) ?>" alt="<?= h($comp['nombre_comun']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura componente falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔧'; p.appendChild(s); this.replaceWith(p);" />
           <?php else: ?>
             <div class="thumbnail-placeholder"><span class="placeholder-icon">🔧</span></div>
             <script>console.log('⚠️ [Manual] Componente sin imagen, usando placeholder');</script>
@@ -819,8 +821,9 @@ include 'includes/header.php';
       <div class="related-grid">
         <?php foreach ($clases as $c): ?>
           <a href="/<?= h($c['slug']) ?>" class="related-card">
-            <?php if (!empty($c['imagen_portada'])): ?>
-              <img src="<?= h($c['imagen_portada']) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura clase falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+            <?php $class_img_src = isset($c['imagen_portada']) ? trim((string)$c['imagen_portada']) : ''; ?>
+            <?php if ($class_img_src !== ''): ?>
+              <img src="<?= h($class_img_src) ?>" alt="<?= h($c['nombre']) ?>" class="related-thumbnail" onerror="this.onerror=null; console.log('❌ [Manual] Miniatura clase falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
             <?php else: ?>
               <div class="thumbnail-placeholder"><span class="placeholder-icon">🔬</span></div>
               <script>console.log('⚠️ [Manual] Clase sin imagen, usando placeholder');</script>
@@ -901,8 +904,6 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .manual-meta { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
 .manual-resumen { font-size:1.05rem; color:#444; margin-top:8px; }
 .manual-toc { background:#f7f9fc; border:1px solid #e3e8f3; border-radius:8px; padding:10px 12px; }
-.manual-toc-placeholder { background:#e6f4ff; border:1px solid #b3d7ff; display:flex; align-items:center; justify-content:center; }
-.manual-toc-placeholder.error { background:#ffe6e6; border-color:#ffb3b3; }
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
@@ -920,8 +921,7 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .related-card { display:block; border:1px solid var(--color-border-light); border-radius:8px; background:#fff; overflow:hidden; transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; position:relative; }
 .related-card:hover, .related-card:focus-within { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-accent); }
 .related-thumbnail { width:100%; height:140px; object-fit:cover; display:block; }
-.thumbnail-placeholder { height:140px; display:flex; align-items:center; justify-content:center; background:#e6f4ff; border-bottom:1px solid var(--color-border-light); }
-.thumbnail-placeholder.error { background:#ffe6e6; }
+.thumbnail-placeholder { height:140px; display:flex; align-items:center; justify-content:center; background:#f5f7fb; border-bottom:1px solid var(--color-border-light); }
 .placeholder-icon { font-size:36px; }
 .related-info { padding:10px 12px; }
 .related-excerpt { color:#555; margin-top:4px; }
