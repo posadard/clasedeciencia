@@ -1296,6 +1296,10 @@ strong, b {
     color: var(--color-primary-light);
 }
 
+/* Clickable card magnifier affordance (global) */
+.card-magnify { position:absolute; right:8px; bottom:8px; font-size:18px; opacity:0.8; pointer-events:none; }
+.article-card, .card-link, .related-card, .kit-inline-card, .kit-card, .materials-list li { position:relative; }
+
 .card-meta {
     display: flex;
     gap: var(--spacing-md);

@@ -300,6 +300,7 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </div>
                         </div>
+                        <span class="card-magnify" aria-hidden="true">🔎</span>
                     </a>
                 </article>
                 <?php endforeach; ?>

@@ -104,6 +104,7 @@ include 'includes/header.php';
                             <?php endif; ?>
                         </div>
                     </a>
+                    <span class="card-magnify" aria-hidden="true">🔎</span>
                 </article>
                 <?php endforeach; ?>
             </div>
