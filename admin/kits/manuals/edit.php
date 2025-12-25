@@ -843,7 +843,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     } else {
       console.log('⚠️ [ManualsEdit] CKEditor no cargado aún');
     }
-    document.getElementById('step-modal').style.display = 'block';
+    document.getElementById('step-modal').style.display = 'flex';
+    console.log('✅ [ManualsEdit] Step modal abierto (display:flex)');
   }
 
   function closeEditorModal() {
