@@ -316,21 +316,12 @@ try {
     
 
     <?php
-    // Load kit items for component scope selector (prefer items in this kit)
+    // Load kit items for component scope selector (always list all components)
     $kit_items = [];
-    if ($kit_id > 0) {
-      try {
-        $q = $pdo->prepare('SELECT ki.id, ki.nombre_comun, ki.slug, ki.sku, ki.advertencias_seguridad FROM kit_componentes kc JOIN kit_items ki ON ki.id = kc.item_id WHERE kc.kit_id = ? ORDER BY ki.nombre_comun ASC');
-        $q->execute([$kit_id]);
-        $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
-      } catch (PDOException $e) { $kit_items = []; }
-    }
-    if (empty($kit_items)) {
-      try {
-        $q = $pdo->query('SELECT id, nombre_comun, slug, sku, advertencias_seguridad FROM kit_items ORDER BY nombre_comun ASC');
-        $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
-      } catch (PDOException $e) { $kit_items = []; }
-    }
+    try {
+      $q = $pdo->query('SELECT id, nombre_comun, slug, sku, advertencias_seguridad FROM kit_items ORDER BY nombre_comun ASC');
+      $kit_items = $q->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $e) { $kit_items = []; }
     $amb_val = $manual['ambito'] ?? 'kit';
     $item_val = isset($manual['item_id']) ? (int)$manual['item_id'] : 0;
     $tipo_val = $manual['tipo_manual'] ?? 'armado';
@@ -1319,7 +1310,8 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
     const max = maxRaw === '' ? null : parseInt(maxRaw,10);
     const extras = notes.map(n => ({ nota: n.nota, categoria: n.categoria }));
     let payload = null;
-    if (useKitSafety && useKitSafety.checked) {
+    const amb = ambSel ? ambSel.value : 'kit';
+    if (useKitSafety && useKitSafety.checked && amb === 'kit') {
       payload = { usar_seguridad_kit: true };
       const kitHas = hasKitAge();
       if (!kitHas && (min !== null || max !== null)) {
@@ -1332,6 +1324,19 @@ console.log('🔍 [ManualsEdit] KIT_SAFETY:', KIT_SAFETY ? 'sí' : 'no');
       }
       if (extras.length) { payload.notas_extra = extras; }
       console.log('ℹ️ [ManualsEdit] Merge: incluir seguridad del kit');
+    } else if (amb === 'componente' && compSafetyCheckbox && compSafetyCheckbox.checked) {
+      payload = { usar_seguridad_componente: true };
+      const compHasAge = compHasAgeFromWarn(getSelectedComponentWarn());
+      if (!compHasAge && (min !== null || max !== null)) {
+        payload.edad = {};
+        if (min !== null) payload.edad.min = min;
+        if (max !== null) payload.edad.max = max;
+        console.log('ℹ️ [ManualsEdit] Merge: componente sin edad, usando edad propia');
+      } else if (compHasAge) {
+        console.log('ℹ️ [ManualsEdit] Merge: edad del componente presente, no se serializa edad propia');
+      }
+      if (extras.length) { payload.notas_extra = extras; }
+      console.log('ℹ️ [ManualsEdit] Merge: incluir advertencias del componente');
     } else {
       if (min !== null || max !== null) {
         payload = { edad: { }, notas: extras };

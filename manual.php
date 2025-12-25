@@ -256,6 +256,7 @@ include 'includes/header.php';
       <?php
         // Compute effective safety by merging manual directives with kit safety (age + free-text notes)
         $hasManualSafety = !empty($manualSegRaw);
+        $useCompSafety = false;
         $useKitSafety = false;
         $effectiveAge = ['min' => null, 'max' => null];
         $manualNotes = [];
@@ -264,6 +265,7 @@ include 'includes/header.php';
             $isAssoc = is_array($manualSegRaw) && array_keys($manualSegRaw) !== range(0, count($manualSegRaw)-1);
             if ($isAssoc) {
                 if (isset($manualSegRaw['usar_seguridad_kit'])) { $useKitSafety = !!$manualSegRaw['usar_seguridad_kit']; }
+              if (isset($manualSegRaw['usar_seguridad_componente'])) { $useCompSafety = !!$manualSegRaw['usar_seguridad_componente']; }
                 if (!empty($manualSegRaw['edad']) && is_array($manualSegRaw['edad'])) {
                     $effectiveAge['min'] = isset($manualSegRaw['edad']['min']) ? (int)$manualSegRaw['edad']['min'] : null;
                     $effectiveAge['max'] = isset($manualSegRaw['edad']['max']) ? (int)$manualSegRaw['edad']['max'] : null;
@@ -288,6 +290,16 @@ include 'includes/header.php';
         if ($ambito === 'kit' && ($effectiveAge['min'] === null || $effectiveAge['max'] === null) && $kitSeg) {
           if ($effectiveAge['min'] === null && !empty($kitSeg['edad_min'])) $effectiveAge['min'] = (int)$kitSeg['edad_min'];
           if ($effectiveAge['max'] === null && !empty($kitSeg['edad_max'])) $effectiveAge['max'] = (int)$kitSeg['edad_max'];
+        }
+        // If manual age not set and component flag is on, use component age when available
+        if ($ambito === 'componente' && ($effectiveAge['min'] === null || $effectiveAge['max'] === null) && $useCompSafety && $comp && !empty($comp['advertencias_seguridad'])) {
+          try {
+            $cw = json_decode((string)$comp['advertencias_seguridad'], true);
+            if (is_array($cw) && array_keys($cw) !== range(0, count($cw)-1)) {
+              if ($effectiveAge['min'] === null && isset($cw['edad_min']) && $cw['edad_min'] !== '') $effectiveAge['min'] = (int)$cw['edad_min'];
+              if ($effectiveAge['max'] === null && isset($cw['edad_max']) && $cw['edad_max'] !== '') $effectiveAge['max'] = (int)$cw['edad_max'];
+            }
+          } catch(Exception $e) {}
         }
         // Kit notes are free text; include if directive says so (solo ámbito kit)
         if ($ambito === 'kit' && $useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
