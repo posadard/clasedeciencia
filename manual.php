@@ -112,7 +112,7 @@ if (!empty($manual['slug'])) {
 }
 if ($ambito === 'componente' && !empty($manual['item_id'])) {
   try {
-    $stmtC = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada FROM kit_items WHERE id = ? LIMIT 1');
+    $stmtC = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada, advertencias_seguridad FROM kit_items WHERE id = ? LIMIT 1');
     $stmtC->execute([(int)$manual['item_id']]);
     $comp = $stmtC->fetch(PDO::FETCH_ASSOC) ?: null;
   } catch (Exception $e) { $comp = null; }
@@ -125,7 +125,7 @@ if ($ambito === 'componente' && !$comp && !empty($manual['slug'])) {
   if (count($parts) >= 4 && $parts[0] === 'manual' && $parts[2] === 'componente') {
     $entity_slug = $parts[3];
     try {
-      $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada FROM kit_items WHERE slug = ? LIMIT 1');
+      $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada, advertencias_seguridad FROM kit_items WHERE slug = ? LIMIT 1');
       $stmtC2->execute([$entity_slug]);
       $comp = $stmtC2->fetch(PDO::FETCH_ASSOC) ?: null;
     } catch (Exception $e) { /* ignore */ }
@@ -252,12 +252,7 @@ include 'includes/header.php';
             if (is_array($tmp)) { $seg = $tmp; $manualSegRaw = $tmp; }
         }
       ?>
-      <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
-        <section class="component-warnings">
-          <h2>⚠️ Advertencias del Componente</h2>
-          <div class="component-warning-text"><?= nl2br(h($comp['advertencias_seguridad'])) ?></div>
-        </section>
-      <?php endif; ?>
+      <?php /* Advertencias del componente: ahora se integran dentro del bloque de seguridad */ ?>
       <?php
         // Compute effective safety by merging manual directives with kit safety (age + free-text notes)
         $hasManualSafety = !empty($manualSegRaw);
@@ -412,6 +407,12 @@ include 'includes/header.php';
                       </li>
                     <?php endforeach; ?>
                   </ul>
+                <?php endif; ?>
+                <?php if ($ambito === 'componente' && $comp && !empty($comp['advertencias_seguridad'])): ?>
+                  <div class="component-warning-inline">
+                    <div class="component-warning-text"><?= nl2br(h($comp['advertencias_seguridad'])) ?></div>
+                  </div>
+                  <script>console.log('🔧 [Manual] Advertencias del componente integradas en Seguridad');</script>
                 <?php endif; ?>
                 <?php
                   // Concatenar notas de seguridad de componentes y herramientas (10 palabras) con el nombre
@@ -846,6 +847,7 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .component-warnings { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:10px 12px; margin:12px 0; }
 .component-warnings h2 { margin-bottom:6px; }
 .component-warning-text { white-space:pre-wrap; }
+.component-warning-inline { background:#fff7f7; border:1px solid #ffd6d6; color:#7a2d2d; border-radius:8px; padding:8px 10px; margin-top:8px; }
 .manual-content { margin-bottom: var(--spacing-lg); }
 /* Byline (similar a clase.php) */
 .article-byline { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:#555; border-top:1px solid var(--color-border-light); padding-top: var(--spacing-sm); margin-top: var(--spacing-lg); margin-bottom: var(--spacing-md); }
