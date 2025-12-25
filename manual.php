@@ -108,6 +108,20 @@ if ($ambito === 'componente' && !empty($manual['item_id'])) {
     $comp = $stmtC->fetch(PDO::FETCH_ASSOC) ?: null;
   } catch (Exception $e) { $comp = null; }
 }
+// Fallback: derive component from slug if ambito=componente but item_id missing
+if ($ambito === 'componente' && !$comp && !empty($manual['slug'])) {
+  $slug_low = strtolower((string)$manual['slug']);
+  $parts = explode('-', $slug_low);
+  // Expect: manual-{tipo}-componente-{entidad}-{fecha}-V{ver}
+  if (count($parts) >= 4 && $parts[0] === 'manual' && $parts[2] === 'componente') {
+    $entity_slug = $parts[3];
+    try {
+      $stmtC2 = $pdo->prepare('SELECT id, nombre_comun, slug, sku, imagen_portada FROM kit_items WHERE slug = ? LIMIT 1');
+      $stmtC2->execute([$entity_slug]);
+      $comp = $stmtC2->fetch(PDO::FETCH_ASSOC) ?: null;
+    } catch (Exception $e) { /* ignore */ }
+  }
+}
 
 // Build friendly display title now that tipo, ambito and entity are known
 $entity_name_raw = ($ambito === 'componente' && $comp && !empty($comp['nombre_comun'])) ? (string)$comp['nombre_comun'] : (string)$kit['nombre'];
@@ -132,12 +146,10 @@ include 'includes/header.php';
 <div class="container">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / 
-    <?php if (!empty($kit) && !empty($kit['slug'])): ?>
-      <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
-    <?php elseif ($ambito === 'componente' && $comp && !empty($comp['slug'])): ?>
+    <?php if ($ambito === 'componente' && $comp && !empty($comp['slug'])): ?>
       <a href="/<?= h($comp['slug']) ?>"><?= h($comp['nombre_comun']) ?></a> / 
-    <?php else: ?>
-      
+    <?php elseif (!empty($kit) && !empty($kit['slug'])): ?>
+      <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
     <?php endif; ?>
     <strong><?= h($display_title_raw) ?></strong>
   </div>
@@ -196,10 +208,10 @@ include 'includes/header.php';
         $pasos = [];
         $herr = [];
         $seg = [];
-        // Kit safety
+        // Kit safety (solo aplica en ámbito kit)
         $kitSeg = null;
-        if (!empty($kit['seguridad'])) {
-            try { $tmpKit = json_decode($kit['seguridad'], true); if (is_array($tmpKit)) { $kitSeg = $tmpKit; } } catch(Exception $e) {}
+        if ($ambito === 'kit' && !empty($kit['seguridad'])) {
+          try { $tmpKit = json_decode($kit['seguridad'], true); if (is_array($tmpKit)) { $kitSeg = $tmpKit; } } catch(Exception $e) {}
         }
         if (!empty($manual['pasos_json'])) {
             $tmp = json_decode($manual['pasos_json'], true);
@@ -252,13 +264,13 @@ include 'includes/header.php';
                 }
             }
         }
-        // If manual age not set, use kit age if available
-        if (($effectiveAge['min'] === null || $effectiveAge['max'] === null) && $kitSeg) {
-            if ($effectiveAge['min'] === null && !empty($kitSeg['edad_min'])) $effectiveAge['min'] = (int)$kitSeg['edad_min'];
-            if ($effectiveAge['max'] === null && !empty($kitSeg['edad_max'])) $effectiveAge['max'] = (int)$kitSeg['edad_max'];
+        // If manual age not set, use kit age if available (solo ámbito kit)
+        if ($ambito === 'kit' && ($effectiveAge['min'] === null || $effectiveAge['max'] === null) && $kitSeg) {
+          if ($effectiveAge['min'] === null && !empty($kitSeg['edad_min'])) $effectiveAge['min'] = (int)$kitSeg['edad_min'];
+          if ($effectiveAge['max'] === null && !empty($kitSeg['edad_max'])) $effectiveAge['max'] = (int)$kitSeg['edad_max'];
         }
-        // Kit notes are free text; include if directive says so
-        if ($useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
+        // Kit notes are free text; include if directive says so (solo ámbito kit)
+        if ($ambito === 'kit' && $useKitSafety && $kitSeg && !empty($kitSeg['notas'])) { $kitNotesText = (string)$kitSeg['notas']; }
         $hasAnySafety = $useKitSafety || !empty($manualNotes) || ($effectiveAge['min'] !== null || $effectiveAge['max'] !== null);
       ?>
       <?php
