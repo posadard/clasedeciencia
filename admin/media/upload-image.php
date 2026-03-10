@@ -220,5 +220,9 @@ echo json_encode([
     'url' => $relative_url,
     'width' => $target_w,
     'height' => $target_h,
+    'source_width' => $src_w,
+    'source_height' => $src_h,
+    'mime_type' => 'image/webp',
+    'upload_date' => date('c'),
     'preset' => $preset,
 ], JSON_UNESCAPED_UNICODE);

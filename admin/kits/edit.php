@@ -78,6 +78,38 @@ if ($is_edit) {
 
 $error_msg = '';
 $action_msg = '';
+$media_primary = [
+  'titulo' => '',
+  'descripcion' => '',
+  'schema_role' => 'primary',
+  'mime_type' => 'image/webp',
+  'width' => '',
+  'height' => '',
+  'upload_date' => '',
+  'creator_name' => '',
+  'in_language' => 'es-CO'
+];
+
+if ($is_edit) {
+  try {
+    $stRm = $pdo->prepare("SELECT * FROM recursos_multimedia WHERE kit_id = ? AND schema_role = 'primary' ORDER BY sort_order ASC, id ASC LIMIT 1");
+    $stRm->execute([$id]);
+    $rm = $stRm->fetch(PDO::FETCH_ASSOC);
+    if ($rm) {
+      $media_primary['titulo'] = (string)($rm['titulo'] ?? '');
+      $media_primary['descripcion'] = (string)($rm['descripcion'] ?? '');
+      $media_primary['schema_role'] = (string)($rm['schema_role'] ?? 'primary');
+      $media_primary['mime_type'] = (string)($rm['mime_type'] ?? 'image/webp');
+      $media_primary['width'] = isset($rm['width']) ? (string)$rm['width'] : '';
+      $media_primary['height'] = isset($rm['height']) ? (string)$rm['height'] : '';
+      $media_primary['upload_date'] = !empty($rm['upload_date']) ? (string)$rm['upload_date'] : '';
+      $media_primary['creator_name'] = (string)($rm['creator_name'] ?? '');
+      $media_primary['in_language'] = (string)($rm['in_language'] ?? 'es-CO');
+    }
+  } catch (PDOException $e) {
+    // DB antigua sin columnas extendidas
+  }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
@@ -440,6 +472,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $contenido_html = isset($_POST['contenido_html']) ? (string)$_POST['contenido_html'] : '';
       $imagen_portada = isset($_POST['imagen_portada']) ? trim((string)$_POST['imagen_portada']) : '';
       $video_portada = isset($_POST['video_portada']) ? trim((string)$_POST['video_portada']) : '';
+      $media_titulo = isset($_POST['media_titulo']) ? trim((string)$_POST['media_titulo']) : '';
+      $media_descripcion = isset($_POST['media_descripcion']) ? trim((string)$_POST['media_descripcion']) : '';
+      $media_schema_role = isset($_POST['media_schema_role']) ? trim((string)$_POST['media_schema_role']) : 'primary';
+      $media_mime_type = isset($_POST['media_mime_type']) ? trim((string)$_POST['media_mime_type']) : '';
+      $media_width = (isset($_POST['media_width']) && $_POST['media_width'] !== '') ? (int)$_POST['media_width'] : null;
+      $media_height = (isset($_POST['media_height']) && $_POST['media_height'] !== '') ? (int)$_POST['media_height'] : null;
+      $media_upload_date = isset($_POST['media_upload_date']) ? trim((string)$_POST['media_upload_date']) : '';
+      $media_creator_name = isset($_POST['media_creator_name']) ? trim((string)$_POST['media_creator_name']) : '';
+      $media_in_language = isset($_POST['media_in_language']) ? trim((string)$_POST['media_in_language']) : 'es-CO';
       $seo_title = isset($_POST['seo_title']) ? trim((string)$_POST['seo_title']) : '';
       $seo_description = isset($_POST['seo_description']) ? trim((string)$_POST['seo_description']) : '';
       // Tiempo y Dificultad (por defecto del kit)
@@ -581,6 +622,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $insA = $pdo->prepare('INSERT INTO kits_areas (kit_id, area_id) VALUES (?, ?)');
                 foreach ($areas_sel as $aid) { if ($aid > 0) { $insA->execute([$id, (int)$aid]); } }
               }
+
+              if (!empty($imagen_portada)) {
+                try {
+                  $role = in_array($media_schema_role, ['primary','gallery','tutorial','download','external'], true) ? $media_schema_role : 'primary';
+                  $upload_dt = null;
+                  if ($media_upload_date !== '') {
+                    $ts = strtotime($media_upload_date);
+                    if ($ts) { $upload_dt = date('Y-m-d H:i:s', $ts); }
+                  }
+                  $sel = $pdo->prepare("SELECT id FROM recursos_multimedia WHERE kit_id = ? AND schema_role = 'primary' ORDER BY sort_order ASC, id ASC LIMIT 1");
+                  $sel->execute([$id]);
+                  $rm_id = (int)$sel->fetchColumn();
+                  if ($rm_id > 0) {
+                    $upd = $pdo->prepare("UPDATE recursos_multimedia SET tipo='imagen', url=?, titulo=?, descripcion=?, sort_order=0, schema_role=?, mime_type=?, width=?, height=?, upload_date=?, in_language=?, creator_name=? WHERE id=?");
+                    $upd->execute([$imagen_portada, ($media_titulo !== '' ? $media_titulo : $nombre), ($media_descripcion !== '' ? $media_descripcion : $resumen), $role, ($media_mime_type !== '' ? $media_mime_type : 'image/webp'), $media_width, $media_height, $upload_dt, ($media_in_language !== '' ? $media_in_language : 'es-CO'), ($media_creator_name !== '' ? $media_creator_name : null), $rm_id]);
+                  } else {
+                    $insRm = $pdo->prepare("INSERT INTO recursos_multimedia (clase_id, kit_id, tipo, url, titulo, descripcion, sort_order, schema_role, mime_type, width, height, upload_date, in_language, creator_name) VALUES (NULL, ?, 'imagen', ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)");
+                    $insRm->execute([$id, $imagen_portada, ($media_titulo !== '' ? $media_titulo : $nombre), ($media_descripcion !== '' ? $media_descripcion : $resumen), $role, ($media_mime_type !== '' ? $media_mime_type : 'image/webp'), $media_width, $media_height, $upload_dt, ($media_in_language !== '' ? $media_in_language : 'es-CO'), ($media_creator_name !== '' ? $media_creator_name : null)]);
+                  }
+                } catch (PDOException $e) {
+                  try {
+                    $sel = $pdo->prepare("SELECT id FROM recursos_multimedia WHERE kit_id = ? ORDER BY sort_order ASC, id ASC LIMIT 1");
+                    $sel->execute([$id]);
+                    $rm_id = (int)$sel->fetchColumn();
+                    if ($rm_id > 0) {
+                      $upd = $pdo->prepare("UPDATE recursos_multimedia SET tipo='imagen', url=?, titulo=?, descripcion=?, sort_order=0 WHERE id=?");
+                      $upd->execute([$imagen_portada, ($media_titulo !== '' ? $media_titulo : $nombre), ($media_descripcion !== '' ? $media_descripcion : $resumen), $rm_id]);
+                    } else {
+                      $insRm = $pdo->prepare("INSERT INTO recursos_multimedia (clase_id, tipo, url, titulo, descripcion, sort_order) VALUES (NULL, 'imagen', ?, ?, ?, 0)");
+                      $insRm->execute([$imagen_portada, ($media_titulo !== '' ? $media_titulo : $nombre), ($media_descripcion !== '' ? $media_descripcion : $resumen)]);
+                    }
+                  } catch (PDOException $e2) {
+                    echo '<script>console.log("⚠️ [KitsEdit] No se pudo guardar metadata multimedia:",' . json_encode($e2->getMessage()) . ');</script>';
+                  }
+                }
+              }
+
               $pdo->commit();
               echo '<script>console.log("✅ [KitsEdit] Kit y relaciones clase_kits + kits_areas guardados");</script>';
               
@@ -886,7 +964,54 @@ include '../header.php';
         <label for="imagen_portada">Imagen de portada (URL)</label>
         <div class="image-field-row">
           <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($kit['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="/assets/img/kits/kit-xyz.webp" />
-          <button type="button" class="btn btn-secondary js-image-picker-trigger" data-target-input="imagen_portada" data-preset="kit-cover" data-entity="kit">📷 Subir y editar</button>
+          <button type="button" class="btn btn-secondary js-image-picker-trigger" data-target-input="imagen_portada" data-preset="kit-cover" data-entity="kit" data-meta-title-input="media_titulo" data-meta-description-input="media_descripcion" data-meta-mime-input="media_mime_type" data-meta-width-input="media_width" data-meta-height-input="media_height" data-meta-upload-date-input="media_upload_date" data-meta-role-input="media_schema_role" data-meta-creator-input="media_creator_name" data-meta-language-input="media_in_language" data-meta-title-source="nombre" data-meta-description-source="resumen">📷 Subir y editar</button>
+        </div>
+        <div class="field-inline" style="margin-top:8px;">
+          <div class="form-group">
+            <label for="media_titulo">Título media</label>
+            <input type="text" id="media_titulo" name="media_titulo" value="<?= htmlspecialchars($media_primary['titulo'] ?: ($kit['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+          <div class="form-group">
+            <label for="media_descripcion">Descripción media</label>
+            <input type="text" id="media_descripcion" name="media_descripcion" maxlength="255" value="<?= htmlspecialchars($media_primary['descripcion'] ?: ($kit['resumen'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+        </div>
+        <div class="field-inline">
+          <div class="form-group">
+            <label for="media_schema_role">Rol schema</label>
+            <?php $role_val = $media_primary['schema_role'] ?: 'primary'; ?>
+            <select id="media_schema_role" name="media_schema_role">
+              <?php foreach (['primary','gallery','tutorial','download','external'] as $role): ?>
+                <option value="<?= $role ?>" <?= $role_val === $role ? 'selected' : '' ?>><?= ucfirst($role) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="media_mime_type">MIME type</label>
+            <input type="text" id="media_mime_type" name="media_mime_type" value="<?= htmlspecialchars($media_primary['mime_type'] ?: 'image/webp', ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+          <div class="form-group">
+            <label for="media_width">Ancho</label>
+            <input type="number" id="media_width" name="media_width" min="0" value="<?= htmlspecialchars((string)$media_primary['width'], ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+          <div class="form-group">
+            <label for="media_height">Alto</label>
+            <input type="number" id="media_height" name="media_height" min="0" value="<?= htmlspecialchars((string)$media_primary['height'], ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+        </div>
+        <div class="field-inline">
+          <div class="form-group">
+            <label for="media_upload_date">Fecha upload</label>
+            <input type="text" id="media_upload_date" name="media_upload_date" value="<?= htmlspecialchars((string)$media_primary['upload_date'], ENT_QUOTES, 'UTF-8') ?>" placeholder="YYYY-MM-DD HH:MM:SS o ISO8601" />
+          </div>
+          <div class="form-group">
+            <label for="media_creator_name">Autor/creador</label>
+            <input type="text" id="media_creator_name" name="media_creator_name" value="<?= htmlspecialchars((string)$media_primary['creator_name'], ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+          <div class="form-group">
+            <label for="media_in_language">Idioma</label>
+            <input type="text" id="media_in_language" name="media_in_language" value="<?= htmlspecialchars((string)($media_primary['in_language'] ?: 'es-CO'), ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
         </div>
       </div>
       <div class="form-group">

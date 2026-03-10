@@ -27,7 +27,18 @@
     existingUrl: '',
     entity: 'general',
     csrfToken: '',
-    backgroundColor: '#ffffff'
+    backgroundColor: '#ffffff',
+    metaTitleInputId: '',
+    metaDescriptionInputId: '',
+    metaMimeInputId: '',
+    metaWidthInputId: '',
+    metaHeightInputId: '',
+    metaUploadDateInputId: '',
+    metaRoleInputId: '',
+    metaCreatorInputId: '',
+    metaLanguageInputId: '',
+    metaTitleSourceId: '',
+    metaDescriptionSourceId: ''
   };
 
   function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -118,6 +129,17 @@
     state.existingUrl = opts.existingUrl || '';
     state.entity = opts.entity || 'general';
     state.csrfToken = opts.csrfToken || '';
+    state.metaTitleInputId = opts.metaTitleInputId || '';
+    state.metaDescriptionInputId = opts.metaDescriptionInputId || '';
+    state.metaMimeInputId = opts.metaMimeInputId || '';
+    state.metaWidthInputId = opts.metaWidthInputId || '';
+    state.metaHeightInputId = opts.metaHeightInputId || '';
+    state.metaUploadDateInputId = opts.metaUploadDateInputId || '';
+    state.metaRoleInputId = opts.metaRoleInputId || '';
+    state.metaCreatorInputId = opts.metaCreatorInputId || '';
+    state.metaLanguageInputId = opts.metaLanguageInputId || '';
+    state.metaTitleSourceId = opts.metaTitleSourceId || '';
+    state.metaDescriptionSourceId = opts.metaDescriptionSourceId || '';
 
     const modal = qs('#adminImageEditorModal');
     modal.classList.add('is-open');
@@ -136,6 +158,49 @@
     }
 
     console.log('🔍 [ImageEditor] Abierto con preset:', state.preset, 'input:', state.targetInputId);
+  }
+
+  function stripHtml(text) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = String(text || '');
+    return (tmp.textContent || tmp.innerText || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function setInputValue(inputId, value) {
+    if (!inputId) return;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.value = String(value == null ? '' : value);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function applyAutoMetadata(json) {
+    const titleSource = state.metaTitleSourceId ? document.getElementById(state.metaTitleSourceId) : null;
+    const descSource = state.metaDescriptionSourceId ? document.getElementById(state.metaDescriptionSourceId) : null;
+    const autoTitle = titleSource ? String(titleSource.value || '').trim() : '';
+    const autoDesc = descSource ? stripHtml(descSource.value || '') : '';
+
+    if (state.metaTitleInputId && autoTitle) setInputValue(state.metaTitleInputId, autoTitle);
+    if (state.metaDescriptionInputId && autoDesc) setInputValue(state.metaDescriptionInputId, autoDesc.slice(0, 255));
+    if (state.metaMimeInputId) setInputValue(state.metaMimeInputId, json && json.mime_type ? json.mime_type : 'image/webp');
+    if (state.metaWidthInputId) setInputValue(state.metaWidthInputId, json && json.width ? json.width : '');
+    if (state.metaHeightInputId) setInputValue(state.metaHeightInputId, json && json.height ? json.height : '');
+    if (state.metaUploadDateInputId && json && json.upload_date) setInputValue(state.metaUploadDateInputId, json.upload_date);
+    if (state.metaRoleInputId) {
+      const roleInput = document.getElementById(state.metaRoleInputId);
+      if (roleInput && !String(roleInput.value || '').trim()) {
+        setInputValue(state.metaRoleInputId, 'primary');
+      }
+    }
+    if (state.metaLanguageInputId) {
+      const langInput = document.getElementById(state.metaLanguageInputId);
+      if (langInput && !String(langInput.value || '').trim()) {
+        setInputValue(state.metaLanguageInputId, 'es-CO');
+      }
+    }
+
+    console.log('✅ [ImageEditor] Metadata autocompletada');
   }
 
   function closeEditor() {
@@ -405,6 +470,8 @@
           }
         }
 
+        applyAutoMetadata(json || {});
+
         closeEditor();
         console.log('✅ [ImageEditor] Imagen guardada y URL aplicada:', json.url);
       } catch (err) {
@@ -630,6 +697,17 @@
         const targetInputId = btn.getAttribute('data-target-input') || '';
         const preset = btn.getAttribute('data-preset') || 'generic-cover';
         const entity = btn.getAttribute('data-entity') || 'general';
+        const metaTitleInputId = btn.getAttribute('data-meta-title-input') || '';
+        const metaDescriptionInputId = btn.getAttribute('data-meta-description-input') || '';
+        const metaMimeInputId = btn.getAttribute('data-meta-mime-input') || '';
+        const metaWidthInputId = btn.getAttribute('data-meta-width-input') || '';
+        const metaHeightInputId = btn.getAttribute('data-meta-height-input') || '';
+        const metaUploadDateInputId = btn.getAttribute('data-meta-upload-date-input') || '';
+        const metaRoleInputId = btn.getAttribute('data-meta-role-input') || '';
+        const metaCreatorInputId = btn.getAttribute('data-meta-creator-input') || '';
+        const metaLanguageInputId = btn.getAttribute('data-meta-language-input') || '';
+        const metaTitleSourceId = btn.getAttribute('data-meta-title-source') || '';
+        const metaDescriptionSourceId = btn.getAttribute('data-meta-description-source') || '';
         const csrfToken = (qs('#kit-form input[name="csrf_token"]') || qs('#clase-form input[name="csrf_token"]') || qs('#cmp-form input[name="csrf_token"]') || qs('input[name="csrf_token"]'))?.value || '';
         const targetInput = targetInputId ? document.getElementById(targetInputId) : null;
         const existingUrl = targetInput ? String(targetInput.value || '').trim() : '';
@@ -638,7 +716,24 @@
           alert('No se encontró input destino para esta acción.');
           return;
         }
-        openEditor({ targetInputId: targetInputId, preset: preset, entity: entity, csrfToken: csrfToken, existingUrl: existingUrl });
+        openEditor({
+          targetInputId: targetInputId,
+          preset: preset,
+          entity: entity,
+          csrfToken: csrfToken,
+          existingUrl: existingUrl,
+          metaTitleInputId: metaTitleInputId,
+          metaDescriptionInputId: metaDescriptionInputId,
+          metaMimeInputId: metaMimeInputId,
+          metaWidthInputId: metaWidthInputId,
+          metaHeightInputId: metaHeightInputId,
+          metaUploadDateInputId: metaUploadDateInputId,
+          metaRoleInputId: metaRoleInputId,
+          metaCreatorInputId: metaCreatorInputId,
+          metaLanguageInputId: metaLanguageInputId,
+          metaTitleSourceId: metaTitleSourceId,
+          metaDescriptionSourceId: metaDescriptionSourceId
+        });
       });
     });
   }
