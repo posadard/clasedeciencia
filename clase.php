@@ -18,6 +18,8 @@ if (!$proyecto) {
     exit;
 }
 
+$canonical_url = SITE_URL . '/' . $proyecto['slug'];
+
 // Cargar información completa del ciclo
 $ciclo_info = [];
 if (!empty($proyecto['ciclo'])) {
@@ -142,7 +144,6 @@ if (!empty($areas)) {
 
 $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Ciencia');
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
-$canonical_url = SITE_URL . '/' . $proyecto['slug'];
 
 // Schema.org Recurso Educativo (LearningResource)
 $learning_resource_schema = [
