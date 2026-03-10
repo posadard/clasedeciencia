@@ -171,7 +171,14 @@ $manual_schema = [
   'name' => $display_title_raw,
   'description' => $page_description,
   'url' => $canonical_url,
-  'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
+  'subjectOf' => [
+    '@type' => 'DigitalDocument',
+    '@id' => $canonical_url . '#digital-document',
+    'name' => 'Version imprimible: ' . $display_title_raw,
+    'url' => $canonical_url,
+    'encodingFormat' => 'text/html',
+    'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO'
+  ],
   'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
   'isAccessibleForFree' => true,
   'author' => [
@@ -291,18 +298,9 @@ $breadcrumb_schema = [
   'itemListElement' => $breadcrumb_items
 ];
 
-$digital_document_schema = [
-  '@type' => 'DigitalDocument',
-  '@id' => $canonical_url . '#digital-document',
-  'name' => 'Version imprimible: ' . $display_title_raw,
-  'url' => $canonical_url,
-  'encodingFormat' => 'text/html',
-  'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO'
-];
-
 $schema_json = cdc_encode_schema_json([
   '@context' => 'https://schema.org',
-  '@graph' => [$manual_schema, $breadcrumb_schema, $digital_document_schema]
+  '@graph' => [$manual_schema, $breadcrumb_schema]
 ]);
 
 include 'includes/header.php';

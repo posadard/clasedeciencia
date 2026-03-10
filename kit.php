@@ -104,7 +104,14 @@ $kit_schema = [
   'name' => (string)$kit['nombre'],
   'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
   'url' => $canonical_url,
-  'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
+  'subjectOf' => [
+    '@type' => 'DigitalDocument',
+    '@id' => $canonical_url . '#digital-document',
+    'name' => 'Version imprimible: ' . (string)$kit['nombre'],
+    'url' => $canonical_url,
+    'encodingFormat' => 'text/html',
+    'inLanguage' => 'es-CO'
+  ],
   'isAccessibleForFree' => true,
   'brand' => [
     '@type' => 'Organization',
@@ -201,18 +208,9 @@ $breadcrumb_schema = [
   ]
 ];
 
-$digital_document_schema = [
-  '@type' => 'DigitalDocument',
-  '@id' => $canonical_url . '#digital-document',
-  'name' => 'Version imprimible: ' . (string)$kit['nombre'],
-  'url' => $canonical_url,
-  'encodingFormat' => 'text/html',
-  'inLanguage' => 'es-CO'
-];
-
 $schema_json = cdc_encode_schema_json([
   '@context' => 'https://schema.org',
-  '@graph' => [$kit_schema, $breadcrumb_schema, $digital_document_schema]
+  '@graph' => [$kit_schema, $breadcrumb_schema]
 ]);
 
 include 'includes/header.php';
