@@ -142,27 +142,29 @@ $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Cien
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
 $canonical_url = SITE_URL . '/' . $proyecto['slug'];
 
-// Schema.org HowTo enriquecido
-$how_to_schema = [
-    '@type' => 'HowTo',
-    '@id' => $canonical_url . '#howto',
+// Schema.org Recurso Educativo (LearningResource)
+$learning_resource_schema = [
+    '@type' => 'LearningResource',
+    '@id' => $canonical_url . '#learning-resource',
     'name' => $proyecto['nombre'],
     'description' => $page_description,
     'url' => $canonical_url,
-    'inLanguage' => 'es-CO'
+    'inLanguage' => 'es-CO',
+    'learningResourceType' => 'Clase interactiva',
+    'educationalUse' => 'instruction'
 ];
 
 if (!empty($proyecto['duracion_minutos'])) {
-    $how_to_schema['totalTime'] = 'PT' . (int)$proyecto['duracion_minutos'] . 'M';
+    $learning_resource_schema['timeRequired'] = 'PT' . (int)$proyecto['duracion_minutos'] . 'M';
 }
 
 if (!empty($proyecto['imagen_portada'])) {
-    $how_to_schema['image'] = cdc_absolute_url($proyecto['imagen_portada']);
+    $learning_resource_schema['image'] = cdc_absolute_url($proyecto['imagen_portada']);
 }
 
 if (!empty($proyecto['video_portada'])) {
     $video_url = cdc_absolute_url($proyecto['video_portada']);
-    $how_to_schema['video'] = [
+    $learning_resource_schema['video'] = [
         '@type' => 'VideoObject',
         'name' => 'Video de ' . $proyecto['nombre'],
         'embedUrl' => $video_url,
@@ -171,9 +173,9 @@ if (!empty($proyecto['video_portada'])) {
 }
 
 if (!empty($kits) && is_array($kits)) {
-    $how_to_schema['tool'] = array_values(array_map(function ($k) {
+    $learning_resource_schema['isRelatedTo'] = array_values(array_map(function ($k) {
         return [
-            '@type' => 'HowToTool',
+            '@type' => 'Product',
             'name' => (string)($k['nombre'] ?? 'Kit')
         ];
     }, $kits));
@@ -190,19 +192,43 @@ if (!empty($materiales_por_kit) && is_array($materiales_por_kit)) {
                 continue;
             }
             $supply[] = [
-                '@type' => 'HowToSupply',
+                '@type' => 'DefinedTerm',
                 'name' => (string)$m['nombre_comun']
             ];
         }
     }
 }
 if (!empty($supply)) {
-    $how_to_schema['supply'] = array_values($supply);
+    $learning_resource_schema['keywords'] = array_values(array_map(function ($s) {
+        return (string)($s['name'] ?? '');
+    }, $supply));
+}
+
+if (!empty($proyecto['objetivo_aprendizaje'])) {
+    $learning_resource_schema['teaches'] = (string)$proyecto['objetivo_aprendizaje'];
+}
+
+if (!empty($proyecto['grados'])) {
+    $grados = json_decode((string)$proyecto['grados'], true);
+    if (is_array($grados) && !empty($grados)) {
+        $learning_resource_schema['educationalLevel'] = implode(', ', array_map(function ($g) {
+            return (string)$g;
+        }, $grados));
+    }
+}
+
+if (!empty($areas) && is_array($areas)) {
+    $learning_resource_schema['about'] = array_values(array_map(function ($a) {
+        return [
+            '@type' => 'Thing',
+            'name' => (string)($a['nombre'] ?? '')
+        ];
+    }, $areas));
 }
 
 if ($guia && !empty($guia['pasos'])) {
     $pasos = json_decode($guia['pasos'], true) ?: [];
-    $how_to_steps = [];
+    $learning_parts = [];
     foreach ($pasos as $i => $p) {
         if (!is_array($p)) {
             $p = ['texto' => (string)$p];
@@ -219,17 +245,17 @@ if ($guia && !empty($guia['pasos'])) {
             $step_text = trim(strip_tags((string)$p['html']));
         }
         $step_payload = [
-            '@type' => 'HowToStep',
-            'position' => ((int)$i + 1),
+            '@type' => 'CreativeWork',
+            '@id' => $canonical_url . '#paso-' . ((int)$i + 1),
             'name' => $step_name
         ];
         if ($step_text !== '') {
-            $step_payload['text'] = $step_text;
+            $step_payload['description'] = $step_text;
         }
-        $how_to_steps[] = $step_payload;
+        $learning_parts[] = $step_payload;
     }
-    if (!empty($how_to_steps)) {
-        $how_to_schema['step'] = $how_to_steps;
+    if (!empty($learning_parts)) {
+        $learning_resource_schema['hasPart'] = $learning_parts;
     }
 }
 
@@ -260,7 +286,7 @@ $breadcrumb_schema = [
 
 $schema_json = cdc_encode_schema_json([
     '@context' => 'https://schema.org',
-    '@graph' => [$how_to_schema, $breadcrumb_schema]
+    '@graph' => [$learning_resource_schema, $breadcrumb_schema]
 ]);
 
 include 'includes/header.php';
