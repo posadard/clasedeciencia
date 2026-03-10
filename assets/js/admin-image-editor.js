@@ -213,6 +213,24 @@
     input.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  function setModalValue(id, value) {
+    const input = qs('#' + id);
+    if (!input) return;
+    input.value = String(value == null ? '' : value);
+  }
+
+  function detectAdminCreator() {
+    const logoutLink = Array.from(document.querySelectorAll('a[href="/admin/logout.php"]'))[0];
+    if (!logoutLink) return '';
+    const txt = String(logoutLink.textContent || '').trim();
+    const m = txt.match(/\(([^)]+)\)/);
+    return m && m[1] ? String(m[1]).trim() : '';
+  }
+
+  function nowIsoLike() {
+    return new Date().toISOString();
+  }
+
   function applyAutoMetadata(json) {
     const titleSource = state.metaTitleSourceId ? document.getElementById(state.metaTitleSourceId) : null;
     const descSource = state.metaDescriptionSourceId ? document.getElementById(state.metaDescriptionSourceId) : null;
@@ -223,10 +241,23 @@
     const descInput = state.metaDescriptionInputId ? document.getElementById(state.metaDescriptionInputId) : null;
     if (state.metaTitleInputId && autoTitle && (!titleInput || !String(titleInput.value || '').trim())) setInputValue(state.metaTitleInputId, autoTitle);
     if (state.metaDescriptionInputId && autoDesc && (!descInput || !String(descInput.value || '').trim())) setInputValue(state.metaDescriptionInputId, autoDesc.slice(0, 255));
-    if (state.metaMimeInputId) setInputValue(state.metaMimeInputId, json && json.mime_type ? json.mime_type : 'image/webp');
-    if (state.metaWidthInputId) setInputValue(state.metaWidthInputId, json && json.width ? json.width : '');
-    if (state.metaHeightInputId) setInputValue(state.metaHeightInputId, json && json.height ? json.height : '');
-    if (state.metaUploadDateInputId && json && json.upload_date) setInputValue(state.metaUploadDateInputId, json.upload_date);
+    const preset = getPresetInfo();
+    const mime = (json && json.mime_type) ? json.mime_type : 'image/webp';
+    const width = (json && json.width) ? json.width : preset.width;
+    const height = (json && json.height) ? json.height : preset.height;
+    const uploadDate = (json && json.upload_date) ? json.upload_date : nowIsoLike();
+    const creatorAuto = detectAdminCreator();
+
+    if (state.metaMimeInputId) setInputValue(state.metaMimeInputId, mime);
+    if (state.metaWidthInputId) setInputValue(state.metaWidthInputId, width);
+    if (state.metaHeightInputId) setInputValue(state.metaHeightInputId, height);
+    if (state.metaUploadDateInputId) setInputValue(state.metaUploadDateInputId, uploadDate);
+    if (state.metaCreatorInputId) {
+      const creatorInput = document.getElementById(state.metaCreatorInputId);
+      if (creatorInput && !String(creatorInput.value || '').trim() && creatorAuto) {
+        setInputValue(state.metaCreatorInputId, creatorAuto);
+      }
+    }
     if (state.metaRoleInputId) {
       const roleInput = document.getElementById(state.metaRoleInputId);
       if (roleInput && !String(roleInput.value || '').trim()) {
@@ -238,6 +269,17 @@
       if (langInput && !String(langInput.value || '').trim()) {
         setInputValue(state.metaLanguageInputId, 'es-CO');
       }
+    }
+
+    setModalValue('imageEditorMetaMime', mime);
+    setModalValue('imageEditorMetaWidth', width);
+    setModalValue('imageEditorMetaHeight', height);
+    setModalValue('imageEditorMetaUploadDate', uploadDate);
+    if (!modalMetadataValue('imageEditorMetaCreator') && creatorAuto) {
+      setModalValue('imageEditorMetaCreator', creatorAuto);
+    }
+    if (!modalMetadataValue('imageEditorMetaLanguage')) {
+      setModalValue('imageEditorMetaLanguage', 'es-CO');
     }
 
     console.log('✅ [ImageEditor] Metadata autocompletada');
@@ -262,14 +304,16 @@
     const hiddenCreator = state.metaCreatorInputId ? document.getElementById(state.metaCreatorInputId) : null;
     const hiddenLang = state.metaLanguageInputId ? document.getElementById(state.metaLanguageInputId) : null;
 
+    const preset = getPresetInfo();
+    const creatorAuto = detectAdminCreator();
     setInputValue('imageEditorMetaTitle', (hiddenTitle && hiddenTitle.value) ? hiddenTitle.value : (titleSource ? String(titleSource.value || '').trim() : ''));
     setInputValue('imageEditorMetaDescription', (hiddenDesc && hiddenDesc.value) ? hiddenDesc.value : (descSource ? stripHtml(descSource.value || '').slice(0, 255) : ''));
     setInputValue('imageEditorMetaRole', (hiddenRole && hiddenRole.value) ? hiddenRole.value : 'primary');
     setInputValue('imageEditorMetaMime', (hiddenMime && hiddenMime.value) ? hiddenMime.value : 'image/webp');
-    setInputValue('imageEditorMetaWidth', hiddenWidth && hiddenWidth.value ? hiddenWidth.value : '');
-    setInputValue('imageEditorMetaHeight', hiddenHeight && hiddenHeight.value ? hiddenHeight.value : '');
-    setInputValue('imageEditorMetaUploadDate', hiddenDate && hiddenDate.value ? hiddenDate.value : '');
-    setInputValue('imageEditorMetaCreator', hiddenCreator && hiddenCreator.value ? hiddenCreator.value : '');
+    setInputValue('imageEditorMetaWidth', hiddenWidth && hiddenWidth.value ? hiddenWidth.value : String(preset.width));
+    setInputValue('imageEditorMetaHeight', hiddenHeight && hiddenHeight.value ? hiddenHeight.value : String(preset.height));
+    setInputValue('imageEditorMetaUploadDate', hiddenDate && hiddenDate.value ? hiddenDate.value : nowIsoLike());
+    setInputValue('imageEditorMetaCreator', hiddenCreator && hiddenCreator.value ? hiddenCreator.value : creatorAuto);
     setInputValue('imageEditorMetaLanguage', (hiddenLang && hiddenLang.value) ? hiddenLang.value : 'es-CO');
   }
 
@@ -555,7 +599,6 @@
         }
 
         applyAutoMetadata(json || {});
-        persistModalMetadataToHidden();
 
         closeEditor();
         console.log('✅ [ImageEditor] Imagen guardada y URL aplicada:', json.url);
