@@ -174,7 +174,7 @@ if (!empty($proyecto['video_portada'])) {
 }
 
 if (!empty($kits) && is_array($kits)) {
-    $learning_resource_schema['isRelatedTo'] = array_values(array_map(function ($k) {
+    $learning_resource_schema['mentions'] = array_values(array_map(function ($k) {
         return [
             '@type' => 'Product',
             'name' => (string)($k['nombre'] ?? 'Kit')
