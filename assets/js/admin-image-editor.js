@@ -24,6 +24,7 @@
     dragBaseY: 0,
     preset: 'generic-cover',
     targetInputId: '',
+    existingUrl: '',
     entity: 'general',
     csrfToken: '',
     backgroundColor: '#ffffff'
@@ -32,10 +33,29 @@
   function qs(sel, root) { return (root || document).querySelector(sel); }
   function qsa(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
 
-  function escapeHtml(str) {
-    return String(str || '').replace(/[&<>'\"]/g, function (c) {
-      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c] || c;
-    });
+  function isManagedUploadUrl(url) {
+    if (!url) return false;
+    const v = String(url).trim();
+    if (v === '') return false;
+    if (v.indexOf('/assets/images/uploads/') === 0) return true;
+    try {
+      const u = new URL(v, window.location.origin);
+      return u.origin === window.location.origin && u.pathname.indexOf('/assets/images/uploads/') === 0;
+    } catch (_e) {
+      return false;
+    }
+  }
+
+  function clearLoadedImage() {
+    state.sourceImage = null;
+    state.sourceName = '';
+    state.backgroundColor = '#f3f4f6';
+    resetTransform();
+    render();
+    const meta = qs('#imageEditorMeta');
+    if (meta) {
+      meta.textContent = 'Sin imagen seleccionada.';
+    }
   }
 
   function buildModal() {
@@ -58,6 +78,10 @@
       '        <label class="btn" for="imageEditorFileInput">📁 Seleccionar imagen</label>' +
       '        <input id="imageEditorFileInput" type="file" accept="image/jpeg,image/png,image/webp" style="display:none;" />' +
       '        <p class="hint" id="imageEditorMeta">Sin imagen seleccionada.</p>' +
+      '        <div class="image-editor-actions">' +
+      '          <button type="button" class="btn btn-secondary" id="imageEditorLoadCurrent">Usar imagen actual</button>' +
+      '          <button type="button" class="btn btn-secondary" id="imageEditorDeleteCurrent">Eliminar actual</button>' +
+      '        </div>' +
       '        <label for="imageEditorZoom">Zoom</label>' +
       '        <input id="imageEditorZoom" type="range" min="1" max="3" step="0.01" value="1" />' +
       '        <div class="image-editor-actions">' +
@@ -91,10 +115,9 @@
     buildModal();
     state.preset = opts.preset || 'generic-cover';
     state.targetInputId = opts.targetInputId || '';
+    state.existingUrl = opts.existingUrl || '';
     state.entity = opts.entity || 'general';
     state.csrfToken = opts.csrfToken || '';
-    state.sourceImage = null;
-    state.sourceName = '';
 
     const modal = qs('#adminImageEditorModal');
     modal.classList.add('is-open');
@@ -102,11 +125,16 @@
 
     const info = getPresetInfo();
     qs('#imageEditorPresetHint').textContent = 'Preset: ' + info.label;
-    qs('#imageEditorMeta').textContent = 'Sin imagen seleccionada.';
     qs('#imageEditorFileInput').value = '';
 
-    resetTransform();
-    render();
+    clearLoadedImage();
+
+    if (state.existingUrl) {
+      loadImageFromUrl(state.existingUrl).catch(function (err) {
+        console.log('⚠️ [ImageEditor] No se pudo precargar imagen actual:', err && err.message);
+      });
+    }
+
     console.log('🔍 [ImageEditor] Abierto con preset:', state.preset, 'input:', state.targetInputId);
   }
 
@@ -205,6 +233,70 @@
       fitImageToView();
       render();
       console.log('✅ [ImageEditor] Reset de encuadre');
+    });
+
+    qs('#imageEditorLoadCurrent').addEventListener('click', function () {
+      const input = state.targetInputId ? document.getElementById(state.targetInputId) : null;
+      const currentUrl = input ? String(input.value || '').trim() : '';
+      if (!currentUrl) {
+        alert('No hay imagen actual en el campo.');
+        return;
+      }
+      loadImageFromUrl(currentUrl).catch(function (err) {
+        console.log('❌ [ImageEditor] Error al cargar imagen actual:', err && err.message);
+        alert('No se pudo cargar la imagen actual.');
+      });
+    });
+
+    qs('#imageEditorDeleteCurrent').addEventListener('click', async function () {
+      const input = state.targetInputId ? document.getElementById(state.targetInputId) : null;
+      const currentUrl = input ? String(input.value || '').trim() : '';
+      if (!currentUrl) {
+        alert('No hay imagen para eliminar.');
+        return;
+      }
+
+      if (!confirm('¿Eliminar la imagen actual? Esta acción no se puede deshacer.')) {
+        return;
+      }
+
+      if (!isManagedUploadUrl(currentUrl)) {
+        alert('La imagen actual no está en /assets/images/uploads/. Solo se limpiará el campo.');
+        if (input) {
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        clearLoadedImage();
+        return;
+      }
+
+      try {
+        const fd = new FormData();
+        fd.append('action', 'delete');
+        fd.append('csrf_token', state.csrfToken || '');
+        fd.append('image_url', currentUrl);
+        const response = await fetch('/admin/media/upload-image.php', {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin'
+        });
+        const json = await response.json();
+        if (!json || !json.ok) {
+          throw new Error((json && json.error) ? json.error : 'No se pudo eliminar imagen');
+        }
+
+        if (input) {
+          input.value = '';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        clearLoadedImage();
+        console.log('✅ [ImageEditor] Imagen eliminada del disco:', json.url);
+      } catch (err) {
+        console.log('❌ [ImageEditor] Error al eliminar imagen:', err && err.message);
+        alert('No se pudo eliminar la imagen: ' + (err && err.message ? err.message : 'Error'));
+      }
     });
 
     zoom.addEventListener('input', function () {
@@ -360,6 +452,36 @@
     console.log('🔍 [ImageEditor] Fit inicial aplicado. Preset ratio:', presetRatio.toFixed(3), 'img ratio:', imgRatio.toFixed(3));
   }
 
+  function loadImageFromUrl(rawUrl) {
+    return new Promise(function (resolve, reject) {
+      const currentUrl = String(rawUrl || '').trim();
+      if (!currentUrl) {
+        reject(new Error('URL vacía'));
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function () {
+        state.sourceImage = img;
+        state.sourceName = 'actual';
+        state.backgroundColor = computeDominantBackgroundColor(img);
+        fitImageToView();
+        render();
+        const meta = qs('#imageEditorMeta');
+        if (meta) {
+          meta.textContent = 'Imagen actual cargada (' + img.width + 'x' + img.height + ')';
+        }
+        console.log('✅ [ImageEditor] Imagen actual precargada:', currentUrl);
+        resolve();
+      };
+      img.onerror = function () {
+        reject(new Error('No se pudo abrir la URL actual'));
+      };
+      img.src = currentUrl;
+    });
+  }
+
   function setScale(nextScale) {
     if (!state.sourceImage) return;
     const canvas = qs('#imageEditorViewport');
@@ -509,12 +631,14 @@
         const preset = btn.getAttribute('data-preset') || 'generic-cover';
         const entity = btn.getAttribute('data-entity') || 'general';
         const csrfToken = (qs('#kit-form input[name="csrf_token"]') || qs('#clase-form input[name="csrf_token"]') || qs('#cmp-form input[name="csrf_token"]') || qs('input[name="csrf_token"]'))?.value || '';
+        const targetInput = targetInputId ? document.getElementById(targetInputId) : null;
+        const existingUrl = targetInput ? String(targetInput.value || '').trim() : '';
 
         if (!targetInputId) {
           alert('No se encontró input destino para esta acción.');
           return;
         }
-        openEditor({ targetInputId: targetInputId, preset: preset, entity: entity, csrfToken: csrfToken });
+        openEditor({ targetInputId: targetInputId, preset: preset, entity: entity, csrfToken: csrfToken, existingUrl: existingUrl });
       });
     });
   }

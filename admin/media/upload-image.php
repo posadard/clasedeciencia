@@ -3,6 +3,29 @@ require_once __DIR__ . '/../auth.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+function cdc_normalize_upload_relative_url($url) {
+    $raw = trim((string)$url);
+    if ($raw === '') {
+        return null;
+    }
+
+    $path = $raw;
+    if (preg_match('/^https?:\/\//i', $raw)) {
+        $parts = parse_url($raw);
+        $path = isset($parts['path']) ? (string)$parts['path'] : '';
+    }
+
+    if ($path === '' || strpos($path, '/assets/images/uploads/') !== 0) {
+        return null;
+    }
+
+    if (strpos($path, '..') !== false) {
+        return null;
+    }
+
+    return $path;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'Método no permitido']);
@@ -13,6 +36,44 @@ $csrf_token = isset($_POST['csrf_token']) ? (string)$_POST['csrf_token'] : '';
 if ($csrf_token === '' || !isset($_SESSION['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $csrf_token)) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'Token CSRF inválido']);
+    exit;
+}
+
+$action = isset($_POST['action']) ? trim((string)$_POST['action']) : 'upload';
+if ($action === 'delete') {
+    $image_url = isset($_POST['image_url']) ? (string)$_POST['image_url'] : '';
+    $relative = cdc_normalize_upload_relative_url($image_url);
+    if ($relative === null) {
+        http_response_code(400);
+        echo json_encode(['ok' => false, 'error' => 'Ruta de imagen no administrada o inválida']);
+        exit;
+    }
+
+    $uploads_root = realpath(__DIR__ . '/../../assets/images/uploads');
+    $candidate = __DIR__ . '/../..' . $relative;
+    $candidate_dir = realpath(dirname($candidate));
+
+    if (!$uploads_root || !$candidate_dir || strpos($candidate_dir, $uploads_root) !== 0) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'Ruta fuera del directorio permitido']);
+        exit;
+    }
+
+    $deleted = false;
+    if (is_file($candidate)) {
+        $deleted = @unlink($candidate);
+        if (!$deleted) {
+            http_response_code(500);
+            echo json_encode(['ok' => false, 'error' => 'No se pudo eliminar el archivo']);
+            exit;
+        }
+    }
+
+    echo json_encode([
+        'ok' => true,
+        'deleted' => $deleted,
+        'url' => $relative,
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
