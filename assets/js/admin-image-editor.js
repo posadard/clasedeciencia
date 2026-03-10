@@ -4,8 +4,8 @@
   }
 
   const PRESETS = {
-    'kit-cover': { width: 1200, height: 675, label: 'Kit portada 1200x675' },
-    'clase-cover': { width: 1200, height: 675, label: 'Clase portada 1200x675' },
+    'kit-cover': { width: 800, height: 800, label: 'Kit portada 800x800' },
+    'clase-cover': { width: 800, height: 800, label: 'Clase portada 800x800' },
     'componente-thumb': { width: 800, height: 800, label: 'Componente 800x800' },
     'generic-cover': { width: 1200, height: 675, label: 'General 1200x675' }
   };

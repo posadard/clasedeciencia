@@ -33,8 +33,8 @@ $preset = isset($_POST['preset']) ? trim((string)$_POST['preset']) : 'kit-cover'
 $entity = isset($_POST['entity']) ? trim((string)$_POST['entity']) : 'general';
 
 $allowed_presets = [
-    'kit-cover' => ['width' => 1200, 'height' => 675],
-    'clase-cover' => ['width' => 1200, 'height' => 675],
+    'kit-cover' => ['width' => 800, 'height' => 800],
+    'clase-cover' => ['width' => 800, 'height' => 800],
     'componente-thumb' => ['width' => 800, 'height' => 800],
     'generic-cover' => ['width' => 1200, 'height' => 675],
 ];
