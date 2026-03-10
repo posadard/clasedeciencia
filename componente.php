@@ -2,6 +2,7 @@
 // Página de detalle de Componente (kit_items)
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/db-functions.php';
 require_once 'includes/materials-functions.php';
 
 $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
@@ -157,6 +158,17 @@ if (!empty($additional_property)) {
     $component_schema['additionalProperty'] = $additional_property;
 }
 
+$media_resources = [];
+try {
+    $stmtR = $pdo->prepare("SELECT * FROM recursos_multimedia WHERE item_id = ? ORDER BY sort_order ASC, id ASC");
+    $stmtR->execute([(int)$material['id']]);
+    $media_resources = $stmtR->fetchAll(PDO::FETCH_ASSOC) ?: [];
+} catch (Exception $e) {
+    $media_resources = [];
+}
+
+$media_schema_nodes = cdc_build_media_schema_nodes($media_resources, $component_url);
+
 $warn_obj = json_decode((string)($material['description'] ?? ''), true);
 if (is_array($warn_obj) && (!empty($warn_obj['edad_min']) || !empty($warn_obj['edad_max']))) {
     $aud = ['@type' => 'PeopleAudience'];
@@ -211,13 +223,23 @@ $webpage_schema = [
     'name' => (string)$page_title,
     'inLanguage' => 'es-CO',
     'mainEntity' => ['@id' => $component_url . '#product'],
-    'hasPart' => ['@id' => $component_url . '#digital-document'],
+    'hasPart' => array_merge(
+        [['@id' => $component_url . '#digital-document']],
+        array_values(array_map(function ($n) {
+            return ['@id' => (string)($n['@id'] ?? '')];
+        }, $media_schema_nodes))
+    ),
     'breadcrumb' => ['@id' => $component_url . '#breadcrumb']
 ];
 
+$graph_nodes = [$component_schema, $breadcrumb_schema, $digital_document_schema, $webpage_schema];
+if (!empty($media_schema_nodes)) {
+    $graph_nodes = array_merge($graph_nodes, $media_schema_nodes);
+}
+
 $schema_json = cdc_encode_schema_json([
     '@context' => 'https://schema.org',
-    '@graph' => [$component_schema, $breadcrumb_schema, $digital_document_schema, $webpage_schema]
+    '@graph' => $graph_nodes
 ]);
 
 include 'includes/header.php';

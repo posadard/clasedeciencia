@@ -98,6 +98,100 @@ function cdc_encode_schema_json($schema) {
 }
 
 /**
+ * Build schema.org media nodes from recursos_multimedia rows.
+ */
+function cdc_build_media_schema_nodes($resources, $base_url) {
+    if (!is_array($resources) || empty($resources)) {
+        return [];
+    }
+
+    $nodes = [];
+    $base_url = (string)$base_url;
+
+    foreach ($resources as $r) {
+        if (!is_array($r) || empty($r['url'])) {
+            continue;
+        }
+
+        $tipo = strtolower((string)($r['tipo'] ?? ''));
+        $mime = strtolower((string)($r['mime_type'] ?? ''));
+        $id_suffix = isset($r['id']) ? (string)$r['id'] : md5((string)$r['url']);
+
+        $schema_type = 'MediaObject';
+        if (strpos($tipo, 'video') !== false || strpos($mime, 'video/') === 0) {
+            $schema_type = 'VideoObject';
+        } elseif (
+            strpos($tipo, 'image') !== false ||
+            strpos($tipo, 'imagen') !== false ||
+            strpos($tipo, 'foto') !== false ||
+            strpos($mime, 'image/') === 0
+        ) {
+            $schema_type = 'ImageObject';
+        }
+
+        $content_url = cdc_absolute_url((string)$r['url']);
+        $node = [
+            '@type' => $schema_type,
+            '@id' => rtrim($base_url, '/') . '#media-' . $id_suffix,
+            'name' => !empty($r['titulo']) ? (string)$r['titulo'] : 'Recurso multimedia',
+            'contentUrl' => $content_url,
+            'url' => $content_url
+        ];
+
+        if (!empty($r['descripcion'])) {
+            $node['description'] = (string)$r['descripcion'];
+        }
+        if (!empty($r['mime_type'])) {
+            $node['encodingFormat'] = (string)$r['mime_type'];
+        }
+        if (!empty($r['width'])) {
+            $node['width'] = (int)$r['width'];
+        }
+        if (!empty($r['height'])) {
+            $node['height'] = (int)$r['height'];
+        }
+        if (!empty($r['duration_iso8601']) && $schema_type === 'VideoObject') {
+            $node['duration'] = (string)$r['duration_iso8601'];
+        }
+        if (!empty($r['upload_date'])) {
+            $ts = strtotime((string)$r['upload_date']);
+            if ($ts) {
+                $node['uploadDate'] = date('c', $ts);
+            }
+        }
+        if (!empty($r['thumbnail_url'])) {
+            $node['thumbnailUrl'] = cdc_absolute_url((string)$r['thumbnail_url']);
+        }
+        if (!empty($r['embed_url']) && $schema_type === 'VideoObject') {
+            $node['embedUrl'] = cdc_absolute_url((string)$r['embed_url']);
+        }
+        if (!empty($r['in_language'])) {
+            $node['inLanguage'] = (string)$r['in_language'];
+        }
+        if (!empty($r['license_url'])) {
+            $node['license'] = cdc_absolute_url((string)$r['license_url']);
+        }
+        if (!empty($r['creator_name'])) {
+            $node['creator'] = [
+                '@type' => 'Person',
+                'name' => (string)$r['creator_name']
+            ];
+        }
+        if (!empty($r['schema_role'])) {
+            $node['additionalProperty'] = [
+                '@type' => 'PropertyValue',
+                'name' => 'schema_role',
+                'value' => (string)$r['schema_role']
+            ];
+        }
+
+        $nodes[] = $node;
+    }
+
+    return $nodes;
+}
+
+/**
  * Generate UTM-tracked ChemicalStore URL
  */
 function chemicalstore_url($path = '', $campaign = 'general') {
