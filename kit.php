@@ -255,13 +255,14 @@ include 'includes/header.php';
           <h3 class="safety-subtitle">🧪 Advertencias de materiales</h3>
           <ul class="safety-kit-list">
             <?php foreach ($kit_warnings as $kw): ?>
+              <?php $kw_warning_text = cdc_format_safety_warning($kw['advertencia'] ?? ''); ?>
               <li>
                 <?php if (!empty($kw['slug'])): ?>
                   <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
                 <?php else: ?>
                   <strong><?= h($kw['nombre']) ?></strong>
                 <?php endif; ?>
-                <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+                <?php if ($kw_warning_text !== ''): ?><span>— <?= nl2br(h($kw_warning_text)) ?></span><?php endif; ?>
               </li>
             <?php endforeach; ?>
           </ul>
@@ -287,13 +288,14 @@ include 'includes/header.php';
           <h3 class="safety-subtitle">🧪 Advertencias de materiales</h3>
           <ul class="safety-kit-list">
             <?php foreach ($kit_warnings as $kw): ?>
+              <?php $kw_warning_text = cdc_format_safety_warning($kw['advertencia'] ?? ''); ?>
               <li>
                 <?php if (!empty($kw['slug'])): ?>
                   <a href="/<?= h($kw['slug']) ?>" title="Ver componente" aria-label="Ver componente <?= h($kw['nombre']) ?>"><?= h($kw['nombre']) ?></a>
                 <?php else: ?>
                   <strong><?= h($kw['nombre']) ?></strong>
                 <?php endif; ?>
-                <span>— <?= nl2br(h($kw['advertencia'])) ?></span>
+                <?php if ($kw_warning_text !== ''): ?><span>— <?= nl2br(h($kw_warning_text)) ?></span><?php endif; ?>
               </li>
             <?php endforeach; ?>
           </ul>
