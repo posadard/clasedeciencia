@@ -966,53 +966,16 @@ include '../header.php';
           <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($kit['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="/assets/img/kits/kit-xyz.webp" />
           <button type="button" class="btn btn-secondary js-image-picker-trigger" data-target-input="imagen_portada" data-preset="kit-cover" data-entity="kit" data-meta-title-input="media_titulo" data-meta-description-input="media_descripcion" data-meta-mime-input="media_mime_type" data-meta-width-input="media_width" data-meta-height-input="media_height" data-meta-upload-date-input="media_upload_date" data-meta-role-input="media_schema_role" data-meta-creator-input="media_creator_name" data-meta-language-input="media_in_language" data-meta-title-source="nombre" data-meta-description-source="resumen">📷 Subir y editar</button>
         </div>
-        <div class="field-inline" style="margin-top:8px;">
-          <div class="form-group">
-            <label for="media_titulo">Título media</label>
-            <input type="text" id="media_titulo" name="media_titulo" value="<?= htmlspecialchars($media_primary['titulo'] ?: ($kit['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-          <div class="form-group">
-            <label for="media_descripcion">Descripción media</label>
-            <input type="text" id="media_descripcion" name="media_descripcion" maxlength="255" value="<?= htmlspecialchars($media_primary['descripcion'] ?: ($kit['resumen'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-        </div>
-        <div class="field-inline">
-          <div class="form-group">
-            <label for="media_schema_role">Rol schema</label>
-            <?php $role_val = $media_primary['schema_role'] ?: 'primary'; ?>
-            <select id="media_schema_role" name="media_schema_role">
-              <?php foreach (['primary','gallery','tutorial','download','external'] as $role): ?>
-                <option value="<?= $role ?>" <?= $role_val === $role ? 'selected' : '' ?>><?= ucfirst($role) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="media_mime_type">MIME type</label>
-            <input type="text" id="media_mime_type" name="media_mime_type" value="<?= htmlspecialchars($media_primary['mime_type'] ?: 'image/webp', ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-          <div class="form-group">
-            <label for="media_width">Ancho</label>
-            <input type="number" id="media_width" name="media_width" min="0" value="<?= htmlspecialchars((string)$media_primary['width'], ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-          <div class="form-group">
-            <label for="media_height">Alto</label>
-            <input type="number" id="media_height" name="media_height" min="0" value="<?= htmlspecialchars((string)$media_primary['height'], ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-        </div>
-        <div class="field-inline">
-          <div class="form-group">
-            <label for="media_upload_date">Fecha upload</label>
-            <input type="text" id="media_upload_date" name="media_upload_date" value="<?= htmlspecialchars((string)$media_primary['upload_date'], ENT_QUOTES, 'UTF-8') ?>" placeholder="YYYY-MM-DD HH:MM:SS o ISO8601" />
-          </div>
-          <div class="form-group">
-            <label for="media_creator_name">Autor/creador</label>
-            <input type="text" id="media_creator_name" name="media_creator_name" value="<?= htmlspecialchars((string)$media_primary['creator_name'], ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-          <div class="form-group">
-            <label for="media_in_language">Idioma</label>
-            <input type="text" id="media_in_language" name="media_in_language" value="<?= htmlspecialchars((string)($media_primary['in_language'] ?: 'es-CO'), ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-        </div>
+        <?php $role_val = $media_primary['schema_role'] ?: 'primary'; ?>
+        <input type="hidden" id="media_titulo" name="media_titulo" value="<?= htmlspecialchars($media_primary['titulo'] ?: ($kit['nombre'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_descripcion" name="media_descripcion" value="<?= htmlspecialchars($media_primary['descripcion'] ?: ($kit['resumen'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_schema_role" name="media_schema_role" value="<?= htmlspecialchars($role_val, ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_mime_type" name="media_mime_type" value="<?= htmlspecialchars($media_primary['mime_type'] ?: 'image/webp', ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_width" name="media_width" value="<?= htmlspecialchars((string)$media_primary['width'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_height" name="media_height" value="<?= htmlspecialchars((string)$media_primary['height'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_upload_date" name="media_upload_date" value="<?= htmlspecialchars((string)$media_primary['upload_date'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_creator_name" name="media_creator_name" value="<?= htmlspecialchars((string)$media_primary['creator_name'], ENT_QUOTES, 'UTF-8') ?>" />
+        <input type="hidden" id="media_in_language" name="media_in_language" value="<?= htmlspecialchars((string)($media_primary['in_language'] ?: 'es-CO'), ENT_QUOTES, 'UTF-8') ?>" />
       </div>
       <div class="form-group">
         <label for="video_portada">Video portada (URL o ID)</label>

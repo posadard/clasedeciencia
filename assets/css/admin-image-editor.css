@@ -74,6 +74,34 @@
   align-content: start;
 }
 
+.image-editor-metadata {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.image-editor-metadata h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+}
+
+.image-editor-metadata label {
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+.image-editor-metadata input,
+.image-editor-metadata select {
+  width: 100%;
+}
+
+.image-editor-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
 .image-editor-side .hint {
   margin: 0;
   font-size: 0.85rem;

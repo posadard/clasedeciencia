@@ -100,7 +100,44 @@
       '          <button type="button" class="btn btn-secondary" id="imageEditorZoomIn">+</button>' +
       '          <button type="button" class="btn btn-secondary" id="imageEditorReset">Reset</button>' +
       '        </div>' +
-      '        <p class="hint" id="imageEditorPresetHint"></p>' +
+        '        <p class="hint" id="imageEditorPresetHint"></p>' +
+        '        <div class="image-editor-metadata">' +
+        '          <h4>Metadata de la imagen</h4>' +
+        '          <label for="imageEditorMetaTitle">Titulo</label>' +
+        '          <input id="imageEditorMetaTitle" type="text" maxlength="255" />' +
+        '          <label for="imageEditorMetaDescription">Descripcion</label>' +
+        '          <input id="imageEditorMetaDescription" type="text" maxlength="255" />' +
+        '          <label for="imageEditorMetaRole">Rol schema</label>' +
+        '          <select id="imageEditorMetaRole">' +
+        '            <option value="primary">Primary</option>' +
+        '            <option value="gallery">Gallery</option>' +
+        '            <option value="tutorial">Tutorial</option>' +
+        '            <option value="download">Download</option>' +
+        '            <option value="external">External</option>' +
+        '          </select>' +
+        '          <div class="image-editor-grid-2">' +
+        '            <div>' +
+        '              <label for="imageEditorMetaMime">MIME</label>' +
+        '              <input id="imageEditorMetaMime" type="text" />' +
+        '            </div>' +
+        '            <div>' +
+        '              <label for="imageEditorMetaLanguage">Idioma</label>' +
+        '              <input id="imageEditorMetaLanguage" type="text" />' +
+        '            </div>' +
+        '            <div>' +
+        '              <label for="imageEditorMetaWidth">Ancho</label>' +
+        '              <input id="imageEditorMetaWidth" type="number" min="0" />' +
+        '            </div>' +
+        '            <div>' +
+        '              <label for="imageEditorMetaHeight">Alto</label>' +
+        '              <input id="imageEditorMetaHeight" type="number" min="0" />' +
+        '            </div>' +
+        '          </div>' +
+        '          <label for="imageEditorMetaUploadDate">Fecha upload</label>' +
+        '          <input id="imageEditorMetaUploadDate" type="text" placeholder="YYYY-MM-DD HH:MM:SS o ISO8601" />' +
+        '          <label for="imageEditorMetaCreator">Autor/creador</label>' +
+        '          <input id="imageEditorMetaCreator" type="text" />' +
+        '        </div>' +
       '      </div>' +
       '    </div>' +
       '    <div class="image-editor-footer">' +
@@ -148,6 +185,7 @@
     const info = getPresetInfo();
     qs('#imageEditorPresetHint').textContent = 'Preset: ' + info.label;
     qs('#imageEditorFileInput').value = '';
+    loadModalMetadata();
 
     clearLoadedImage();
 
@@ -181,8 +219,10 @@
     const autoTitle = titleSource ? String(titleSource.value || '').trim() : '';
     const autoDesc = descSource ? stripHtml(descSource.value || '') : '';
 
-    if (state.metaTitleInputId && autoTitle) setInputValue(state.metaTitleInputId, autoTitle);
-    if (state.metaDescriptionInputId && autoDesc) setInputValue(state.metaDescriptionInputId, autoDesc.slice(0, 255));
+    const titleInput = state.metaTitleInputId ? document.getElementById(state.metaTitleInputId) : null;
+    const descInput = state.metaDescriptionInputId ? document.getElementById(state.metaDescriptionInputId) : null;
+    if (state.metaTitleInputId && autoTitle && (!titleInput || !String(titleInput.value || '').trim())) setInputValue(state.metaTitleInputId, autoTitle);
+    if (state.metaDescriptionInputId && autoDesc && (!descInput || !String(descInput.value || '').trim())) setInputValue(state.metaDescriptionInputId, autoDesc.slice(0, 255));
     if (state.metaMimeInputId) setInputValue(state.metaMimeInputId, json && json.mime_type ? json.mime_type : 'image/webp');
     if (state.metaWidthInputId) setInputValue(state.metaWidthInputId, json && json.width ? json.width : '');
     if (state.metaHeightInputId) setInputValue(state.metaHeightInputId, json && json.height ? json.height : '');
@@ -201,6 +241,48 @@
     }
 
     console.log('✅ [ImageEditor] Metadata autocompletada');
+  }
+
+  function modalMetadataValue(id) {
+    const el = qs('#' + id);
+    return el ? String(el.value || '').trim() : '';
+  }
+
+  function loadModalMetadata() {
+    const titleSource = state.metaTitleSourceId ? document.getElementById(state.metaTitleSourceId) : null;
+    const descSource = state.metaDescriptionSourceId ? document.getElementById(state.metaDescriptionSourceId) : null;
+
+    const hiddenTitle = state.metaTitleInputId ? document.getElementById(state.metaTitleInputId) : null;
+    const hiddenDesc = state.metaDescriptionInputId ? document.getElementById(state.metaDescriptionInputId) : null;
+    const hiddenRole = state.metaRoleInputId ? document.getElementById(state.metaRoleInputId) : null;
+    const hiddenMime = state.metaMimeInputId ? document.getElementById(state.metaMimeInputId) : null;
+    const hiddenWidth = state.metaWidthInputId ? document.getElementById(state.metaWidthInputId) : null;
+    const hiddenHeight = state.metaHeightInputId ? document.getElementById(state.metaHeightInputId) : null;
+    const hiddenDate = state.metaUploadDateInputId ? document.getElementById(state.metaUploadDateInputId) : null;
+    const hiddenCreator = state.metaCreatorInputId ? document.getElementById(state.metaCreatorInputId) : null;
+    const hiddenLang = state.metaLanguageInputId ? document.getElementById(state.metaLanguageInputId) : null;
+
+    setInputValue('imageEditorMetaTitle', (hiddenTitle && hiddenTitle.value) ? hiddenTitle.value : (titleSource ? String(titleSource.value || '').trim() : ''));
+    setInputValue('imageEditorMetaDescription', (hiddenDesc && hiddenDesc.value) ? hiddenDesc.value : (descSource ? stripHtml(descSource.value || '').slice(0, 255) : ''));
+    setInputValue('imageEditorMetaRole', (hiddenRole && hiddenRole.value) ? hiddenRole.value : 'primary');
+    setInputValue('imageEditorMetaMime', (hiddenMime && hiddenMime.value) ? hiddenMime.value : 'image/webp');
+    setInputValue('imageEditorMetaWidth', hiddenWidth && hiddenWidth.value ? hiddenWidth.value : '');
+    setInputValue('imageEditorMetaHeight', hiddenHeight && hiddenHeight.value ? hiddenHeight.value : '');
+    setInputValue('imageEditorMetaUploadDate', hiddenDate && hiddenDate.value ? hiddenDate.value : '');
+    setInputValue('imageEditorMetaCreator', hiddenCreator && hiddenCreator.value ? hiddenCreator.value : '');
+    setInputValue('imageEditorMetaLanguage', (hiddenLang && hiddenLang.value) ? hiddenLang.value : 'es-CO');
+  }
+
+  function persistModalMetadataToHidden() {
+    if (state.metaTitleInputId) setInputValue(state.metaTitleInputId, modalMetadataValue('imageEditorMetaTitle'));
+    if (state.metaDescriptionInputId) setInputValue(state.metaDescriptionInputId, modalMetadataValue('imageEditorMetaDescription'));
+    if (state.metaRoleInputId) setInputValue(state.metaRoleInputId, modalMetadataValue('imageEditorMetaRole') || 'primary');
+    if (state.metaMimeInputId) setInputValue(state.metaMimeInputId, modalMetadataValue('imageEditorMetaMime') || 'image/webp');
+    if (state.metaWidthInputId) setInputValue(state.metaWidthInputId, modalMetadataValue('imageEditorMetaWidth'));
+    if (state.metaHeightInputId) setInputValue(state.metaHeightInputId, modalMetadataValue('imageEditorMetaHeight'));
+    if (state.metaUploadDateInputId) setInputValue(state.metaUploadDateInputId, modalMetadataValue('imageEditorMetaUploadDate'));
+    if (state.metaCreatorInputId) setInputValue(state.metaCreatorInputId, modalMetadataValue('imageEditorMetaCreator'));
+    if (state.metaLanguageInputId) setInputValue(state.metaLanguageInputId, modalMetadataValue('imageEditorMetaLanguage') || 'es-CO');
   }
 
   function closeEditor() {
@@ -434,6 +516,8 @@
       }
 
       try {
+        persistModalMetadataToHidden();
+
         const blob = await exportBlob();
         const fd = new FormData();
         fd.append('csrf_token', state.csrfToken || '');
@@ -471,6 +555,7 @@
         }
 
         applyAutoMetadata(json || {});
+        persistModalMetadataToHidden();
 
         closeEditor();
         console.log('✅ [ImageEditor] Imagen guardada y URL aplicada:', json.url);
