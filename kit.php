@@ -31,6 +31,7 @@ $kit_areas = cdc_get_kit_areas($pdo, (int)$kit['id']);
 
 // Ficha técnica del kit (precompute inline summary for reuse)
 $ficha_inline = '';
+$ficha_rows = [];
 try {
   $stmt = $pdo->prepare("SELECT c.atributo_id, c.valor_string, c.valor_numero, c.valor_entero, c.valor_booleano, c.valor_fecha, c.valor_datetime, c.valor_json, c.unidad_codigo, c.orden,
                                  d.etiqueta, d.tipo_dato, d.unidad_defecto,
@@ -96,6 +97,112 @@ try {
 $page_title = !empty($kit['seo_title']) ? h($kit['seo_title']) : h(($kit['nombre'] ?? 'Kit') . ' - Clase de Ciencia');
 $page_description = !empty($kit['seo_description']) ? h($kit['seo_description']) : ( !empty($kit['resumen']) ? h($kit['resumen']) : ('Componentes, clases relacionadas y manuales del kit ' . h($kit['nombre'] ?? '')) );
 $canonical_url = SITE_URL . '/' . urlencode($kit['slug']);
+
+$kit_schema = [
+  '@type' => 'Product',
+  '@id' => $canonical_url . '#product',
+  'name' => (string)$kit['nombre'],
+  'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
+  'url' => $canonical_url,
+  'brand' => [
+    '@type' => 'Organization',
+    'name' => SITE_NAME
+  ]
+];
+
+if (!empty($kit['codigo'])) {
+  $kit_schema['sku'] = (string)$kit['codigo'];
+}
+if (!empty($kit['version'])) {
+  $kit_schema['releaseDate'] = date('Y-m-d', strtotime((string)$kit['updated_at']));
+}
+if (!empty($kit['imagen_portada'])) {
+  $kit_schema['image'] = cdc_absolute_url($kit['imagen_portada']);
+}
+if (!empty($kit['video_portada'])) {
+  $video_url = cdc_absolute_url($kit['video_portada']);
+  $kit_schema['video'] = [
+    '@type' => 'VideoObject',
+    'name' => 'Video de ' . (string)$kit['nombre'],
+    'embedUrl' => $video_url,
+    'url' => $video_url
+  ];
+}
+if (!empty($kit_areas) && is_array($kit_areas)) {
+  $kit_schema['category'] = implode(', ', array_values(array_map(function($a){ return (string)($a['nombre'] ?? ''); }, $kit_areas)));
+}
+
+$seg_obj = json_decode((string)($kit['seguridad'] ?? ''), true);
+if (is_array($seg_obj) && (!empty($seg_obj['edad_min']) || !empty($seg_obj['edad_max']))) {
+  $aud = ['@type' => 'PeopleAudience'];
+  if (!empty($seg_obj['edad_min'])) {
+    $aud['suggestedMinAge'] = (int)$seg_obj['edad_min'];
+  }
+  if (!empty($seg_obj['edad_max'])) {
+    $aud['suggestedMaxAge'] = (int)$seg_obj['edad_max'];
+  }
+  $kit_schema['audience'] = $aud;
+}
+
+$additional_property = [];
+if (!empty($ficha_rows)) {
+  foreach ($ficha_rows as $r) {
+    $value = '';
+    $tipo = (string)($r['tipo_dato'] ?? 'string');
+    if ($tipo === 'number' && $r['valor_numero'] !== null) { $value = (string)$r['valor_numero']; }
+    elseif ($tipo === 'integer' && $r['valor_entero'] !== null) { $value = (string)$r['valor_entero']; }
+    elseif ($tipo === 'boolean' && $r['valor_booleano'] !== null) { $value = ((int)$r['valor_booleano'] === 1) ? 'true' : 'false'; }
+    elseif ($tipo === 'date' && !empty($r['valor_fecha'])) { $value = (string)$r['valor_fecha']; }
+    elseif ($tipo === 'datetime' && !empty($r['valor_datetime'])) { $value = (string)$r['valor_datetime']; }
+    elseif ($tipo === 'json' && !empty($r['valor_json'])) { $value = trim(strip_tags((string)$r['valor_json'])); }
+    elseif (!empty($r['valor_string'])) { $value = trim((string)$r['valor_string']); }
+    if ($value === '') {
+      continue;
+    }
+    $prop = [
+      '@type' => 'PropertyValue',
+      'name' => (string)($r['etiqueta'] ?? 'Atributo'),
+      'value' => $value
+    ];
+    if (!empty($r['unidad_codigo'])) {
+      $prop['unitCode'] = (string)$r['unidad_codigo'];
+    }
+    $additional_property[] = $prop;
+  }
+}
+if (!empty($additional_property)) {
+  $kit_schema['additionalProperty'] = $additional_property;
+}
+
+$breadcrumb_schema = [
+  '@type' => 'BreadcrumbList',
+  '@id' => $canonical_url . '#breadcrumb',
+  'itemListElement' => [
+    [
+      '@type' => 'ListItem',
+      'position' => 1,
+      'name' => 'Inicio',
+      'item' => SITE_URL . '/'
+    ],
+    [
+      '@type' => 'ListItem',
+      'position' => 2,
+      'name' => 'Kits',
+      'item' => SITE_URL . '/kits'
+    ],
+    [
+      '@type' => 'ListItem',
+      'position' => 3,
+      'name' => (string)$kit['nombre'],
+      'item' => $canonical_url
+    ]
+  ]
+];
+
+$schema_json = cdc_encode_schema_json([
+  '@context' => 'https://schema.org',
+  '@graph' => [$kit_schema, $breadcrumb_schema]
+]);
 
 include 'includes/header.php';
 ?>

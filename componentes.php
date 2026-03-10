@@ -28,6 +28,50 @@ if ($q !== '') { $filters['search'] = $q; }
 $items = get_materials($pdo, $filters, POSTS_PER_PAGE, $offset);
 $total = count_materials($pdo, $filters);
 
+$item_list_elements = [];
+if (!empty($items) && is_array($items)) {
+    foreach (array_values($items) as $idx => $it) {
+        $item_list_elements[] = [
+            '@type' => 'ListItem',
+            'position' => $idx + 1,
+            'url' => SITE_URL . '/' . urlencode((string)($it['slug'] ?? '')),
+            'name' => (string)($it['common_name'] ?? 'Componente')
+        ];
+    }
+}
+
+$schema_json = cdc_encode_schema_json([
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'ItemList',
+            '@id' => $canonical_url . '#itemlist',
+            'name' => $page_title,
+            'url' => $canonical_url,
+            'numberOfItems' => (int)$total,
+            'itemListElement' => $item_list_elements
+        ],
+        [
+            '@type' => 'BreadcrumbList',
+            '@id' => $canonical_url . '#breadcrumb',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Inicio',
+                    'item' => SITE_URL . '/'
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Componentes',
+                    'item' => SITE_URL . '/componentes'
+                ]
+            ]
+        ]
+    ]
+]);
+
 include 'includes/header.php';
 ?>
 <div class="container library-page">

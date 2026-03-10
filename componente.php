@@ -38,6 +38,7 @@ $material_safety_text = cdc_format_safety_warning($material['description'] ?? ''
 
 // Ficha técnica del componente (resumen compacto similar a kit.php)
 $ficha_inline = '';
+$ficha_rows = [];
 try {
     $stmt = $pdo->prepare("SELECT c.atributo_id, c.valor_string, c.valor_numero, c.valor_entero, c.valor_booleano, c.valor_fecha, c.valor_datetime, c.valor_json, c.unidad_codigo, c.orden,
                                    d.etiqueta, d.tipo_dato, d.unidad_defecto,
@@ -99,6 +100,103 @@ try {
 } catch (PDOException $e) {
     error_log('Error ficha tecnica componente (precompute): ' . $e->getMessage());
 }
+
+$component_url = $canonical_url;
+$component_schema = [
+    '@type' => 'Product',
+    '@id' => $component_url . '#product',
+    'name' => (string)$material['common_name'],
+    'description' => trim((string)$page_description),
+    'url' => $component_url,
+    'brand' => [
+        '@type' => 'Organization',
+        'name' => SITE_NAME
+    ]
+];
+
+if (!empty($material['foto_url'])) {
+    $component_schema['image'] = cdc_absolute_url($material['foto_url']);
+}
+if (!empty($material['sku'])) {
+    $component_schema['sku'] = (string)$material['sku'];
+} elseif (!empty($material['slug'])) {
+    $component_schema['sku'] = (string)$material['slug'];
+}
+if (!empty($material['category_name'])) {
+    $component_schema['category'] = (string)$material['category_name'];
+}
+
+$additional_property = [];
+if (!empty($ficha_rows)) {
+    foreach ($ficha_rows as $r) {
+        $value = '';
+        $tipo = (string)($r['tipo_dato'] ?? 'string');
+        if ($tipo === 'number' && $r['valor_numero'] !== null) { $value = (string)$r['valor_numero']; }
+        elseif ($tipo === 'integer' && $r['valor_entero'] !== null) { $value = (string)$r['valor_entero']; }
+        elseif ($tipo === 'boolean' && $r['valor_booleano'] !== null) { $value = ((int)$r['valor_booleano'] === 1) ? 'true' : 'false'; }
+        elseif ($tipo === 'date' && !empty($r['valor_fecha'])) { $value = (string)$r['valor_fecha']; }
+        elseif ($tipo === 'datetime' && !empty($r['valor_datetime'])) { $value = (string)$r['valor_datetime']; }
+        elseif ($tipo === 'json' && !empty($r['valor_json'])) { $value = trim(strip_tags((string)$r['valor_json'])); }
+        elseif (!empty($r['valor_string'])) { $value = trim((string)$r['valor_string']); }
+        if ($value === '') {
+            continue;
+        }
+        $prop = [
+            '@type' => 'PropertyValue',
+            'name' => (string)($r['etiqueta'] ?? 'Atributo'),
+            'value' => $value
+        ];
+        if (!empty($r['unidad_codigo'])) {
+            $prop['unitCode'] = (string)$r['unidad_codigo'];
+        }
+        $additional_property[] = $prop;
+    }
+}
+if (!empty($additional_property)) {
+    $component_schema['additionalProperty'] = $additional_property;
+}
+
+$warn_obj = json_decode((string)($material['description'] ?? ''), true);
+if (is_array($warn_obj) && (!empty($warn_obj['edad_min']) || !empty($warn_obj['edad_max']))) {
+    $aud = ['@type' => 'PeopleAudience'];
+    if (!empty($warn_obj['edad_min'])) {
+        $aud['suggestedMinAge'] = (int)$warn_obj['edad_min'];
+    }
+    if (!empty($warn_obj['edad_max'])) {
+        $aud['suggestedMaxAge'] = (int)$warn_obj['edad_max'];
+    }
+    $component_schema['audience'] = $aud;
+}
+
+$breadcrumb_schema = [
+    '@type' => 'BreadcrumbList',
+    '@id' => $component_url . '#breadcrumb',
+    'itemListElement' => [
+        [
+            '@type' => 'ListItem',
+            'position' => 1,
+            'name' => 'Inicio',
+            'item' => SITE_URL . '/'
+        ],
+        [
+            '@type' => 'ListItem',
+            'position' => 2,
+            'name' => 'Componentes',
+            'item' => SITE_URL . '/componentes'
+        ],
+        [
+            '@type' => 'ListItem',
+            'position' => 3,
+            'name' => (string)$material['common_name'],
+            'item' => $component_url
+        ]
+    ]
+];
+
+$schema_json = cdc_encode_schema_json([
+    '@context' => 'https://schema.org',
+    '@graph' => [$component_schema, $breadcrumb_schema]
+]);
 
 include 'includes/header.php';
 ?>

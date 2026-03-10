@@ -162,6 +162,138 @@ $page_description = 'Guía/Manual: ' . $display_title_raw;
 // Canonical: usar solo el slug del manual (ya incluye entidad y fecha)
 $canonical_url = SITE_URL . '/' . urlencode($manual['slug']);
 
+$manual_type_key = strtolower((string)($manual['tipo_manual'] ?? ''));
+$is_howto = in_array($manual_type_key, ['armado', 'uso', 'experimento', 'calibracion', 'mantenimiento', 'seguridad', 'solucion'], true);
+
+$manual_schema = [
+  '@type' => $is_howto ? 'HowTo' : 'TechArticle',
+  '@id' => $canonical_url . '#manual',
+  'name' => $display_title_raw,
+  'description' => $page_description,
+  'url' => $canonical_url,
+  'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
+  'author' => [
+    '@type' => 'Organization',
+    'name' => SITE_NAME
+  ],
+  'publisher' => [
+    '@type' => 'Organization',
+    'name' => SITE_NAME
+  ]
+];
+
+if (!empty($manual['published_at'])) {
+  $manual_schema['datePublished'] = date('c', strtotime((string)$manual['published_at']));
+}
+if (!empty($manual['updated_at'])) {
+  $manual_schema['dateModified'] = date('c', strtotime((string)$manual['updated_at']));
+}
+if (!empty($manual['time_minutes'])) {
+  $manual_schema['totalTime'] = 'PT' . (int)$manual['time_minutes'] . 'M';
+}
+
+if (!empty($kit['imagen_portada'])) {
+  $manual_schema['image'] = cdc_absolute_url($kit['imagen_portada']);
+} elseif (!empty($comp['imagen_portada'])) {
+  $manual_schema['image'] = cdc_absolute_url($comp['imagen_portada']);
+}
+
+if (!empty($manual['resumen'])) {
+  $manual_schema['abstract'] = (string)$manual['resumen'];
+}
+
+if ($is_howto) {
+  $steps = [];
+  if (!empty($manual['pasos_json'])) {
+    $parsed_steps = json_decode((string)$manual['pasos_json'], true);
+    if (is_array($parsed_steps)) {
+      foreach ($parsed_steps as $idx => $st) {
+        if (!is_array($st)) {
+          $st = ['texto' => (string)$st];
+        }
+        $name = !empty($st['titulo']) ? (string)$st['titulo'] : ('Paso ' . ((int)$idx + 1));
+        $text = '';
+        if (!empty($st['texto'])) { $text = (string)$st['texto']; }
+        elseif (!empty($st['detalle'])) { $text = (string)$st['detalle']; }
+        elseif (!empty($st['descripcion'])) { $text = (string)$st['descripcion']; }
+        elseif (!empty($st['html'])) { $text = trim(strip_tags((string)$st['html'])); }
+        $payload = [
+          '@type' => 'HowToStep',
+          'position' => ((int)$idx + 1),
+          'name' => $name
+        ];
+        if ($text !== '') {
+          $payload['text'] = $text;
+        }
+        $steps[] = $payload;
+      }
+    }
+  }
+  if (!empty($steps)) {
+    $manual_schema['step'] = $steps;
+  }
+}
+
+$breadcrumb_items = [
+  [
+    '@type' => 'ListItem',
+    'position' => 1,
+    'name' => 'Inicio',
+    'item' => SITE_URL . '/'
+  ]
+];
+
+if ($ambito === 'componente') {
+  $breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => 2,
+    'name' => 'Componentes',
+    'item' => SITE_URL . '/componentes'
+  ];
+  $breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => 3,
+    'name' => (string)$entity_name_raw,
+    'item' => !empty($comp['slug']) ? (SITE_URL . '/' . $comp['slug']) : $canonical_url
+  ];
+  $breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => 4,
+    'name' => $display_title_raw,
+    'item' => $canonical_url
+  ];
+} else {
+  $breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => 2,
+    'name' => 'Kits',
+    'item' => SITE_URL . '/kits'
+  ];
+  $breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => 3,
+    'name' => (string)$entity_name_raw,
+    'item' => !empty($kit['slug']) ? (SITE_URL . '/' . $kit['slug']) : $canonical_url
+  ];
+  $breadcrumb_items[] = [
+    '@type' => 'ListItem',
+    'position' => 4,
+    'name' => $display_title_raw,
+    'item' => $canonical_url
+  ];
+}
+
+$breadcrumb_schema = [
+  '@type' => 'BreadcrumbList',
+  '@id' => $canonical_url . '#breadcrumb',
+  'itemListElement' => $breadcrumb_items
+];
+
+$schema_json = cdc_encode_schema_json([
+  '@context' => 'https://schema.org',
+  '@graph' => [$manual_schema, $breadcrumb_schema]
+]);
+
 include 'includes/header.php';
 ?>
 <div class="container">

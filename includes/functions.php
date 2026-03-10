@@ -73,6 +73,31 @@ function cdc_format_safety_warning($warning) {
 }
 
 /**
+ * Convert relative URL to absolute site URL.
+ */
+function cdc_absolute_url($url) {
+    $url = trim((string)$url);
+    if ($url === '') {
+        return '';
+    }
+    if (preg_match('/^https?:\/\//i', $url)) {
+        return $url;
+    }
+    return rtrim(SITE_URL, '/') . '/' . ltrim($url, '/');
+}
+
+/**
+ * Encode schema graph safely for inline JSON-LD script output.
+ */
+function cdc_encode_schema_json($schema) {
+    $json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if (!is_string($json)) {
+        return '';
+    }
+    return str_replace('</script>', '<\\/script>', $json);
+}
+
+/**
  * Generate UTM-tracked ChemicalStore URL
  */
 function chemicalstore_url($path = '', $campaign = 'general') {

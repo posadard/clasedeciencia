@@ -420,6 +420,52 @@ if ($q !== '' && empty($filters)) {
     $total = cdc_count_proyectos($pdo, $filters);
 }
 
+$item_list_elements = [];
+if (!empty($proyectos) && is_array($proyectos)) {
+    foreach (array_values($proyectos) as $idx => $p) {
+        $item_list_elements[] = [
+            '@type' => 'ListItem',
+            'position' => $idx + 1,
+            'url' => SITE_URL . '/' . urlencode((string)($p['slug'] ?? '')),
+            'name' => (string)($p['nombre'] ?? 'Clase')
+        ];
+    }
+}
+
+$schema_graph = [
+    [
+        '@type' => 'ItemList',
+        '@id' => $canonical_url . '#itemlist',
+        'name' => $page_title,
+        'url' => $canonical_url,
+        'numberOfItems' => (int)$total,
+        'itemListElement' => $item_list_elements
+    ],
+    [
+        '@type' => 'BreadcrumbList',
+        '@id' => $canonical_url . '#breadcrumb',
+        'itemListElement' => [
+            [
+                '@type' => 'ListItem',
+                'position' => 1,
+                'name' => 'Inicio',
+                'item' => SITE_URL . '/'
+            ],
+            [
+                '@type' => 'ListItem',
+                'position' => 2,
+                'name' => 'Clases',
+                'item' => SITE_URL . '/clases'
+            ]
+        ]
+    ]
+];
+
+$schema_json = cdc_encode_schema_json([
+    '@context' => 'https://schema.org',
+    '@graph' => $schema_graph
+]);
+
 include 'includes/header.php';
 ?>
 <div class="container library-page clases-page view-<?= h($view) ?>">

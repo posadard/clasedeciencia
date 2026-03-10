@@ -142,28 +142,126 @@ $page_title = $proyecto['seo_title'] ?: ($proyecto['nombre'] . ' - Clase de Cien
 $page_description = $proyecto['seo_description'] ?: ($proyecto['resumen'] ?: 'Guía interactiva de la clase');
 $canonical_url = SITE_URL . '/' . $proyecto['slug'];
 
-// Schema.org básico HowTo
-$schema = [
-    '@context' => 'https://schema.org',
+// Schema.org HowTo enriquecido
+$how_to_schema = [
     '@type' => 'HowTo',
+    '@id' => $canonical_url . '#howto',
     'name' => $proyecto['nombre'],
     'description' => $page_description,
-    'totalTime' => 'PT' . (int)$proyecto['duracion_minutos'] . 'M',
-    'url' => $canonical_url
+    'url' => $canonical_url,
+    'inLanguage' => 'es-CO'
 ];
+
+if (!empty($proyecto['duracion_minutos'])) {
+    $how_to_schema['totalTime'] = 'PT' . (int)$proyecto['duracion_minutos'] . 'M';
+}
+
+if (!empty($proyecto['imagen_portada'])) {
+    $how_to_schema['image'] = cdc_absolute_url($proyecto['imagen_portada']);
+}
+
+if (!empty($proyecto['video_portada'])) {
+    $video_url = cdc_absolute_url($proyecto['video_portada']);
+    $how_to_schema['video'] = [
+        '@type' => 'VideoObject',
+        'name' => 'Video de ' . $proyecto['nombre'],
+        'embedUrl' => $video_url,
+        'url' => $video_url
+    ];
+}
+
+if (!empty($kits) && is_array($kits)) {
+    $how_to_schema['tool'] = array_values(array_map(function ($k) {
+        return [
+            '@type' => 'HowToTool',
+            'name' => (string)($k['nombre'] ?? 'Kit')
+        ];
+    }, $kits));
+}
+
+$supply = [];
+if (!empty($materiales_por_kit) && is_array($materiales_por_kit)) {
+    foreach ($materiales_por_kit as $items) {
+        if (!is_array($items)) {
+            continue;
+        }
+        foreach ($items as $m) {
+            if (empty($m['nombre_comun'])) {
+                continue;
+            }
+            $supply[] = [
+                '@type' => 'HowToSupply',
+                'name' => (string)$m['nombre_comun']
+            ];
+        }
+    }
+}
+if (!empty($supply)) {
+    $how_to_schema['supply'] = array_values($supply);
+}
+
 if ($guia && !empty($guia['pasos'])) {
     $pasos = json_decode($guia['pasos'], true) ?: [];
-    $schema['step'] = array_map(function($i, $p){
-        return [
+    $how_to_steps = [];
+    foreach ($pasos as $i => $p) {
+        if (!is_array($p)) {
+            $p = ['texto' => (string)$p];
+        }
+        $step_name = isset($p['titulo']) && $p['titulo'] !== '' ? (string)$p['titulo'] : ('Paso ' . ((int)$i + 1));
+        $step_text = '';
+        if (!empty($p['texto'])) {
+            $step_text = (string)$p['texto'];
+        } elseif (!empty($p['detalle'])) {
+            $step_text = (string)$p['detalle'];
+        } elseif (!empty($p['descripcion'])) {
+            $step_text = (string)$p['descripcion'];
+        } elseif (!empty($p['html'])) {
+            $step_text = trim(strip_tags((string)$p['html']));
+        }
+        $step_payload = [
             '@type' => 'HowToStep',
-            'name' => isset($p['titulo']) ? $p['titulo'] : ('Paso ' . ($i+1)),
-            'text' => isset($p['texto']) ? $p['texto'] : ''
+            'position' => ((int)$i + 1),
+            'name' => $step_name
         ];
-    }, array_keys($pasos), $pasos);
+        if ($step_text !== '') {
+            $step_payload['text'] = $step_text;
+        }
+        $how_to_steps[] = $step_payload;
+    }
+    if (!empty($how_to_steps)) {
+        $how_to_schema['step'] = $how_to_steps;
+    }
 }
-$schema_json = json_encode($schema, JSON_UNESCAPED_UNICODE);
-// Prevent </script> early-termination in JSON-LD
-$schema_json = str_replace('</script>', '<\/script>', $schema_json);
+
+$breadcrumb_schema = [
+    '@type' => 'BreadcrumbList',
+    '@id' => $canonical_url . '#breadcrumb',
+    'itemListElement' => [
+        [
+            '@type' => 'ListItem',
+            'position' => 1,
+            'name' => 'Inicio',
+            'item' => SITE_URL . '/'
+        ],
+        [
+            '@type' => 'ListItem',
+            'position' => 2,
+            'name' => 'Clases',
+            'item' => SITE_URL . '/clases'
+        ],
+        [
+            '@type' => 'ListItem',
+            'position' => 3,
+            'name' => (string)$proyecto['nombre'],
+            'item' => $canonical_url
+        ]
+    ]
+];
+
+$schema_json = cdc_encode_schema_json([
+    '@context' => 'https://schema.org',
+    '@graph' => [$how_to_schema, $breadcrumb_schema]
+]);
 
 include 'includes/header.php';
 ?>

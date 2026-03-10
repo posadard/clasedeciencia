@@ -172,6 +172,50 @@ $page_description = 'Explora los kits de Clase de Ciencia con sus componentes y 
 $kits = cdc_get_kits($pdo, $q, POSTS_PER_PAGE, $offset, $filters, $sort);
 $total = cdc_count_kits($pdo, $q, $filters);
 
+$item_list_elements = [];
+if (!empty($kits) && is_array($kits)) {
+    foreach (array_values($kits) as $idx => $k) {
+        $item_list_elements[] = [
+            '@type' => 'ListItem',
+            'position' => $idx + 1,
+            'url' => SITE_URL . '/' . urlencode((string)($k['slug'] ?? '')),
+            'name' => (string)($k['nombre'] ?? 'Kit')
+        ];
+    }
+}
+
+$schema_json = cdc_encode_schema_json([
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'ItemList',
+            '@id' => $canonical_url . '#itemlist',
+            'name' => $page_title,
+            'url' => $canonical_url,
+            'numberOfItems' => (int)$total,
+            'itemListElement' => $item_list_elements
+        ],
+        [
+            '@type' => 'BreadcrumbList',
+            '@id' => $canonical_url . '#breadcrumb',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Inicio',
+                    'item' => SITE_URL . '/'
+                ],
+                [
+                    '@type' => 'ListItem',
+                    'position' => 2,
+                    'name' => 'Kits',
+                    'item' => SITE_URL . '/kits'
+                ]
+            ]
+        ]
+    ]
+]);
+
 include 'includes/header.php';
 ?>
 <div class="container library-page">

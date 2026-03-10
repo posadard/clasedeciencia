@@ -16,6 +16,37 @@ $canonical_url = SITE_URL . '/';
 $areas = cdc_get_areas($pdo);
 $ciclos = cdc_get_ciclos($pdo, true); // Solo ciclos activos
 
+$schema_json = cdc_encode_schema_json([
+    '@context' => 'https://schema.org',
+    '@graph' => [
+        [
+            '@type' => 'WebSite',
+            '@id' => SITE_URL . '/#website',
+            'url' => SITE_URL . '/',
+            'name' => SITE_NAME,
+            'description' => $page_description,
+            'inLanguage' => 'es-CO',
+            'potentialAction' => [
+                '@type' => 'SearchAction',
+                'target' => SITE_URL . '/clases?q={search_term_string}',
+                'query-input' => 'required name=search_term_string'
+            ]
+        ],
+        [
+            '@type' => 'BreadcrumbList',
+            '@id' => SITE_URL . '/#breadcrumb',
+            'itemListElement' => [
+                [
+                    '@type' => 'ListItem',
+                    'position' => 1,
+                    'name' => 'Inicio',
+                    'item' => SITE_URL . '/'
+                ]
+            ]
+        ]
+    ]
+]);
+
 include 'includes/header.php';
 ?>
 

@@ -54,6 +54,50 @@ $tipo_map = [
   'referencia' => ['emoji' => '📚', 'label' => 'Referencia']
 ];
 
+$item_list_elements = [];
+if (!empty($items) && is_array($items)) {
+  foreach (array_values($items) as $idx => $m) {
+    $item_list_elements[] = [
+      '@type' => 'ListItem',
+      'position' => $idx + 1,
+      'url' => SITE_URL . '/' . urlencode((string)($m['slug'] ?? '')),
+      'name' => (string)($m['slug'] ?? 'Manual')
+    ];
+  }
+}
+
+$schema_json = cdc_encode_schema_json([
+  '@context' => 'https://schema.org',
+  '@graph' => [
+    [
+      '@type' => 'ItemList',
+      '@id' => $canonical_url . '#itemlist',
+      'name' => $page_title,
+      'url' => $canonical_url,
+      'numberOfItems' => count($items),
+      'itemListElement' => $item_list_elements
+    ],
+    [
+      '@type' => 'BreadcrumbList',
+      '@id' => $canonical_url . '#breadcrumb',
+      'itemListElement' => [
+        [
+          '@type' => 'ListItem',
+          'position' => 1,
+          'name' => 'Inicio',
+          'item' => SITE_URL . '/'
+        ],
+        [
+          '@type' => 'ListItem',
+          'position' => 2,
+          'name' => 'Manuales',
+          'item' => SITE_URL . '/manuales.php'
+        ]
+      ]
+    ]
+  ]
+]);
+
 include 'includes/header.php';
 ?>
 <div class="container library-page">
