@@ -172,6 +172,8 @@ $manual_schema = [
   'description' => $page_description,
   'url' => $canonical_url,
   'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
+  'isAccessibleForFree' => true,
+  'potentialAction' => cdc_schema_print_action($canonical_url),
   'author' => [
     '@type' => 'Organization',
     'name' => SITE_NAME
@@ -309,6 +311,9 @@ include 'includes/header.php';
       <a href="/kit.php?slug=<?= urlencode($kit['slug']) ?>"><?= h($kit['nombre']) ?></a> / 
     <?php endif; ?>
     <strong><?= h($display_title_raw) ?></strong>
+  </div>
+  <div class="page-print-action no-print">
+    <button type="button" class="btn btn-secondary print-button" aria-label="Imprimir este manual">🖨️ Imprimir</button>
   </div>
 
   <header class="manual-header">

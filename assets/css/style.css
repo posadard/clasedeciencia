@@ -717,6 +717,18 @@ strong, b {
 .breadcrumb a { color: var(--color-text-light); border: none; }
 .breadcrumb a:hover { color: var(--color-primary); border: none; }
 
+.page-print-action {
+    display: flex;
+    justify-content: flex-end;
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+.page-print-action .print-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
 .library-layout {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -2491,6 +2503,15 @@ strong, b {
 .material-specs td.mono { font-family: var(--font-mono); color: var(--color-primary); font-weight: 700; }
 
 @media (max-width: 768px) {
+    .page-print-action {
+        justify-content: stretch;
+    }
+
+    .page-print-action .print-button {
+        width: 100%;
+        justify-content: center;
+    }
+
     .material-specs th { display: block; width: 100%; padding-top: 0.65rem; }
     .material-specs td { display: block; width: 100%; padding-bottom: 0.65rem; }
     .material-specs tbody tr { border-bottom: 1px solid var(--color-border-light); }

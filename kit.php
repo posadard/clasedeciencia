@@ -104,6 +104,8 @@ $kit_schema = [
   'name' => (string)$kit['nombre'],
   'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
   'url' => $canonical_url,
+  'isAccessibleForFree' => true,
+  'potentialAction' => cdc_schema_print_action($canonical_url),
   'brand' => [
     '@type' => 'Organization',
     'name' => SITE_NAME
@@ -209,6 +211,9 @@ include 'includes/header.php';
 <div class="container article-page">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / <a href="/kits">Kits</a> / <strong><?= h($kit['nombre']) ?></strong>
+  </div>
+  <div class="page-print-action no-print">
+    <button type="button" class="btn btn-secondary print-button" aria-label="Imprimir este kit">🖨️ Imprimir</button>
   </div>
 
   <!-- Card de Resumen del Kit (mismo layout que clase) -->

@@ -151,7 +151,9 @@ $learning_resource_schema = [
     'url' => $canonical_url,
     'inLanguage' => 'es-CO',
     'learningResourceType' => 'Clase interactiva',
-    'educationalUse' => 'instruction'
+    'educationalUse' => 'instruction',
+    'isAccessibleForFree' => true,
+    'potentialAction' => cdc_schema_print_action($canonical_url)
 ];
 
 if (!empty($proyecto['duracion_minutos'])) {
@@ -294,6 +296,9 @@ include 'includes/header.php';
 <div class="container article-page">
     <div class="breadcrumb">
         <a href="/">Inicio</a> / <a href="/clases">Clases</a> / <strong><?= h($proyecto['nombre']) ?></strong>
+    </div>
+    <div class="page-print-action no-print">
+        <button type="button" class="btn btn-secondary print-button" aria-label="Imprimir esta clase">🖨️ Imprimir</button>
     </div>
     
     <!-- Card de Resumen Técnico -->

@@ -108,6 +108,8 @@ $component_schema = [
     'name' => (string)$material['common_name'],
     'description' => trim((string)$page_description),
     'url' => $component_url,
+    'isAccessibleForFree' => true,
+    'potentialAction' => cdc_schema_print_action($component_url),
     'brand' => [
         '@type' => 'Organization',
         'name' => SITE_NAME
@@ -208,6 +210,9 @@ include 'includes/header.php';
             <a href="/componentes?category=<?= urlencode($material['category_slug']) ?>"><?= h($material['category_name']) ?></a> /
         <?php endif; ?>
         <strong><?= h($material['common_name']) ?></strong>
+    </div>
+    <div class="page-print-action no-print">
+        <button type="button" class="btn btn-secondary print-button" aria-label="Imprimir este componente">🖨️ Imprimir</button>
     </div>
 
         <div class="clase-summary-card">
