@@ -696,7 +696,6 @@ include 'includes/header.php';
                                 <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" loading="lazy" onerror="this.onerror=null; console.log('❌ [Clase] Miniatura kit (bottom) falló'); var p=document.createElement('div'); p.className='thumbnail-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
                             <?php else: ?>
                                 <div class="thumbnail-placeholder"><span class="placeholder-icon">📦</span></div>
-                                <script>console.log('⚠️ [Clase] Kit sin imagen (bottom), usando placeholder');</script>
                             <?php endif; ?>
                         </div>
                         <div class="kit-top-content">
@@ -768,7 +767,6 @@ include 'includes/header.php';
                                 <div class="gallery-placeholder">
                                     <span class="placeholder-icon">🔬</span>
                                 </div>
-                                <script>console.log('⚠️ [Clase] Recurso imagen sin URL, usando placeholder');</script>
                             <?php endif; ?>
                             <?php if (!empty($r['titulo'])): ?>
                                 <p class="media-caption"><?= h($r['titulo']) ?></p>
@@ -890,7 +888,6 @@ include 'includes/header.php';
                             <div class="thumbnail-placeholder">
                                 <span class="placeholder-icon">🔬</span>
                             </div>
-                            <script>console.log('⚠️ [Clase] Miniatura relacionada sin imagen, usando placeholder');</script>
                         <?php endif; ?>
                         <div class="related-info">
                             <h4><?= h($rel['nombre']) ?></h4>
