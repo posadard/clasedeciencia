@@ -108,14 +108,7 @@ $component_schema = [
     'name' => (string)$material['common_name'],
     'description' => trim((string)$page_description),
     'url' => $component_url,
-    'subjectOf' => [
-        '@type' => 'DigitalDocument',
-        '@id' => $component_url . '#digital-document',
-        'name' => 'Version imprimible: ' . (string)$material['common_name'],
-        'url' => $component_url,
-        'encodingFormat' => 'text/html',
-        'inLanguage' => 'es-CO'
-    ],
+    'subjectOf' => ['@id' => $component_url . '#digital-document'],
     'isAccessibleForFree' => true,
     'brand' => [
         '@type' => 'Organization',
@@ -203,7 +196,7 @@ $breadcrumb_schema = [
 ];
 
 $digital_document_schema = [
-    '@type' => ['DigitalDocument', 'WebPage'],
+    '@type' => 'DigitalDocument',
     '@id' => $component_url . '#digital-document',
     'name' => 'Version imprimible: ' . (string)$material['common_name'],
     'url' => $component_url,

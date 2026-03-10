@@ -171,14 +171,7 @@ $manual_schema = [
   'name' => $display_title_raw,
   'description' => $page_description,
   'url' => $canonical_url,
-  'subjectOf' => [
-    '@type' => 'DigitalDocument',
-    '@id' => $canonical_url . '#digital-document',
-    'name' => 'Version imprimible: ' . $display_title_raw,
-    'url' => $canonical_url,
-    'encodingFormat' => 'text/html',
-    'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO'
-  ],
+  'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
   'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
   'isAccessibleForFree' => true,
   'author' => [
@@ -299,7 +292,7 @@ $breadcrumb_schema = [
 ];
 
 $digital_document_schema = [
-  '@type' => ['DigitalDocument', 'WebPage'],
+  '@type' => 'DigitalDocument',
   '@id' => $canonical_url . '#digital-document',
   'name' => 'Version imprimible: ' . $display_title_raw,
   'url' => $canonical_url,

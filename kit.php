@@ -104,14 +104,7 @@ $kit_schema = [
   'name' => (string)$kit['nombre'],
   'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
   'url' => $canonical_url,
-  'subjectOf' => [
-    '@type' => 'DigitalDocument',
-    '@id' => $canonical_url . '#digital-document',
-    'name' => 'Version imprimible: ' . (string)$kit['nombre'],
-    'url' => $canonical_url,
-    'encodingFormat' => 'text/html',
-    'inLanguage' => 'es-CO'
-  ],
+  'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
   'isAccessibleForFree' => true,
   'brand' => [
     '@type' => 'Organization',
@@ -209,7 +202,7 @@ $breadcrumb_schema = [
 ];
 
 $digital_document_schema = [
-  '@type' => ['DigitalDocument', 'WebPage'],
+  '@type' => 'DigitalDocument',
   '@id' => $canonical_url . '#digital-document',
   'name' => 'Version imprimible: ' . (string)$kit['nombre'],
   'url' => $canonical_url,
