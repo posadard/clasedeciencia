@@ -173,7 +173,6 @@ $manual_schema = [
   'url' => $canonical_url,
   'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
   'isAccessibleForFree' => true,
-  'potentialAction' => cdc_schema_print_action($canonical_url),
   'author' => [
     '@type' => 'Organization',
     'name' => SITE_NAME

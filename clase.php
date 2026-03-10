@@ -152,8 +152,7 @@ $learning_resource_schema = [
     'inLanguage' => 'es-CO',
     'learningResourceType' => 'Clase interactiva',
     'educationalUse' => 'instruction',
-    'isAccessibleForFree' => true,
-    'potentialAction' => cdc_schema_print_action($canonical_url)
+        'isAccessibleForFree' => true
 ];
 
 if (!empty($proyecto['duracion_minutos'])) {

@@ -105,7 +105,6 @@ $kit_schema = [
   'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
   'url' => $canonical_url,
   'isAccessibleForFree' => true,
-  'potentialAction' => cdc_schema_print_action($canonical_url),
   'brand' => [
     '@type' => 'Organization',
     'name' => SITE_NAME

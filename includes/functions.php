@@ -98,17 +98,6 @@ function cdc_encode_schema_json($schema) {
 }
 
 /**
- * Build a generic schema PrintAction for printable pages.
- */
-function cdc_schema_print_action($url) {
-    $target = cdc_absolute_url($url);
-    return [
-        '@type' => 'PrintAction',
-        'target' => $target
-    ];
-}
-
-/**
  * Generate UTM-tracked ChemicalStore URL
  */
 function chemicalstore_url($path = '', $campaign = 'general') {

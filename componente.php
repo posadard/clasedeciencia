@@ -109,7 +109,6 @@ $component_schema = [
     'description' => trim((string)$page_description),
     'url' => $component_url,
     'isAccessibleForFree' => true,
-    'potentialAction' => cdc_schema_print_action($component_url),
     'brand' => [
         '@type' => 'Organization',
         'name' => SITE_NAME
