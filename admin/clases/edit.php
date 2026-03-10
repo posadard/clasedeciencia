@@ -533,7 +533,10 @@ include '../header.php';
   <div class="form-row">
     <div class="form-group">
       <label for="imagen_portada">Imagen portada (URL)</label>
-      <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($clase['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+      <div class="image-field-row">
+        <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($clase['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" />
+        <button type="button" class="btn btn-secondary js-image-picker-trigger" data-target-input="imagen_portada" data-preset="clase-cover" data-entity="clase">📷 Subir y editar</button>
+      </div>
     </div>
     <div class="form-group">
       <label for="video_portada">Video portada (URL)</label>
@@ -1958,5 +1961,7 @@ include '../header.php';
   bindDeleteAttrButtons();
 </script>
 <?php endif; ?>
+
+<script src="/assets/js/admin-image-editor.js"></script>
 
 <?php include '../footer.php'; ?>

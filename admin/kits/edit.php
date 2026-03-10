@@ -884,7 +884,10 @@ include '../header.php';
     <div class="field-inline">
       <div class="form-group">
         <label for="imagen_portada">Imagen de portada (URL)</label>
-        <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($kit['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="/assets/img/kits/kit-xyz.webp" />
+        <div class="image-field-row">
+          <input type="text" id="imagen_portada" name="imagen_portada" value="<?= htmlspecialchars($kit['imagen_portada'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="/assets/img/kits/kit-xyz.webp" />
+          <button type="button" class="btn btn-secondary js-image-picker-trigger" data-target-input="imagen_portada" data-preset="kit-cover" data-entity="kit">📷 Subir y editar</button>
+        </div>
       </div>
       <div class="form-group">
         <label for="video_portada">Video portada (URL o ID)</label>
@@ -2599,6 +2602,7 @@ include '../header.php';
   })();
 </script>
 <?php endif; ?>
+<script src="/assets/js/admin-image-editor.js"></script>
 <div class="form-actions" style="margin-top:2rem;">
   <button type="submit" class="btn" form="kit-form">Guardar</button>
   <a href="/admin/kits/index.php" class="btn btn-secondary">Cancelar</a>

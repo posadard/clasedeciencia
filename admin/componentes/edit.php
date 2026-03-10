@@ -282,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($nombre_comun === '') $errores[] = 'El nombre común es obligatorio';
     if ($categoria_id <= 0) $errores[] = 'La categoría es obligatoria';
-    if ($foto_url !== '' && !preg_match('/^https?:\/\//i', $foto_url)) { $errores[] = 'La URL de la foto debe iniciar con http:// o https://'; }
+    if ($foto_url !== '' && !preg_match('/^(https?:\/\/|\/assets\/images\/uploads\/)/i', $foto_url)) { $errores[] = 'La URL de la foto debe iniciar con http://, https:// o /assets/images/uploads/'; }
     if ($foto_url !== '' && strlen($foto_url) > 255) { $errores[] = 'La URL de la foto supera 255 caracteres'; }
 
     if ($sku === '') {
@@ -416,7 +416,10 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="foto_url">URL de la foto</label>
-    <input type="text" id="foto_url" name="foto_url" value="<?= htmlspecialchars($material['foto_url'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="https://..." />
+    <div class="image-field-row">
+      <input type="text" id="foto_url" name="foto_url" value="<?= htmlspecialchars($material['foto_url'] ?? '', ENT_QUOTES, 'UTF-8') ?>" placeholder="https://..." />
+      <button type="button" class="btn btn-secondary js-image-picker-trigger" data-target-input="foto_url" data-preset="componente-thumb" data-entity="componente">📷 Subir y editar</button>
+    </div>
     <small class="help-text">Enlace http(s) a la imagen representativa del componente.</small>
   </div>
   <div class="form-actions">
@@ -969,5 +972,7 @@ if ($is_edit) {
   })();
 </script>
 <?php endif; ?>
+
+<script src="/assets/js/admin-image-editor.js"></script>
 
 <?php include '../footer.php'; ?>

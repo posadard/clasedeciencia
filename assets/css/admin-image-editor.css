@@ -1,0 +1,111 @@
+.image-editor-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.image-editor-modal.is-open {
+  display: flex;
+}
+
+.image-editor-dialog {
+  width: min(980px, 96vw);
+  max-height: 94vh;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #d9e2ec;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.image-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.image-editor-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.image-editor-body {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 14px;
+  padding: 14px;
+  overflow: auto;
+}
+
+.image-editor-canvas-wrap {
+  background: #0b1220;
+  border-radius: 10px;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#imageEditorViewport {
+  max-width: 100%;
+  max-height: 68vh;
+  display: block;
+  cursor: grab;
+  background: #111827;
+}
+
+#imageEditorViewport.is-dragging {
+  cursor: grabbing;
+}
+
+.image-editor-side {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.image-editor-side .hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.image-editor-footer {
+  border-top: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.image-editor-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.image-field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.image-field-row input[type="text"] {
+  flex: 1;
+}
+
+@media (max-width: 860px) {
+  .image-editor-body {
+    grid-template-columns: 1fr;
+  }
+}
