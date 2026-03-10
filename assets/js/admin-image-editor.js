@@ -25,7 +25,8 @@
     preset: 'generic-cover',
     targetInputId: '',
     entity: 'general',
-    csrfToken: ''
+    csrfToken: '',
+    backgroundColor: '#ffffff'
   };
 
   function qs(sel, root) { return (root || document).querySelector(sel); }
@@ -116,6 +117,66 @@
     modal.setAttribute('aria-hidden', 'true');
   }
 
+  function getMaskRect(canvasW, canvasH, ratio) {
+    let maskW = canvasW * 0.9;
+    let maskH = maskW / ratio;
+    if (maskH > canvasH * 0.9) {
+      maskH = canvasH * 0.9;
+      maskW = maskH * ratio;
+    }
+    return {
+      x: (canvasW - maskW) / 2,
+      y: (canvasH - maskH) / 2,
+      w: maskW,
+      h: maskH
+    };
+  }
+
+  function computeDominantBackgroundColor(img) {
+    try {
+      const sampleCanvas = document.createElement('canvas');
+      const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+      const sw = 48;
+      const sh = 48;
+      sampleCanvas.width = sw;
+      sampleCanvas.height = sh;
+      sampleCtx.drawImage(img, 0, 0, sw, sh);
+      const data = sampleCtx.getImageData(0, 0, sw, sh).data;
+
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      let count = 0;
+
+      for (let y = 0; y < sh; y++) {
+        for (let x = 0; x < sw; x++) {
+          const isBorder = (x < 6 || x >= sw - 6 || y < 6 || y >= sh - 6);
+          if (!isBorder) continue;
+          const idx = (y * sw + x) * 4;
+          const alpha = data[idx + 3];
+          if (alpha < 16) continue;
+          r += data[idx];
+          g += data[idx + 1];
+          b += data[idx + 2];
+          count++;
+        }
+      }
+
+      if (count === 0) {
+        return '#f3f4f6';
+      }
+
+      // Suavizar ligeramente para evitar fondos muy intensos.
+      const rr = Math.round((r / count) * 0.92 + 10);
+      const gg = Math.round((g / count) * 0.92 + 10);
+      const bb = Math.round((b / count) * 0.92 + 10);
+
+      return 'rgb(' + rr + ', ' + gg + ', ' + bb + ')';
+    } catch (_err) {
+      return '#f3f4f6';
+    }
+  }
+
   function resetTransform() {
     state.scale = 1;
     state.offsetX = 0;
@@ -195,10 +256,11 @@
         img.onload = function () {
           state.sourceImage = img;
           state.sourceName = file.name || 'imagen';
+          state.backgroundColor = computeDominantBackgroundColor(img);
           fitImageToView();
           render();
           qs('#imageEditorMeta').textContent = 'Archivo: ' + state.sourceName + ' (' + img.width + 'x' + img.height + ')';
-          console.log('✅ [ImageEditor] Imagen cargada:', state.sourceName, img.width + 'x' + img.height);
+          console.log('✅ [ImageEditor] Imagen cargada:', state.sourceName, img.width + 'x' + img.height, 'bg:', state.backgroundColor);
         };
         img.onerror = function () {
           alert('No se pudo cargar la imagen seleccionada.');
@@ -275,8 +337,9 @@
     const baseScaleX = cw / img.width;
     const baseScaleY = ch / img.height;
     const fitScale = Math.max(baseScaleX, baseScaleY);
+    const containScale = Math.min(baseScaleX, baseScaleY);
 
-    state.minScale = fitScale;
+    state.minScale = Math.max(containScale * 0.25, 0.02);
     state.scale = fitScale;
 
     const drawW = img.width * state.scale;
@@ -287,9 +350,9 @@
     const zoom = qs('#imageEditorZoom');
     if (zoom) {
       const max = Math.max(fitScale * 4, fitScale + 2);
-      zoom.min = String(fitScale);
+      zoom.min = String(state.minScale);
       zoom.max = String(max);
-      zoom.step = String((max - fitScale) / 200);
+      zoom.step = String((max - state.minScale) / 240);
       zoom.value = String(state.scale);
     }
 
@@ -319,21 +382,16 @@
     const drawW = state.sourceImage.width * state.scale;
     const drawH = state.sourceImage.height * state.scale;
 
-    if (drawW <= cw) {
-      state.offsetX = (cw - drawW) / 2;
-    } else {
-      const minX = cw - drawW;
-      const maxX = 0;
-      state.offsetX = Math.max(minX, Math.min(maxX, state.offsetX));
-    }
+    // Permitir huecos para zoom out, pero evitar que la imagen se pierda completamente.
+    const marginX = Math.max(24, drawW * 0.12);
+    const marginY = Math.max(24, drawH * 0.12);
+    const minX = -drawW + marginX;
+    const maxX = cw - marginX;
+    const minY = -drawH + marginY;
+    const maxY = ch - marginY;
 
-    if (drawH <= ch) {
-      state.offsetY = (ch - drawH) / 2;
-    } else {
-      const minY = ch - drawH;
-      const maxY = 0;
-      state.offsetY = Math.max(minY, Math.min(maxY, state.offsetY));
-    }
+    state.offsetX = Math.max(minX, Math.min(maxX, state.offsetX));
+    state.offsetY = Math.max(minY, Math.min(maxY, state.offsetY));
   }
 
   function render() {
@@ -349,17 +407,12 @@
 
     const info = getPresetInfo();
     const maskRatio = info.width / info.height;
-    let maskW = cw * 0.9;
-    let maskH = maskW / maskRatio;
-    if (maskH > ch * 0.9) {
-      maskH = ch * 0.9;
-      maskW = maskH * maskRatio;
-    }
-    const maskX = (cw - maskW) / 2;
-    const maskY = (ch - maskH) / 2;
+    const mask = getMaskRect(cw, ch, maskRatio);
 
     if (state.sourceImage) {
       clampOffsets();
+      ctx.fillStyle = state.backgroundColor || '#f3f4f6';
+      ctx.fillRect(mask.x, mask.y, mask.w, mask.h);
       const drawW = state.sourceImage.width * state.scale;
       const drawH = state.sourceImage.height * state.scale;
       ctx.drawImage(state.sourceImage, state.offsetX, state.offsetY, drawW, drawH);
@@ -369,13 +422,13 @@
     ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
     ctx.beginPath();
     ctx.rect(0, 0, cw, ch);
-    ctx.rect(maskX, maskY, maskW, maskH);
+    ctx.rect(mask.x, mask.y, mask.w, mask.h);
     ctx.fill('evenodd');
     ctx.restore();
 
     ctx.strokeStyle = '#22c55e';
     ctx.lineWidth = 2;
-    ctx.strokeRect(maskX, maskY, maskW, maskH);
+    ctx.strokeRect(mask.x, mask.y, mask.w, mask.h);
   }
 
   function exportBlob() {
@@ -395,24 +448,20 @@
       const cw = viewport.width;
       const ch = viewport.height;
       const ratio = info.width / info.height;
+      const mask = getMaskRect(cw, ch, ratio);
 
-      let maskW = cw * 0.9;
-      let maskH = maskW / ratio;
-      if (maskH > ch * 0.9) {
-        maskH = ch * 0.9;
-        maskW = maskH * ratio;
-      }
-      const maskX = (cw - maskW) / 2;
-      const maskY = (ch - maskH) / 2;
+      const drawW = state.sourceImage.width * state.scale;
+      const drawH = state.sourceImage.height * state.scale;
+      const scaleToExport = info.width / mask.w;
 
-      const sx = (maskX - state.offsetX) / state.scale;
-      const sy = (maskY - state.offsetY) / state.scale;
-      const sw = maskW / state.scale;
-      const sh = maskH / state.scale;
+      const dx = (state.offsetX - mask.x) * scaleToExport;
+      const dy = (state.offsetY - mask.y) * scaleToExport;
+      const dw = drawW * scaleToExport;
+      const dh = drawH * scaleToExport;
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = state.backgroundColor || '#f3f4f6';
       ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-      ctx.drawImage(state.sourceImage, sx, sy, sw, sh, 0, 0, exportCanvas.width, exportCanvas.height);
+      ctx.drawImage(state.sourceImage, dx, dy, dw, dh);
 
       exportCanvas.toBlob(function (blob) {
         if (!blob) {
