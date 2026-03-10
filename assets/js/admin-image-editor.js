@@ -362,11 +362,35 @@
 
   function setScale(nextScale) {
     if (!state.sourceImage) return;
+    const canvas = qs('#imageEditorViewport');
     const zoom = qs('#imageEditorZoom');
     const min = parseFloat(zoom.min || String(state.minScale || 1));
     const max = parseFloat(zoom.max || '4');
 
-    state.scale = Math.max(min, Math.min(max, nextScale));
+    const oldScale = state.scale;
+    const targetScale = Math.max(min, Math.min(max, nextScale));
+    if (!canvas || targetScale === oldScale) {
+      state.scale = targetScale;
+      if (zoom) {
+        zoom.value = String(state.scale);
+      }
+      clampOffsets();
+      render();
+      return;
+    }
+
+    // Anclar el zoom al centro del encuadre visible.
+    const info = getPresetInfo();
+    const mask = getMaskRect(canvas.width, canvas.height, info.width / info.height);
+    const anchorX = mask.x + (mask.w / 2);
+    const anchorY = mask.y + (mask.h / 2);
+
+    const imageXAtAnchor = (anchorX - state.offsetX) / oldScale;
+    const imageYAtAnchor = (anchorY - state.offsetY) / oldScale;
+
+    state.scale = targetScale;
+    state.offsetX = anchorX - (imageXAtAnchor * state.scale);
+    state.offsetY = anchorY - (imageYAtAnchor * state.scale);
     if (zoom) {
       zoom.value = String(state.scale);
     }
