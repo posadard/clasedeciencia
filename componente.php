@@ -202,9 +202,19 @@ $breadcrumb_schema = [
     ]
 ];
 
+$digital_document_schema = [
+    '@type' => ['DigitalDocument', 'WebPage'],
+    '@id' => $component_url . '#digital-document',
+    'name' => 'Version imprimible: ' . (string)$material['common_name'],
+    'url' => $component_url,
+    'encodingFormat' => 'text/html',
+    'inLanguage' => 'es-CO',
+    'mainEntity' => ['@id' => $component_url . '#product']
+];
+
 $schema_json = cdc_encode_schema_json([
     '@context' => 'https://schema.org',
-    '@graph' => [$component_schema, $breadcrumb_schema]
+    '@graph' => [$component_schema, $breadcrumb_schema, $digital_document_schema]
 ]);
 
 include 'includes/header.php';

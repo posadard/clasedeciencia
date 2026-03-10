@@ -293,9 +293,19 @@ $breadcrumb_schema = [
     ]
 ];
 
+$digital_document_schema = [
+    '@type' => ['DigitalDocument', 'WebPage'],
+    '@id' => $canonical_url . '#digital-document',
+    'name' => 'Version imprimible: ' . (string)$proyecto['nombre'],
+    'url' => $canonical_url,
+    'encodingFormat' => 'text/html',
+    'inLanguage' => 'es-CO',
+    'mainEntity' => ['@id' => $canonical_url . '#learning-resource']
+];
+
 $schema_json = cdc_encode_schema_json([
     '@context' => 'https://schema.org',
-    '@graph' => [$learning_resource_schema, $breadcrumb_schema]
+    '@graph' => [$learning_resource_schema, $breadcrumb_schema, $digital_document_schema]
 ]);
 
 include 'includes/header.php';

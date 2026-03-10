@@ -298,9 +298,19 @@ $breadcrumb_schema = [
   'itemListElement' => $breadcrumb_items
 ];
 
+$digital_document_schema = [
+  '@type' => ['DigitalDocument', 'WebPage'],
+  '@id' => $canonical_url . '#digital-document',
+  'name' => 'Version imprimible: ' . $display_title_raw,
+  'url' => $canonical_url,
+  'encodingFormat' => 'text/html',
+  'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
+  'mainEntity' => ['@id' => $canonical_url . '#manual']
+];
+
 $schema_json = cdc_encode_schema_json([
   '@context' => 'https://schema.org',
-  '@graph' => [$manual_schema, $breadcrumb_schema]
+  '@graph' => [$manual_schema, $breadcrumb_schema, $digital_document_schema]
 ]);
 
 include 'includes/header.php';
