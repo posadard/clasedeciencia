@@ -149,10 +149,11 @@ $learning_resource_schema = [
     'name' => $proyecto['nombre'],
     'description' => $page_description,
     'url' => $canonical_url,
+    'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
     'inLanguage' => 'es-CO',
     'learningResourceType' => 'Clase interactiva',
     'educationalUse' => 'instruction',
-        'isAccessibleForFree' => true
+    'isAccessibleForFree' => true
 ];
 
 if (!empty($proyecto['duracion_minutos'])) {
@@ -285,9 +286,18 @@ $breadcrumb_schema = [
     ]
 ];
 
+$digital_document_schema = [
+    '@type' => 'DigitalDocument',
+    '@id' => $canonical_url . '#digital-document',
+    'name' => 'Version imprimible: ' . (string)$proyecto['nombre'],
+    'url' => $canonical_url,
+    'encodingFormat' => 'text/html',
+    'inLanguage' => 'es-CO'
+];
+
 $schema_json = cdc_encode_schema_json([
     '@context' => 'https://schema.org',
-    '@graph' => [$learning_resource_schema, $breadcrumb_schema]
+    '@graph' => [$learning_resource_schema, $breadcrumb_schema, $digital_document_schema]
 ]);
 
 include 'includes/header.php';

@@ -108,6 +108,7 @@ $component_schema = [
     'name' => (string)$material['common_name'],
     'description' => trim((string)$page_description),
     'url' => $component_url,
+    'subjectOf' => ['@id' => $component_url . '#digital-document'],
     'isAccessibleForFree' => true,
     'brand' => [
         '@type' => 'Organization',
@@ -194,9 +195,18 @@ $breadcrumb_schema = [
     ]
 ];
 
+$digital_document_schema = [
+    '@type' => 'DigitalDocument',
+    '@id' => $component_url . '#digital-document',
+    'name' => 'Version imprimible: ' . (string)$material['common_name'],
+    'url' => $component_url,
+    'encodingFormat' => 'text/html',
+    'inLanguage' => 'es-CO'
+];
+
 $schema_json = cdc_encode_schema_json([
     '@context' => 'https://schema.org',
-    '@graph' => [$component_schema, $breadcrumb_schema]
+    '@graph' => [$component_schema, $breadcrumb_schema, $digital_document_schema]
 ]);
 
 include 'includes/header.php';
