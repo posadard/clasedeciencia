@@ -336,7 +336,8 @@
 
     const baseScaleX = cw / img.width;
     const baseScaleY = ch / img.height;
-    const fitScale = Math.max(baseScaleX, baseScaleY);
+    // Autoajuste inicial por alto: prioriza que la altura encaje al abrir.
+    const fitScale = baseScaleY;
     const containScale = Math.min(baseScaleX, baseScaleY);
 
     state.minScale = Math.max(containScale * 0.25, 0.02);
