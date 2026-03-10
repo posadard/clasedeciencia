@@ -171,7 +171,6 @@ $manual_schema = [
   'name' => $display_title_raw,
   'description' => $page_description,
   'url' => $canonical_url,
-  'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
   'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
   'isAccessibleForFree' => true,
   'author' => [

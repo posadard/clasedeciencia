@@ -108,7 +108,6 @@ $component_schema = [
     'name' => (string)$material['common_name'],
     'description' => trim((string)$page_description),
     'url' => $component_url,
-    'subjectOf' => ['@id' => $component_url . '#digital-document'],
     'isAccessibleForFree' => true,
     'brand' => [
         '@type' => 'Organization',

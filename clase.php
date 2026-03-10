@@ -149,7 +149,6 @@ $learning_resource_schema = [
     'name' => $proyecto['nombre'],
     'description' => $page_description,
     'url' => $canonical_url,
-    'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
     'inLanguage' => 'es-CO',
     'learningResourceType' => 'Clase interactiva',
     'educationalUse' => 'instruction',

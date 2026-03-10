@@ -104,7 +104,6 @@ $kit_schema = [
   'name' => (string)$kit['nombre'],
   'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
   'url' => $canonical_url,
-  'subjectOf' => ['@id' => $canonical_url . '#digital-document'],
   'isAccessibleForFree' => true,
   'brand' => [
     '@type' => 'Organization',
