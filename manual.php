@@ -300,9 +300,20 @@ $digital_document_schema = [
   'mainEntity' => ['@id' => $canonical_url . '#manual']
 ];
 
+$webpage_schema = [
+  '@type' => 'WebPage',
+  '@id' => $canonical_url . '#webpage',
+  'url' => $canonical_url,
+  'name' => $display_title_raw,
+  'inLanguage' => !empty($manual['idioma']) ? (string)$manual['idioma'] : 'es-CO',
+  'mainEntity' => ['@id' => $canonical_url . '#manual'],
+  'hasPart' => ['@id' => $canonical_url . '#digital-document'],
+  'breadcrumb' => ['@id' => $canonical_url . '#breadcrumb']
+];
+
 $schema_json = cdc_encode_schema_json([
   '@context' => 'https://schema.org',
-  '@graph' => [$manual_schema, $breadcrumb_schema, $digital_document_schema]
+  '@graph' => [$manual_schema, $breadcrumb_schema, $digital_document_schema, $webpage_schema]
 ]);
 
 include 'includes/header.php';

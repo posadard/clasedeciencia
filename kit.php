@@ -210,9 +210,20 @@ $digital_document_schema = [
   'mainEntity' => ['@id' => $canonical_url . '#product']
 ];
 
+$webpage_schema = [
+  '@type' => 'WebPage',
+  '@id' => $canonical_url . '#webpage',
+  'url' => $canonical_url,
+  'name' => (string)$page_title,
+  'inLanguage' => 'es-CO',
+  'mainEntity' => ['@id' => $canonical_url . '#product'],
+  'hasPart' => ['@id' => $canonical_url . '#digital-document'],
+  'breadcrumb' => ['@id' => $canonical_url . '#breadcrumb']
+];
+
 $schema_json = cdc_encode_schema_json([
   '@context' => 'https://schema.org',
-  '@graph' => [$kit_schema, $breadcrumb_schema, $digital_document_schema]
+  '@graph' => [$kit_schema, $breadcrumb_schema, $digital_document_schema, $webpage_schema]
 ]);
 
 include 'includes/header.php';
