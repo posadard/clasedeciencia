@@ -104,7 +104,6 @@ $kit_schema = [
   'name' => (string)$kit['nombre'],
   'description' => trim(strip_tags((string)($kit['resumen'] ?? ''))),
   'url' => $canonical_url,
-  'isAccessibleForFree' => true,
   'brand' => [
     '@type' => 'Organization',
     'name' => SITE_NAME
@@ -120,13 +119,16 @@ if (!empty($kit['version'])) {
 if (!empty($kit['imagen_portada'])) {
   $kit_schema['image'] = cdc_absolute_url($kit['imagen_portada']);
 }
+$video_schema = null;
 if (!empty($kit['video_portada'])) {
   $video_url = cdc_absolute_url($kit['video_portada']);
-  $kit_schema['video'] = [
+  $video_schema = [
     '@type' => 'VideoObject',
+    '@id' => $canonical_url . '#video',
     'name' => 'Video de ' . (string)$kit['nombre'],
     'embedUrl' => $video_url,
-    'url' => $video_url
+    'url' => $video_url,
+    'inLanguage' => 'es-CO'
   ];
 }
 if (!empty($kit_areas) && is_array($kit_areas)) {
@@ -218,8 +220,15 @@ $digital_document_schema = [
   'url' => $canonical_url,
   'encodingFormat' => 'text/html',
   'inLanguage' => 'es-CO',
+  'isAccessibleForFree' => true,
   'mainEntity' => ['@id' => $canonical_url . '#product']
 ];
+
+if ($video_schema) {
+  $digital_document_schema['hasPart'] = [
+    ['@id' => $canonical_url . '#video']
+  ];
+}
 
 $webpage_schema = [
   '@type' => 'WebPage',
@@ -227,6 +236,7 @@ $webpage_schema = [
   'url' => $canonical_url,
   'name' => (string)$page_title,
   'inLanguage' => 'es-CO',
+  'isAccessibleForFree' => true,
   'mainEntity' => ['@id' => $canonical_url . '#product'],
   'hasPart' => array_merge(
     [['@id' => $canonical_url . '#digital-document']],
@@ -237,7 +247,14 @@ $webpage_schema = [
   'breadcrumb' => ['@id' => $canonical_url . '#breadcrumb']
 ];
 
+if ($video_schema) {
+  $webpage_schema['hasPart'][] = ['@id' => $canonical_url . '#video'];
+}
+
 $graph_nodes = [$kit_schema, $breadcrumb_schema, $digital_document_schema, $webpage_schema];
+if ($video_schema) {
+  $graph_nodes[] = $video_schema;
+}
 if (!empty($media_schema_nodes)) {
   $graph_nodes = array_merge($graph_nodes, $media_schema_nodes);
 }
