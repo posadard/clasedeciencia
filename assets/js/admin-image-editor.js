@@ -9,6 +9,7 @@
     'componente-thumb': { width: 800, height: 800, label: 'Componente 800x800' },
     'generic-cover': { width: 1200, height: 675, label: 'General 1200x675' }
   };
+  const DEFAULT_CREATOR_NAME = 'Clase de Ciencia';
 
   let state = {
     sourceImage: null,
@@ -220,11 +221,7 @@
   }
 
   function detectAdminCreator() {
-    const logoutLink = Array.from(document.querySelectorAll('a[href="/admin/logout.php"]'))[0];
-    if (!logoutLink) return '';
-    const txt = String(logoutLink.textContent || '').trim();
-    const m = txt.match(/\(([^)]+)\)/);
-    return m && m[1] ? String(m[1]).trim() : '';
+    return DEFAULT_CREATOR_NAME;
   }
 
   function nowIsoLike() {

@@ -369,10 +369,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $rm_id = (int)$sel->fetchColumn();
             if ($rm_id > 0) {
               $upd = $pdo->prepare("UPDATE recursos_multimedia SET tipo='imagen', url=?, titulo=?, descripcion=?, sort_order=0, schema_role=?, mime_type=?, width=?, height=?, upload_date=?, in_language=?, creator_name=? WHERE id=?");
-              $upd->execute([$foto_url, ($media_titulo !== '' ? $media_titulo : $nombre_comun), ($media_descripcion !== '' ? $media_descripcion : ''), $role, ($media_mime_type !== '' ? $media_mime_type : 'image/webp'), $media_width, $media_height, $upload_dt, ($media_in_language !== '' ? $media_in_language : 'es-CO'), ($media_creator_name !== '' ? $media_creator_name : null), $rm_id]);
+              $upd->execute([$foto_url, ($media_titulo !== '' ? $media_titulo : $nombre_comun), ($media_descripcion !== '' ? $media_descripcion : ''), $role, ($media_mime_type !== '' ? $media_mime_type : 'image/webp'), $media_width, $media_height, $upload_dt, ($media_in_language !== '' ? $media_in_language : 'es-CO'), ($media_creator_name !== '' ? $media_creator_name : 'Clase de Ciencia'), $rm_id]);
             } else {
               $insRm = $pdo->prepare("INSERT INTO recursos_multimedia (item_id, tipo, url, titulo, descripcion, sort_order, schema_role, mime_type, width, height, upload_date, in_language, creator_name) VALUES (?, 'imagen', ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)");
-              $insRm->execute([$id, $foto_url, ($media_titulo !== '' ? $media_titulo : $nombre_comun), ($media_descripcion !== '' ? $media_descripcion : ''), $role, ($media_mime_type !== '' ? $media_mime_type : 'image/webp'), $media_width, $media_height, $upload_dt, ($media_in_language !== '' ? $media_in_language : 'es-CO'), ($media_creator_name !== '' ? $media_creator_name : null)]);
+              $insRm->execute([$id, $foto_url, ($media_titulo !== '' ? $media_titulo : $nombre_comun), ($media_descripcion !== '' ? $media_descripcion : ''), $role, ($media_mime_type !== '' ? $media_mime_type : 'image/webp'), $media_width, $media_height, $upload_dt, ($media_in_language !== '' ? $media_in_language : 'es-CO'), ($media_creator_name !== '' ? $media_creator_name : 'Clase de Ciencia')]);
             }
           } catch (PDOException $e) {
             try {
