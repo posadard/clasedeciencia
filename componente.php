@@ -33,6 +33,9 @@ if (!empty($material['descripcion_html'])) {
 $page_description = generate_excerpt($raw_desc, 160);
 $canonical_url = SITE_URL . '/' . urlencode($material['slug']);
 
+// Normalizar advertencias para evitar mostrar JSON crudo en la vista pública.
+$material_safety_text = cdc_format_safety_warning($material['description'] ?? '');
+
 // Ficha técnica del componente (resumen compacto similar a kit.php)
 $ficha_inline = '';
 try {
@@ -144,11 +147,11 @@ include 'includes/header.php';
                         </div>
                         <?php endif; ?>
                     </div>
-                    <?php if (!empty($material['description'])): ?>
+                    <?php if ($material_safety_text !== ''): ?>
                     <section class="safety-info summary-safety">
                         <h2 class="safety-title">⚠️ Información de Seguridad</h2>
                         <div class="safety-content">
-                            <div class="safety-notes"><?= nl2br(h($material['description'])) ?></div>
+                            <div class="safety-notes"><?= nl2br(h($material_safety_text)) ?></div>
                             <p class="safety-note"><strong>Nota:</strong> Requiere supervisión permanente de un adulto responsable.</p>
                         </div>
                     </section>
