@@ -12,6 +12,67 @@ function h($string) {
 }
 
 /**
+ * Format safety warning text from plain string or JSON payload.
+ */
+function cdc_format_safety_warning($warning) {
+    if ($warning === null) {
+        return '';
+    }
+
+    $raw = is_string($warning) ? trim($warning) : $warning;
+    if ($raw === '') {
+        return '';
+    }
+
+    $sec = null;
+    if (is_array($raw)) {
+        $sec = $raw;
+    } elseif (is_string($raw)) {
+        $decoded = json_decode($raw, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            $sec = $decoded;
+        }
+    }
+
+    if (!is_array($sec)) {
+        return trim((string)$raw);
+    }
+
+    $parts = [];
+    $min = isset($sec['edad_min']) && $sec['edad_min'] !== '' ? (int)$sec['edad_min'] : null;
+    $max = isset($sec['edad_max']) && $sec['edad_max'] !== '' ? (int)$sec['edad_max'] : null;
+    if ($min !== null && $max !== null) {
+        $parts[] = 'Edad segura: ' . $min . '-' . $max . ' años';
+    } elseif ($min !== null) {
+        $parts[] = 'Edad segura: ' . $min . '+ años';
+    } elseif ($max !== null) {
+        $parts[] = 'Edad segura: ≤' . $max . ' años';
+    }
+
+    if (isset($sec['notas'])) {
+        if (is_array($sec['notas'])) {
+            $notas = array_values(array_filter(array_map('trim', $sec['notas']), function ($v) {
+                return $v !== '';
+            }));
+            if (!empty($notas)) {
+                $parts[] = implode('. ', $notas);
+            }
+        } else {
+            $nota = trim((string)$sec['notas']);
+            if ($nota !== '') {
+                $parts[] = $nota;
+            }
+        }
+    }
+
+    if (empty($parts)) {
+        return trim((string)$raw);
+    }
+
+    return implode(' · ', $parts);
+}
+
+/**
  * Generate UTM-tracked ChemicalStore URL
  */
 function chemicalstore_url($path = '', $campaign = 'general') {

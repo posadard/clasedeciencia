@@ -563,8 +563,9 @@ include 'includes/header.php';
                             <?php foreach ($materiales_por_kit[$kit['id']] as $m): ?>
                                     <li <?php if (!empty($m['slug'])): ?>role="link" tabindex="0" onclick="event.stopPropagation(); console.log('🧪 [Clase] Click componente →','<?= h($m['slug']) ?>'); window.location.href='/<?= h($m['slug']) ?>';"<?php endif; ?>>
                                     <span class="material-name"><?= h($m['nombre_comun']) ?></span>
-                                    <?php if (!empty($m['advertencias_seguridad'])): ?>
-                                        <small class="material-warning">⚠️ <?= h($m['advertencias_seguridad']) ?></small>
+                                    <?php $warning_text = cdc_format_safety_warning($m['advertencias_seguridad'] ?? ''); ?>
+                                    <?php if ($warning_text !== ''): ?>
+                                        <small class="material-warning">⚠️ <?= h($warning_text) ?></small>
                                     <?php endif; ?>
                                     <?php if (!empty($m['cantidad'])): ?>
                                         <span class="badge"><?= h($m['cantidad']) ?> <?= h($m['unidad'] ?? '') ?></span>
