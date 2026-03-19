@@ -4403,19 +4403,10 @@ strong, b {
 .card-stats {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
+    gap: 8px;
     margin-top: 8px;
 }
-.card-stats-label {
-    font-size: 0.72rem;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    width: 100%;
-    margin-bottom: 2px;
-}
-.card-stats span:not(.card-stats-label) {
+.card-stats span {
     font-size: 0.78rem;
     color: var(--color-text-muted);
     background: var(--color-bg-alt);
