@@ -133,7 +133,7 @@
                     <li><a href="/admin/ia/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/ia/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-chart"/></svg> IA</a></li>
                     <li><a href="/admin/paginas/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/paginas/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-article"/></svg> Páginas</a></li>
                     <li><a href="/admin/footer/index.php" class="<?= strpos($_SERVER['PHP_SELF'], '/footer/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-list"/></svg> Footer</a></li>
-                    <li><a href="/admin/sitio/config.php" class="<?= strpos($_SERVER['PHP_SELF'], '/sitio/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-tag"/></svg> Configuración</a></li>
+                    <li><a href="/admin/sitio/ajustes.php" class="<?= strpos($_SERVER['PHP_SELF'], '/sitio/') !== false ? 'active' : '' ?>"><svg class="admin-icon" width="16" height="16" aria-hidden="true"><use xlink:href="#icon-tag"/></svg> Configuración</a></li>
                 </ul>
             </nav>
         </aside>
