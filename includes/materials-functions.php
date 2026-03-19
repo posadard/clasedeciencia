@@ -50,6 +50,7 @@ function get_materials($pdo, $filters = [], $limit = null, $offset = 0) {
                 m.nombre_comun AS common_name,
                 NULL AS technical_name,
                 m.advertencias_seguridad AS description,
+                m.foto_url,
                 cm.nombre AS category_name,
                 cm.slug AS category_slug,
                 NULL AS category_icon,

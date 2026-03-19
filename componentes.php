@@ -157,6 +157,14 @@ include 'includes/header.php';
                 <article class="article-card" data-href="/<?= h($it['slug']) ?>">
                     <a class="card-link" href="/<?= h($it['slug']) ?>">
                         <div class="card-content">
+                            <div class="card-thumb-sm">
+                                <?php if (!empty($it['foto_url'])): ?>
+                                <img src="<?= h($it['foto_url']) ?>" alt="<?= h($it['common_name']) ?>" loading="lazy"
+                                     onerror="this.onerror=null;this.closest('.card-thumb-sm').classList.add('card-thumb-sm--placeholder');this.remove();" />
+                                <?php else: ?>
+                                <span class="card-thumb-sm__icon">&#x1F4E6;</span>
+                                <?php endif; ?>
+                            </div>
                             <div class="card-meta">
                                 <span class="section-badge">Componente</span>
                                 <?php if (!empty($it['category_name'])): ?>
