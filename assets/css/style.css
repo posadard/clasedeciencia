@@ -3566,10 +3566,10 @@ strong, b {
     background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
 }
 .summary-placeholder--componente {
-    background: linear-gradient(135deg, #d1fae5 0%, #10b981 100%);
+    background: linear-gradient(135deg, #bfdbfe 0%, #3b82f6 100%);
 }
 .summary-placeholder--clase {
-    background: linear-gradient(135deg, #ede9fe 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #fecaca 0%, #ef4444 100%);
 }
 /* Error state: red for any failed-to-load image */
 .summary-placeholder.error {
@@ -4434,6 +4434,9 @@ strong, b {
 }
 .card-thumb-sm--kit {
     background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
+}
+.card-thumb-sm--componente {
+    background: linear-gradient(135deg, #bfdbfe 0%, #3b82f6 100%);
 }
 .card-thumb-sm__icon {
     font-size: 3rem;

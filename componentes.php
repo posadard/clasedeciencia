@@ -156,12 +156,11 @@ include 'includes/header.php';
                 <?php foreach ($items as $it): ?>
                 <article class="article-card" data-href="/<?= h($it['slug']) ?>">
                     <a class="card-link" href="/<?= h($it['slug']) ?>">
-                        <div class="card-thumb-sm">
+                        <div class="card-thumb-sm card-thumb-sm--componente">
+                            <span class="card-thumb-sm__icon">&#x1F4E6;</span>
                             <?php if (!empty($it['foto_url'])): ?>
                             <img src="<?= h($it['foto_url']) ?>" alt="<?= h($it['common_name']) ?>" loading="lazy"
-                                 onerror="this.onerror=null;this.closest('.card-thumb-sm').classList.add('card-thumb-sm--placeholder');this.remove();" />
-                            <?php else: ?>
-                            <span class="card-thumb-sm__icon">&#x1F4E6;</span>
+                                 onerror="this.onerror=null;console.log('\u274c [Componentes] Thumbnail fall\u00f3 para: <?= h(addslashes($it['common_name'])) ?>');this.remove();" />
                             <?php endif; ?>
                         </div>
                         <div class="card-content">
