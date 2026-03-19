@@ -3561,7 +3561,17 @@ strong, b {
     align-items: center;
     justify-content: center;
 }
-
+/* Entity-specific placeholder backgrounds */
+.summary-placeholder--kit {
+    background: linear-gradient(135deg, #fef3c7 0%, #f59e0b 100%);
+}
+.summary-placeholder--componente {
+    background: linear-gradient(135deg, #d1fae5 0%, #10b981 100%);
+}
+.summary-placeholder--clase {
+    background: linear-gradient(135deg, #ede9fe 0%, #7c3aed 100%);
+}
+/* Error state: red for any failed-to-load image */
 .summary-placeholder.error {
     background: linear-gradient(135deg, #f87171 0%, var(--color-error) 100%);
 }

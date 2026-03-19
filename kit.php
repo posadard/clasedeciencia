@@ -279,10 +279,10 @@ include 'includes/header.php';
     <div class="summary-content">
       <div class="summary-left">
         <?php if (!empty($kit['imagen_portada'])): ?>
-          <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Kit] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+          <img src="<?= h($kit['imagen_portada']) ?>" alt="<?= h($kit['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Kit] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder summary-placeholder--kit error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🧰'; p.appendChild(s); this.replaceWith(p);" />
         <?php else: ?>
-          <div class="summary-placeholder">
-            <span class="placeholder-icon">📦</span>
+          <div class="summary-placeholder summary-placeholder--kit">
+            <span class="placeholder-icon">🧰</span>
           </div>
         <?php endif; ?>
       </div>

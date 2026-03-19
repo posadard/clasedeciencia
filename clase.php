@@ -340,9 +340,9 @@ include 'includes/header.php';
         <div class="summary-content">
             <div class="summary-left">
                 <?php if (!empty($proyecto['imagen_portada'])): ?>
-                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Clase] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
+                    <img src="<?= h($proyecto['imagen_portada']) ?>" alt="<?= h($proyecto['nombre']) ?>" class="summary-image" onerror="this.onerror=null; console.log('❌ [Clase] Imagen portada falló'); var p=document.createElement('div'); p.className='summary-placeholder summary-placeholder--clase error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='🔬'; p.appendChild(s); this.replaceWith(p);" />
                 <?php else: ?>
-                    <div class="summary-placeholder">
+                    <div class="summary-placeholder summary-placeholder--clase">
                         <span class="placeholder-icon">🔬</span>
                     </div>
                 <?php endif; ?>
