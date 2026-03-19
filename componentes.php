@@ -2,6 +2,7 @@
 // Página de listado de Componentes (kit_items) con categorías
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/db-functions.php';
 require_once 'includes/materials-functions.php';
 
 // Filtros

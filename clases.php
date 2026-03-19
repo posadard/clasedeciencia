@@ -4,6 +4,7 @@
 // - Maneja filtros y búsqueda inteligente en una sola vista
 require_once 'config.php';
 require_once 'includes/functions.php';
+require_once 'includes/db-functions.php';
 
 // ================================================================
 // DETECCIÓN DINÁMICA DE SLUGS: ciclo, área o proyecto
