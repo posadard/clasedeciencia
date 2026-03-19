@@ -60,7 +60,7 @@ function cdc_get_kits($pdo, $search = '', $limit = 12, $offset = 0, $filters = [
 
     $sql = "SELECT 
                 k.id, k.nombre, k.slug, k.codigo, k.version, k.updated_at,
-                k.resumen, k.seguridad,
+                k.resumen, k.seguridad, k.imagen_portada,
                 GROUP_CONCAT(DISTINCT a.nombre SEPARATOR ', ') AS areas_nombres,
                 (SELECT COUNT(*) FROM kit_componentes kc WHERE kc.kit_id = k.id) AS componentes_count,
                 (SELECT COUNT(*) FROM clase_kits ck WHERE ck.kit_id = k.id) AS clases_count
@@ -320,6 +320,14 @@ include 'includes/header.php';
                 <?php foreach ($kits as $k): ?>
                 <article class="article-card" data-href="/<?= h($k['slug']) ?>">
                     <a class="card-link" href="/<?= h($k['slug']) ?>">
+                        <div class="card-thumb-sm card-thumb-sm--kit">
+                            <?php if (!empty($k['imagen_portada'])): ?>
+                            <img src="<?= h($k['imagen_portada']) ?>" alt="<?= h($k['nombre']) ?>" loading="lazy"
+                                 onerror="this.onerror=null;this.closest('.card-thumb-sm').classList.add('card-thumb-sm--placeholder');this.remove();" />
+                            <?php else: ?>
+                            <span class="card-thumb-sm__icon">&#x1F9F0;</span>
+                            <?php endif; ?>
+                        </div>
                         <div class="card-content">
                             <div class="card-meta">
                                 <span class="section-badge">Kit</span>

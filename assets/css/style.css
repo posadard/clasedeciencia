@@ -4444,6 +4444,27 @@ strong, b {
     flex: 1;
     padding: 10px 12px;
 }
+/* Kits row view: same layout, thumb hidden in cards mode */
+.kits-page .card-thumb-sm--kit { display: none; }
+.kits-page.view-rows .card-thumb-sm--kit { display: flex; }
+.kits-page.view-rows .article-card .card-link {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+}
+.kits-page.view-rows .card-thumb-sm--kit {
+    margin: 0;
+    width: 100px;
+    height: auto;
+    min-height: 90px;
+    flex: 0 0 100px;
+    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+}
+.kits-page.view-rows .card-content {
+    flex: 1;
+    padding: 10px 12px;
+}
 
 /* Warning chip on cards (catalog listings) */
 .card-warning {
