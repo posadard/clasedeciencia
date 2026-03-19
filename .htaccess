@@ -3,6 +3,9 @@
 # Enable Rewrite Engine
 RewriteEngine On
 
+# Redirect renamed admin page (config.php blocked by FilesMatch rule)
+RewriteRule ^admin/sitio/config\.php$ /admin/sitio/ajustes.php [R=301,L]
+
 # ============================================================
 # URLs AMIGABLES PARA CLASES
 # ============================================================
