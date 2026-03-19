@@ -166,7 +166,7 @@ include 'includes/header.php';
                             <h3><?= h($it['common_name']) ?></h3>
                             <?php $desc_text = cdc_format_safety_warning($it['description'] ?? ''); ?>
                             <?php if ($desc_text !== ''): ?>
-                            <p class="excerpt"><small><?= h($desc_text) ?></small></p>
+                            <p class="card-warning">⚠️ <?= h($desc_text) ?></p>
                             <?php endif; ?>
                         </div>
                     </a>
