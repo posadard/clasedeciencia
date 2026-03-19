@@ -28,6 +28,7 @@ if ($q !== '') { $filters['search'] = $q; }
 
 $items = get_materials($pdo, $filters, POSTS_PER_PAGE, $offset);
 $total = count_materials($pdo, $filters);
+$view = isset($_GET['view']) && in_array($_GET['view'], ['cards','rows'], true) ? $_GET['view'] : 'cards';
 
 $item_list_elements = [];
 if (!empty($items) && is_array($items)) {
@@ -75,7 +76,7 @@ $schema_json = cdc_encode_schema_json([
 
 include 'includes/header.php';
 ?>
-<div class="container library-page">
+<div class="container library-page componentes-page view-<?= $view ?>">
     <div class="breadcrumb">
         <a href="/">Inicio</a> / <strong>Componentes</strong>
     </div>
@@ -124,6 +125,25 @@ include 'includes/header.php';
                         (Página <?= get_current_page() ?> de <?= ceil($total / POSTS_PER_PAGE) ?>)
                     <?php endif; ?>
                 </p>
+                <div class="view-toggle" aria-label="Cambiar vista">
+                    <button type="button" class="btn btn-secondary vt-cards" title="Vista tarjetas" onclick="updateView('cards')" <?= $view==='cards'?'disabled':'' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Tarjetas
+                    </button>
+                    <button type="button" class="btn btn-secondary vt-rows" title="Vista filas" onclick="updateView('rows')" <?= $view==='rows'?'disabled':'' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        Filas
+                    </button>
+                </div>
             </div>
 
             <?php if (empty($items)): ?>
@@ -163,5 +183,11 @@ include 'includes/header.php';
 <script>
 console.log('🔍 [componentes] Filtros:', <?= json_encode($filters) ?>);
 console.log('✅ [componentes] Componentes cargados:', <?= count($items) ?>, 'de', <?= (int)$total ?>);
+
+function updateView(view) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
+    window.location.href = url.toString();
+}
 </script>
 <?php include 'includes/footer.php'; ?>

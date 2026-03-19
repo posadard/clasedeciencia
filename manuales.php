@@ -12,6 +12,7 @@ $canonical_url = SITE_URL . '/manuales.php';
 $tipo = isset($_GET['tipo']) ? trim($_GET['tipo']) : '';
 $ambito = isset($_GET['ambito']) ? trim($_GET['ambito']) : '';
 $idioma = isset($_GET['idioma']) ? trim($_GET['idioma']) : '';
+$view = isset($_GET['view']) && in_array($_GET['view'], ['cards','rows'], true) ? $_GET['view'] : 'cards';
 
 $items = [];
 try {
@@ -100,7 +101,7 @@ $schema_json = cdc_encode_schema_json([
 
 include 'includes/header.php';
 ?>
-<div class="container library-page">
+<div class="container library-page manuales-page view-<?= $view ?>">
   <div class="breadcrumb">
     <a href="/">Inicio</a> / <strong>Manuales</strong>
   </div>
@@ -149,6 +150,25 @@ include 'includes/header.php';
         <p class="results-count">
           Mostrando <?= count($items) ?> manuales
         </p>
+        <div class="view-toggle" aria-label="Cambiar vista">
+          <button type="button" class="btn btn-secondary vt-cards" title="Vista tarjetas" onclick="updateView('cards')" <?= $view==='cards'?'disabled':'' ?>>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+            </svg>
+            Tarjetas
+          </button>
+          <button type="button" class="btn btn-secondary vt-rows" title="Vista filas" onclick="updateView('rows')" <?= $view==='rows'?'disabled':'' ?>>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            Filas
+          </button>
+        </div>
       </div>
 
       <?php if (empty($items)): ?>
@@ -196,5 +216,11 @@ include 'includes/header.php';
 <script>
 console.log('🔍 [Manuales] Total:', <?= count($items) ?>);
 console.log('🔍 [Manuales] Filtros:', <?= json_encode(['tipo'=>$tipo, 'ambito'=>$ambito, 'idioma'=>$idioma]) ?>);
+
+function updateView(view) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
+    window.location.href = url.toString();
+}
 </script>
 <?php include 'includes/footer.php'; ?>

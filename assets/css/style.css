@@ -918,6 +918,12 @@ strong, b {
     .clases-page .text-trunc { display: none !important; }
     .clases-page .text-full { display: inline !important; }
     .clases-page .view-toggle { display: none; }
+    /* Mobile: force rows on kits, componentes, manuales pages */
+    .kits-page .articles-grid { grid-template-columns: 1fr !important; }
+    .componentes-page .articles-grid { grid-template-columns: 1fr !important; }
+    .manuales-page .articles-grid { grid-template-columns: 1fr !important; }
+    .kits-page .text-trunc { display: none !important; }
+    .kits-page .text-full { display: inline !important; }
 }
 
 /* View modes (desktop) for clases page */
@@ -926,6 +932,17 @@ strong, b {
 .clases-page.view-rows .text-full { display: inline; }
 .clases-page.view-rows .text-trunc { display: none; }
 .clases-page.view-rows .articles-grid { grid-template-columns: 1fr; }
+
+/* View modes (desktop) for kits page */
+.kits-page.view-cards .text-full { display: none; }
+.kits-page.view-cards .text-trunc { display: inline; }
+.kits-page.view-rows .text-full { display: inline; }
+.kits-page.view-rows .text-trunc { display: none; }
+.kits-page.view-rows .articles-grid { grid-template-columns: 1fr; }
+
+/* View modes (desktop) for componentes and manuales pages */
+.componentes-page.view-rows .articles-grid { grid-template-columns: 1fr; }
+.manuales-page.view-rows .articles-grid { grid-template-columns: 1fr; }
 
 /* === Compact tweaks for library/results === */
 .library-page .library-layout {

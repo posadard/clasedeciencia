@@ -136,6 +136,7 @@ $areas_in = $parse_multi('area');
 if (!empty($areas_in)) { $filters['areas'] = $areas_in; }
 elseif (isset($_GET['area']) && $_GET['area'] !== '') { $filters['area'] = trim((string)$_GET['area']); }
 $sort = isset($_GET['sort']) ? (string)$_GET['sort'] : 'recientes';
+$view = isset($_GET['view']) && in_array($_GET['view'], ['cards','rows'], true) ? $_GET['view'] : 'cards';
 $current_page = get_current_page();
 $offset = get_offset($current_page);
 
@@ -218,7 +219,7 @@ $schema_json = cdc_encode_schema_json([
 
 include 'includes/header.php';
 ?>
-<div class="container library-page">
+<div class="container library-page kits-page view-<?= $view ?>">
     <div class="breadcrumb">
         <a href="/">Inicio</a> / <strong>Kits</strong>
     </div>
@@ -287,6 +288,25 @@ include 'includes/header.php';
                         <option value="clases" <?= (isset($_GET['sort']) && $_GET['sort'] === 'clases') ? 'selected' : '' ?>>👩‍🏫 Más clases vinculadas</option>
                         <option value="componentes" <?= (isset($_GET['sort']) && $_GET['sort'] === 'componentes') ? 'selected' : '' ?>>🧪 Más componentes</option>
                     </select>
+                </div>
+                <div class="view-toggle" aria-label="Cambiar vista">
+                    <button type="button" class="btn btn-secondary vt-cards" title="Vista tarjetas" onclick="updateView('cards')" <?= $view==='cards'?'disabled':'' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Tarjetas
+                    </button>
+                    <button type="button" class="btn btn-secondary vt-rows" title="Vista filas" onclick="updateView('rows')" <?= $view==='rows'?'disabled':'' ?>>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false" style="margin-right:6px;">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                        Filas
+                    </button>
                 </div>
             </div>
 
@@ -366,6 +386,12 @@ if (<?= json_encode($filters['edad'] === null) ?>) { console.log('⚠️ [kits] 
 function updateSort(sortValue) {
     const url = new URL(window.location.href);
     url.searchParams.set('sort', sortValue);
+    window.location.href = url.toString();
+}
+
+function updateView(view) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', view);
     window.location.href = url.toString();
 }
 
