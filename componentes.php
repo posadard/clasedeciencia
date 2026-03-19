@@ -169,6 +169,7 @@ include 'includes/header.php';
                             <p class="card-warning">⚠️ <?= h($desc_text) ?></p>
                             <?php endif; ?>
                             <div class="card-stats">
+                                <span class="card-stats-label">Contenido relacionado:</span>
                                 <span title="Manuales">📘 <?= (int)($it['manuales_count'] ?? 0) ?> manual<?= (int)($it['manuales_count'] ?? 0) !== 1 ? 'es' : '' ?></span>
                                 <span title="Kits">🧰 <?= (int)($it['kits_count'] ?? 0) ?> kit<?= (int)($it['kits_count'] ?? 0) !== 1 ? 's' : '' ?></span>
                                 <span title="Clases">📚 <?= (int)($it['clases_count'] ?? 0) ?> clase<?= (int)($it['clases_count'] ?? 0) !== 1 ? 's' : '' ?></span>
