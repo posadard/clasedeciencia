@@ -15,22 +15,22 @@ $idioma = isset($_GET['idioma']) ? trim($_GET['idioma']) : '';
 
 $items = [];
 try {
-    $where = ["k.activo = 1"];
+    $where = ["(k.activo = 1 OR k.id IS NULL)"];
     $params = [];
     // Mostrar publicados y descontinuados
     $where[] = "m.status IN ('published','discontinued')";
     if ($tipo !== '') { $where[] = 'm.tipo_manual = ?'; $params[] = $tipo; }
     if ($ambito !== '' && in_array($ambito, ['kit','componente'])) { $where[] = 'm.ambito = ?'; $params[] = $ambito; }
     if ($idioma !== '') { $where[] = 'm.idioma = ?'; $params[] = $idioma; }
-      $sql = "SELECT m.id, m.slug, m.version, m.idioma, m.time_minutes, m.dificultad_ensamble, m.updated_at, m.published_at, m.status,
+    $sql = "SELECT m.id, m.slug, m.version, m.idioma, m.time_minutes, m.dificultad_ensamble, m.updated_at, m.published_at, m.status,
              m.tipo_manual, m.ambito, m.item_id,
              k.id AS kit_id, k.nombre AS kit_nombre, k.slug AS kit_slug,
              i.slug AS item_slug
            FROM kit_manuals m
-           JOIN kits k ON k.id = m.kit_id
+           LEFT JOIN kits k ON k.id = m.kit_id
            LEFT JOIN kit_items i ON i.id = m.item_id
-            WHERE " . implode(' AND ', $where) . "
-            ORDER BY k.nombre ASC, m.slug ASC, m.version DESC";
+           WHERE " . implode(' AND ', $where) . "
+           ORDER BY k.nombre ASC, m.slug ASC, m.version DESC";
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     $items = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
