@@ -156,20 +156,11 @@ include 'includes/header.php';
                 <?php foreach ($items as $it): ?>
                 <article class="article-card" data-href="/<?= h($it['slug']) ?>">
                     <a class="card-link" href="/<?= h($it['slug']) ?>">
-                        <?php if (!empty($it['foto_url'])): ?>
-                        <div class="card-thumb">
-                            <img src="<?= h($it['foto_url']) ?>" alt="<?= h($it['common_name']) ?>" loading="lazy"
-                                 onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\'card-thumb-placeholder\'>📦</span>';" />
-                        </div>
-                        <?php endif; ?>
                         <div class="card-content">
                             <div class="card-meta">
                                 <span class="section-badge">Componente</span>
                                 <?php if (!empty($it['category_name'])): ?>
                                 <span class="difficulty-badge" title="Categoría"><?= h($it['category_name']) ?></span>
-                                <?php endif; ?>
-                                <?php if (!empty($it['manuales_count'])): ?>
-                                <span class="badge" title="Manuales disponibles">📘 <?= (int)$it['manuales_count'] ?></span>
                                 <?php endif; ?>
                             </div>
                             <h3><?= h($it['common_name']) ?></h3>
@@ -177,6 +168,11 @@ include 'includes/header.php';
                             <?php if ($desc_text !== ''): ?>
                             <p class="card-warning">⚠️ <?= h($desc_text) ?></p>
                             <?php endif; ?>
+                            <div class="card-stats">
+                                <span title="Manuales">📘 <?= (int)($it['manuales_count'] ?? 0) ?> manual<?= (int)($it['manuales_count'] ?? 0) !== 1 ? 'es' : '' ?></span>
+                                <span title="Kits">🧰 <?= (int)($it['kits_count'] ?? 0) ?> kit<?= (int)($it['kits_count'] ?? 0) !== 1 ? 's' : '' ?></span>
+                                <span title="Clases">📚 <?= (int)($it['clases_count'] ?? 0) ?> clase<?= (int)($it['clases_count'] ?? 0) !== 1 ? 's' : '' ?></span>
+                            </div>
                         </div>
                     </a>
                     <span class="card-magnify" aria-hidden="true">🔎</span>

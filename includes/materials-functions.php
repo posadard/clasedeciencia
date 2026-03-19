@@ -50,13 +50,20 @@ function get_materials($pdo, $filters = [], $limit = null, $offset = 0) {
                 m.nombre_comun AS common_name,
                 NULL AS technical_name,
                 m.advertencias_seguridad AS description,
-                m.foto_url,
                 cm.nombre AS category_name,
                 cm.slug AS category_slug,
                 NULL AS category_icon,
                 (SELECT COUNT(*) FROM kit_manuals km
                  WHERE km.ambito = 'componente' AND km.item_id = m.id
-                 AND km.status IN ('published','discontinued')) AS manuales_count
+                 AND km.status IN ('published','discontinued')) AS manuales_count,
+                (SELECT COUNT(DISTINCT kc.kit_id) FROM kit_componentes kc
+                 JOIN kits k ON k.id = kc.kit_id AND k.activo = 1
+                 WHERE kc.item_id = m.id) AS kits_count,
+                (SELECT COUNT(DISTINCT ck.clase_id) FROM kit_componentes kc2
+                 JOIN kits k2 ON k2.id = kc2.kit_id AND k2.activo = 1
+                 JOIN clase_kits ck ON ck.kit_id = k2.id
+                 JOIN clases c ON c.id = ck.clase_id AND c.activo = 1
+                 WHERE kc2.item_id = m.id) AS clases_count
             FROM kit_items m
             " . implode(' ', $joins) . "
             WHERE " . implode(' AND ', $where) . "
