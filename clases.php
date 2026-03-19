@@ -42,22 +42,10 @@ if (isset($_GET['slug_dinamico']) && !empty($_GET['slug_dinamico'])) {
 // ================================================================
 
 // Helpers locales (similar a catalogo.php)
-function cdc_get_areas($pdo) {
-    $stmt = $pdo->query("SELECT id, nombre, slug FROM areas ORDER BY nombre");
-    return $stmt->fetchAll();
-}
 function cdc_get_competencias($pdo) {
     $stmt = $pdo->query("SELECT id, codigo, nombre FROM competencias ORDER BY id");
     return $stmt->fetchAll();
 }
-function cdc_get_ciclos($pdo, $activo_only = true) {
-    $sql = "SELECT numero, nombre, slug, grados_texto, edad_min, edad_max, activo, orden FROM ciclos ";
-    if ($activo_only) $sql .= "WHERE activo = 1 ";
-    $sql .= "ORDER BY orden ASC, numero ASC";
-    $stmt = $pdo->query($sql);
-    return $stmt->fetchAll();
-}
-
 // Limitar a N palabras y añadir "..."
 function cdc_word_limit($text, $max_words = 10) {
     $t = trim(strip_tags((string)$text));
