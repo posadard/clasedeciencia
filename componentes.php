@@ -164,8 +164,9 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </div>
                             <h3><?= h($it['common_name']) ?></h3>
-                            <?php if (!empty($it['description'])): ?>
-                            <p class="excerpt"><small><?= h($it['description']) ?></small></p>
+                            <?php $desc_text = cdc_format_safety_warning($it['description'] ?? ''); ?>
+                            <?php if ($desc_text !== ''): ?>
+                            <p class="excerpt"><small><?= h($desc_text) ?></small></p>
                             <?php endif; ?>
                         </div>
                     </a>
