@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 10, 2026 at 01:18 AM
+-- Generation Time: Mar 19, 2026 at 12:18 AM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -533,12 +533,12 @@ INSERT INTO `clase_kits` (`clase_id`, `kit_id`, `sort_order`, `es_principal`, `c
 (3, 3, 1, 1, '2025-12-20 21:53:17'),
 (4, 4, 1, 1, '2025-12-21 19:48:45'),
 (5, 5, 1, 1, '2025-12-20 21:53:17'),
-(6, 6, 1, 1, '2026-03-10 01:12:34'),
+(6, 6, 2, 0, '2026-03-10 02:48:17'),
 (7, 7, 1, 1, '2025-12-20 21:53:17'),
 (8, 8, 1, 1, '2025-12-20 21:53:17'),
 (9, 9, 1, 1, '2025-12-20 21:53:17'),
 (10, 10, 1, 1, '2025-12-20 21:53:17'),
-(11, 6, 1, 1, '2026-03-10 01:09:36'),
+(11, 6, 1, 1, '2026-03-10 02:48:17'),
 (11, 11, 1, 1, '2025-12-20 21:53:17'),
 (12, 12, 1, 1, '2025-12-20 21:53:17'),
 (13, 13, 1, 1, '2025-12-25 04:03:46'),
@@ -988,7 +988,7 @@ INSERT INTO `kits` (`id`, `clase_id`, `nombre`, `slug`, `codigo`, `version`, `re
 (3, 3, 'Kit: Circuito eléctrico básico', NULL, 'KIT-CIRCUITO_ELECTRICO_BASICO', '1.0', 'Kit para armar un circuito simple con batería, interruptor y LED.', '<h2>Descripción</h2><p>Ensamble un circuito básico y observe la transformación de energía eléctrica en luz.</p><h3>Incluye</h3><ul><li>Pilas y porta baterías</li><li>Cables, interruptor y LED</li></ul>', '/assets/images/kits/kit-3.jpg', 'https://www.youtube.com/embed/kit-3-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"No cortocircuites las baterías. Verifica polaridad del LED.\"}', 'Kit educativo: Kit: Circuito eléctrico básico', 'Circuito eléctrico básico con LED para iniciar en electricidad de forma segura.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39', NULL, NULL),
 (4, 4, 'Separación de mezclas', 'kit-separacion-de-mezclas', 'KIT-SEPARACION_DE_MEZCLAS', '1.0', 'Kit para practicar métodos físicos como filtración y decantación.', '<h2>Descripción</h2><p>Explora técnicas de separación con papel filtro, embudo y recipientes.</p><h3>Actividades</h3><ul><li>Filtración de mezclas</li><li>Observación de resultados</li></ul>', '/assets/images/kits/kit-4.jpg', 'https://www.youtube.com/embed/kit-4-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"Manejo cuidadoso del agua y utensilios. Mantén orden y limpieza.\"}', 'Kit educativo: Separación de mezclas', 'Separación de mezclas con filtros y embudos para actividades de laboratorio escolar.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39', NULL, NULL),
 (5, 5, 'Test de pH', NULL, 'KIT-TEST_DE_PH', '1.0', 'Kit con tiras indicadoras para identificar ácidos y bases.', '<h2>Descripción</h2><p>Mide el pH de sustancias cotidianas y registra resultados.</p><h3>Incluye</h3><ul><li>Tiras de pH</li><li>Accesorios básicos de medición</li></ul>', '/assets/images/kits/kit-5.jpg', 'https://www.youtube.com/embed/kit-5-instrucciones', '{\"edad_min\": 11, \"edad_max\": 13, \"notas\": \"No ingieras sustancias. Lava manos tras la práctica.\"}', 'Kit educativo: Test de pH', 'Pruebas de pH para explorar ácidos y bases con normas básicas de seguridad.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39', NULL, NULL),
-(6, 11, 'Radio de cristal', 'kit-radio-de-cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', '<h2>Descripci&oacute;n</h2>\r\n\r\n<p>Analiza la modulaci&oacute;n AM con un receptor pasivo de cristal.</p>\r\n\r\n<h3>Componentes</h3>\r\n\r\n<ul>\r\n	<li>Diodo de germanio</li>\r\n	<li>Auricular de alta impedancia</li>\r\n	<li>Alambre para bobina</li>\r\n</ul>\r\n', '/assets/images/uploads/kit/2026/03/kit-20260309-200932-0616c054e6e8.webp', 'https://www.youtube.com/embed/6HqgWcTnWTk?si=DcstazBj3Sg6hc24', '{\"edad_min\":12,\"edad_max\":18,\"notas\":\"No conectes el circuito a la red eléctrica. Usa antena y tierra de forma segura.\"}', 'Kit de Ciencia - Ciencias Ambientales: Radio de cristal', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', 1, '2025-12-20 04:46:28', '2026-03-10 01:09:36', 22, 'Fácil'),
+(6, 11, 'Radio de cristal', 'kit-radio-de-cristal', 'KIT-RADIO_DE_CRISTAL', '1.0', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', '<h2>Descripci&oacute;n</h2>\r\n\r\n<p>Analiza la modulaci&oacute;n AM con un receptor pasivo de cristal.</p>\r\n\r\n<h3>Componentes</h3>\r\n\r\n<ul>\r\n	<li>Diodo de germanio</li>\r\n	<li>Auricular de alta impedancia</li>\r\n	<li>Alambre para bobina</li>\r\n</ul>\r\n', '/assets/images/uploads/kit/2026/03/kit-20260309-214812-c0059bffc19c.webp', 'https://www.youtube.com/embed/6HqgWcTnWTk?si=DcstazBj3Sg6hc24', '{\"edad_min\":12,\"edad_max\":18,\"notas\":\"No conectes el circuito a la red eléctrica. Usa antena y tierra de forma segura.\"}', 'Kit de Ciencia - Ciencias Ambientales: Radio de cristal', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', 1, '2025-12-20 04:46:28', '2026-03-10 02:48:17', 22, 'Fácil'),
 (7, 7, 'Kit: Motor eléctrico simple', NULL, 'KIT-MOTOR_ELECTRICO_SIMPLE', '1.0', 'Kit para construir un motor sencillo y relacionar electricidad y magnetismo.', '<h2>Descripción</h2><p>Arma un rotor básico para observar movimiento por fuerza electromagnética.</p><h3>Aprendizajes</h3><ul><li>Interacción campo-corriente</li><li>Variables de velocidad</li></ul>', '/assets/images/kits/kit-7.jpg', 'https://www.youtube.com/embed/kit-7-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Evita sobrecalentamiento por corrientes prolongadas. Supervisión recomendada.\"}', 'Kit educativo: Kit: Motor eléctrico simple', 'Motor eléctrico simple para analizar fuerza electromagnética de forma segura.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39', NULL, NULL),
 (8, 8, 'Kit: Osmosis con vegetales', NULL, 'KIT-OSMOSIS_CON_VEGETALES', '1.0', 'Kit para observar transporte celular con soluciones salinas en vegetales.', '<h2>Descripción</h2><p>Explora cambios por osmosis usando muestras vegetales y sal.</p><h3>Registro</h3><p>Compara longitudes/masas antes y después.</p>', '/assets/images/kits/kit-8.jpg', 'https://www.youtube.com/embed/kit-8-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Higiene y manejo adecuado de alimentos. Limpia la mesa al finalizar.\"}', 'Kit educativo: Kit: Osmosis con vegetales', 'Experimento de osmosis con vegetales para evidenciar transporte de agua.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39', NULL, NULL),
 (9, 9, 'Kit: Carro trampa de ratón', NULL, 'KIT-CARRO_TRAMPA_DE_RATON', '1.0', 'Kit para construir un carro impulsado por energía potencial de una trampa.', '<h2>Descripción</h2><p>Convierte energía potencial en movimiento y analiza fricción.</p><h3>Sugerencias</h3><p>Prueba distintas superficies y mide distancias.</p>', '/assets/images/kits/kit-9.jpg', 'https://www.youtube.com/embed/kit-9-instrucciones', '{\"edad_min\": 13, \"edad_max\": 15, \"notas\": \"Riesgo de pellizco. Manipula la trampa con cuidado y protección.\"}', 'Kit educativo: Kit: Carro trampa de ratón', 'Carro propulsado por trampa para estudiar energía y fricción en movimiento.', 1, '2025-12-20 04:46:28', '2025-12-21 23:19:39', NULL, NULL),
@@ -1158,6 +1158,8 @@ CREATE TABLE `kit_manuals` (
   `seguridad_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`seguridad_json`)),
   `html` mediumtext DEFAULT NULL,
   `render_mode` enum('legacy','fullhtml') NOT NULL DEFAULT 'legacy',
+  `schema_type_preferido` enum('auto','HowTo','TechArticle') NOT NULL DEFAULT 'auto',
+  `schema_overrides_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`schema_overrides_json`)),
   `published_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -1167,8 +1169,8 @@ CREATE TABLE `kit_manuals` (
 -- Dumping data for table `kit_manuals`
 --
 
-INSERT INTO `kit_manuals` (`id`, `kit_id`, `slug`, `version`, `autor`, `status`, `tipo_manual`, `ambito`, `item_id`, `idioma`, `resumen`, `time_minutes`, `dificultad_ensamble`, `pasos_json`, `herramientas_json`, `seguridad_json`, `html`, `render_mode`, `published_at`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'manual-armado-componente-diode-germanio-23-12-25-v1-0', '1.0', 'Clase de Ciencia', 'published', 'armado', 'componente', 16, 'es-CO', NULL, 45, 'media', '[{\"orden\":1,\"titulo\":\"Preparar antena y tierra\",\"html\":\"<p>Desenrolla 10–20 m de alambre para la antena y conecta una buena tierra (por ejemplo, tubería metálica).<\\/p>\"},{\"orden\":2,\"titulo\":\"Enrollar la bobina\",\"html\":\"<p>Haz ~80–120 espiras de alambre esmaltado sobre un tubo; deja derivaciones para sintonía.<\\/p>\"},{\"orden\":3,\"titulo\":\"Conectar LC y diodo\",\"html\":\"<p>Conecta la bobina al capacitor variable (si aplica) y el diodo de germanio como detector AM.<\\/p>\"},{\"orden\":4,\"titulo\":\"Auricular y prueba\",\"html\":\"<p>Conecta el auricular de alta impedancia, ajusta la sintonía y busca estaciones AM.<\\/p>\"}]', '[{\"nombre\":\"Alicates de corte\",\"cantidad\":1,\"nota\":\"para alambre\",\"seguridad\":\"peligroso\"},{\"nombre\":\"Cúter\",\"cantidad\":1,\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Cinta aislante\",\"cantidad\":\"1 rollo\",\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Regla\",\"cantidad\":1,\"nota\":\"medir longitudes de antena\",\"seguridad\":\"\"},{\"nombre\":\"Lija fina\",\"cantidad\":1,\"nota\":\"retirar esmalte de alambre\",\"seguridad\":\"\"}]', '{\"edad\":{\"min\":20,\"max\":30},\"notas\":[{\"nota\":\"No conectes el circuito a la red eléctrica.\",\"categoria\":\"eléctrico\"},{\"nota\":\"Usa antena y tierra con supervisión docente.\",\"categoria\":\"supervisión adulta\"},{\"nota\":\"test\",\"categoria\":\"protección personal\"}]}', '', 'legacy', '2025-12-23 22:50:18', '2025-12-24 01:02:33', '2025-12-25 05:32:52');
+INSERT INTO `kit_manuals` (`id`, `kit_id`, `slug`, `version`, `autor`, `status`, `tipo_manual`, `ambito`, `item_id`, `idioma`, `resumen`, `time_minutes`, `dificultad_ensamble`, `pasos_json`, `herramientas_json`, `seguridad_json`, `html`, `render_mode`, `schema_type_preferido`, `schema_overrides_json`, `published_at`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'manual-armado-componente-diode-germanio-09-03-26-v1-0', '1.0', 'Clase de Ciencia', 'published', 'armado', 'componente', 16, 'es-CO', NULL, 45, 'media', '[{\"orden\":1,\"titulo\":\"Preparar antena y tierra\",\"html\":\"<p>Desenrolla 10–20 m de alambre para la antena y conecta una buena tierra (por ejemplo, tubería metálica).<\\/p>\"},{\"orden\":2,\"titulo\":\"Enrollar la bobina\",\"html\":\"<p>Haz ~80–120 espiras de alambre esmaltado sobre un tubo; deja derivaciones para sintonía.<\\/p>\"},{\"orden\":3,\"titulo\":\"Conectar LC y diodo\",\"html\":\"<p>Conecta la bobina al capacitor variable (si aplica) y el diodo de germanio como detector AM.<\\/p>\"},{\"orden\":4,\"titulo\":\"Auricular y prueba\",\"html\":\"<p>Conecta el auricular de alta impedancia, ajusta la sintonía y busca estaciones AM.<\\/p>\"}]', '[{\"nombre\":\"Alicates de corte\",\"cantidad\":1,\"nota\":\"para alambre\",\"seguridad\":\"peligroso\"},{\"nombre\":\"Cúter\",\"cantidad\":1,\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Cinta aislante\",\"cantidad\":\"1 rollo\",\"nota\":\"\",\"seguridad\":\"\"},{\"nombre\":\"Regla\",\"cantidad\":1,\"nota\":\"medir longitudes de antena\",\"seguridad\":\"\"},{\"nombre\":\"Lija fina\",\"cantidad\":1,\"nota\":\"retirar esmalte de alambre\",\"seguridad\":\"\"}]', '{\"edad\":{\"min\":20,\"max\":30},\"notas\":[{\"nota\":\"No conectes el circuito a la red eléctrica.\",\"categoria\":\"eléctrico\"},{\"nota\":\"Usa antena y tierra con supervisión docente.\",\"categoria\":\"supervisión adulta\"},{\"nota\":\"test\",\"categoria\":\"protección personal\"}]}', '', 'legacy', 'auto', NULL, '2026-03-09 20:43:03', '2025-12-24 01:02:33', '2026-03-10 01:43:14');
 
 --
 -- Triggers `kit_manuals`
@@ -1239,12 +1241,27 @@ INSERT INTO `prompts_clase` (`id`, `clase_id`, `prompt_contexto`, `conocimientos
 
 CREATE TABLE `recursos_multimedia` (
   `id` int(11) NOT NULL,
-  `clase_id` int(11) NOT NULL,
+  `clase_id` int(11) DEFAULT NULL,
+  `kit_id` int(11) DEFAULT NULL,
+  `item_id` int(11) DEFAULT NULL,
+  `manual_id` int(11) DEFAULT NULL,
   `tipo` enum('imagen','video','pdf','link') NOT NULL,
   `url` varchar(255) NOT NULL,
   `titulo` varchar(180) DEFAULT NULL,
   `descripcion` varchar(255) DEFAULT NULL,
   `sort_order` int(11) NOT NULL DEFAULT 0,
+  `schema_role` enum('primary','gallery','tutorial','download','external') NOT NULL DEFAULT 'gallery',
+  `mime_type` varchar(100) DEFAULT NULL,
+  `width` int(11) DEFAULT NULL,
+  `height` int(11) DEFAULT NULL,
+  `duration_iso8601` varchar(32) DEFAULT NULL COMMENT 'Ej: PT2M10S',
+  `upload_date` datetime DEFAULT NULL,
+  `thumbnail_url` varchar(255) DEFAULT NULL,
+  `embed_url` varchar(255) DEFAULT NULL,
+  `in_language` varchar(10) DEFAULT NULL,
+  `license_url` varchar(255) DEFAULT NULL,
+  `creator_name` varchar(160) DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
   `created_at` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1252,22 +1269,23 @@ CREATE TABLE `recursos_multimedia` (
 -- Dumping data for table `recursos_multimedia`
 --
 
-INSERT INTO `recursos_multimedia` (`id`, `clase_id`, `tipo`, `url`, `titulo`, `descripcion`, `sort_order`, `created_at`) VALUES
-(1, 15, 'link', 'https://clasedeciencia.com/clase/analisis-quimico-del-entorno', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(2, 11, 'link', 'https://clasedeciencia.com/clase/carro-solar', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(3, 9, 'link', 'https://clasedeciencia.com/clase/carro-trampa-de-raton', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(4, 3, 'link', 'https://clasedeciencia.com/clase/circuito-electrico-basico', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(5, 13, 'link', 'https://clasedeciencia.com/clase/electroiman', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(6, 10, 'link', 'https://clasedeciencia.com/clase/generador-manual-dinamo', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(7, 1, 'link', 'https://clasedeciencia.com/clase/microscopio-sencillo', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(8, 7, 'link', 'https://clasedeciencia.com/clase/motor-electrico-simple', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(9, 8, 'link', 'https://clasedeciencia.com/clase/osmosis-con-vegetales', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(10, 2, 'link', 'https://clasedeciencia.com/clase/pulmon-mecanico', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(11, 6, 'link', 'https://clasedeciencia.com/clase/radio-de-cristal', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(12, 4, 'link', 'https://clasedeciencia.com/clase/separacion-de-mezclas', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(13, 5, 'link', 'https://clasedeciencia.com/clase/test-de-ph', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(14, 14, 'link', 'https://clasedeciencia.com/clase/tratamiento-de-agua', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28'),
-(15, 12, 'link', 'https://clasedeciencia.com/clase/turbina-eolica-de-mesa', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, '2025-12-20 04:46:28');
+INSERT INTO `recursos_multimedia` (`id`, `clase_id`, `kit_id`, `item_id`, `manual_id`, `tipo`, `url`, `titulo`, `descripcion`, `sort_order`, `schema_role`, `mime_type`, `width`, `height`, `duration_iso8601`, `upload_date`, `thumbnail_url`, `embed_url`, `in_language`, `license_url`, `creator_name`, `metadata`, `created_at`) VALUES
+(1, 15, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/analisis-quimico-del-entorno', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(2, 11, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/carro-solar', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(3, 9, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/carro-trampa-de-raton', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(4, 3, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/circuito-electrico-basico', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(5, 13, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/electroiman', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(6, 10, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/generador-manual-dinamo', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(7, 1, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/microscopio-sencillo', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(8, 7, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/motor-electrico-simple', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(9, 8, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/osmosis-con-vegetales', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(10, 2, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/pulmon-mecanico', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(11, 6, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/radio-de-cristal', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(12, 4, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/separacion-de-mezclas', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(13, 5, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/test-de-ph', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(14, 14, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/tratamiento-de-agua', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(15, 12, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/turbina-eolica-de-mesa', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
+(16, NULL, 6, NULL, NULL, 'imagen', '/assets/images/uploads/kit/2026/03/kit-20260309-214812-c0059bffc19c.webp', 'Radio de cristal', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', 0, 'primary', 'image/webp', 800, 800, NULL, '2026-03-09 21:48:12', NULL, NULL, 'es-CO', NULL, 'Clase de Ciencia', NULL, '2026-03-10 02:48:17');
 
 -- --------------------------------------------------------
 
@@ -1597,7 +1615,15 @@ ALTER TABLE `prompts_clase`
 ALTER TABLE `recursos_multimedia`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_rm_clase` (`clase_id`),
-  ADD KEY `idx_rm_order` (`clase_id`,`sort_order`);
+  ADD KEY `idx_rm_order` (`clase_id`,`sort_order`),
+  ADD KEY `idx_rm_kit` (`kit_id`),
+  ADD KEY `idx_rm_item` (`item_id`),
+  ADD KEY `idx_rm_manual` (`manual_id`),
+  ADD KEY `idx_rm_tipo_role` (`tipo`,`schema_role`),
+  ADD KEY `idx_rm_clase_order` (`clase_id`,`sort_order`),
+  ADD KEY `idx_rm_kit_order` (`kit_id`,`sort_order`),
+  ADD KEY `idx_rm_item_order` (`item_id`,`sort_order`),
+  ADD KEY `idx_rm_manual_order` (`manual_id`,`sort_order`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -1739,7 +1765,7 @@ ALTER TABLE `prompts_clase`
 -- AUTO_INCREMENT for table `recursos_multimedia`
 --
 ALTER TABLE `recursos_multimedia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 -- --------------------------------------------------------
 
@@ -1884,7 +1910,10 @@ ALTER TABLE `kit_manuals`
 -- Constraints for table `recursos_multimedia`
 --
 ALTER TABLE `recursos_multimedia`
-  ADD CONSTRAINT `fk_rm_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `fk_rm_clase` FOREIGN KEY (`clase_id`) REFERENCES `clases` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_rm_item` FOREIGN KEY (`item_id`) REFERENCES `kit_items` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_rm_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_rm_manual` FOREIGN KEY (`manual_id`) REFERENCES `kit_manuals` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

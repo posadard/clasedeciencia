@@ -479,3 +479,79 @@ function cdc_get_kit_manual_by_slug($pdo, $kit_id, $manual_slug, $published_only
         return false;
     }
 }
+
+// ============================================================
+// CMS: Páginas estáticas, Footer y Configuración del sitio
+// ============================================================
+
+/**
+ * Obtiene una página estática por slug.
+ * Retorna el registro o false si no existe / está inactiva.
+ */
+function cdc_get_pagina_estatica(PDO $pdo, string $slug)
+{
+    try {
+        $stmt = $pdo->prepare(
+            'SELECT id, slug, titulo, meta_description, contenido_html, updated_at
+             FROM paginas_estaticas
+             WHERE slug = ? AND activo = 1
+             LIMIT 1'
+        );
+        $stmt->execute([$slug]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log('cdc_get_pagina_estatica error [' . $slug . ']: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Carga los grupos del footer con sus enlaces activos.
+ * Retorna: array indexado por grupo_id con 'titulo' y 'enlaces'[].
+ */
+function cdc_get_footer_data(PDO $pdo): array
+{
+    try {
+        $stmt = $pdo->query(
+            'SELECT g.id AS grupo_id, g.titulo AS grupo_titulo,
+                    e.id AS enlace_id, e.etiqueta, e.url, e.externo
+             FROM footer_grupos g
+             JOIN footer_enlaces e ON e.grupo_id = g.id
+             WHERE g.activo = 1 AND e.activo = 1
+             ORDER BY g.orden ASC, e.orden ASC'
+        );
+        $grupos = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $gid = $row['grupo_id'];
+            if (!isset($grupos[$gid])) {
+                $grupos[$gid] = ['titulo' => $row['grupo_titulo'], 'enlaces' => []];
+            }
+            $grupos[$gid]['enlaces'][] = [
+                'etiqueta' => $row['etiqueta'],
+                'url'      => $row['url'],
+                'externo'  => (bool)$row['externo'],
+            ];
+        }
+        return $grupos;
+    } catch (PDOException $e) {
+        error_log('cdc_get_footer_data error: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Obtiene un valor de sitio_config por clave.
+ * Si no existe, retorna $default.
+ */
+function cdc_get_sitio_config(PDO $pdo, string $clave, string $default = ''): string
+{
+    try {
+        $stmt = $pdo->prepare('SELECT valor FROM sitio_config WHERE clave = ? LIMIT 1');
+        $stmt->execute([$clave]);
+        $val = $stmt->fetchColumn();
+        return ($val !== false && $val !== null) ? (string)$val : $default;
+    } catch (PDOException $e) {
+        error_log('cdc_get_sitio_config error [' . $clave . ']: ' . $e->getMessage());
+        return $default;
+    }
+}

@@ -1,43 +1,46 @@
     </main>
-    
+<?php
+// ── Footer dinámico: carga grupos y enlaces desde BD ──────────────────────────
+$_footer_grupos = [];
+$_footer_texto_sobre = 'Plataforma de formación científica para estudiantes de educación básica y media, con guías interactivas, proyectos prácticos y orientación personalizada.';
+try {
+    // $pdo está disponible porque config.php fue incluido en cada página pública
+    $_footer_grupos = cdc_get_footer_data($pdo);
+    $_footer_texto_sobre = cdc_get_sitio_config(
+        $pdo,
+        'footer_texto_sobre',
+        $_footer_texto_sobre
+    );
+} catch (Throwable $_fe) {
+    error_log('footer.php DB error: ' . $_fe->getMessage());
+    // Fallback: footer sin columnas dinámicas — no genera error visible al usuario
+}
+?>
     <footer class="site-footer">
         <div class="container">
             <div class="footer-content">
+                <!-- Columna 1: Acerca de (texto desde sitio_config) -->
                 <div class="footer-section">
                     <h3>Acerca de <?= SITE_NAME ?></h3>
-                    <p>Plataforma de formación científica para estudiantes de educación básica y media, con guías interactivas, proyectos prácticos y orientación personalizada.</p>
+                    <p><?= h($_footer_texto_sobre) ?></p>
                 </div>
-                
+
+                <!-- Columnas dinámicas desde footer_grupos + footer_enlaces -->
+                <?php foreach ($_footer_grupos as $_fgrupo): ?>
                 <div class="footer-section">
-                    <h3>Enlaces Rápidos</h3>
+                    <h3><?= h($_fgrupo['titulo']) ?></h3>
                     <ul>
-                        <li><a href="/">Inicio</a></li>
-                        <li><a href="/clases">Clases</a></li>
-                        <li><a href="/kits">Kits</a></li>
-                        <li><a href="/componentes">Componentes</a></li>
-                        <li><a href="/manuales.php">Manuales</a></li>
-                        <li><a href="/contact.php">Contacto</a></li>
+                        <?php foreach ($_fgrupo['enlaces'] as $_fenlace): ?>
+                        <li>
+                            <a href="<?= h($_fenlace['url']) ?>"
+                               <?= $_fenlace['externo'] ? 'target="_blank" rel="noopener"' : '' ?>>
+                                <?= h($_fenlace['etiqueta']) ?>
+                            </a>
+                        </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
-                
-                <div class="footer-section">
-                    <h3>Información</h3>
-                    <ul>
-                        <li><a href="/sobre-nosotros.php">Sobre Nosotros</a></li>
-                        <li><a href="/terms.php">Términos de Uso</a></li>
-                        <li><a href="/privacy.php">Política de Privacidad</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>Páginas de Interés</h3>
-                    <ul>
-                        <li><a href="https://www.unesco.org/es/education" target="_blank" rel="noopener">UNESCO - Educación</a></li>
-                        <li><a href="https://www.mineducacion.gov.co/" target="_blank" rel="noopener">Ministerio de Educación (Colombia)</a></li>
-                        <li><a href="https://www.ibe.unesco.org/" target="_blank" rel="noopener">IBE-UNESCO</a></li>
-                        <li><a href="https://www.oas.org/es/sedi/dde/" target="_blank" rel="noopener">OEA - Educación</a></li>
-                    </ul>
-                </div>
+                <?php endforeach; ?>
             </div>
             
             <div class="footer-bottom">
