@@ -24,9 +24,6 @@ define('UTM_MEDIUM', 'referral');
 // Contact Email
 define('CONTACT_EMAIL', 'soporte@clasedeciencia.com');
 
-// TinyMCE API Key — obtener gratis en https://www.tiny.cloud/auth/signup/
-// Dejar 'no-api-key' para modo sin clave (funciona con advertencia en consola).
-define('TINYMCE_API_KEY', 'no-api-key');
 
 // Pagination
 define('POSTS_PER_PAGE', 12);

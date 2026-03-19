@@ -30,7 +30,7 @@ $msg_type = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo           = trim($_POST['titulo'] ?? '');
     $meta_description = trim($_POST['meta_description'] ?? '');
-    $contenido_html   = $_POST['contenido_html'] ?? '';   // HTML de TinyMCE — confiable Admin
+    $contenido_html   = $_POST['contenido_html'] ?? '';   // HTML de confianza editado por Admin (CKEditor)
     $activo           = isset($_POST['activo']) ? 1 : 0;
     $updated_by       = $_SESSION['admin_username'] ?? 'admin';
 
@@ -103,7 +103,7 @@ include '../header.php';
 
         <div class="form-group" style="margin-top:1rem;">
             <label for="contenido_html">Contenido</label>
-            <textarea id="contenido_html" name="contenido_html"><?= h($pagina['contenido_html'] ?? '') ?></textarea>
+            <textarea id="contenido_html" name="contenido_html" rows="12"><?= htmlspecialchars($pagina['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
         </div>
 
         <div class="form-group" style="margin-top:1rem;display:flex;align-items:center;gap:0.5rem;">
@@ -126,27 +126,36 @@ include '../header.php';
     </form>
 </div>
 
-<!-- TinyMCE -->
-<script src="https://cdn.tiny.cloud/1/<?= TINYMCE_API_KEY ?>/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- CKEditor 4 (mismo que clases/edit.php y kits/edit.php) -->
+<script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
 <script>
-tinymce.init({
-    selector: '#contenido_html',
-    language: 'es',
-    height: 500,
-    menubar: false,
-    plugins: 'link lists',
-    toolbar: 'bold italic underline | link | bullist numlist | h2 h3 | removeformat',
-    content_style: 'body { font-family: Inter, sans-serif; font-size: 15px; line-height: 1.6; max-width: 800px; margin: 16px auto; }',
-    setup: function(editor) {
-        editor.on('init', function() {
-            console.log('✅ [TinyMCE] Editor inicializado para página: "<?= h($slug) ?>"');
-        });
-        // Sincronizar con el textarea antes del submit
-        editor.on('change', function() {
-            editor.save();
-        });
+(function initCKEPaginas() {
+    try {
+        if (window.CKEDITOR) {
+            CKEDITOR.replace('contenido_html', {
+                height: 500,
+                removePlugins: 'elementspath',
+                resize_enabled: true,
+                contentsCss: ['/assets/css/style.css', '/assets/css/article-content.css'],
+                bodyClass: 'article-body'
+            });
+            console.log('✅ [PaginasEdit] CKEditor 4 cargado para página: "<?= h($slug) ?>"');
+        } else {
+            console.log('⚠️ [PaginasEdit] CKEditor no disponible, usando textarea simple');
+        }
+    } catch(e) {
+        console.log('❌ [PaginasEdit] Error iniciando CKEditor:', e && e.message);
     }
-});
+})();
+
+// Ocultar avisos de versión de CKEditor
+(function hideCkeWarnings(){
+    try {
+        const style = document.createElement('style');
+        style.textContent = '.cke_notification.cke_notification_warning,.cke_upgrade_notice { display:none !important; }';
+        document.head.appendChild(style);
+    } catch(e) {}
+})();
 
 // Contador de caracteres meta_description
 document.getElementById('meta_description').addEventListener('input', function() {
