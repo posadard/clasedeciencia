@@ -100,6 +100,15 @@ body {
     background-color: var(--color-bg);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Sticky footer: el footer siempre queda al final del viewport */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* El main crece para ocupar el espacio disponible → footer pegado al fondo */
+.site-main {
+    flex: 1;
 }
 
 /* Vintage subtle paper texture (light, non-intrusive) */
