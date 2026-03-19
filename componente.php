@@ -262,7 +262,7 @@ include 'includes/header.php';
                 <div class="summary-left">
                     <?php if (!empty($material['foto_url'])): ?>
                         <img src="<?= h($material['foto_url']) ?>" alt="<?= h($material['common_name']) ?>" class="summary-image"
-                                 onerror="this.onerror=null; console.log('❌ [Componente] Imagen falló'); var p=document.createElement('div'); p.className='summary-placeholder error'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
+                                 onerror="this.onerror=null; console.log('⚠️ [Componente] Imagen no disponible'); var p=document.createElement('div'); p.className='summary-placeholder'; var s=document.createElement('span'); s.className='placeholder-icon'; s.textContent='📦'; p.appendChild(s); this.replaceWith(p);" />
                     <?php else: ?>
                         <div class="summary-placeholder">
                             <span class="placeholder-icon">📦</span>
