@@ -325,7 +325,7 @@ include 'includes/header.php';
                             <img src="<?= h($k['imagen_portada']) ?>" alt="<?= h($k['nombre']) ?>" loading="lazy"
                                  onerror="this.onerror=null;this.closest('.card-thumb-sm').classList.add('card-thumb-sm--placeholder');this.remove();" />
                             <?php else: ?>
-                            <span class="card-thumb-sm__icon">&#x1F9F0;</span>
+                            <span class="card-thumb-sm__icon">&#x1F4E6;</span>
                             <?php endif; ?>
                         </div>
                         <div class="card-content">
