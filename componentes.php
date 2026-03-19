@@ -176,10 +176,10 @@ include 'includes/header.php';
                             <?php if ($desc_text !== ''): ?>
                             <p class="card-warning">⚠️ <?= h($desc_text) ?></p>
                             <?php endif; ?>
-                            <div class="card-stats">
-                                <span title="Manuales">📘 <?= (int)($it['manuales_count'] ?? 0) ?> manual<?= (int)($it['manuales_count'] ?? 0) !== 1 ? 'es' : '' ?></span>
-                                <span title="Kits">🧰 <?= (int)($it['kits_count'] ?? 0) ?> kit<?= (int)($it['kits_count'] ?? 0) !== 1 ? 's' : '' ?></span>
-                                <span title="Clases">📚 <?= (int)($it['clases_count'] ?? 0) ?> clase<?= (int)($it['clases_count'] ?? 0) !== 1 ? 's' : '' ?></span>
+                            <div class="card-footer">
+                                <span class="age"><?= (int)($it['manuales_count'] ?? 0) ?> manual<?= (int)($it['manuales_count'] ?? 0) !== 1 ? 'es' : '' ?></span>
+                                <span class="area"><?= (int)($it['kits_count'] ?? 0) ?> kit<?= (int)($it['kits_count'] ?? 0) !== 1 ? 's' : '' ?></span>
+                                <span class="area"><?= (int)($it['clases_count'] ?? 0) ?> clase<?= (int)($it['clases_count'] ?? 0) !== 1 ? 's' : '' ?></span>
                             </div>
                         </div>
                     </a>

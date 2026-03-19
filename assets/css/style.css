@@ -4398,24 +4398,6 @@ strong, b {
     order: 1;
 }
 
-/* Thumbnail on component cards */
-/* Stats row on component cards */
-.card-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 8px;
-}
-.card-stats span {
-    font-size: 0.78rem;
-    color: var(--color-text-muted);
-    background: var(--color-bg-alt);
-    border: 1px solid var(--color-border-light);
-    border-radius: 999px;
-    padding: 2px 8px;
-    white-space: nowrap;
-}
-
 /* Small thumbnail on component cards */
 .card-thumb-sm {
     width: 100%;
