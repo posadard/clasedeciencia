@@ -4410,6 +4410,7 @@ strong, b {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 .card-thumb-sm img {
     width: 100%;
@@ -4424,22 +4425,24 @@ strong, b {
     font-size: 3rem;
     opacity: 0.35;
 }
-/* Row view: thumbnail as side strip */
+/* Row view: card-link becomes two columns */
+.componentes-page.view-rows .article-card .card-link {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+}
 .componentes-page.view-rows .card-thumb-sm {
     margin: 0;
-    width: 80px;
-    height: 80px;
-    flex: 0 0 80px;
-    border-radius: var(--border-radius-sm);
-    align-self: center;
-}
-.componentes-page.view-rows .article-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+    width: 100px;
+    height: auto;
+    min-height: 90px;
+    flex: 0 0 100px;
+    border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
 }
 .componentes-page.view-rows .card-content {
     flex: 1;
+    padding: 10px 12px;
 }
 
 /* Warning chip on cards (catalog listings) */
