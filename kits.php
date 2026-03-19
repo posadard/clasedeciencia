@@ -321,11 +321,10 @@ include 'includes/header.php';
                 <article class="article-card" data-href="/<?= h($k['slug']) ?>">
                     <a class="card-link" href="/<?= h($k['slug']) ?>">
                         <div class="card-thumb-sm card-thumb-sm--kit">
+                            <span class="card-thumb-sm__icon">&#x1F9F0;</span>
                             <?php if (!empty($k['imagen_portada'])): ?>
                             <img src="<?= h($k['imagen_portada']) ?>" alt="<?= h($k['nombre']) ?>" loading="lazy"
-                                 onerror="this.onerror=null;this.closest('.card-thumb-sm').classList.add('card-thumb-sm--placeholder');this.remove();" />
-                            <?php else: ?>
-                            <span class="card-thumb-sm__icon">&#x1F4E6;</span>
+                                 onerror="this.onerror=null;console.log('\u274c [Kits] Thumbnail fall\u00f3 para: <?= h(addslashes($k['nombre'])) ?>');this.remove();" />
                             <?php endif; ?>
                         </div>
                         <div class="card-content">
