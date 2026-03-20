@@ -922,8 +922,32 @@ strong, b {
     .kits-page .articles-grid { grid-template-columns: 1fr !important; }
     .componentes-page .articles-grid { grid-template-columns: 1fr !important; }
     .manuales-page .articles-grid { grid-template-columns: 1fr !important; }
+    /* Hide view toggles on mobile — single column is always used */
+    .kits-page .view-toggle { display: none; }
+    .componentes-page .view-toggle { display: none; }
+    .manuales-page .view-toggle { display: none; }
+    /* Full text on mobile for kits and componentes */
     .kits-page .text-trunc { display: none !important; }
     .kits-page .text-full { display: inline !important; }
+    .componentes-page .text-trunc { display: none !important; }
+    .componentes-page .text-full { display: inline !important; }
+    /* Row view: on mobile revert thumb to top-bleed block (undo the flex-row layout) */
+    .componentes-page.view-rows .article-card .card-link,
+    .kits-page.view-rows .article-card .card-link {
+        flex-direction: column;
+    }
+    .componentes-page.view-rows .card-thumb-sm,
+    .kits-page.view-rows .card-thumb-sm--kit {
+        width: calc(100% + 24px);
+        margin: -12px -12px 10px;
+        height: 90px;
+        flex: unset;
+        border-radius: var(--border-radius-sm) var(--border-radius-sm) 0 0;
+    }
+    /* Kit row view: show thumb (reactivate, hidden in card mode) */
+    .kits-page.view-rows .card-thumb-sm--kit { display: flex; }
+    /* Reduce card-thumb-sm height in card view on mobile */
+    .card-thumb-sm { height: 90px; }
 }
 
 /* View modes (desktop) for clases page */
