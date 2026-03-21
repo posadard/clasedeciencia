@@ -329,10 +329,10 @@
     var log = document.createElement('div');
     log.className = 'ia-chat-log';
     log.innerHTML =
-      '<div class="ia-chat-empty">' +
-        '<span class="ia-chat-empty-icon">🔬</span>' +
-        '<div class="ia-chat-empty-title">¡Hola! Soy tu asistente científico</div>' +
-        '<div class="ia-chat-empty-hint">Puedes seguir trabajando con el experimento<br>y preguntarme lo que necesites.</div>' +
+      '<div class="ia-chat-empty" id="ia-empty-state">' +
+        '<span class="ia-chat-empty-icon" id="ia-empty-icon">🔬</span>' +
+        '<div class="ia-chat-empty-title" id="ia-empty-title">¡Hola! Soy CiencIA</div>' +
+        '<div class="ia-chat-empty-hint" id="ia-empty-hint"></div>' +
       '</div>';
 
     // Footer / input
@@ -393,6 +393,18 @@
     return t;
   }
 
+  var BIENVENIDA = {
+    'clase':       { icono: '🔬', titulo: '¡Hola! Soy CiencIA',       hint: 'Puedes seguir leyendo el experimento<br>y preguntarme lo que necesites.' },
+    'kit':         { icono: '🧰', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre los componentes,<br>usos o instrucciones de este kit.' },
+    'componente':  { icono: '⚗️', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame cómo usar este componente,<br>sus propiedades o medidas de seguridad.' },
+    'manual':      { icono: '📖', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre los pasos de este manual<br>o cualquier duda que tengas.' },
+    'inicio':      { icono: '🚀', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre clases, kits,<br>materiales o experimentos científicos.' },
+    'catalogo':    { icono: '📚', titulo: '¡Hola! Soy CiencIA',       hint: 'Cuéntame qué tema te interesa<br>y te ayudo a encontrar la clase ideal.' },
+    'kits':        { icono: '🧰', titulo: '¡Hola! Soy CiencIA',       hint: 'Cuéntame qué necesitas y te oriento<br>hacia el kit más adecuado.' },
+    'componentes': { icono: '⚗️', titulo: '¡Hola! Soy CiencIA',      hint: 'Pregúntame sobre materiales,<br>usos, cuidados o alternativas.' },
+    'manuales':    { icono: '📖', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame qué tipo de guía buscas<br>y te ayudo a encontrarla.' },
+  };
+
   var SUBTITULOS = {
     'clase':       'Pregunta sobre este experimento',
     'kit':         'Pregunta sobre este kit',
@@ -418,9 +430,18 @@
     var ui = createUI();
     var isExpanded = false;
 
-    // Subtítulo según página
+    // Subtítulo del header según página
     var subEl = ui.panel.querySelector('.ia-panel-header-sub');
     if (subEl) subEl.textContent = SUBTITULOS[pagina] || SUBTITULOS['inicio'];
+
+    // Mensaje de bienvenida según página
+    var bv = BIENVENIDA[pagina] || BIENVENIDA['inicio'];
+    var emIcon  = ui.panel.querySelector('#ia-empty-icon');
+    var emTitle = ui.panel.querySelector('#ia-empty-title');
+    var emHint  = ui.panel.querySelector('#ia-empty-hint');
+    if (emIcon)  emIcon.textContent  = bv.icono;
+    if (emTitle) emTitle.textContent = bv.titulo;
+    if (emHint)  emHint.innerHTML    = bv.hint;
 
     function openPanel() {
       ui.panel.classList.add('ia-open');
