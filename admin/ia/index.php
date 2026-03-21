@@ -63,8 +63,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             foreach ($campos as $clave => $tipo) {
                 $post_key = 'cfg_' . $clave;
-                if (!array_key_exists($post_key, $_POST)) continue;
 
+                // Los checkboxes booleanos solo aparecen en POST si están marcados.
+                // Leemos el valor: 1 si checked, 0 si ausente.
+                if ($tipo === 'boolean') {
+                    $nuevo_valor = isset($_POST[$post_key]) ? '1' : '0';
+                    $stmt_upd->execute([$nuevo_valor, $instancia_save, $clave]);
+                    continue;
+                }
+
+                if (!array_key_exists($post_key, $_POST)) continue;
                 $nuevo_valor = $_POST[$post_key];
 
                 // Para secretos: si vacío o placeholder '●●●●...', no actualizar
@@ -185,6 +193,16 @@ include '../header.php';
 
 .flash-ok  { padding: 0.75rem 1rem; background: #e8f5e9; border: 1px solid #a5d6a7; color: #1b5e20; border-radius: 4px; margin-bottom: 1rem; }
 .flash-err { padding: 0.75rem 1rem; background: #fbe9e7; border: 1px solid #ffab91; color: #bf360c; border-radius: 4px; margin-bottom: 1rem; }
+
+/* Toggle switch */
+.ia-toggle-wrap { display: flex; align-items: center; gap: 0.65rem; margin-top: 0.15rem; }
+.ia-toggle { position: relative; display: inline-block; width: 46px; height: 26px; flex-shrink: 0; }
+.ia-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.ia-toggle-slider { position: absolute; inset: 0; background: #ccc; border-radius: 26px; cursor: pointer; transition: background 0.2s; }
+.ia-toggle-slider::before { content: ''; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+.ia-toggle input:checked + .ia-toggle-slider { background: #2e7d32; }
+.ia-toggle input:checked + .ia-toggle-slider::before { transform: translateX(20px); }
+.ia-toggle-label { font-size: 0.88rem; font-weight: 600; }
 </style>
 
 <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
@@ -321,10 +339,13 @@ include '../header.php';
                     <div class="ia-form-group <?= $is_full ? 'full-col' : '' ?>">
                         <label for="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
                         <?php if ($tipo === 'boolean'): ?>
-                            <select name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>">
-                                <option value="1" <?= $valor === '1' ? 'selected' : '' ?>>Sí</option>
-                                <option value="0" <?= $valor !== '1' ? 'selected' : '' ?>>No</option>
-                            </select>
+                            <div class="ia-toggle-wrap">
+                                <label class="ia-toggle">
+                                    <input type="checkbox" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="1" <?= $valor === '1' ? 'checked' : '' ?>>
+                                    <span class="ia-toggle-slider"></span>
+                                </label>
+                                <span class="ia-toggle-label" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>_lbl"><?= $valor === '1' ? 'Activo' : 'Inactivo' ?></span>
+                            </div>
                         <?php elseif ($tipo === 'number'): ?>
                             <input type="number" step="any" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>">
                         <?php elseif ($tipo === 'secreto'): ?>
@@ -365,10 +386,13 @@ include '../header.php';
                     <div class="ia-form-group <?= $is_full ? 'full-col' : '' ?>">
                         <label for="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
                         <?php if ($tipo === 'boolean'): ?>
-                            <select name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>">
-                                <option value="1" <?= $valor === '1' ? 'selected' : '' ?>>Sí</option>
-                                <option value="0" <?= $valor !== '1' ? 'selected' : '' ?>>No</option>
-                            </select>
+                            <div class="ia-toggle-wrap">
+                                <label class="ia-toggle">
+                                    <input type="checkbox" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="1" <?= $valor === '1' ? 'checked' : '' ?>>
+                                    <span class="ia-toggle-slider"></span>
+                                </label>
+                                <span class="ia-toggle-label" id="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>_lbl"><?= $valor === '1' ? 'Activo' : 'Inactivo' ?></span>
+                            </div>
                         <?php elseif ($tipo === 'number'): ?>
                             <input type="number" step="any" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>">
                         <?php elseif ($tipo === 'secreto'): ?>
@@ -436,6 +460,15 @@ include '../header.php';
 
 <script>
 console.log('✅ [Admin/IA] Panel cargado. Tab activo:', '<?= $active_tab ?>');
+
+// Toggle label update
+document.querySelectorAll('.ia-toggle input[type="checkbox"]').forEach(function(cb) {
+    function updateLabel() {
+        var lbl = document.getElementById(cb.id + '_lbl');
+        if (lbl) lbl.textContent = cb.checked ? 'Activo' : 'Inactivo';
+    }
+    cb.addEventListener('change', updateLabel);
+});
 
 // ---------------------------------------------------------------
 // Tab switching
