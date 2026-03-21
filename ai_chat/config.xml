@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- AI Chat Assistant Configuration - Created by posadard.com -->
+<extension>
+  <id>ai_chat</id>
+  <version>2.1.0</version>
+  <type>extensions</type>
+  <category>extensions</category>
+  <author>posadard.com</author>
+  <description>AI Chat Assistant - Enhanced search functionality with Groq AI integration for AbanteCart</description>
+  <website>https://posadard.com</website>
+  <cartversions>
+    <item>1.2</item>
+    <item>1.3</item>
+    <item>1.4</item>
+  </cartversions>
+  <priority>1</priority>
+  <settings>
+    <!-- AI Chat Assistant Core Settings -->
+    <item id="ai_chat_status">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    <item id="ai_chat_items_limit">
+      <type>input</type>
+      <default_value>3</default_value>
+    </item>
+    <item id="ai_chat_new_window">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    <item id="ai_chat_enter">
+      <type>checkbox</type>
+      <default_value>1</default_value>
+    </item>
+    
+  
+    
+    <!-- Groq AI Configuration -->
+    <item id="ai_chat_groq_enabled">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    <item id="ai_chat_groq_api_key">
+      <type>input</type>
+      <default_value></default_value>
+    </item>
+    <item id="ai_chat_groq_model">
+      <type>input</type>
+      <default_value>llama-3.1-8b-instant</default_value>
+      <pattern_validate>/^[a-zA-Z0-9\-\.]+$/</pattern_validate>
+    </item>
+    
+    <!-- Manual AI Configuration -->
+    <item id="ai_chat_groq_temperature">
+      <type>input</type>
+      <default_value>0.3</default_value>
+    </item>
+    <item id="ai_chat_groq_max_tokens">
+      <type>input</type>
+      <default_value>100</default_value>
+    </item>
+    <item id="ai_chat_cache_duration">
+      <type>input</type>
+      <default_value>900</default_value>
+    </item>
+    <item id="ai_chat_natural_language_threshold">
+      <type>input</type>
+      <default_value>4</default_value>
+    </item>
+      <!-- Color Theme Configuration -->
+  <item id="ai_chat_color_theme">
+  <type>selectbox</type>
+  <default_value>default</default_value>
+  <variants>
+    <item>default</item>
+    <item>yellow</item>
+    <item>blue</item>
+    <item>red</item>
+    <item>green</item>
+    <item>orange</item>
+    <item>purple</item>
+  </variants>
+</item>
+    
+    <!-- 🆕 NEW: Keywords Configuration - SIMPLE VERSION -->
+    
+    <!-- 🚫 Generic Words to AVOID -->
+    <item id="ai_chat_generic_words_avoid">
+      <type>textarea</type>
+      <default_value>product,products,item,items,thing,things,stuff,merchandise,goods,article,articles,piece,pieces,sale,buy,purchase,order,shopping,store,shop,business,company,brand,service,services,price,cost,money,cheap,expensive,discount,offer,deal,promotion,special,value,budget,supply,supplies,material,materials,equipment,inventory,stock,available,delivery,shipping,tool,tools,device,machine,system,technology,solution,solutions,application,applications,use,usage,medicine,medical,health,healthcare,treatment,therapy,care,healing,cure,remedy,therapeutic,clinical,chemical,chemicals,substance,substances,compound,compounds,formula,formulas,preparation,preparations,agent,agents,liquid,powder,solid,mixture,blend,household,home,domestic,family,personal,daily,everyday,routine,regular,common,standard,clothing,apparel,wear,fashion,style,design,fabric,textile,garment,outfit,accessory,food,foods,nutrition,nutritional,dietary,ingredient,ingredients,supplement,supplements,organic,natural,digital,electronic,software,hardware,computer,internet,online,virtual,smart,automated,automotive,vehicle,car,auto,motor,engine,parts,component,components,accessory,accessories,fitness,sport,sports,exercise,workout,training,athletic,performance,activity,recreation,creative,artistic,craft,crafts,hobby,decoration,decorative,ornament,design,pattern,construction,building,repair,maintenance,improvement,renovation,installation,assembly,mounting,educational,learning,study,academic,school,training,course,lesson,tutorial,garden,gardening,outdoor,landscape,plant,plants,growing,cultivation,maintenance,seasonal,gift,gifts,present,presents,celebration,occasion,holiday,seasonal,special,commemorative,communication,connection,contact,message,signal,transmission,reception,interface,display,power,energy,electric,electrical,battery,charging,voltage,current,efficiency,consumption,security,safety,protection,secure,safe,guard,surveillance,monitoring,alarm,detection,environmental,eco,green,sustainable,recycled,biodegradable,renewable,conservation,pollution</default_value>
+    </item>
+    
+    <!-- ✅ Support Keywords to SUGGEST -->
+    <item id="ai_chat_support_keywords">
+      <type>textarea</type>
+      <default_value>contact,support,help,assistance,service,customer service,customer care,shipping,delivery,returns,refund,exchange,return policy,payment,warranty,guarantee,policy,terms,payment methods,faq,guide,instructions,manual,tutorial,how to,about us,store hours,location,privacy policy,terms of service</default_value>
+    </item>
+    <!-- Search Categories Settings -->
+    <item id="ai_chat_brands">
+      <type>checkbox</type>
+      <default_value>1</default_value>
+    </item>
+    <item id="ai_chat_categories">
+      <type>checkbox</type>
+      <default_value>1</default_value>
+    </item>
+    <item id="ai_chat_reviews">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    <item id="ai_chat_pages">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    <item id="ai_chat_products">
+      <type>checkbox</type>
+      <default_value>1</default_value>
+    </item>
+    <item id="ai_chat_ptags">
+      <type>checkbox</type>
+      <default_value>1</default_value>
+    </item>
+    <item id="ai_chat_pdesc">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    
+    <!-- Display Settings -->
+    <item id="ai_chat_images">
+      <type>checkbox</type>
+      <default_value>1</default_value>
+    </item>
+    <item id="ai_chat_textcut">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+    
+    <!-- Advanced Settings -->
+    <item id="ai_chat_search_id">
+      <type>input</type>
+      <default_value>filter_keyword</default_value>
+    </item>
+    <item id="ai_chat_all_lang">
+      <type>checkbox</type>
+      <default_value>0</default_value>
+    </item>
+  </settings>
+  <additional_settings><![CDATA[localisation/language_definitions]]></additional_settings>
+  <help_file><![CDATA[help/ai_chat_help.txt]]></help_file>
+  <note>true</note>
+  <help_link><![CDATA[https://posadard.com]]></help_link>
+  <install>
+    <trigger>install.php</trigger>
+  </install>
+  <uninstall>
+    <trigger>uninstall.php</trigger>
+  </uninstall>
+</extension>

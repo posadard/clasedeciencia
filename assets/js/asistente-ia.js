@@ -562,16 +562,28 @@
 
   function buscarSugerencias(pregunta, limit) {
     limit = limit || 5;
-    if (!_catalogo) return [];
-    var q = normalizarTexto(pregunta);
-    if (q.length < 3) return [];
+    if (!_catalogo) {
+      console.log('⚠️ [asistente-ia] buscarSugerencias: catálogo no cargado aún');
+      return [];
+    }
+    // Partir la pregunta en palabras de ≥4 chars para filtrar stopwords (hola, que, me, esto...)
+    var palabras = normalizarTexto(pregunta)
+      .split(/\s+/)
+      .filter(function(p) { return p.length >= 4; })
+      .slice(0, 8);
+    console.log('🔍 [asistente-ia] buscarSugerencias keywords:', palabras);
+    if (palabras.length === 0) return [];
+
     var ICONOS = { clase: '🔬', kit: '🧰', componente: '⚗️' };
     var LABELS = { clase: 'Clase', kit: 'Kit', componente: 'Componente' };
     var resultados = [];
     ['clases', 'kits', 'componentes'].forEach(function(grupo) {
       var tipo = grupo === 'clases' ? 'clase' : (grupo === 'kits' ? 'kit' : 'componente');
       (_catalogo[grupo] || []).forEach(function(item) {
-        if (item.search_text && item.search_text.includes(q)) {
+        if (!item.search_text) return;
+        // Coincide si ALGUNA palabra clave aparece en el search_text del ítem
+        var match = palabras.some(function(p) { return item.search_text.includes(p); });
+        if (match) {
           resultados.push({
             icono:  ICONOS[tipo],
             label:  LABELS[tipo],
@@ -582,6 +594,7 @@
         }
       });
     });
+    console.log('✅ [asistente-ia] buscarSugerencias encontró:', resultados.length, 'resultados');
     // Deduplicar por URL y limitar
     var seen = {};
     return resultados.filter(function(r) {

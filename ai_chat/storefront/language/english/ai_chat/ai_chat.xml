@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!-- AI Chat Assistant Storefront Language - Created by posadard.com -->
+<definitions>
+	<definition>
+		<key>ai_chat_text_search</key>
+		<value><![CDATA[Type to search]]></value>
+	</definition>
+	<definition>
+		<key>ai_chat_text_oops</key>
+		<value><![CDATA[Oops, nothing found!]]></value>
+	</definition>
+    <definition>
+		<key>ai_chat_text_matches</key>
+		<value><![CDATA[Matches ]]></value>
+	</definition>
+	<definition>
+		<key>text_manufacturers</key>
+		<value><![CDATA[Brands]]></value>
+	</definition>
+	<definition>
+		<key>text_products</key>
+		<value><![CDATA[Products]]></value>
+	</definition>
+	<definition>
+		<key>text_categories</key>
+		<value><![CDATA[Categories]]></value>
+	</definition>
+	<definition>
+		<key>text_product_categories</key>
+		<value><![CDATA[Categories]]></value>
+	</definition>
+	<definition>
+		<key>text_reviews</key>
+		<value><![CDATA[In reviews]]></value>
+	</definition>
+	<definition>
+		<key>text_contents</key>
+		<value><![CDATA[In pages]]></value>
+	</definition>
+</definitions>
