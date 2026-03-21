@@ -697,17 +697,10 @@ try {
         error_log('IA log error: ' . $e->getMessage());
     }
 
-    // Sugerencias de contenido relacionado (solo si no hay guardrail)
-    $sugerencias = [];
-    if (!$guardrail_activado && $instancia === 'frontend') {
-        $sugerencias = buscar_sugerencias($pdo, $pregunta, 4);
-    }
-
     ob_end_clean(); // descartar warnings/notices PHP antes de responder
     echo json_encode([
         'ok'                 => true,
         'respuesta'          => $respuesta,
-        'sugerencias'        => $sugerencias,
         'guardrail_activado' => $guardrail_activado,
         'cached'             => $cached,
         'modelo_usado'       => $modelo_usado,

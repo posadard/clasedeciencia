@@ -520,6 +520,77 @@
     'manuales':    '¿Te ayudo a encontrar un manual?',
   };
 
+  // ======== Catálogo local para sugerencias (reutiliza mismas APIs del buscador del header) ========
+  var _catalogo = null;
+  var _catalogoCargando = false;
+
+  function normalizarTexto(text) {
+    return (text || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\u00f1/g, 'n'); // ñ
+  }
+
+  function cargarCatalogo() {
+    if (_catalogo || _catalogoCargando) return;
+    _catalogoCargando = true;
+    console.log('📡 [asistente-ia] Cargando catálogo para sugerencias...');
+    var t = 't=' + Date.now();
+    Promise.all([
+      fetch('/api/clases-data.php?' + t, { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : { success: false }; }),
+      fetch('/api/kits-data.php?' + t, { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : { success: false }; }),
+      fetch('/api/componentes-data.php?' + t, { cache: 'no-store' }).then(function(r){ return r.ok ? r.json() : { success: false }; })
+    ]).then(function(results) {
+      _catalogo = {
+        clases:      (results[0].success && results[0].proyectos)   ? results[0].proyectos   : [],
+        kits:        (results[1].success && results[1].kits)        ? results[1].kits        : [],
+        componentes: (results[2].success && results[2].componentes) ? results[2].componentes : []
+      };
+      _catalogoCargando = false;
+      console.log('✅ [asistente-ia] Catálogo cargado:', {
+        clases: _catalogo.clases.length,
+        kits: _catalogo.kits.length,
+        componentes: _catalogo.componentes.length
+      });
+    }).catch(function(err) {
+      _catalogoCargando = false;
+      _catalogo = { clases: [], kits: [], componentes: [] };
+      console.log('❌ [asistente-ia] Error cargando catálogo:', err.message);
+    });
+  }
+
+  function buscarSugerencias(pregunta, limit) {
+    limit = limit || 5;
+    if (!_catalogo) return [];
+    var q = normalizarTexto(pregunta);
+    if (q.length < 3) return [];
+    var ICONOS = { clase: '🔬', kit: '🧰', componente: '⚗️' };
+    var LABELS = { clase: 'Clase', kit: 'Kit', componente: 'Componente' };
+    var resultados = [];
+    ['clases', 'kits', 'componentes'].forEach(function(grupo) {
+      var tipo = grupo === 'clases' ? 'clase' : (grupo === 'kits' ? 'kit' : 'componente');
+      (_catalogo[grupo] || []).forEach(function(item) {
+        if (item.search_text && item.search_text.includes(q)) {
+          resultados.push({
+            icono:  ICONOS[tipo],
+            label:  LABELS[tipo],
+            titulo: item.title || '',
+            url:    item.url   || '#',
+            desc:   item.description ? item.description.substring(0, 80) : ''
+          });
+        }
+      });
+    });
+    // Deduplicar por URL y limitar
+    var seen = {};
+    return resultados.filter(function(r) {
+      if (seen[r.url]) return false;
+      seen[r.url] = true;
+      return true;
+    }).slice(0, limit);
+  }
+
   window.initAsistenteIA = function (ctx) {
     ctx = ctx || {};
     var claseId      = ctx.claseId      || null;
@@ -532,6 +603,7 @@
     injectCSS();
     var ui = createUI();
     var isExpanded = false;
+    cargarCatalogo(); // carga catálogo en background para sugerencias client-side
 
     // Subtítulo del header según página
     var subEl = ui.panel.querySelector('.ia-panel-header-sub');
@@ -605,7 +677,7 @@
         typing.remove();
         if (json && json.ok) {
           addBubble(ui.log, 'ia', json.respuesta);
-          addSugerencias(ui.log, json.sugerencias);
+          addSugerencias(ui.log, buscarSugerencias(pregunta));
         } else {
           addBubble(ui.log, 'ia', '❌ ' + (json && json.error ? json.error : 'Error al procesar la consulta.'));
         }
