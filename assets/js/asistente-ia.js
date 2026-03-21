@@ -336,6 +336,17 @@
     .ia-send-btn:hover:not(:disabled) { background: #3d5ba9; }
     .ia-send-btn:disabled { background: #d4d8dd; cursor: not-allowed; }
 
+    /* Logo icon con glow — identidad visual potenciada */
+    .ia-logo-icon {
+      display: block;
+      filter: drop-shadow(0 0 4px rgba(125,211,252,0.85)) drop-shadow(0 0 10px rgba(56,189,248,0.5));
+      animation: ia-icon-glow 2.6s ease-in-out infinite;
+    }
+    @keyframes ia-icon-glow {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(125,211,252,0.85)) drop-shadow(0 0 10px rgba(56,189,248,0.5)); }
+      50%       { filter: drop-shadow(0 0 8px rgba(125,211,252,1))    drop-shadow(0 0 18px rgba(56,189,248,0.8)); }
+    }
+
     /* Responsive — en móvil el panel ocupa toda la pantalla (no push) */
     @media (max-width: 768px) {
       body.ia-panel-open,
@@ -357,24 +368,26 @@
     // Trigger tab en el borde derecho
     var trigger = document.createElement('button');
     trigger.className = 'ia-trigger';
-    trigger.setAttribute('aria-label', 'Abrir CiencIA — Asistente de IA');
+    trigger.setAttribute('aria-label', 'Abrir Clase de CiencIA — Asistente de IA');
+    var LOGO_SVG_SM = '<svg class="ia-logo-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></circle><line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line><circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"></circle><ellipse cx="8" cy="8" rx="2" ry="3" fill="currentColor" opacity="0.15" transform="rotate(-35 8 8)"></ellipse></svg>';
+    var LOGO_SVG_MD = '<svg class="ia-logo-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></circle><line x1="15" y1="15" x2="21" y2="21" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></line><circle cx="10" cy="10" r="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.3"></circle><ellipse cx="8" cy="8" rx="2" ry="3" fill="currentColor" opacity="0.15" transform="rotate(-35 8 8)"></ellipse></svg>';
     trigger.innerHTML =
-      '<span class="ia-trigger-icon">🔬</span>' +
-      '<span class="ia-trigger-label">Cienc<span class="ia-glow">IA</span></span>';
+      '<span class="ia-trigger-icon">' + LOGO_SVG_SM + '</span>' +
+      '<span class="ia-trigger-label">Clase de Cienc<span class="ia-glow">IA</span></span>';
 
     // Panel lateral
     var panel = document.createElement('div');
     panel.className = 'ia-side-panel';
     panel.setAttribute('role', 'complementary');
-    panel.setAttribute('aria-label', 'CiencIA — Asistente de IA');
+    panel.setAttribute('aria-label', 'Clase de CiencIA — Asistente de IA');
 
     // Header
     var header = document.createElement('div');
     header.className = 'ia-panel-header';
     header.innerHTML =
-      '<span class="ia-panel-header-icon">🤖</span>' +
+      '<span class="ia-panel-header-icon">' + LOGO_SVG_MD + '</span>' +
       '<div class="ia-panel-header-info">' +
-        '<div class="ia-panel-header-title">Cienc<span style="color:#7dd3fc;text-shadow:0 0 8px rgba(125,211,252,0.8),0 0 18px rgba(56,189,248,0.5)">IA</span></div>' +
+        '<div class="ia-panel-header-title">Clase de Cienc<span style="color:#7dd3fc;text-shadow:0 0 8px rgba(125,211,252,0.8),0 0 18px rgba(56,189,248,0.5)">IA</span></div>' +
         '<div class="ia-panel-header-sub">Pregunta sobre este experimento</div>' +
       '</div>';
     var expandBtn = document.createElement('button');
@@ -394,7 +407,7 @@
     log.innerHTML =
       '<div class="ia-chat-empty" id="ia-empty-state">' +
         '<span class="ia-chat-empty-icon" id="ia-empty-icon">🔬</span>' +
-        '<div class="ia-chat-empty-title" id="ia-empty-title">¡Hola! Soy CiencIA</div>' +
+        '<div class="ia-chat-empty-title" id="ia-empty-title">¡Hola! Soy Clase de CiencIA</div>' +
         '<div class="ia-chat-empty-hint" id="ia-empty-hint"></div>' +
       '</div>';
 
@@ -436,7 +449,7 @@
     wrap.className = role === 'user' ? 'ia-bubble ia-bubble-user' : 'ia-bubble ia-bubble-ia';
     var label = document.createElement('div');
     label.className = 'ia-bubble-label';
-    label.textContent = role === 'user' ? 'Tú' : 'CiencIA';
+    label.textContent = role === 'user' ? 'Tú' : 'Clase de CiencIA';
     var body = document.createElement('div');
     body.className = 'ia-bubble-text';
     body.textContent = text;
@@ -484,15 +497,15 @@
   }
 
   var BIENVENIDA = {
-    'clase':       { icono: '🔬', titulo: '¡Hola! Soy CiencIA',       hint: 'Puedes seguir leyendo el experimento<br>y preguntarme lo que necesites.' },
-    'kit':         { icono: '🧰', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre los componentes,<br>usos o instrucciones de este kit.' },
-    'componente':  { icono: '⚗️', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame cómo usar este componente,<br>sus propiedades o medidas de seguridad.' },
-    'manual':      { icono: '📖', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre los pasos de este manual<br>o cualquier duda que tengas.' },
-    'inicio':      { icono: '🚀', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre clases, kits,<br>materiales o experimentos científicos.' },
-    'catalogo':    { icono: '📚', titulo: '¡Hola! Soy CiencIA',       hint: 'Cuéntame qué tema te interesa<br>y te ayudo a encontrar la clase ideal.' },
-    'kits':        { icono: '🧰', titulo: '¡Hola! Soy CiencIA',       hint: 'Cuéntame qué necesitas y te oriento<br>hacia el kit más adecuado.' },
-    'componentes': { icono: '⚗️', titulo: '¡Hola! Soy CiencIA',      hint: 'Pregúntame sobre materiales,<br>usos, cuidados o alternativas.' },
-    'manuales':    { icono: '📖', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame qué tipo de guía buscas<br>y te ayudo a encontrarla.' },
+    'clase':       { icono: '🔬', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Puedes seguir leyendo el experimento<br>y preguntarme lo que necesites.' },
+    'kit':         { icono: '🧰', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame sobre los componentes,<br>usos o instrucciones de este kit.' },
+    'componente':  { icono: '⚗️', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame cómo usar este componente,<br>sus propiedades o medidas de seguridad.' },
+    'manual':      { icono: '📖', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame sobre los pasos de este manual<br>o cualquier duda que tengas.' },
+    'inicio':      { icono: '🚀', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame sobre clases, kits,<br>materiales o experimentos científicos.' },
+    'catalogo':    { icono: '📚', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Cuéntame qué tema te interesa<br>y te ayudo a encontrar la clase ideal.' },
+    'kits':        { icono: '🧰', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Cuéntame qué necesitas y te oriento<br>hacia el kit más adecuado.' },
+    'componentes': { icono: '⚗️', titulo: '¡Hola! Soy Clase de CiencIA',      hint: 'Pregúntame sobre materiales,<br>usos, cuidados o alternativas.' },
+    'manuales':    { icono: '📖', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame qué tipo de guía buscas<br>y te ayudo a encontrarla.' },
   };
 
   var SUBTITULOS = {
