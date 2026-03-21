@@ -347,6 +347,34 @@
     .ia-send-btn:hover:not(:disabled) { background: #3d5ba9; }
     .ia-send-btn:disabled { background: #d4d8dd; cursor: not-allowed; }
 
+    /* Banner sesión restaurada */
+    .ia-session-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #eef2ff;
+      border-bottom: 1px solid #c7d2fe;
+      font-size: 11.5px;
+      color: #3730a3;
+      flex-shrink: 0;
+    }
+    .ia-session-banner-text { flex: 1; }
+    .ia-session-clear {
+      font-size: 11px;
+      padding: 2px 8px;
+      border: 1px solid #a5b4fc;
+      border-radius: 10px;
+      background: #fff;
+      color: #6366f1;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .ia-session-clear:hover { background: #e0e7ff; }
+
     /* Acciones post-respuesta: Profundiza + preguntas clickeables */
     .ia-action-row {
       display: flex;
@@ -697,6 +725,36 @@
     }).slice(0, limit);
   }
 
+  var SS_KEY = 'cdc_ia_historial';
+  var SS_TTL  = 4 * 60 * 60 * 1000; // 4 horas en ms
+
+  function guardarHistorial(historial) {
+    try {
+      sessionStorage.setItem(SS_KEY, JSON.stringify({
+        ts: Date.now(),
+        items: historial.slice(-24) // guardar máx 24 entradas (12 turnos)
+      }));
+    } catch(e) { /* sessionStorage no disponible */ }
+  }
+
+  function restaurarHistorial() {
+    try {
+      var raw = sessionStorage.getItem(SS_KEY);
+      if (!raw) return [];
+      var data = JSON.parse(raw);
+      if (!data || !data.ts || !Array.isArray(data.items)) return [];
+      if (Date.now() - data.ts > SS_TTL) {
+        sessionStorage.removeItem(SS_KEY);
+        return [];
+      }
+      return data.items;
+    } catch(e) { return []; }
+  }
+
+  function limpiarHistorialSS() {
+    try { sessionStorage.removeItem(SS_KEY); } catch(e) {}
+  }
+
   window.initAsistenteIA = function (ctx) {
     ctx = ctx || {};
     var claseId      = ctx.claseId      || null;
@@ -709,9 +767,10 @@
     injectCSS();
     var ui = createUI();
     var isExpanded = false;
-    var expandState = 0; // 0=normal, 1=expandido, 2=pantalla completa
-    var historial = []; // historial de la conversación: [{role,content}, ...]
-    cargarCatalogo(); // carga catálogo en background para sugerencias client-side
+    var expandState = 0;
+    var historial = restaurarHistorial(); // restaurar historial de sessionStorage si existe
+    var sesionRestaurada = historial.length > 0;
+    cargarCatalogo();
 
     // Subtítulo del header según página
     var subEl = ui.panel.querySelector('.ia-panel-header-sub');
@@ -725,6 +784,26 @@
     if (emIcon)  emIcon.textContent  = bv.icono;
     if (emTitle) emTitle.textContent = bv.titulo;
     if (emHint)  emHint.innerHTML    = bv.hint;
+
+    // Banner de sesión restaurada (se inserta antes del log, dentro del panel)
+    if (sesionRestaurada) {
+      var turnos = Math.floor(historial.length / 2);
+      var banner = document.createElement('div');
+      banner.className = 'ia-session-banner';
+      banner.innerHTML =
+        '<span class="ia-session-banner-text">📎 Retomando conversación anterior (' + turnos + ' turno' + (turnos !== 1 ? 's' : '') + ')</span>' +
+        '<button class="ia-session-clear" title="Borrar historial y empezar de nuevo">× Nueva sesión</button>';
+      banner.querySelector('.ia-session-clear').addEventListener('click', function() {
+        historial = [];
+        limpiarHistorialSS();
+        banner.remove();
+        sesionRestaurada = false;
+        console.log('🗑️ [asistente-ia] historial limpiado por usuario');
+      });
+      // Insertar entre header y log
+      ui.panel.insertBefore(banner, ui.log);
+      console.log('📎 [asistente-ia] sesión restaurada con', historial.length, 'mensajes');
+    }
 
     function openPanel() {
       ui.panel.classList.add('ia-open');
@@ -812,9 +891,10 @@
         console.log('✅ [asistente-ia] respuesta:', json);
         typing.remove();
         if (json && json.ok) {
-          // Actualizar historial con este turno
-          historial.push({ role: 'user',      content: pregunta         });
-          historial.push({ role: 'assistant', content: json.respuesta   });
+          // Actualizar historial con este turno y persistir en sessionStorage
+          historial.push({ role: 'user',      content: pregunta       });
+          historial.push({ role: 'assistant', content: json.respuesta });
+          guardarHistorial(historial);
           addBubble(ui.log, 'ia', json.respuesta);
           addIAActions(ui.log, json.respuesta, enviar);
           addSugerencias(ui.log, buscarSugerencias(pregunta));
