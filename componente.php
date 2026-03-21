@@ -593,4 +593,13 @@ console.log('📚 [componente] Clases relacionadas:', <?= isset($clases_rel) ? c
 .related-card { position:relative; }
 .kit-inline-card { position:relative; }
 </style>
+
+<!-- CiencIA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ pagina: 'componente', componenteId: <?= (int)$material['id'] ?> });
+    console.log('✅ [componente.php] CiencIA init. componente_id:', <?= (int)$material['id'] ?>);
+  });
+</script>
 <?php include 'includes/footer.php'; ?>

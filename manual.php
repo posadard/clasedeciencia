@@ -1161,4 +1161,13 @@ console.log('🔍 [Manual] Pasos:', <?= (isset($pasos) && is_array($pasos)) ? co
 .cdc-modal-close{ position:absolute; right:10px; top:8px; background:transparent; border:none; font-size:22px; line-height:1; cursor:pointer; }
 .cdc-modal-body p{ margin:8px 0; }
 </style>
+
+<!-- CiencIA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ pagina: 'manual', manualId: <?= (int)$manual['id'] ?> });
+    console.log('✅ [manual.php] CiencIA init. manual_id:', <?= (int)$manual['id'] ?>);
+  });
+</script>
 <?php include 'includes/footer.php'; ?>

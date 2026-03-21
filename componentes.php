@@ -203,4 +203,12 @@ function updateView(view) {
     window.location.href = url.toString();
 }
 </script>
+
+<!-- CiencIA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ pagina: 'componentes' });
+  });
+</script>
 <?php include 'includes/footer.php'; ?>

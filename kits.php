@@ -502,4 +502,12 @@ function updateView(view) {
     (SELECTED||[]).forEach(s=> addValue(String(s)));
 })();
 </script>
+
+<!-- CiencIA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ pagina: 'kits' });
+  });
+</script>
 <?php include 'includes/footer.php'; ?>

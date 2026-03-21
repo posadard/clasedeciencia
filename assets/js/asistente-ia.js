@@ -393,13 +393,34 @@
     return t;
   }
 
+  var SUBTITULOS = {
+    'clase':       'Pregunta sobre este experimento',
+    'kit':         'Pregunta sobre este kit',
+    'componente':  'Pregunta sobre este componente',
+    'manual':      'Pregunta sobre este manual',
+    'inicio':      '¿Sobre qué quieres aprender hoy?',
+    'catalogo':    '¿Te ayudo a encontrar algo?',
+    'kits':        '¿Te ayudo a encontrar un kit?',
+    'componentes': '¿Te ayudo con un componente?',
+    'manuales':    '¿Te ayudo a encontrar un manual?',
+  };
+
   window.initAsistenteIA = function (ctx) {
-    var claseId = ctx && ctx.claseId ? ctx.claseId : null;
-    console.log('🔍 [asistente-ia] init claseId:', claseId);
+    ctx = ctx || {};
+    var claseId      = ctx.claseId      || null;
+    var kitId        = ctx.kitId        || null;
+    var componenteId = ctx.componenteId || null;
+    var manualId     = ctx.manualId     || null;
+    var pagina       = ctx.pagina       || (claseId ? 'clase' : 'inicio');
+    console.log('🔍 [asistente-ia] init', pagina, { claseId, kitId, componenteId, manualId });
 
     injectCSS();
     var ui = createUI();
     var isExpanded = false;
+
+    // Subtítulo según página
+    var subEl = ui.panel.querySelector('.ia-panel-header-sub');
+    if (subEl) subEl.textContent = SUBTITULOS[pagina] || SUBTITULOS['inicio'];
 
     function openPanel() {
       ui.panel.classList.add('ia-open');
@@ -444,7 +465,15 @@
         var resp = await fetch('/api/ia-consulta.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ instancia: 'frontend', clase_id: claseId, pregunta: pregunta })
+          body: JSON.stringify({
+            instancia:     'frontend',
+            clase_id:      claseId,
+            kit_id:        kitId,
+            componente_id: componenteId,
+            manual_id:     manualId,
+            pagina:        pagina,
+            pregunta:      pregunta
+          })
         });
         console.log('📡 [asistente-ia] status:', resp.status);
         var json = await resp.json();

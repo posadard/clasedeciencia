@@ -775,4 +775,13 @@ console.log('🛠️ [Kit] Manuales:', <?= count($manuales) ?>);
 .related-card { position:relative; }
 .kit-inline-card { position:relative; }
 </style>
+
+<!-- CiencIA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ pagina: 'kit', kitId: <?= (int)$kit['id'] ?> });
+    console.log('✅ [kit.php] CiencIA init. kit_id:', <?= (int)$kit['id'] ?>);
+  });
+</script>
 <?php include 'includes/footer.php'; ?>

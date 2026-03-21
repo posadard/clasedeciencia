@@ -792,4 +792,12 @@ document.querySelectorAll('.collapsible-toggle').forEach(btn => {
     updateAria();
 })();
 </script>
+
+<!-- CiencIA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ pagina: 'catalogo' });
+  });
+</script>
 <?php include 'includes/footer.php'; ?>
