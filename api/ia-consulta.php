@@ -19,6 +19,8 @@ ob_start();
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../config.php';
+// config.php reactiva display_errors=1 — lo suprimimos de nuevo aquí
+ini_set('display_errors', 0);
 
 // ---------------------------------------------------------------
 // Helpers
@@ -364,7 +366,7 @@ try {
 
     // Frontend: proteger el endpoint backend de acceso externo
     if ($instancia === 'backend') {
-        session_start();
+        if (session_status() === PHP_SESSION_NONE) session_start();
         if (empty($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             json_fail('No autorizado.', ['code' => 403]);
         }
