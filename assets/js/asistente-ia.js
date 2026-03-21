@@ -336,6 +336,49 @@
     .ia-send-btn:hover:not(:disabled) { background: #3d5ba9; }
     .ia-send-btn:disabled { background: #d4d8dd; cursor: not-allowed; }
 
+    /* Acciones post-respuesta: Profundiza + preguntas clickeables */
+    .ia-action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      align-self: flex-start;
+      max-width: 92%;
+    }
+    .ia-profundiza-btn {
+      font-size: 11px;
+      padding: 4px 11px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 20px;
+      background: #fff;
+      color: #6b7280;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+      font-family: inherit;
+    }
+    .ia-profundiza-btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+      color: #374151;
+    }
+    .ia-pregunta-chip {
+      font-size: 11.5px;
+      padding: 5px 11px;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 20px;
+      background: #eef2ff;
+      color: #3730a3;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      font-family: inherit;
+      line-height: 1.4;
+      text-align: left;
+    }
+    .ia-pregunta-chip:hover {
+      background: #c7d2fe;
+      border-color: #818cf8;
+    }
+
     /* Logo icon con glow — identidad visual potenciada */
     .ia-logo-icon {
       display: block;
@@ -496,6 +539,43 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  function extraerPreguntas(texto) {
+    var preguntas = [];
+    var partes = texto.split('?');
+    for (var i = 0; i < partes.length - 1; i++) {
+      var seg = partes[i];
+      var inicio = Math.max(seg.lastIndexOf('. '), seg.lastIndexOf('! '), seg.lastIndexOf('\n'));
+      var q = (inicio >= 0 ? seg.substring(inicio + 2) : seg).trim() + '?';
+      if (q.length > 15 && q.length < 180) preguntas.push(q);
+    }
+    return preguntas.slice(0, 2);
+  }
+
+  function addIAActions(log, texto, onSend) {
+    var preguntas = extraerPreguntas(texto);
+    var row = document.createElement('div');
+    row.className = 'ia-action-row';
+
+    var profBtn = document.createElement('button');
+    profBtn.className = 'ia-profundiza-btn';
+    profBtn.textContent = '🔍 Profundiza';
+    profBtn.addEventListener('click', function() {
+      onSend('Profundiza en tu última respuesta y dame más detalles.');
+    });
+    row.appendChild(profBtn);
+
+    preguntas.forEach(function(q) {
+      var chip = document.createElement('button');
+      chip.className = 'ia-pregunta-chip';
+      chip.textContent = q;
+      chip.addEventListener('click', function() { onSend(q); });
+      row.appendChild(chip);
+    });
+
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+  }
+
   var BIENVENIDA = {
     'clase':       { icono: '🔬', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Puedes seguir leyendo el experimento<br>y preguntarme lo que necesites.' },
     'kit':         { icono: '🧰', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame sobre los componentes,<br>usos o instrucciones de este kit.' },
@@ -616,6 +696,7 @@
     injectCSS();
     var ui = createUI();
     var isExpanded = false;
+    var historial = []; // historial de la conversación: [{role,content}, ...]
     cargarCatalogo(); // carga catálogo en background para sugerencias client-side
 
     // Subtítulo del header según página
@@ -660,15 +741,19 @@
       ui.expandBtn.title = isExpanded ? 'Reducir panel' : 'Expandir panel';
     });
 
-    async function enviar() {
-      var pregunta = ui.textarea.value.trim();
+    // textOverride: usado por chips de preguntas y botón Profundiza
+    async function enviar(textOverride) {
+      var pregunta = (typeof textOverride === 'string') ? textOverride : ui.textarea.value.trim();
       console.log('🔍 [asistente-ia] pregunta:', pregunta);
       if (!pregunta) return;
 
       ui.sendBtn.disabled = true;
-      ui.textarea.value = '';
+      if (typeof textOverride !== 'string') ui.textarea.value = '';
       addBubble(ui.log, 'user', pregunta);
       var typing = addTyping(ui.log);
+
+      // Enviar historial previo (máx 12 mensajes = 6 turnos) para continuidad
+      var historialEnvio = historial.slice(-12);
 
       try {
         var resp = await fetch('/api/ia-consulta.php', {
@@ -681,7 +766,8 @@
             componente_id: componenteId,
             manual_id:     manualId,
             pagina:        pagina,
-            pregunta:      pregunta
+            pregunta:      pregunta,
+            historial:     historialEnvio
           })
         });
         console.log('📡 [asistente-ia] status:', resp.status);
@@ -689,7 +775,11 @@
         console.log('✅ [asistente-ia] respuesta:', json);
         typing.remove();
         if (json && json.ok) {
+          // Actualizar historial con este turno
+          historial.push({ role: 'user',      content: pregunta         });
+          historial.push({ role: 'assistant', content: json.respuesta   });
           addBubble(ui.log, 'ia', json.respuesta);
+          addIAActions(ui.log, json.respuesta, enviar);
           addSugerencias(ui.log, buscarSugerencias(pregunta));
         } else {
           addBubble(ui.log, 'ia', '❌ ' + (json && json.error ? json.error : 'Error al procesar la consulta.'));
@@ -704,7 +794,7 @@
       ui.textarea.focus();
     }
 
-    ui.sendBtn.addEventListener('click', enviar);
+    ui.sendBtn.addEventListener('click', function() { enviar(); });
     ui.textarea.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && e.ctrlKey) { e.preventDefault(); enviar(); }
     });

@@ -499,7 +499,17 @@ try {
     // ParÃ¡metros comunes
     $instancia       = ($data['instancia'] ?? 'frontend') === 'backend' ? 'backend' : 'frontend';
     $pregunta        = trim($data['pregunta'] ?? '');
-
+    // Historial de conversación: array de {role, content} enviado por el cliente
+    $historial_raw = isset($data['historial']) && is_array($data['historial']) ? $data['historial'] : [];
+    $historial = [];
+    $roles_validos = ['user', 'assistant'];
+    foreach (array_slice($historial_raw, -12) as $item) {
+        if (!is_array($item)) continue;
+        $role    = $item['role'] ?? '';
+        $content = isset($item['content']) ? mb_substr(trim((string)$item['content']), 0, 800) : '';
+        if (!in_array($role, $roles_validos, true) || $content === '') continue;
+        $historial[] = ['role' => $role, 'content' => $content];
+    }
     if ($pregunta === '') json_fail('Pregunta vacÃ­a.');
     if (mb_strlen($pregunta) > 2000) json_fail('Pregunta demasiado larga.');
 
@@ -644,10 +654,12 @@ try {
                 $system_content .= "\n\n" . $contexto_texto;
             }
 
-            $messages = [
-                ['role' => 'system', 'content' => $system_content],
-                ['role' => 'user',   'content' => $pregunta],
-            ];
+            // system + historial previo (máx 12 msgs) + pregunta actual
+            $messages = array_merge(
+                [['role' => 'system', 'content' => $system_content]],
+                $historial,
+                [['role' => 'user', 'content' => $pregunta]]
+            );
 
             $resultado = groq_con_fallback($api_key, $modelos, $messages, $temperature, $max_tokens, $top_p);
 
