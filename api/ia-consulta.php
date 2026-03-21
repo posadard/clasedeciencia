@@ -75,11 +75,13 @@ function groq_call(string $api_key, string $modelo, array $messages, float $temp
  * Retorna: { respuesta, modelo_usado, tokens, tiempo_ms } o null si todos fallan.
  */
 function groq_con_fallback(string $api_key, array $modelos, array $messages, float $temperature, int $max_tokens, float $top_p): ?array {
+    $ultimo_error = '';
     foreach ($modelos as $modelo) {
         if (empty($modelo)) continue;
         $r = groq_call($api_key, $modelo, $messages, $temperature, $max_tokens, $top_p);
 
         if ($r['errno'] !== 0) {
+            $ultimo_error = "curl errno={$r['errno']} modelo={$modelo}";
             error_log("IA groq curl error [{$modelo}]: errno={$r['errno']}");
             break; // Error de red: no hay fallback útil
         }
@@ -95,15 +97,26 @@ function groq_con_fallback(string $api_key, array $modelos, array $messages, flo
                     'tiempo_ms'    => $r['tiempo_ms'],
                 ];
             }
+            $ultimo_error = "HTTP {$r['http_status']} pero sin choices. Raw: " . substr($r['raw'], 0, 300);
+            error_log("IA groq sin choices [{$modelo}]: " . $ultimo_error);
+            break;
         }
+
+        // Exponer el error de la API si es 4xx/5xx para diagnóstico
+        $groq_error = json_decode($r['raw'], true);
+        $groq_msg   = $groq_error['error']['message'] ?? $r['raw'];
+        $ultimo_error = "HTTP {$r['http_status']} [{$modelo}]: " . substr($groq_msg, 0, 200);
+        error_log("IA groq error [{$modelo}]: HTTP {$r['http_status']} — {$groq_msg}");
 
         // Solo fallback en rate limit o indisponibilidad
         if (!in_array($r['http_status'], [429, 503])) {
-            error_log("IA groq error [{$modelo}]: HTTP {$r['http_status']} — sin fallback");
             break;
         }
-        error_log("IA groq fallback [{$modelo}]: HTTP {$r['http_status']} → siguiente modelo");
+        error_log("IA groq fallback [{$modelo}] → siguiente modelo");
     }
+
+    // Guardar último error en variable global para poder retornarlo
+    $GLOBALS['_ia_groq_ultimo_error'] = $ultimo_error;
     return null;
 }
 
@@ -518,7 +531,9 @@ try {
                 $tokens       = $resultado['tokens'];
                 $tiempo_ms    = $resultado['tiempo_ms'];
             } else {
-                $respuesta = '❌ Error al consultar la IA. Intenta de nuevo.';
+                $groq_detalle = $GLOBALS['_ia_groq_ultimo_error'] ?? 'sin detalle';
+                $respuesta = '❌ Error al consultar la IA. Detalle: ' . $groq_detalle;
+                error_log('IA groq todos los modelos fallaron: ' . $groq_detalle);
             }
         }
 
