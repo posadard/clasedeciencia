@@ -254,12 +254,11 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
  * Construye el bloque de contexto para la instancia FRONTEND.
  * Combina: clase, Ã¡reas, competencias, kit, manual, guÃ­a y prompt pedagÃ³gico.
  */
-function build_context_frontend(PDO $pdo, ?int $clase_id): string {
-    if (!$clase_id) return '';
-
+function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?int $componente_id = null, ?int $manual_id = null, string $pagina = 'inicio'): string {
     $bloques = [];
 
     try {
+        if ($clase_id) {
         // 1. Clase base (vista ya existente)
         $stmt = $pdo->prepare('SELECT * FROM v_clase_contexto_ia WHERE clase_id = ? LIMIT 1');
         $stmt->execute([$clase_id]);
@@ -330,6 +329,108 @@ function build_context_frontend(PDO $pdo, ?int $clase_id): string {
                 . ($pc['enfoque_pedagogico'] ? "Enfoque: {$pc['enfoque_pedagogico']}\n" : '')
                 . ($cp ? "Conocimientos previos: {$cp}\n" : '')
                 . ($pf ? "Preguntas frecuentes: {$pf}" : '');
+        }
+
+        } elseif ($pagina === 'kit' && $kit_id) {
+            // --- KIT PAGE CONTEXT ---
+            $stmt = $pdo->prepare('SELECT nombre, codigo, version, resumen, seguridad, time_minutes, dificultad_ensamble FROM kits WHERE id = ? AND activo = 1 LIMIT 1');
+            $stmt->execute([$kit_id]);
+            $kit = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($kit) {
+                $seg      = $kit['seguridad'] ? (json_decode($kit['seguridad'], true) ?: []) : [];
+                $seg_nota = $seg['notas'] ?? '';
+                $bloques[] = "=== KIT ACTUAL ===\n"
+                    . "Nombre: {$kit['nombre']}\n"
+                    . "Codigo: {$kit['codigo']} | Version: {$kit['version']}\n"
+                    . ($kit['time_minutes']        ? "Tiempo de armado: {$kit['time_minutes']} min\n" : '')
+                    . ($kit['dificultad_ensamble'] ? "Dificultad: {$kit['dificultad_ensamble']}\n" : '')
+                    . "Resumen: {$kit['resumen']}\n"
+                    . ($seg_nota ? "Seguridad: {$seg_nota}" : '');
+            }
+            $stmt = $pdo->prepare(
+                'SELECT ki.nombre_comun, kc.cantidad, ki.unidad, kc.notas
+                 FROM kit_componentes kc
+                 JOIN kit_items ki ON ki.id = kc.item_id
+                 WHERE kc.kit_id = ?
+                 ORDER BY kc.sort_order'
+            );
+            $stmt->execute([$kit_id]);
+            $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            if ($items) {
+                $lineas = array_map(function ($it) {
+                    $nota = $it['notas'] ? " ({$it['notas']})" : '';
+                    $u    = $it['unidad'] ? " {$it['unidad']}" : '';
+                    return "  - {$it['nombre_comun']} x{$it['cantidad']}{$u}{$nota}";
+                }, $items);
+                $bloques[] = "=== COMPONENTES DEL KIT ===\n" . implode("\n", $lineas);
+            }
+
+        } elseif ($pagina === 'componente' && $componente_id) {
+            // --- COMPONENTE PAGE CONTEXT ---
+            $stmt = $pdo->prepare(
+                'SELECT ki.nombre_comun, ki.sku, ki.descripcion_html, ki.advertencias_seguridad, ki.unidad,
+                        cat.nombre AS categoria
+                 FROM kit_items ki
+                 LEFT JOIN categorias_items cat ON cat.id = ki.categoria_id
+                 WHERE ki.id = ? LIMIT 1'
+            );
+            $stmt->execute([$componente_id]);
+            $comp = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($comp) {
+                $adv      = $comp['advertencias_seguridad'] ? (json_decode($comp['advertencias_seguridad'], true) ?: []) : [];
+                $adv_nota = $adv['notas'] ?? '';
+                $desc     = $comp['descripcion_html'] ? mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags($comp['descripcion_html']))), 0, 500) : '';
+                $bloques[] = "=== COMPONENTE ACTUAL ===\n"
+                    . "Nombre: {$comp['nombre_comun']}\n"
+                    . "SKU: {$comp['sku']} | Categoria: {$comp['categoria']} | Unidad: {$comp['unidad']}\n"
+                    . ($adv_nota ? "Seguridad: {$adv_nota}\n" : '')
+                    . ($desc     ? "Descripcion: {$desc}" : '');
+            }
+
+        } elseif ($pagina === 'manual' && $manual_id) {
+            // --- MANUAL PAGE CONTEXT ---
+            $stmt = $pdo->prepare(
+                'SELECT km.tipo_manual, km.ambito, km.resumen, km.time_minutes, km.dificultad_ensamble,
+                        km.pasos_json, km.seguridad_json,
+                        k.nombre AS kit_nombre, ki.nombre_comun AS componente_nombre
+                 FROM kit_manuals km
+                 LEFT JOIN kits k ON k.id = km.kit_id
+                 LEFT JOIN kit_items ki ON ki.id = km.item_id
+                 WHERE km.id = ? AND km.status = \'published\' LIMIT 1'
+            );
+            $stmt->execute([$manual_id]);
+            $manual_ctx = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($manual_ctx) {
+                $entidad = $manual_ctx['kit_nombre'] ?? $manual_ctx['componente_nombre'] ?? 'N/A';
+                $bloques[] = "=== MANUAL ACTUAL ===\n"
+                    . "Tipo: {$manual_ctx['tipo_manual']} | Ambito: {$manual_ctx['ambito']}\n"
+                    . "Para: {$entidad}\n"
+                    . ($manual_ctx['resumen']      ? "Resumen: {$manual_ctx['resumen']}\n" : '')
+                    . ($manual_ctx['time_minutes'] ? "Tiempo: {$manual_ctx['time_minutes']} min | Dificultad: {$manual_ctx['dificultad_ensamble']}\n" : '');
+                if ($manual_ctx['pasos_json']) {
+                    $pasos  = json_decode($manual_ctx['pasos_json'], true) ?: [];
+                    $lineas = array_map(fn($p) => "  {$p['orden']}. {$p['titulo']}", $pasos);
+                    $bloques[] = "=== PASOS DEL MANUAL ===\n" . implode("\n", $lineas);
+                }
+                if ($manual_ctx['seguridad_json']) {
+                    $seg   = json_decode($manual_ctx['seguridad_json'], true) ?: [];
+                    $notas = array_map(fn($n) => "  - {$n['nota']}", $seg['notas'] ?? []);
+                    if ($notas) $bloques[] = "=== SEGURIDAD ===\n" . implode("\n", $notas);
+                }
+            }
+
+        } else {
+            // --- LISTING PAGE: orientacion general segun pagina ---
+            $listado_hints = [
+                'inicio'      => 'El usuario esta en la pagina de inicio. Ayudale a descubrir las clases de ciencia, kits y componentes disponibles.',
+                'catalogo'    => 'El usuario esta explorando el catalogo de clases. Ayudale a encontrar el proyecto adecuado segun sus grados, areas o intereses.',
+                'kits'        => 'El usuario esta viendo el catalogo de kits de ciencia. Orientale sobre los kits disponibles, que incluyen y para que ciclo o grado son.',
+                'componentes' => 'El usuario esta viendo la lista de componentes. Puedes explicar para que sirve cada material o como se usa en experimentos.',
+                'manuales'    => 'El usuario esta explorando los manuales disponibles. Puedes orientarle sobre como seguir un manual, que tipos existen o cual le conviene.',
+            ];
+            if (isset($listado_hints[$pagina])) {
+                $bloques[] = "=== CONTEXTO DE NAVEGACION ===\n" . $listado_hints[$pagina];
+            }
         }
 
     } catch (Exception $e) {
@@ -522,7 +623,11 @@ try {
     }
 
     // ParÃ¡metros por instancia
-    $clase_id        = $instancia === 'frontend' ? (isset($data['clase_id']) ? (int)$data['clase_id'] : null) : null;
+    $clase_id        = $instancia === 'frontend' ? (isset($data['clase_id'])        ? (int)$data['clase_id']        : null) : null;
+    $kit_id          = $instancia === 'frontend' ? (isset($data['kit_id'])          ? (int)$data['kit_id']          : null) : null;
+    $componente_id   = $instancia === 'frontend' ? (isset($data['componente_id'])   ? (int)$data['componente_id']   : null) : null;
+    $manual_id       = $instancia === 'frontend' ? (isset($data['manual_id'])       ? (int)$data['manual_id']       : null) : null;
+    $pagina          = $instancia === 'frontend' ? trim($data['pagina'] ?? 'inicio') : '';
     $contexto_pagina = $instancia === 'backend'  ? trim($data['contexto_pagina'] ?? 'dashboard') : '';
     $entidad_tipo    = $instancia === 'backend'  ? trim($data['entidad_tipo'] ?? '') : null;
     $entidad_id      = $instancia === 'backend'  ? (isset($data['entidad_id']) ? (int)$data['entidad_id'] : null) : null;
@@ -644,7 +749,7 @@ try {
         } else {
             // Construir contexto segÃºn instancia
             if ($instancia === 'frontend') {
-                $contexto_texto = build_context_frontend($pdo, $clase_id);
+                $contexto_texto = build_context_frontend($pdo, $clase_id, $kit_id, $componente_id, $manual_id, $pagina);
             } else {
                 $contexto_texto = build_context_backend($pdo, $contexto_pagina, $entidad_tipo, $entidad_id);
             }
