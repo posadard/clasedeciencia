@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 // Los checkboxes booleanos solo aparecen en POST si están marcados.
                 // Leemos el valor: 1 si checked, 0 si ausente.
-                if ($tipo === 'boolean') {
+                if ($tipo === 'booleano') {
                     $nuevo_valor = isset($_POST[$post_key]) ? '1' : '0';
                     $stmt_upd->execute([$nuevo_valor, $instancia_save, $clave]);
                     continue;
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
 
                 // Sanitizar según tipo
-                if ($tipo === 'boolean') {
+                if ($tipo === 'booleano') {
                     $nuevo_valor = ($nuevo_valor === '1') ? '1' : '0';
                 } elseif ($tipo === 'number') {
                     $nuevo_valor = (string)(float)$nuevo_valor;
@@ -338,7 +338,7 @@ include '../header.php';
                     ?>
                     <div class="ia-form-group <?= $is_full ? 'full-col' : '' ?>">
                         <label for="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
-                        <?php if ($tipo === 'boolean'): ?>
+                        <?php if ($tipo === 'booleano'): ?>
                             <div class="ia-toggle-wrap">
                                 <label class="ia-toggle">
                                     <input type="checkbox" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="1" <?= $valor === '1' ? 'checked' : '' ?>>
@@ -385,7 +385,7 @@ include '../header.php';
                     ?>
                     <div class="ia-form-group <?= $is_full ? 'full-col' : '' ?>">
                         <label for="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
-                        <?php if ($tipo === 'boolean'): ?>
+                        <?php if ($tipo === 'booleano'): ?>
                             <div class="ia-toggle-wrap">
                                 <label class="ia-toggle">
                                     <input type="checkbox" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="be_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="1" <?= $valor === '1' ? 'checked' : '' ?>>
