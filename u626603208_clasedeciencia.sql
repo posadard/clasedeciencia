@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 19, 2026 at 12:18 AM
+-- Generation Time: Mar 21, 2026 at 01:58 AM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -753,6 +753,7 @@ INSERT INTO `competencias` (`id`, `codigo`, `subcategoria`, `nombre`, `explicaci
 
 CREATE TABLE `configuracion_ia` (
   `id` int(11) NOT NULL,
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend',
   `clave` varchar(100) NOT NULL,
   `valor` text DEFAULT NULL,
   `tipo` enum('texto','numero','booleano','json','secreto') DEFAULT 'texto',
@@ -764,8 +765,35 @@ CREATE TABLE `configuracion_ia` (
 -- Dumping data for table `configuracion_ia`
 --
 
-INSERT INTO `configuracion_ia` (`id`, `clave`, `valor`, `tipo`, `descripcion`, `updated_at`) VALUES
-(1, 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2025-12-20 04:46:28');
+INSERT INTO `configuracion_ia` (`id`, `instancia`, `clave`, `valor`, `tipo`, `descripcion`, `updated_at`) VALUES
+(1, 'frontend', 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2026-03-21 01:22:21'),
+(2, 'frontend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del estudiante (1=activa, 0=inactiva)', '2026-03-21 01:22:21'),
+(3, 'frontend', 'groq_api_key', 'GROQ_API_KEY_FRONTEND', 'secreto', 'API Key de Groq para la instancia frontend. Completar desde el panel admin.', '2026-03-21 01:19:55'),
+(4, 'frontend', 'groq_model_1', 'llama-3.3-70b-versatile', 'texto', 'Modelo principal frontend — pedagógico y preciso', '2026-03-21 01:22:21'),
+(5, 'frontend', 'groq_model_2', 'llama-3.1-8b-instant', 'texto', 'Fallback 1 frontend — rápido y económico (560 t/s)', '2026-03-21 01:22:21'),
+(6, 'frontend', 'groq_model_3', 'openai/gpt-oss-20b', 'texto', 'Fallback 2 frontend — último recurso (1000 t/s)', '2026-03-21 01:22:21'),
+(7, 'frontend', 'groq_temperature', '0.5', 'numero', 'Temperatura de muestreo (0-2). 0.5 = respuestas consistentes y seguras', '2026-03-21 01:22:21'),
+(8, 'frontend', 'groq_max_tokens', '800', 'numero', 'Máximo de tokens en la respuesta al estudiante', '2026-03-21 01:22:21'),
+(9, 'frontend', 'groq_top_p', '0.9', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 01:22:21'),
+(10, 'frontend', 'prompt_sistema', 'Eres un asistente científico educativo para estudiantes colombianos de secundaria (grados 6° a 11°). Tu misión es GUIAR, no resolver: usa preguntas socráticas para que el estudiante descubra las respuestas por sí mismo. NUNCA resuelvas preguntas de examen o evaluaciones directamente. SIEMPRE menciona las normas de seguridad antes de cualquier instrucción experimental. Habla con lenguaje claro, amigable y motivador, apropiado para el ciclo educativo del estudiante. Si la pregunta se sale del ámbito científico educativo, redirige amablemente al tema. Responde siempre en español colombiano.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del estudiante', '2026-03-21 01:22:21'),
+(11, 'frontend', 'guardrails_activos', '1', 'booleano', 'Activa el sistema de filtrado de contenido peligroso (1=activo, 0=desactivo)', '2026-03-21 01:22:21'),
+(12, 'frontend', 'palabras_tematicas', '[\"política\",\"religión\",\"violencia\",\"drogas\",\"alcohol\",\"armas\",\"sexo\",\"apuestas\",\"odio\",\"insultos\"]', 'json', 'Palabras fuera del ámbito educativo que activan el guardrail temático', '2026-03-21 01:22:21'),
+(13, 'frontend', 'nivel_safety', 'estricto', 'texto', 'Nivel de safety: estricto|moderado|libre', '2026-03-21 01:22:21'),
+(14, 'frontend', 'mensaje_guardrail', '⚠️ Esa pregunta está fuera del ámbito de esta clase. Consulta con tu profesor. Si tienes dudas sobre seguridad en el experimento, sigue siempre las instrucciones del kit.', 'texto', 'Mensaje mostrado al estudiante cuando se activa un guardrail', '2026-03-21 01:22:21'),
+(42, 'backend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del administrador (1=activa, 0=inactiva)', '2026-03-21 01:29:41'),
+(43, 'backend', 'groq_api_key', 'GROQ_API_KEY_BACKEND', 'secreto', 'API Key de Groq para la instancia backend. Puede ser la misma del frontend o diferente.', '2026-03-21 01:20:13'),
+(44, 'backend', 'groq_model_1', 'openai/gpt-oss-20b', 'texto', 'Modelo principal backend — rápido y técnico (1000 t/s)', '2026-03-21 01:29:41'),
+(45, 'backend', 'groq_model_2', 'llama-3.3-70b-versatile', 'texto', 'Fallback 1 backend — preciso y capaz (280 t/s)', '2026-03-21 01:29:41'),
+(46, 'backend', 'groq_model_3', 'llama-3.1-8b-instant', 'texto', 'Fallback 2 backend — último recurso (560 t/s)', '2026-03-21 01:29:41'),
+(47, 'backend', 'groq_temperature', '0.3', 'numero', 'Temperatura (0-2). 0.3 = respuestas factuales y precisas', '2026-03-21 01:29:41'),
+(48, 'backend', 'groq_max_tokens', '1200', 'numero', 'Máximo de tokens en la respuesta al administrador', '2026-03-21 01:29:41'),
+(49, 'backend', 'groq_top_p', '0.95', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 01:29:41'),
+(50, 'backend', 'prompt_sistema', 'Eres un asistente técnico y operativo para el equipo administrativo de Clase de Ciencia SAS. Tienes acceso al estado actual del sistema: contratos CTeI, entregas de kits educativos, lotes de materiales, clases y métricas de la IA. Responde con precisión usando los datos del contexto proporcionado. Puedes sugerir acciones administrativas, detectar inconsistencias en los datos y ayudar a redactar documentos operativos. Sé directo y conciso. Responde en español.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del administrador', '2026-03-21 01:29:41'),
+(51, 'backend', 'guardrails_activos', '1', 'booleano', 'Guardrails desactivados por defecto para el admin (1=activar si se requiere)', '2026-03-21 01:29:41'),
+(52, 'backend', 'palabras_peligro', '[]', 'json', 'Sin palabras peligro para el admin (lista vacía)', '2026-03-21 01:29:41'),
+(53, 'backend', 'palabras_tematicas', '[]', 'json', 'Sin filtro temático para el admin (lista vacía)', '2026-03-21 01:29:41'),
+(54, 'backend', 'nivel_safety', 'moderado', 'texto', 'Nivel de safety del admin: estricto|moderado|libre', '2026-03-21 01:29:41'),
+(55, 'backend', 'mensaje_guardrail', '⚠️ Esta consulta fue bloqueada por el sistema de seguridad.', 'texto', 'Mensaje de guardrail para el admin (raramente se activa)', '2026-03-21 01:29:41');
 
 -- --------------------------------------------------------
 
@@ -795,6 +823,63 @@ CREATE TABLE `entregas` (
   `fecha` date NOT NULL,
   `acta_pdf` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `footer_enlaces`
+--
+
+CREATE TABLE `footer_enlaces` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `grupo_id` int(10) UNSIGNED NOT NULL,
+  `etiqueta` varchar(120) NOT NULL,
+  `url` varchar(512) NOT NULL,
+  `externo` tinyint(1) NOT NULL DEFAULT 0,
+  `orden` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `activo` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `footer_enlaces`
+--
+
+INSERT INTO `footer_enlaces` (`id`, `grupo_id`, `etiqueta`, `url`, `externo`, `orden`, `activo`) VALUES
+(1, 1, 'Inicio', '/', 0, 1, 1),
+(2, 1, 'Clases', '/clases', 0, 2, 1),
+(3, 1, 'Kits', '/kits', 0, 3, 1),
+(4, 1, 'Componentes', '/componentes', 0, 4, 1),
+(5, 1, 'Manuales', '/manuales.php', 0, 5, 1),
+(6, 1, 'Contacto', '/contact.php', 0, 6, 1),
+(7, 2, 'Sobre Nosotros', '/sobre-nosotros.php', 0, 1, 1),
+(8, 2, 'Términos de Uso', '/terms.php', 0, 2, 1),
+(9, 2, 'Política de Privacidad', '/privacy.php', 0, 3, 1),
+(10, 3, 'UNESCO - Educación', 'https://www.unesco.org/es/education', 1, 1, 1),
+(11, 3, 'Ministerio de Educación (Colombia)', 'https://www.mineducacion.gov.co/', 1, 2, 1),
+(12, 3, 'IBE-UNESCO', 'https://www.ibe.unesco.org/', 1, 3, 1),
+(13, 3, 'OEA - Educación', 'https://www.oas.org/es/sedi/dde/', 1, 4, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `footer_grupos`
+--
+
+CREATE TABLE `footer_grupos` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `titulo` varchar(80) NOT NULL,
+  `orden` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `activo` tinyint(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `footer_grupos`
+--
+
+INSERT INTO `footer_grupos` (`id`, `titulo`, `orden`, `activo`) VALUES
+(1, 'Enlaces Rápidos', 1, 1),
+(2, 'Información', 2, 1),
+(3, 'Páginas de Interés', 3, 1);
 
 -- --------------------------------------------------------
 
@@ -846,7 +931,8 @@ CREATE TABLE `ia_guardrails_log` (
   `palabra_detectada` varchar(255) NOT NULL,
   `tipo_alerta` enum('peligro','advertencia','info') DEFAULT 'peligro',
   `respuesta_dada` text DEFAULT NULL,
-  `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp()
+  `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -866,8 +952,36 @@ CREATE TABLE `ia_logs` (
   `modelo_usado` varchar(100) DEFAULT NULL,
   `costo_estimado` decimal(10,6) DEFAULT NULL COMMENT 'Costo en USD',
   `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`))
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ia_logs`
+--
+
+INSERT INTO `ia_logs` (`id`, `sesion_id`, `clase_id`, `tipo_evento`, `descripcion`, `tokens_usados`, `tiempo_respuesta_ms`, `modelo_usado`, `costo_estimado`, `fecha_hora`, `metadata`, `instancia`) VALUES
+(1, 1, 6, 'consulta', 'Consulta Groq', 880, 1085, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:22:42', NULL, 'frontend'),
+(2, 1, NULL, 'consulta', 'Consulta Groq', 400, 820, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:23:03', NULL, 'frontend'),
+(3, 1, NULL, 'respuesta', NULL, 423, 1529, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:23:05', NULL, 'frontend'),
+(4, 1, NULL, 'consulta', 'Consulta Groq', 420, 1078, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:24:01', NULL, 'frontend'),
+(5, 1, NULL, 'respuesta', NULL, 486, 1805, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:24:03', NULL, 'frontend'),
+(6, 1, 1, 'consulta', 'Consulta Groq', 835, 1059, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:25:33', NULL, 'frontend'),
+(7, NULL, 1, 'consulta', 'Respuesta desde caché', 0, NULL, NULL, 0.000000, '2026-03-21 01:25:33', NULL, 'frontend'),
+(8, 1, 1, 'respuesta', NULL, 0, 0, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:25:33', NULL, 'frontend'),
+(9, 1, NULL, 'consulta', 'Consulta Groq', 380, 694, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:29:44', NULL, 'frontend'),
+(10, 1, NULL, 'respuesta', NULL, 470, 1756, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:29:45', NULL, 'frontend'),
+(11, NULL, NULL, 'consulta', 'Consulta Groq', 266, 2987, 'openai/gpt-oss-20b', 0.000000, '2026-03-21 01:31:04', NULL, 'backend'),
+(12, 1, NULL, 'respuesta', NULL, 117, 535, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:31:04', NULL, 'frontend'),
+(13, NULL, NULL, 'consulta', 'Consulta Groq', 281, 153, 'openai/gpt-oss-20b', 0.000000, '2026-03-21 01:32:57', NULL, 'backend'),
+(14, 1, NULL, 'respuesta', NULL, 86, 158, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:32:57', NULL, 'frontend'),
+(15, NULL, NULL, 'consulta', 'Consulta Groq', 281, 192, 'openai/gpt-oss-20b', 0.000000, '2026-03-21 01:39:19', NULL, 'backend'),
+(16, 1, NULL, 'consulta', 'Consulta Groq', 383, 1083, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:39:23', NULL, 'frontend'),
+(17, 1, 6, 'consulta', 'Consulta Groq', 872, 914, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:39:36', NULL, 'frontend'),
+(18, 1, 6, 'consulta', 'Consulta Groq', 1063, 1356, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:51:34', NULL, 'frontend'),
+(19, 2, NULL, 'consulta', 'Consulta Groq', 472, 996, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:00', NULL, 'frontend'),
+(20, 2, NULL, 'consulta', 'Consulta Groq', 450, 1406, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:14', NULL, 'frontend'),
+(21, 2, NULL, 'consulta', 'Consulta Groq', 552, 3684, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:35', NULL, 'frontend');
 
 -- --------------------------------------------------------
 
@@ -882,8 +996,27 @@ CREATE TABLE `ia_mensajes` (
   `contenido` text NOT NULL,
   `tokens` int(11) DEFAULT 0,
   `fecha_hora` timestamp NOT NULL DEFAULT current_timestamp(),
-  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`))
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ia_mensajes`
+--
+
+INSERT INTO `ia_mensajes` (`id`, `sesion_id`, `rol`, `contenido`, `tokens`, `fecha_hora`, `metadata`, `instancia`) VALUES
+(1, 1, 'user', '¿Qué materiales necesito para este experimento?', 0, '2026-03-21 01:23:05', '{\"timestamp\": \"2026-03-21 01:23:05\"}', 'frontend'),
+(2, 1, 'assistant', 'Para proporcionar una respuesta precisa, necesitaría saber a qué experimento te refieres. Sin embargo, puedo ofrecerte una guía general sobre cómo identificar los materiales necesarios para un experimento científico.\n\n1. **Lee detenidamente el protocolo del experimento**: La mayoría de los experimentos científicos vienen con un protocolo o una guía que detalla los pasos a seguir y los materiales necesarios.\n\n2. **Identifica los materiales básicos**: Dependiendo del tipo de experimento, es posible que necesites materiales básicos como tubos de ensayo, un microscopio, una balanza, o equipos de seguridad como guantes y gafas de seguridad.\n\n3. **Materiales específicos del experimento**: Algunos experimentos requieren materiales específicos relacionados con el tema de estudio, como sustancias químicas, muestras biológicas, o componentes electrónicos.\n\n4. **Herramientas y equipo**: Asegúrate de tener acceso a las herramientas y al equipo necesario para manipular y medir los materiales durante el experimento.\n\n5. **Verifica la disponibilidad**: Antes de comenzar, verifica que tengas acceso a todos los materiales necesarios. Si algunos materiales no están disponibles, considera alternativas o busca formas de adquirirlos.\n\n6. **Seguridad**: Asegúrate de seguir todas las medidas de seguridad recomendadas para el manejo de los materiales y el equipo que vas a utilizar.\n\nSi me proporcionas más detalles sobre el experimento específico que estás planeando realizar, podré darte una lista más precisa de los materiales necesarios.', 423, '2026-03-21 01:23:05', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(3, 1, 'user', '¿Qué materiales necesito para este experimento?', 0, '2026-03-21 01:24:03', '{\"timestamp\": \"2026-03-21 01:24:03\"}', 'frontend'),
+(4, 1, 'assistant', 'Para proporcionar una respuesta precisa, necesitaría saber a qué experimento te refieres. Sin embargo, puedo ofrecerte una guía general sobre cómo identificar los materiales necesarios para un experimento científico.\n\n1. **Lee la descripción del experimento**: La mayoría de las guías de experimentos incluyen una lista de materiales necesarios al principio o al final de la descripción.\n\n2. **Identifica el propósito del experimento**: Entender qué se intenta demostrar o investigar puede ayudarte a deducir qué materiales serán necesarios. Por ejemplo, si es un experimento químico, probablemente necesitarás sustancias químicas específicas, equipo de laboratorio como tubos de ensayo, y posiblemente equipo de protección personal.\n\n3. **Considera el entorno y la seguridad**: Algunos experimentos requieren un espacio específico o condiciones ambientales particulares. También es crucial considerar el equipo de seguridad necesario, como guantes, gafas de seguridad, o un delantal, dependiendo de la naturaleza del experimento.\n\n4. **Busca en línea o en libros de texto**: Si no tienes acceso a la descripción detallada del experimento, puedes buscar en línea o consultar libros de texto relacionados con el tema. Muchos sitios web educativos y recursos científicos ofrecen listas de materiales necesarios para una amplia variedad de experimentos.\n\n5. **Prepara un kit de experimentos básico**: Si planeas realizar experimentos con frecuencia, considera preparar un kit de experimentos básico que incluya materiales comunes como cinta adhesiva, tijeras, papel, lápices, una regla, un cronómetro, y cualquier otro material que se utilice con frecuencia en experimentos generales.\n\nSi me proporcionas más detalles sobre el experimento específico que estás planeando, podría ofrecerte una lista más precisa de los materiales necesarios.', 486, '2026-03-21 01:24:03', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(5, 1, 'user', '¿Qué materiales necesito para este experimento?', 0, '2026-03-21 01:25:33', '{\"timestamp\": \"2026-03-21 01:25:33\"}', 'frontend'),
+(6, 1, 'assistant', 'Excelente pregunta! Antes de empezar, es importante recordar las normas de seguridad básicas de laboratorio. ¿Recuerdas cuáles son algunas de las normas más importantes que debemos seguir en un entorno experimental?\n\nAhora, veamos los materiales que necesitarás para construir tu microscopio sencillo. Según la guía, necesitarás:\n\n* 2 lentes plásticas de 10x\n* 1 cartón rígido\n\n¿Puedes pensar en por qué se utilizan lentes plásticas en lugar de vidrio? ¿Y qué papel crees que juega el cartón rígido en la construcción del microscopio?\n\nRecuerda que es importante leer la guía cuidadosamente y seguir las instrucciones paso a paso para asegurarte de que tengas todo lo que necesitas para completar el experimento de manera segura y efectiva. ¿Quieres seguir adelante y explorar cómo se ensamblan estos materiales para crear un microscopio sencillo?', 0, '2026-03-21 01:25:33', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(7, 1, 'user', '¿Qué materiales necesito para este experimento?', 0, '2026-03-21 01:29:45', '{\"timestamp\": \"2026-03-21 01:29:45\"}', 'frontend'),
+(8, 1, 'assistant', 'Para proporcionar una respuesta precisa, necesitaría saber a qué experimento te refieres. Sin embargo, puedo ofrecerte una guía general sobre cómo identificar los materiales necesarios para un experimento científico.\n\n1. **Lee detenidamente el protocolo del experimento**: La mayoría de los experimentos científicos incluyen una lista de materiales necesarios. Asegúrate de leer cuidadosamente las instrucciones para entender qué materiales se requieren.\n\n2. **Identifica el tipo de experimento**: Dependiendo del tipo de experimento (químico, biológico, físico, etc.), los materiales necesarios pueden variar significativamente. Por ejemplo, un experimento químico puede requerir sustancias químicas, mientras que un experimento biológico puede necesitar equipo de laboratorio específico como microscopios o incubadoras.\n\n3. **Considera el entorno y la seguridad**: Asegúrate de tener el equipo de seguridad adecuado, como guantes, gafas de seguridad, y un delantal, especialmente si el experimento involucra sustancias químicas o procedimientos que puedan ser peligrosos.\n\n4. **Verifica la disponibilidad de los materiales**: Una vez que tengas la lista de materiales, verifica si tienes acceso a ellos. Algunos materiales pueden ser comunes y fáciles de encontrar, mientras que otros pueden requerir una compra especializada o incluso la solicitud a un proveedor específico.\n\n5. **Prepara un espacio de trabajo adecuado**: Asegúrate de que tu espacio de trabajo esté limpio, bien ventilado, y libre de distracciones. Esto es crucial para la seguridad y el éxito del experimento.\n\nSi me proporcionas más detalles sobre el experimento específico que estás planeando realizar, podré ofrecerte una lista más precisa de los materiales necesarios.', 470, '2026-03-21 01:29:45', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(9, 1, 'user', '¿Cuántas clases activas hay?', 0, '2026-03-21 01:31:04', '{\"timestamp\": \"2026-03-21 01:31:04\"}', 'frontend'),
+(10, 1, 'assistant', 'Lo siento, pero no tengo información específica sobre el número de clases activas en este momento. La información proporcionada no incluye detalles sobre clases activas. Si necesitas ayuda con algo más o tienes más detalles para proporcionar, estaré encantado de ayudarte.', 117, '2026-03-21 01:31:04', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(11, 1, 'user', '¿Cuántas clases activas hay?', 0, '2026-03-21 01:32:57', '{\"timestamp\": \"2026-03-21 01:32:57\"}', 'frontend'),
+(12, 1, 'assistant', 'Lo siento, pero no tengo información sobre el número de clases activas. ¿Hay algo más en lo que pueda ayudarte?', 86, '2026-03-21 01:32:57', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend');
 
 -- --------------------------------------------------------
 
@@ -902,6 +1035,16 @@ CREATE TABLE `ia_respuestas_cache` (
   `activa` tinyint(1) DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ia_respuestas_cache`
+--
+
+INSERT INTO `ia_respuestas_cache` (`id`, `clase_id`, `pregunta_normalizada`, `pregunta_original`, `respuesta`, `veces_usada`, `ultima_vez_usada`, `activa`, `created_at`) VALUES
+(1, 6, 'que es este proyecto?', 'que es este proyecto?', '¡Hola! Este proyecto se trata de la emisión de ondas AM, específicamente de cómo se generan, transmiten y reciben las ondas de radio AM. En este proyecto, exploraremos el sistema emisor-canal-receptor, la modulación en amplitud, la resonancia LC y la detección por diodo.\n\nPero antes de empezar, ¿qué sabes sobre las ondas de radio AM? ¿Has escuchado alguna vez la radio y te has preguntado cómo funcionan las ondas de radio para que podamos escuchar música o programas en vivo?\n\nTambién es importante recordar que, antes de comenzar cualquier experimento, debemos seguir las normas de seguridad básicas de laboratorio, como usar equipo de protección personal, evitar cortocircuitos y no tocar componentes eléctricos con las manos desnudas. ¿Recuerdas algunas de estas normas de seguridad?', 0, NULL, 1, '2026-03-21 01:22:42'),
+(2, 1, '¿qué materiales necesito para este experimento?', '¿Qué materiales necesito para este experimento?', 'Excelente pregunta! Antes de empezar, es importante recordar las normas de seguridad básicas de laboratorio. ¿Recuerdas cuáles son algunas de las normas más importantes que debemos seguir en un entorno experimental?\n\nAhora, veamos los materiales que necesitarás para construir tu microscopio sencillo. Según la guía, necesitarás:\n\n* 2 lentes plásticas de 10x\n* 1 cartón rígido\n\n¿Puedes pensar en por qué se utilizan lentes plásticas en lugar de vidrio? ¿Y qué papel crees que juega el cartón rígido en la construcción del microscopio?\n\nRecuerda que es importante leer la guía cuidadosamente y seguir las instrucciones paso a paso para asegurarte de que tengas todo lo que necesitas para completar el experimento de manera segura y efectiva. ¿Quieres seguir adelante y explorar cómo se ensamblan estos materiales para crear un microscopio sencillo?', 1, '2026-03-21 01:25:33', 1, '2026-03-21 01:25:33'),
+(3, 6, 'hola que es este proyecto?', 'hola que es este proyecto?', '¡Hola! Este proyecto se llama \"Emisión de ondas AM\" y es parte de una clase de física y tecnología. El objetivo es que comprendas cómo se generan, transmiten y reciben las ondas de radio AM, que son un tipo de onda electromagnética.\n\nPero antes de empezar, ¿qué sabes sobre las ondas de radio? ¿Has escuchado alguna vez la radio y te has preguntado cómo funciona? ¿Qué crees que es necesario para que una radio funcione correctamente?\n\nRecuerda que es importante seguir las normas de seguridad en el laboratorio, como no tocar equipos eléctricos con las manos mojadas y no mirar directamente a las luces intensas. ¿Has trabajado antes en un laboratorio o has seguido normas de seguridad similares?', 0, NULL, 1, '2026-03-21 01:39:36'),
+(4, 6, 'como se escucha de donde entra el sonido', 'como se escucha de donde entra el sonido', 'Excelente pregunta! La emisión de ondas AM es un tema fascinante. Para entender cómo se escucha el sonido, debemos considerar el sistema emisor-canal-receptor.\n\nImagina que estás en una radio de cristal, y quieres escuchar tu programa favorito. ¿Qué crees que sucede cuando el sonido de la radio llega a tus oídos?\n\nPiensa en los siguientes pasos:\n\n1. **La señal de audio**: La radio emite una señal de audio, que es la voz o la música que se quiere transmitir.\n2. **La modulación**: La señal de audio se modula en amplitud, lo que significa que se combina con una onda portadora de alta frecuencia.\n3. **La transmisión**: La onda modulada se transmite a través del aire como una onda electromagnética.\n4. **La recepción**: La onda electromagnética llega a la antena de la radio de cristal.\n5. **La detección**: La onda electromagnética se detecta y se convierte en una señal de audio nuevamente.\n\nAhora, pregúntate: ¿Qué componente de la radio de cristal es responsable de convertir la onda electromagnética en una señal de audio que puedes escuchar?\n\n¿Es el circuito resonante LC, el diodo detector o el auricular? ¿O es una combinación de todos ellos?\n\nRecuerda que, antes de realizar cualquier experimento, debes seguir las normas de seguridad básicas de laboratorio y seguridad eléctrica. ¿Qué medidas de seguridad crees que debes tomar al trabajar con radios de cristal?', 0, NULL, 1, '2026-03-21 01:51:34');
 
 --
 -- Triggers `ia_respuestas_cache`
@@ -930,8 +1073,17 @@ CREATE TABLE `ia_sesiones` (
   `fecha_ultima_interaccion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `total_mensajes` int(11) DEFAULT 0,
   `tokens_usados` int(11) DEFAULT 0,
-  `estado` enum('activa','finalizada','timeout') DEFAULT 'activa'
+  `estado` enum('activa','finalizada','timeout') DEFAULT 'activa',
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ia_sesiones`
+--
+
+INSERT INTO `ia_sesiones` (`id`, `sesion_hash`, `clase_id`, `fecha_inicio`, `fecha_ultima_interaccion`, `total_mensajes`, `tokens_usados`, `estado`, `instancia`) VALUES
+(1, 'd5c21494d10484856db76c133c6e1e0e', 6, '2026-03-21 01:22:41', '2026-03-21 01:51:32', 12, 1582, 'activa', 'frontend'),
+(2, '2bcef2b801e0d699f7db24336d0b60f1', NULL, '2026-03-21 01:54:59', '2026-03-21 01:55:31', 0, 0, 'activa', 'frontend');
 
 -- --------------------------------------------------------
 
@@ -950,6 +1102,13 @@ CREATE TABLE `ia_stats_clase` (
   `ultima_consulta` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ia_stats_clase`
+--
+
+INSERT INTO `ia_stats_clase` (`clase_id`, `total_consultas`, `total_sesiones`, `tokens_totales`, `costo_total`, `promedio_mensajes_sesion`, `guardrails_activados`, `ultima_consulta`, `updated_at`) VALUES
+(1, 1, 1, 0, 0.00, 0.00, 0, '2026-03-21 01:25:33', '2026-03-21 01:25:33');
 
 -- --------------------------------------------------------
 
@@ -1197,6 +1356,33 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `paginas_estaticas`
+--
+
+CREATE TABLE `paginas_estaticas` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `slug` varchar(80) NOT NULL,
+  `titulo` varchar(255) NOT NULL,
+  `meta_description` varchar(320) DEFAULT NULL,
+  `contenido_html` mediumtext DEFAULT NULL,
+  `activo` tinyint(1) NOT NULL DEFAULT 1,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `updated_by` varchar(80) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `paginas_estaticas`
+--
+
+INSERT INTO `paginas_estaticas` (`id`, `slug`, `titulo`, `meta_description`, `contenido_html`, `activo`, `updated_at`, `updated_by`) VALUES
+(1, 'sobre-nosotros', 'Sobre Nosotros', 'Conoce el equipo y la misión detrás de Clase de Ciencia, plataforma de formación científica para estudiantes colombianos.', '<p>Somos una plataforma de formación científica para estudiantes de educación básica y media en Colombia, con guías interactivas, proyectos prácticos y orientación personalizada.</p>\n<p>Escríbenos a <a href=\"mailto:soporte@clasedeciencia.com\">soporte@clasedeciencia.com</a></p>', 1, '2026-03-19 00:23:11', 'admin'),
+(2, 'terms', 'Términos de Uso', 'Términos y condiciones de uso de Clase de Ciencia.', '<h2>Uso de la plataforma</h2>\n<p>El contenido de Clase de Ciencia es de carácter educativo y no reemplaza la orientación de un docente calificado.</p>\n<h2>Limitación de responsabilidad</h2>\n<p>Clase de Ciencia no se hace responsable por el uso inadecuado de los materiales o experimentos descritos en la plataforma.</p>\n<h2>Contacto</h2>\n<p>Para consultas sobre estos términos escríbenos a <a href=\"mailto:soporte@clasedeciencia.com\">soporte@clasedeciencia.com</a>.</p>', 1, '2026-03-19 00:23:11', 'admin'),
+(3, 'privacy', 'Política de Privacidad', 'Cómo recopilamos, usamos y protegemos tu información en Clase de Ciencia.', '<h2>Información que recopilamos</h2>\n<p>No requerimos registro de usuario. Únicamente recopilamos datos anónimos de navegación para mejorar la experiencia de la plataforma.</p>\n<h2>Cookies y analíticas</h2>\n<p>Utilizamos cookies de sesión estrictas y herramientas de analítica anónima. No compartimos datos personales con terceros.</p>\n<h2>Enlaces externos</h2>\n<p>Nuestra plataforma puede contener enlaces a sitios externos. No somos responsables de sus políticas de privacidad.</p>\n<h2>Contacto</h2>\n<p>Para consultas sobre privacidad escríbenos a <a href=\"mailto:soporte@clasedeciencia.com\">soporte@clasedeciencia.com</a>.</p>', 1, '2026-03-19 00:23:11', 'admin'),
+(4, 'contact', 'Contacto', 'Ponte en contacto con el equipo de Clase de Ciencia.', '<h2>Escríbenos</h2>\n<p>Para soporte técnico, preguntas pedagógicas o información sobre nuestros kits, contáctanos en:</p>\n<p><a href=\"mailto:soporte@clasedeciencia.com\">soporte@clasedeciencia.com</a></p>\n<h2>Temas que atendemos</h2>\n<ul>\n  <li>Soporte técnico con kits y componentes</li>\n  <li>Orientación pedagógica sobre las clases</li>\n  <li>Solicitudes institucionales (contratos CTeI)</li>\n  <li>Alianzas y colaboraciones educativas</li>\n</ul>', 1, '2026-03-19 00:23:11', 'admin');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `prompts_clase`
 --
 
@@ -1286,6 +1472,32 @@ INSERT INTO `recursos_multimedia` (`id`, `clase_id`, `kit_id`, `item_id`, `manua
 (14, 14, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/tratamiento-de-agua', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
 (15, 12, NULL, NULL, NULL, 'link', 'https://clasedeciencia.com/clase/turbina-eolica-de-mesa', 'Guía interactiva', 'Accede a la guía digital de la clase', 1, 'gallery', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 04:46:28'),
 (16, NULL, 6, NULL, NULL, 'imagen', '/assets/images/uploads/kit/2026/03/kit-20260309-214812-c0059bffc19c.webp', 'Radio de cristal', 'Kit para comprender recepción AM con circuito resonante LC y detección por diodo.', 0, 'primary', 'image/webp', 800, 800, NULL, '2026-03-09 21:48:12', NULL, NULL, 'es-CO', NULL, 'Clase de Ciencia', NULL, '2026-03-10 02:48:17');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sitio_config`
+--
+
+CREATE TABLE `sitio_config` (
+  `clave` varchar(60) NOT NULL,
+  `valor` text DEFAULT NULL,
+  `descripcion` varchar(255) DEFAULT NULL,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `sitio_config`
+--
+
+INSERT INTO `sitio_config` (`clave`, `valor`, `descripcion`, `updated_at`) VALUES
+('email_contacto', 'soporte@clasedeciencia.com', 'Email de contacto principal', '2026-03-19 00:23:11'),
+('facebook_url', '', 'URL del perfil de Facebook (dejar vacío para ocultar el ícono)', '2026-03-19 00:23:11'),
+('footer_texto_sobre', 'Plataforma de formación científica para estudiantes de educación básica y media, con guías interactivas, proyectos prácticos y orientación personalizada.', 'Párrafo descriptivo en la columna \"Acerca de\" del footer', '2026-03-19 00:23:11'),
+('instagram_url', '', 'URL del perfil de Instagram (dejar vacío para ocultar el ícono)', '2026-03-19 00:23:11'),
+('sitio_descripcion', 'Proyectos científicos interactivos para estudiantes colombianos (6°-11°).', 'Meta description global del sitio', '2026-03-19 00:23:11'),
+('sitio_nombre', 'Clase de Ciencia', 'Nombre del sitio (aparece en encabezados y footer)', '2026-03-19 00:23:11'),
+('youtube_url', '', 'URL del canal de YouTube (dejar vacío para ocultar el ícono)', '2026-03-19 00:23:11');
 
 -- --------------------------------------------------------
 
@@ -1482,7 +1694,7 @@ ALTER TABLE `competencias`
 --
 ALTER TABLE `configuracion_ia`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_config_ia_clave` (`clave`);
+  ADD UNIQUE KEY `uk_instancia_clave` (`instancia`,`clave`);
 
 --
 -- Indexes for table `contratos`
@@ -1497,6 +1709,19 @@ ALTER TABLE `contratos`
 ALTER TABLE `entregas`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_entregas_contrato` (`contrato_id`);
+
+--
+-- Indexes for table `footer_enlaces`
+--
+ALTER TABLE `footer_enlaces`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_grupo` (`grupo_id`);
+
+--
+-- Indexes for table `footer_grupos`
+--
+ALTER TABLE `footer_grupos`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `guias`
@@ -1603,6 +1828,13 @@ ALTER TABLE `kit_manuals`
   ADD KEY `idx_km_status_pubat` (`status`,`published_at`);
 
 --
+-- Indexes for table `paginas_estaticas`
+--
+ALTER TABLE `paginas_estaticas`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_slug` (`slug`);
+
+--
 -- Indexes for table `prompts_clase`
 --
 ALTER TABLE `prompts_clase`
@@ -1624,6 +1856,12 @@ ALTER TABLE `recursos_multimedia`
   ADD KEY `idx_rm_kit_order` (`kit_id`,`sort_order`),
   ADD KEY `idx_rm_item_order` (`item_id`,`sort_order`),
   ADD KEY `idx_rm_manual_order` (`manual_id`,`sort_order`);
+
+--
+-- Indexes for table `sitio_config`
+--
+ALTER TABLE `sitio_config`
+  ADD PRIMARY KEY (`clave`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -1687,7 +1925,7 @@ ALTER TABLE `competencias`
 -- AUTO_INCREMENT for table `configuracion_ia`
 --
 ALTER TABLE `configuracion_ia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `contratos`
@@ -1700,6 +1938,18 @@ ALTER TABLE `contratos`
 --
 ALTER TABLE `entregas`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `footer_enlaces`
+--
+ALTER TABLE `footer_enlaces`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `footer_grupos`
+--
+ALTER TABLE `footer_grupos`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `guias`
@@ -1717,25 +1967,25 @@ ALTER TABLE `ia_guardrails_log`
 -- AUTO_INCREMENT for table `ia_logs`
 --
 ALTER TABLE `ia_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `ia_mensajes`
 --
 ALTER TABLE `ia_mensajes`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `ia_respuestas_cache`
 --
 ALTER TABLE `ia_respuestas_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `ia_sesiones`
 --
 ALTER TABLE `ia_sesiones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `kits`
@@ -1754,6 +2004,12 @@ ALTER TABLE `kit_items`
 --
 ALTER TABLE `kit_manuals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `paginas_estaticas`
+--
+ALTER TABLE `paginas_estaticas`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `prompts_clase`
@@ -1860,6 +2116,12 @@ ALTER TABLE `clase_tags`
 --
 ALTER TABLE `entregas`
   ADD CONSTRAINT `fk_entregas_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `footer_enlaces`
+--
+ALTER TABLE `footer_enlaces`
+  ADD CONSTRAINT `fk_fenlaces_grupo` FOREIGN KEY (`grupo_id`) REFERENCES `footer_grupos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `guias`

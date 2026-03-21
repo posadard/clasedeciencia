@@ -121,6 +121,132 @@ function groq_con_fallback(string $api_key, array $modelos, array $messages, flo
 }
 
 // ---------------------------------------------------------------
+// Buscador de sugerencias por palabras clave
+// Devuelve hasta $limit recursos relevantes de la BD
+// ---------------------------------------------------------------
+function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
+    $palabras = array_filter(
+        preg_split('/\s+/', mb_strtolower($pregunta, 'UTF-8')),
+        fn($p) => mb_strlen($p) >= 4
+    );
+    if (empty($palabras)) return [];
+
+    $sugerencias = [];
+    // Usar solo las primeras 5 palabras significativas para no sobrecargar la consulta
+    $palabras = array_slice($palabras, 0, 5);
+
+    $condiciones = implode(' OR ', array_fill(0, count($palabras),
+        '(LOWER(c.nombre) LIKE ? OR LOWER(c.resumen) LIKE ?)'));
+    $params = [];
+    foreach ($palabras as $p) { $params[] = "%$p%"; $params[] = "%$p%"; }
+
+    try {
+        // Clases
+        $stmt = $pdo->prepare(
+            "SELECT 'clase' AS tipo, c.nombre, c.slug, c.resumen AS desc_corta
+             FROM clases c
+             WHERE c.activo = 1 AND ({$condiciones})
+             ORDER BY c.featured DESC LIMIT ?"
+        );
+        $stmt->execute(array_merge($params, [$limit]));
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $sugerencias[] = [
+                'tipo'  => 'clase',
+                'icono' => '🔬',
+                'label' => 'Clase',
+                'titulo' => $r['nombre'],
+                'url'   => '/' . $r['slug'],
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+            ];
+        }
+
+        // Kits
+        $cond_kit = implode(' OR ', array_fill(0, count($palabras),
+            '(LOWER(k.nombre) LIKE ? OR LOWER(k.descripcion) LIKE ?)'));
+        $params_kit = [];
+        foreach ($palabras as $p) { $params_kit[] = "%$p%"; $params_kit[] = "%$p%"; }
+        $stmt = $pdo->prepare(
+            "SELECT 'kit' AS tipo, k.nombre, k.slug, k.descripcion AS desc_corta
+             FROM kits k
+             WHERE k.activo = 1 AND ({$cond_kit})
+             LIMIT ?"
+        );
+        $stmt->execute(array_merge($params_kit, [$limit]));
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $sugerencias[] = [
+                'tipo'  => 'kit',
+                'icono' => '🧰',
+                'label' => 'Kit',
+                'titulo' => $r['nombre'],
+                'url'   => '/kit/' . $r['slug'],
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+            ];
+        }
+
+        // Componentes (kit_items)
+        $cond_comp = implode(' OR ', array_fill(0, count($palabras),
+            '(LOWER(ki.nombre) LIKE ? OR LOWER(ki.descripcion_corta) LIKE ?)'));
+        $params_comp = [];
+        foreach ($palabras as $p) { $params_comp[] = "%$p%"; $params_comp[] = "%$p%"; }
+        $stmt = $pdo->prepare(
+            "SELECT ki.nombre, ki.slug, ki.descripcion_corta AS desc_corta
+             FROM kit_items ki
+             WHERE ki.activo = 1 AND ki.slug IS NOT NULL AND ({$cond_comp})
+             LIMIT ?"
+        );
+        $stmt->execute(array_merge($params_comp, [$limit]));
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $sugerencias[] = [
+                'tipo'  => 'componente',
+                'icono' => '⚗️',
+                'label' => 'Componente',
+                'titulo' => $r['nombre'],
+                'url'   => '/componente/' . $r['slug'],
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+            ];
+        }
+
+        // Manuales
+        $cond_man = implode(' OR ', array_fill(0, count($palabras),
+            '(LOWER(m.titulo) LIKE ? OR LOWER(m.descripcion) LIKE ?)'));
+        $params_man = [];
+        foreach ($palabras as $p) { $params_man[] = "%$p%"; $params_man[] = "%$p%"; }
+        $stmt = $pdo->prepare(
+            "SELECT m.titulo AS nombre, m.slug, m.descripcion AS desc_corta
+             FROM kit_manuals m
+             WHERE m.status = 'published' AND ({$cond_man})
+             LIMIT ?"
+        );
+        $stmt->execute(array_merge($params_man, [$limit]));
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $sugerencias[] = [
+                'tipo'  => 'manual',
+                'icono' => '📖',
+                'label' => 'Manual',
+                'titulo' => $r['nombre'],
+                'url'   => '/manual/' . $r['slug'],
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+            ];
+        }
+
+    } catch (Exception $e) {
+        error_log('IA sugerencias error: ' . $e->getMessage());
+    }
+
+    // Eliminar duplicados por URL y limitar total
+    $vistas = [];
+    $result  = [];
+    foreach ($sugerencias as $s) {
+        if (!isset($vistas[$s['url']])) {
+            $vistas[$s['url']] = true;
+            $result[] = $s;
+        }
+        if (count($result) >= $limit) break;
+    }
+    return $result;
+}
+
+// ---------------------------------------------------------------
 // Context Builders
 // ---------------------------------------------------------------
 
@@ -571,10 +697,17 @@ try {
         error_log('IA log error: ' . $e->getMessage());
     }
 
+    // Sugerencias de contenido relacionado (solo si no hay guardrail)
+    $sugerencias = [];
+    if (!$guardrail_activado && $instancia === 'frontend') {
+        $sugerencias = buscar_sugerencias($pdo, $pregunta, 4);
+    }
+
     ob_end_clean(); // descartar warnings/notices PHP antes de responder
     echo json_encode([
         'ok'                 => true,
         'respuesta'          => $respuesta,
+        'sugerencias'        => $sugerencias,
         'guardrail_activado' => $guardrail_activado,
         'cached'             => $cached,
         'modelo_usado'       => $modelo_usado,

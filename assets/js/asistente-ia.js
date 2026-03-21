@@ -146,6 +146,69 @@
       scroll-behavior: smooth;
     }
 
+    /* Sugerencias de contenido */
+    .ia-sugerencias {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-top: 6px;
+      align-self: flex-start;
+      width: 100%;
+      max-width: 88%;
+    }
+    .ia-sugerencias-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+    .ia-sug-card {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 11px;
+      background: #fff;
+      border: 1px solid #e2e5eb;
+      border-radius: 9px;
+      text-decoration: none;
+      color: #2b2b2b;
+      transition: background 0.15s, border-color 0.15s, transform 0.12s;
+      cursor: pointer;
+    }
+    .ia-sug-card:hover {
+      background: #eef2ff;
+      border-color: #93a8f4;
+      transform: translateX(2px);
+    }
+    .ia-sug-icon { font-size: 18px; flex-shrink: 0; }
+    .ia-sug-body { min-width: 0; }
+    .ia-sug-label {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      margin-bottom: 1px;
+    }
+    .ia-sug-titulo {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #1f3c88;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ia-sug-desc {
+      font-size: 11px;
+      color: #6b7280;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ia-sug-arrow { margin-left: auto; color: #9ca3af; font-size: 13px; flex-shrink: 0; }
+
     /* Estado vacío */
     .ia-chat-empty {
       display: flex;
@@ -393,6 +456,33 @@
     return t;
   }
 
+  function addSugerencias(log, sugerencias) {
+    if (!sugerencias || sugerencias.length === 0) return;
+    var wrap = document.createElement('div');
+    wrap.className = 'ia-sugerencias';
+    var label = document.createElement('div');
+    label.className = 'ia-sugerencias-label';
+    label.textContent = '📎 Te puede interesar';
+    wrap.appendChild(label);
+    sugerencias.forEach(function (s) {
+      var a = document.createElement('a');
+      a.className = 'ia-sug-card';
+      a.href = s.url;
+      // Abrir en la misma pestaña — el usuario sigue en el sitio
+      a.innerHTML =
+        '<span class="ia-sug-icon">' + s.icono + '</span>' +
+        '<span class="ia-sug-body">' +
+          '<div class="ia-sug-label">' + s.label + '</div>' +
+          '<div class="ia-sug-titulo">' + s.titulo + '</div>' +
+          (s.desc ? '<div class="ia-sug-desc">' + s.desc + '</div>' : '') +
+        '</span>' +
+        '<span class="ia-sug-arrow">›</span>';
+      wrap.appendChild(a);
+    });
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
   var BIENVENIDA = {
     'clase':       { icono: '🔬', titulo: '¡Hola! Soy CiencIA',       hint: 'Puedes seguir leyendo el experimento<br>y preguntarme lo que necesites.' },
     'kit':         { icono: '🧰', titulo: '¡Hola! Soy CiencIA',       hint: 'Pregúntame sobre los componentes,<br>usos o instrucciones de este kit.' },
@@ -502,6 +592,7 @@
         typing.remove();
         if (json && json.ok) {
           addBubble(ui.log, 'ia', json.respuesta);
+          addSugerencias(ui.log, json.sugerencias);
         } else {
           addBubble(ui.log, 'ia', '❌ ' + (json && json.error ? json.error : 'Error al procesar la consulta.'));
         }
