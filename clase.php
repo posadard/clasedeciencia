@@ -1000,4 +1000,14 @@ console.log('🔗 [Clase] Relacionadas:', <?= count($clases_relacionadas) ?>);
 .materials-list li { position:relative; }
 .materials-list li .card-magnify { font-size:16px; }
 </style>
+
+<!-- Asistente IA Widget -->
+<script src="/assets/js/asistente-ia.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.initAsistenteIA({ claseId: <?= (int)$proyecto['id'] ?> });
+    console.log('✅ [clase.php] Asistente IA inicializado. clase_id:', <?= (int)$proyecto['id'] ?>);
+  });
+</script>
+
 <?php include 'includes/footer.php'; ?>

@@ -1,5 +1,5 @@
 // Asistente IA - Widget Cliente
-// Uso: en clase.php, llama initAsistenteIA({ proyectoId })
+// Uso: en clase.php, llama initAsistenteIA({ claseId })
 
 (function () {
   function createUI() {
@@ -83,7 +83,7 @@
   }
 
   window.initAsistenteIA = function (ctx) {
-    const proyectoId = ctx && ctx.proyectoId ? ctx.proyectoId : null;
+    const claseId = ctx && ctx.claseId ? ctx.claseId : null;
     const ui = createUI();
 
     ui.btn.addEventListener('click', function () {
@@ -98,10 +98,10 @@
       ui.input.value = '';
 
       try {
-        const resp = await fetch('/api/ia-consulta.php', {
+      const resp = await fetch('/api/ia-consulta.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ proyecto_id: proyectoId, pregunta })
+          body: JSON.stringify({ instancia: 'frontend', clase_id: claseId, pregunta })
         });
         console.log('📡 [asistente-ia] Status:', resp.status);
         const json = await resp.json();
