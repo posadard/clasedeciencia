@@ -20,6 +20,17 @@
     body.ia-panel-open.ia-panel-expanded {
       padding-right: ${PANEL_W_EXP}px;
     }
+    /* Pantalla completa: sin push al body, el panel cubre todo */
+    body.ia-panel-fullscreen {
+      padding-right: 0 !important;
+    }
+    .ia-side-panel.ia-fullscreen {
+      width: 100vw !important;
+      top: 0;
+      left: 0;
+      border-left: none;
+      box-shadow: none;
+    }
 
     /* Tab/trigger pegado al borde derecho (solo cuando el panel está cerrado) */
     .ia-trigger {
@@ -393,9 +404,11 @@
     /* Responsive — en móvil el panel ocupa toda la pantalla (no push) */
     @media (max-width: 768px) {
       body.ia-panel-open,
-      body.ia-panel-open.ia-panel-expanded { padding-right: 0; }
+      body.ia-panel-open.ia-panel-expanded,
+      body.ia-panel-fullscreen { padding-right: 0; }
       .ia-side-panel,
-      .ia-side-panel.ia-expanded { width: 100vw; }
+      .ia-side-panel.ia-expanded,
+      .ia-side-panel.ia-fullscreen { width: 100vw; }
       .ia-trigger-label { display: none; }
       .ia-trigger { padding: 12px 9px; }
     }
@@ -696,6 +709,7 @@
     injectCSS();
     var ui = createUI();
     var isExpanded = false;
+    var expandState = 0; // 0=normal, 1=expandido, 2=pantalla completa
     var historial = []; // historial de la conversación: [{role,content}, ...]
     cargarCatalogo(); // carga catálogo en background para sugerencias client-side
 
@@ -721,9 +735,10 @@
     }
 
     function closePanel() {
-      ui.panel.classList.remove('ia-open');
-      document.body.classList.remove('ia-panel-open', 'ia-panel-expanded');
+      ui.panel.classList.remove('ia-open', 'ia-expanded', 'ia-fullscreen');
+      document.body.classList.remove('ia-panel-open', 'ia-panel-expanded', 'ia-panel-fullscreen');
       ui.trigger.style.display = '';
+      expandState = 0;
       isExpanded = false;
       ui.expandBtn.textContent = '⇔';
       ui.expandBtn.title = 'Expandir panel';
@@ -734,11 +749,33 @@
     ui.closeBtn.addEventListener('click', closePanel);
 
     ui.expandBtn.addEventListener('click', function () {
-      isExpanded = !isExpanded;
-      ui.panel.classList.toggle('ia-expanded', isExpanded);
-      document.body.classList.toggle('ia-panel-expanded', isExpanded);
-      ui.expandBtn.textContent = isExpanded ? '⇤' : '⇔';
-      ui.expandBtn.title = isExpanded ? 'Reducir panel' : 'Expandir panel';
+      expandState = (expandState + 1) % 3;
+
+      // Limpiar todos los estados
+      ui.panel.classList.remove('ia-expanded', 'ia-fullscreen');
+      document.body.classList.remove('ia-panel-expanded', 'ia-panel-fullscreen');
+
+      if (expandState === 1) {
+        // Expandido (560px)
+        ui.panel.classList.add('ia-expanded');
+        document.body.classList.add('ia-panel-expanded');
+        ui.expandBtn.textContent = '⛶';
+        ui.expandBtn.title = 'Pantalla completa';
+        isExpanded = true;
+      } else if (expandState === 2) {
+        // Pantalla completa
+        ui.panel.classList.add('ia-fullscreen');
+        document.body.classList.add('ia-panel-fullscreen');
+        ui.expandBtn.textContent = '⤢';
+        ui.expandBtn.title = 'Reducir panel';
+        isExpanded = true;
+      } else {
+        // Normal (360px)
+        ui.expandBtn.textContent = '⇔';
+        ui.expandBtn.title = 'Expandir panel';
+        isExpanded = false;
+      }
+      console.log('🔍 [asistente-ia] expandState:', expandState);
     });
 
     // textOverride: usado por chips de preguntas y botón Profundiza
