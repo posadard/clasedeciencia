@@ -9,6 +9,13 @@
  * Response: { ok, respuesta, guardrail_activado, cached, modelo_usado, tokens, tiempo_ms }
  */
 
+// Evitar que PHP imprima warnings/notices dentro de la respuesta JSON
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
+// Capturar cualquier salida espuria antes del JSON
+ob_start();
+
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../config.php';
@@ -18,6 +25,7 @@ require_once __DIR__ . '/../config.php';
 // ---------------------------------------------------------------
 
 function json_fail(string $message, array $extra = []): void {
+    ob_end_clean(); // descartar cualquier salida PHP previa
     echo json_encode(array_merge(['ok' => false, 'error' => $message], $extra),
         JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -546,6 +554,7 @@ try {
         error_log('IA log error: ' . $e->getMessage());
     }
 
+    ob_end_clean(); // descartar warnings/notices PHP antes de responder
     echo json_encode([
         'ok'                 => true,
         'respuesta'          => $respuesta,
@@ -558,6 +567,7 @@ try {
 
 } catch (Throwable $e) {
     error_log('IA consulta fatal: ' . $e->getMessage());
+    ob_end_clean();
     json_fail('Error interno del servidor.');
 }
 
