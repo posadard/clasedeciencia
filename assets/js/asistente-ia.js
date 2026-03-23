@@ -580,6 +580,13 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  // Patrones de segunda persona: la IA le pregunta AL usuario → no aptos como chip
+  var _SEGUNDA_PERSONA = [
+    '¿estás', '¿te ', '¿te\u00a0', '¿prefieres', '¿quieres', '¿quisieras',
+    '¿te gustaría', '¿puedes', '¿has ', '¿cuál es tu', '¿cuáles son tus',
+    '¿tienes', '¿conoces', '¿sabes', '¿podrías', '¿qué te'
+  ];
+
   function extraerPreguntas(texto) {
     var preguntas = [];
     var partes = texto.split('?');
@@ -587,23 +594,36 @@
       var seg = partes[i];
       var inicio = Math.max(seg.lastIndexOf('. '), seg.lastIndexOf('! '), seg.lastIndexOf('\n'));
       var q = (inicio >= 0 ? seg.substring(inicio + 2) : seg).trim() + '?';
-      if (q.length > 15 && q.length < 180) preguntas.push(q);
+      if (q.length <= 15 || q.length >= 180) continue;
+      // Filtrar preguntas dirigidas al usuario (segunda persona) — no tiene sentido enviarlas como input
+      var qLower = q.toLowerCase();
+      var dirigidaAlUsuario = _SEGUNDA_PERSONA.some(function(p) { return qLower.indexOf(p) !== -1; });
+      if (!dirigidaAlUsuario) preguntas.push(q);
     }
     return preguntas.slice(0, 2);
   }
 
   function addIAActions(log, texto, onSend) {
     var preguntas = extraerPreguntas(texto);
+    // Si la IA termina con una pregunta al usuario, está esperando respuesta:
+    // no mostrar Profundiza (no hay nada que expandir aún)
+    var terminaEnPregunta = texto.trim().slice(-1) === '?';
+    var mostrarProfundiza  = !terminaEnPregunta && texto.length > 120;
+
+    if (!mostrarProfundiza && preguntas.length === 0) return; // nada útil que mostrar
+
     var row = document.createElement('div');
     row.className = 'ia-action-row';
 
-    var profBtn = document.createElement('button');
-    profBtn.className = 'ia-profundiza-btn';
-    profBtn.textContent = '🔍 Profundiza';
-    profBtn.addEventListener('click', function() {
-      onSend('Profundiza en tu última respuesta y dame más detalles.');
-    });
-    row.appendChild(profBtn);
+    if (mostrarProfundiza) {
+      var profBtn = document.createElement('button');
+      profBtn.className = 'ia-profundiza-btn';
+      profBtn.textContent = '🔍 Profundiza';
+      profBtn.addEventListener('click', function() {
+        onSend('Profundiza en tu última respuesta y dame más detalles.');
+      });
+      row.appendChild(profBtn);
+    }
 
     preguntas.forEach(function(q) {
       var chip = document.createElement('button');
