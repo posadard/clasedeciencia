@@ -6,11 +6,23 @@ $page_title = 'Panel IA';
 // Helpers
 // ---------------------------------------------------------------
 function ia_get_config(PDO $pdo, string $instancia): array {
-    $stmt = $pdo->prepare('SELECT clave, valor, tipo FROM configuracion_ia WHERE instancia = ? ORDER BY clave');
+    // Solo filas globales (pagina IS NULL)
+    $stmt = $pdo->prepare('SELECT clave, valor, tipo FROM configuracion_ia WHERE instancia = ? AND pagina IS NULL ORDER BY clave');
     $stmt->execute([$instancia]);
     $out = [];
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $out[$row['clave']] = ['valor' => $row['valor'], 'tipo' => $row['tipo']];
+    }
+    return $out;
+}
+
+// Devuelve overrides agrupados por pagina: ['clase' => ['prompt_sistema' => [...], ...], ...]
+function ia_get_config_paginas(PDO $pdo, string $instancia): array {
+    $stmt = $pdo->prepare('SELECT pagina, clave, valor, tipo FROM configuracion_ia WHERE instancia = ? AND pagina IS NOT NULL ORDER BY pagina, clave');
+    $stmt->execute([$instancia]);
+    $out = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $out[$row['pagina']][$row['clave']] = ['valor' => $row['valor'], 'tipo' => $row['tipo']];
     }
     return $out;
 }
@@ -49,51 +61,75 @@ $save_error  = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_config') {
     $instancia_save = in_array($_POST['instancia'] ?? '', ['frontend', 'backend']) ? $_POST['instancia'] : null;
+    // pagina_save: NULL = global, o nombre de página (clase, kit, etc.)
+    $paginas_validas = ['clase', 'kit', 'componente', 'manual', 'inicio', 'catalogo'];
+    $pagina_raw      = $_POST['pagina'] ?? '';
+    $pagina_save     = ($pagina_raw === '' || $pagina_raw === 'global') ? null : $pagina_raw;
+    if ($pagina_save !== null && !in_array($pagina_save, $paginas_validas, true)) {
+        $pagina_save = null;   // fallback seguro
+    }
+
     if (!$instancia_save) {
         $save_error = 'Instancia inválida.';
     } else {
         try {
-            $stmt_get  = $pdo->prepare('SELECT clave, tipo FROM configuracion_ia WHERE instancia = ?');
-            $stmt_get->execute([$instancia_save]);
-            $campos = $stmt_get->fetchAll(PDO::FETCH_KEY_PAIR);     // clave => tipo
+            // Obtener tipos de las claves que corresponden a este scope (global o página)
+            if ($pagina_save === null) {
+                $stmt_get = $pdo->prepare('SELECT clave, tipo FROM configuracion_ia WHERE instancia = ? AND pagina IS NULL');
+                $stmt_get->execute([$instancia_save]);
+            } else {
+                $stmt_get = $pdo->prepare('SELECT clave, tipo FROM configuracion_ia WHERE instancia = ? AND pagina = ?');
+                $stmt_get->execute([$instancia_save, $pagina_save]);
+            }
+            $campos = $stmt_get->fetchAll(PDO::FETCH_KEY_PAIR);   // clave => tipo
 
-            $stmt_upd = $pdo->prepare(
-                'UPDATE configuracion_ia SET valor = ?, updated_at = NOW() WHERE instancia = ? AND clave = ?'
-            );
+            // UPDATE apuntando exactamente al scope correcto
+            if ($pagina_save === null) {
+                $stmt_upd = $pdo->prepare(
+                    'UPDATE configuracion_ia SET valor = ?, updated_at = NOW() WHERE instancia = ? AND pagina IS NULL AND clave = ?'
+                );
+            } else {
+                $stmt_upd = $pdo->prepare(
+                    'UPDATE configuracion_ia SET valor = ?, updated_at = NOW() WHERE instancia = ? AND pagina = ? AND clave = ?'
+                );
+            }
 
             foreach ($campos as $clave => $tipo) {
                 $post_key = 'cfg_' . $clave;
 
-                // Los checkboxes booleanos solo aparecen en POST si están marcados.
-                // Leemos el valor: 1 si checked, 0 si ausente.
                 if ($tipo === 'booleano') {
                     $nuevo_valor = isset($_POST[$post_key]) ? '1' : '0';
-                    $stmt_upd->execute([$nuevo_valor, $instancia_save, $clave]);
+                    if ($pagina_save === null) {
+                        $stmt_upd->execute([$nuevo_valor, $instancia_save, $clave]);
+                    } else {
+                        $stmt_upd->execute([$nuevo_valor, $instancia_save, $pagina_save, $clave]);
+                    }
                     continue;
                 }
 
                 if (!array_key_exists($post_key, $_POST)) continue;
                 $nuevo_valor = $_POST[$post_key];
 
-                // Para secretos: si vacío o placeholder '●●●●...', no actualizar
                 if ($tipo === 'secreto') {
                     $stripped = trim($nuevo_valor);
                     if ($stripped === '' || substr_count($stripped, '●') > 4) continue;
                 }
 
-                // Sanitizar según tipo
-                if ($tipo === 'booleano') {
-                    $nuevo_valor = ($nuevo_valor === '1') ? '1' : '0';
-                } elseif ($tipo === 'number') {
+                if ($tipo === 'numero') {
                     $nuevo_valor = (string)(float)$nuevo_valor;
                 } else {
                     $nuevo_valor = trim($nuevo_valor);
                 }
 
-                $stmt_upd->execute([$nuevo_valor, $instancia_save, $clave]);
+                if ($pagina_save === null) {
+                    $stmt_upd->execute([$nuevo_valor, $instancia_save, $clave]);
+                } else {
+                    $stmt_upd->execute([$nuevo_valor, $instancia_save, $pagina_save, $clave]);
+                }
             }
+            $scope_label = $pagina_save ? "página '{$pagina_save}'" : 'configuración global';
             $save_ok  = true;
-            $save_msg = "Configuración de instancia '{$instancia_save}' guardada.";
+            $save_msg = "Guardado: instancia '{$instancia_save}' — {$scope_label}.";
         } catch (PDOException $e) {
             error_log('[IA Admin] save error: ' . $e->getMessage());
             $save_error = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
@@ -104,8 +140,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // ---------------------------------------------------------------
 // Cargar datos para vistas
 // ---------------------------------------------------------------
-$cfg_frontend = ia_get_config($pdo, 'frontend');
-$cfg_backend  = ia_get_config($pdo, 'backend');
+$cfg_frontend        = ia_get_config($pdo, 'frontend');
+$cfg_backend         = ia_get_config($pdo, 'backend');
+$cfg_frontend_paginas = ia_get_config_paginas($pdo, 'frontend');
+$paginas_labels = [
+    'clase'      => '🔬 Clase (experimento)',
+    'kit'        => '🧰 Kit',
+    'componente' => '⚗️ Componente',
+    'manual'     => '📖 Manual',
+    'inicio'     => '🚀 Inicio',
+    'catalogo'   => '📚 Catálogo',
+];
 
 // Logs recientes
 $logs_recientes = [];
@@ -323,46 +368,89 @@ include '../header.php';
      TAB: FRONTEND CONFIG
 ================================================================= -->
 <div class="ia-tab-panel <?= $active_tab === 'frontend' ? 'active' : '' ?>" id="tab-frontend">
+
+    <?php
+    // Helper local para renderizar el formulario de un scope (global o página)
+    function ia_render_form(string $instancia, ?string $pagina, array $campos, string $form_id): void {
+        $scope_val = $pagina ?? 'global';
+        $pfx       = $pagina ? 'p_' . $pagina . '_' : 'g_';
+    ?>
+    <form method="post" action="/admin/ia/index.php?tab=frontend" id="<?= htmlspecialchars($form_id, ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="action"    value="save_config">
+        <input type="hidden" name="instancia" value="<?= htmlspecialchars($instancia, ENT_QUOTES, 'UTF-8') ?>">
+        <input type="hidden" name="pagina"    value="<?= htmlspecialchars($scope_val, ENT_QUOTES, 'UTF-8') ?>">
+        <div class="ia-cfg-grid">
+            <?php foreach ($campos as $clave => $meta): ?>
+                <?php
+                $valor   = $meta['valor'];
+                $tipo    = $meta['tipo'];
+                $label   = ia_field_label($clave);
+                $is_full = in_array($clave, ['prompt_sistema', 'palabras_peligro', 'palabras_tematicas', 'mensaje_guardrail']);
+                $uid     = htmlspecialchars($pfx . $clave, ENT_QUOTES, 'UTF-8');
+                $name    = htmlspecialchars('cfg_' . $clave, ENT_QUOTES, 'UTF-8');
+                ?>
+                <div class="ia-form-group <?= $is_full ? 'full-col' : '' ?>">
+                    <label for="<?= $uid ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
+                    <?php if ($tipo === 'booleano'): ?>
+                        <div class="ia-toggle-wrap">
+                            <label class="ia-toggle">
+                                <input type="checkbox" name="<?= $name ?>" id="<?= $uid ?>" value="1" <?= $valor === '1' ? 'checked' : '' ?>>
+                                <span class="ia-toggle-slider"></span>
+                            </label>
+                            <span class="ia-toggle-label" id="<?= $uid ?>_lbl"><?= $valor === '1' ? 'Activo' : 'Inactivo' ?></span>
+                        </div>
+                    <?php elseif ($tipo === 'numero'): ?>
+                        <input type="number" step="any" name="<?= $name ?>" id="<?= $uid ?>" value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>">
+                    <?php elseif ($tipo === 'secreto'): ?>
+                        <input type="text" name="<?= $name ?>" id="<?= $uid ?>" value="" placeholder="<?= htmlspecialchars(ia_mask($valor, $tipo), ENT_QUOTES, 'UTF-8') ?>" autocomplete="off">
+                        <span class="hint">Dejar vacío para mantener el valor actual.</span>
+                    <?php elseif ($is_full): ?>
+                        <textarea name="<?= $name ?>" id="<?= $uid ?>" rows="<?= $clave === 'prompt_sistema' ? 8 : 4 ?>"><?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?></textarea>
+                    <?php else: ?>
+                        <input type="text" name="<?= $name ?>" id="<?= $uid ?>" value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>">
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+        <div style="margin-top:1.25rem;">
+            <button type="submit" class="btn">💾 Guardar</button>
+        </div>
+    </form>
+    <?php } ?>
+
+    <!-- Config global -->
     <div class="card">
-        <h3>Configuración — Frontend (Estudiantes)</h3>
-        <form method="post" action="/admin/ia/index.php?tab=frontend">
-            <input type="hidden" name="action" value="save_config">
-            <input type="hidden" name="instancia" value="frontend">
-            <div class="ia-cfg-grid">
-                <?php foreach ($cfg_frontend as $clave => $meta): ?>
-                    <?php
-                    $valor = $meta['valor'];
-                    $tipo  = $meta['tipo'];
-                    $label = ia_field_label($clave);
-                    $is_full = in_array($clave, ['prompt_sistema', 'palabras_peligro', 'palabras_tematicas', 'mensaje_guardrail']);
-                    ?>
-                    <div class="ia-form-group <?= $is_full ? 'full-col' : '' ?>">
-                        <label for="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?></label>
-                        <?php if ($tipo === 'booleano'): ?>
-                            <div class="ia-toggle-wrap">
-                                <label class="ia-toggle">
-                                    <input type="checkbox" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="1" <?= $valor === '1' ? 'checked' : '' ?>>
-                                    <span class="ia-toggle-slider"></span>
-                                </label>
-                                <span class="ia-toggle-label" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>_lbl"><?= $valor === '1' ? 'Activo' : 'Inactivo' ?></span>
-                            </div>
-                        <?php elseif ($tipo === 'number'): ?>
-                            <input type="number" step="any" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>">
-                        <?php elseif ($tipo === 'secreto'): ?>
-                            <input type="text" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="" placeholder="<?= htmlspecialchars(ia_mask($valor, $tipo), ENT_QUOTES, 'UTF-8') ?>" autocomplete="off">
-                            <span class="hint">Dejar vacío para mantener el valor actual.</span>
-                        <?php elseif ($is_full): ?>
-                            <textarea name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" rows="<?= $clave === 'prompt_sistema' ? 8 : 4 ?>"><?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?></textarea>
-                        <?php else: ?>
-                            <input type="text" name="cfg_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" id="fe_<?= htmlspecialchars($clave, ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>">
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+        <h3>⚙️ Configuración Global (Frontend)</h3>
+        <p class="hint" style="margin-bottom:1rem;">Valores base para todas las páginas. Las páginas con overrides sobreescriben solo las claves definidas en ellas.</p>
+        <?php ia_render_form('frontend', null, $cfg_frontend, 'form-fe-global'); ?>
+    </div>
+
+    <!-- Overrides por página -->
+    <div class="card" style="margin-top:1.5rem;">
+        <h3>📄 Overrides por Página</h3>
+        <p class="hint" style="margin-bottom:1rem;">Cada página puede tener su propio prompt y parámetros. Solo se sobreescriben las claves aquí definidas.</p>
+
+        <!-- Sub-pestañas de página -->
+        <div class="ia-tabs" style="margin-bottom:1.25rem;" id="pagina-tabs">
+            <?php foreach ($paginas_labels as $pg => $lbl): ?>
+                <button class="ia-tab-btn<?= $pg === array_key_first($paginas_labels) ? ' active' : '' ?>"
+                        data-pagina="<?= htmlspecialchars($pg, ENT_QUOTES, 'UTF-8') ?>"
+                        onclick="switchPagina('<?= htmlspecialchars($pg, ENT_QUOTES, 'UTF-8') ?>', this)">
+                    <?= htmlspecialchars($lbl, ENT_QUOTES, 'UTF-8') ?>
+                </button>
+            <?php endforeach; ?>
+        </div>
+
+        <?php foreach ($paginas_labels as $pg => $lbl): ?>
+            <div class="ia-pagina-panel" id="pagina-panel-<?= htmlspecialchars($pg, ENT_QUOTES, 'UTF-8') ?>"
+                 style="display:<?= $pg === array_key_first($paginas_labels) ? 'block' : 'none' ?>;">
+                <?php if (!empty($cfg_frontend_paginas[$pg])): ?>
+                    <?php ia_render_form('frontend', $pg, $cfg_frontend_paginas[$pg], 'form-fe-' . $pg); ?>
+                <?php else: ?>
+                    <p style="color:#888;font-style:italic;">Sin overrides configurados para esta página.</p>
+                <?php endif; ?>
             </div>
-            <div style="margin-top:1.25rem;">
-                <button type="submit" class="btn">💾 Guardar configuración frontend</button>
-            </div>
-        </form>
+        <?php endforeach; ?>
     </div>
 </div>
 
@@ -471,26 +559,37 @@ document.querySelectorAll('.ia-toggle input[type="checkbox"]').forEach(function(
 });
 
 // ---------------------------------------------------------------
-// Tab switching
+// Tab switching (main tabs — no afectan sub-pestañas de página)
 // ---------------------------------------------------------------
-document.querySelectorAll('.ia-tab-btn').forEach(function(btn) {
+document.querySelectorAll('.ia-tab-btn[data-tab]').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const target = this.getAttribute('data-tab');
         console.log('🔍 [Admin/IA] Cambiando a tab:', target);
 
-        document.querySelectorAll('.ia-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelectorAll('.ia-tab-btn[data-tab]').forEach(function(b) { b.classList.remove('active'); });
         document.querySelectorAll('.ia-tab-panel').forEach(function(p) { p.classList.remove('active'); });
 
         this.classList.add('active');
         var panel = document.getElementById('tab-' + target);
         if (panel) panel.classList.add('active');
 
-        // Update URL without reload
         try {
             history.replaceState(null, '', '/admin/ia/index.php?tab=' + encodeURIComponent(target));
         } catch(e) {}
     });
 });
+
+// ---------------------------------------------------------------
+// Sub-pestañas de página (dentro del tab frontend)
+// ---------------------------------------------------------------
+function switchPagina(pagina, btn) {
+    console.log('🔍 [Admin/IA] Página override:', pagina);
+    document.querySelectorAll('#pagina-tabs .ia-tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.ia-pagina-panel').forEach(function(p) { p.style.display = 'none'; });
+    btn.classList.add('active');
+    var panel = document.getElementById('pagina-panel-' + pagina);
+    if (panel) panel.style.display = 'block';
+}
 
 // ---------------------------------------------------------------
 // Test IA
