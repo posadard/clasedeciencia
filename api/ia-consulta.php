@@ -1,6 +1,6 @@
 <?php
 /**
- * API: IA Consulta â€” 2 instancias (frontend + backend)
+ * API: IA Consulta Ã¢â‚¬â€ 2 instancias (frontend + backend)
  *
  * Frontend POST: { instancia: 'frontend', clase_id: int, pregunta: string }
  * Backend  POST: { instancia: 'backend',  contexto_pagina: string, pregunta: string,
@@ -19,7 +19,7 @@ ob_start();
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../config.php';
-// config.php reactiva display_errors=1 â€” lo suprimimos de nuevo aquÃ­
+// config.php reactiva display_errors=1 Ã¢â‚¬â€ lo suprimimos de nuevo aquÃƒÂ­
 ini_set('display_errors', 0);
 
 // ---------------------------------------------------------------
@@ -83,7 +83,7 @@ function groq_con_fallback(string $api_key, array $modelos, array $messages, flo
         if ($r['errno'] !== 0) {
             $ultimo_error = "curl errno={$r['errno']} modelo={$modelo}";
             error_log("IA groq curl error [{$modelo}]: errno={$r['errno']}");
-            break; // Error de red: no hay fallback Ãºtil
+            break; // Error de red: no hay fallback ÃƒÂºtil
         }
 
         if ($r['http_status'] >= 200 && $r['http_status'] < 300) {
@@ -102,20 +102,20 @@ function groq_con_fallback(string $api_key, array $modelos, array $messages, flo
             break;
         }
 
-        // Exponer el error de la API si es 4xx/5xx para diagnÃ³stico
+        // Exponer el error de la API si es 4xx/5xx para diagnÃƒÂ³stico
         $groq_error = json_decode($r['raw'], true);
         $groq_msg   = $groq_error['error']['message'] ?? $r['raw'];
         $ultimo_error = "HTTP {$r['http_status']} [{$modelo}]: " . substr($groq_msg, 0, 200);
-        error_log("IA groq error [{$modelo}]: HTTP {$r['http_status']} â€” {$groq_msg}");
+        error_log("IA groq error [{$modelo}]: HTTP {$r['http_status']} Ã¢â‚¬â€ {$groq_msg}");
 
         // Solo fallback en rate limit o indisponibilidad
         if (!in_array($r['http_status'], [429, 503])) {
             break;
         }
-        error_log("IA groq fallback [{$modelo}] â†’ siguiente modelo");
+        error_log("IA groq fallback [{$modelo}] Ã¢â€ â€™ siguiente modelo");
     }
 
-    // Guardar Ãºltimo error en variable global para poder retornarlo
+    // Guardar ÃƒÂºltimo error en variable global para poder retornarlo
     $GLOBALS['_ia_groq_ultimo_error'] = $ultimo_error;
     return null;
 }
@@ -152,11 +152,11 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $sugerencias[] = [
                 'tipo'  => 'clase',
-                'icono' => '🔬',
+                'icono' => 'ðŸ”¬',
                 'label' => 'Clase',
                 'titulo' => $r['nombre'],
                 'url'   => '/' . $r['slug'],
-                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, 'â€¦'),
             ];
         }
 
@@ -175,11 +175,11 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $sugerencias[] = [
                 'tipo'  => 'kit',
-                'icono' => '🧰',
+                'icono' => 'ðŸ§°',
                 'label' => 'Kit',
                 'titulo' => $r['nombre'],
                 'url'   => '/kit/' . $r['slug'],
-                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, 'â€¦'),
             ];
         }
 
@@ -198,11 +198,11 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $sugerencias[] = [
                 'tipo'  => 'componente',
-                'icono' => '⚗️',
+                'icono' => 'âš—ï¸',
                 'label' => 'Componente',
                 'titulo' => $r['nombre'],
                 'url'   => '/componente/' . $r['slug'],
-                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, 'â€¦'),
             ];
         }
 
@@ -221,11 +221,11 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
             $sugerencias[] = [
                 'tipo'  => 'manual',
-                'icono' => '📖',
+                'icono' => 'ðŸ“–',
                 'label' => 'Manual',
                 'titulo' => $r['nombre'],
                 'url'   => '/manual/' . $r['slug'],
-                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, '…'),
+                'desc'  => mb_strimwidth($r['desc_corta'] ?? '', 0, 80, 'â€¦'),
             ];
         }
 
@@ -252,7 +252,7 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
 
 /**
  * Construye el bloque de contexto para la instancia FRONTEND.
- * Combina: clase, Ã¡reas, competencias, kit, manual, guÃ­a y prompt pedagÃ³gico.
+ * Combina: clase, ÃƒÂ¡reas, competencias, kit, manual, guÃƒÂ­a y prompt pedagÃƒÂ³gico.
  */
 function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?int $componente_id = null, ?int $manual_id = null, string $pagina = 'inicio'): string {
     $bloques = [];
@@ -269,10 +269,10 @@ function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?
             $bloques[] = "=== CLASE ACTUAL ===\n"
                 . "Nombre: {$clase['nombre']}\n"
                 . "Ciclo: {$clase['ciclo']} | Grados: {$clase['grados']} | Dificultad: {$clase['dificultad']}\n"
-                . "DuraciÃ³n: {$clase['duracion_minutos']} min\n"
+                . "DuraciÃƒÂ³n: {$clase['duracion_minutos']} min\n"
                 . "Resumen: {$clase['resumen']}\n"
                 . "Objetivo de aprendizaje: {$clase['objetivo_aprendizaje']}\n"
-                . "Ãreas del conocimiento: {$areas}\n"
+                . "ÃƒÂreas del conocimiento: {$areas}\n"
                 . "Competencias MEN: {$comp}";
         }
 
@@ -304,27 +304,27 @@ function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?
             $bloques[] = "=== PASOS DEL MANUAL ===\n" . implode("\n", $lineas);
         }
 
-        // 4. GuÃ­a de la clase
+        // 4. GuÃƒÂ­a de la clase
         $stmt = $pdo->prepare('SELECT pasos, explicacion_cientifica FROM guias WHERE clase_id = ? LIMIT 1');
         $stmt->execute([$clase_id]);
         $guia = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($guia && $guia['pasos']) {
             $pasos  = json_decode($guia['pasos'], true) ?: [];
             $lineas = array_map(fn($p, $i) => "  " . ($i + 1) . ". {$p['titulo']}: {$p['detalle']}", $pasos, array_keys($pasos));
-            $bloques[] = "=== GUÃA PASO A PASO ===\n" . implode("\n", $lineas);
+            $bloques[] = "=== GUÃƒÂA PASO A PASO ===\n" . implode("\n", $lineas);
             if (!empty($guia['explicacion_cientifica'])) {
-                $bloques[] = "=== EXPLICACIÃ“N CIENTÃFICA ===\n{$guia['explicacion_cientifica']}";
+                $bloques[] = "=== EXPLICACIÃƒâ€œN CIENTÃƒÂFICA ===\n{$guia['explicacion_cientifica']}";
             }
         }
 
-        // 5. Prompt pedagÃ³gico (prompts_clase)
+        // 5. Prompt pedagÃƒÂ³gico (prompts_clase)
         $stmt = $pdo->prepare('SELECT prompt_contexto, enfoque_pedagogico, conocimientos_previos, preguntas_frecuentes FROM prompts_clase WHERE clase_id = ? AND activo = 1 LIMIT 1');
         $stmt->execute([$clase_id]);
         $pc = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($pc) {
             $cp = $pc['conocimientos_previos'] ? implode(', ', json_decode($pc['conocimientos_previos'], true) ?: []) : '';
             $pf = $pc['preguntas_frecuentes'] ? implode(' / ', json_decode($pc['preguntas_frecuentes'], true) ?: []) : '';
-            $bloques[] = "=== ORIENTACIONES PEDAGÃ“GICAS ===\n"
+            $bloques[] = "=== ORIENTACIONES PEDAGÃƒâ€œGICAS ===\n"
                 . ($pc['prompt_contexto'] ? "Contexto: {$pc['prompt_contexto']}\n" : '')
                 . ($pc['enfoque_pedagogico'] ? "Enfoque: {$pc['enfoque_pedagogico']}\n" : '')
                 . ($cp ? "Conocimientos previos: {$cp}\n" : '')
@@ -442,7 +442,7 @@ function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?
 
 /**
  * Construye el bloque de contexto para la instancia BACKEND.
- * Datos varÃ­an segÃºn la pÃ¡gina admin activa.
+ * Datos varÃƒÂ­an segÃƒÂºn la pÃƒÂ¡gina admin activa.
  */
 function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entidad_tipo, ?int $entidad_id): string {
     $bloques = [];
@@ -473,7 +473,7 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
                 )->fetchAll(PDO::FETCH_ASSOC);
                 $bloques[] = "=== COMPONENTES (" . count($rows) . " registros) ===\n"
                     . implode("\n", array_map(fn($r) =>
-                        "  [{$r['id']}] {$r['nombre_comun']} ({$r['sku']}) | CategorÃ­a: {$r['categoria']}", $rows));
+                        "  [{$r['id']}] {$r['nombre_comun']} ({$r['sku']}) | CategorÃƒÂ­a: {$r['categoria']}", $rows));
                 break;
 
             case 'contratos':
@@ -490,9 +490,9 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
                     'SELECT e.id, e.institucion_educativa, e.fecha, e.acta_pdf, c.numero as contrato, c.departamento
                      FROM entregas e JOIN contratos c ON c.id = e.contrato_id ORDER BY e.fecha DESC LIMIT 50'
                 )->fetchAll(PDO::FETCH_ASSOC);
-                $bloques[] = "=== ÃšLTIMAS ENTREGAS (" . count($rows) . " registros) ===\n"
+                $bloques[] = "=== ÃƒÅ¡LTIMAS ENTREGAS (" . count($rows) . " registros) ===\n"
                     . implode("\n", array_map(fn($r) =>
-                        "  [{$r['id']}] {$r['institucion_educativa']} | Contrato: {$r['contrato']} | {$r['departamento']} | {$r['fecha']} | acta:" . ($r['acta_pdf'] ? 'sÃ­' : 'no'), $rows));
+                        "  [{$r['id']}] {$r['institucion_educativa']} | Contrato: {$r['contrato']} | {$r['departamento']} | {$r['fecha']} | acta:" . ($r['acta_pdf'] ? 'sÃƒÂ­' : 'no'), $rows));
                 break;
 
             case 'lotes':
@@ -510,12 +510,12 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
 
             case 'ia':
                 $rows = $pdo->query('SELECT * FROM v_ia_dashboard ORDER BY fecha DESC LIMIT 14')->fetchAll(PDO::FETCH_ASSOC);
-                $bloques[] = "=== DASHBOARD IA (Ãºltimos 14 dÃ­as) ===\n"
+                $bloques[] = "=== DASHBOARD IA (ÃƒÂºltimos 14 dÃƒÂ­as) ===\n"
                     . implode("\n", array_map(fn($r) =>
                         "  {$r['fecha']}: sesiones={$r['sesiones_unicas']} consultas={$r['total_consultas']} errores={$r['total_errores']} guardrails={$r['alertas_seguridad']} tokens={$r['tokens_totales']} costo_USD={$r['costo_total']}", $rows));
                 $estados = $pdo->query("SELECT instancia, valor FROM configuracion_ia WHERE clave = 'ia_activa'")->fetchAll(PDO::FETCH_ASSOC);
                 foreach ($estados as $e) {
-                    $bloques[] = "IA {$e['instancia']}: " . ($e['valor'] == '1' ? 'âœ… activa' : 'âŒ inactiva');
+                    $bloques[] = "IA {$e['instancia']}: " . ($e['valor'] == '1' ? 'Ã¢Å“â€¦ activa' : 'Ã¢ÂÅ’ inactiva');
                 }
                 break;
 
@@ -530,7 +530,7 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
                 break;
         }
 
-        // Contexto profundo de entidad especÃ­fica
+        // Contexto profundo de entidad especÃƒÂ­fica
         if ($entidad_tipo && $entidad_id) {
             switch ($entidad_tipo) {
                 case 'contrato':
@@ -553,7 +553,7 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
                     $k = $stmt->fetch(PDO::FETCH_ASSOC);
                     if ($k) {
                         $bloques[] = "=== KIT #{$entidad_id} (detalle) ===\n"
-                            . "Nombre: {$k['nombre']} | CÃ³digo: {$k['codigo']} | Clase: {$k['clase_nombre']}";
+                            . "Nombre: {$k['nombre']} | CÃƒÂ³digo: {$k['codigo']} | Clase: {$k['clase_nombre']}";
                         $stmt = $pdo->prepare('SELECT i.nombre_comun, kc.cantidad, kc.notas FROM kit_componentes kc JOIN kit_items i ON i.id = kc.item_id WHERE kc.kit_id = ?');
                         $stmt->execute([$entidad_id]);
                         $comps = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -597,10 +597,10 @@ try {
     $data = json_decode($raw, true);
     if (!is_array($data)) $data = [];
 
-    // ParÃ¡metros comunes
+    // ParÃƒÂ¡metros comunes
     $instancia       = ($data['instancia'] ?? 'frontend') === 'backend' ? 'backend' : 'frontend';
     $pregunta        = trim($data['pregunta'] ?? '');
-    // Historial de conversación: array de {role, content} enviado por el cliente
+    // Historial de conversaciÃ³n: array de {role, content} enviado por el cliente
     $historial_raw = isset($data['historial']) && is_array($data['historial']) ? $data['historial'] : [];
     $historial = [];
     $roles_validos = ['user', 'assistant'];
@@ -611,7 +611,7 @@ try {
         if (!in_array($role, $roles_validos, true) || $content === '') continue;
         $historial[] = ['role' => $role, 'content' => $content];
     }
-    if ($pregunta === '') json_fail('Pregunta vacÃ­a.');
+    if ($pregunta === '') json_fail('Pregunta vacÃƒÂ­a.');
     if (mb_strlen($pregunta) > 2000) json_fail('Pregunta demasiado larga.');
 
     // Frontend: proteger el endpoint backend de acceso externo
@@ -622,7 +622,7 @@ try {
         }
     }
 
-    // ParÃ¡metros por instancia
+    // ParÃƒÂ¡metros por instancia
     $clase_id        = $instancia === 'frontend' ? (isset($data['clase_id'])        ? (int)$data['clase_id']        : null) : null;
     $kit_id          = $instancia === 'frontend' ? (isset($data['kit_id'])          ? (int)$data['kit_id']          : null) : null;
     $componente_id   = $instancia === 'frontend' ? (isset($data['componente_id'])   ? (int)$data['componente_id']   : null) : null;
@@ -633,20 +633,31 @@ try {
     $entidad_id      = $instancia === 'backend'  ? (isset($data['entidad_id']) ? (int)$data['entidad_id'] : null) : null;
 
     // ---------------------------------------------------------------
-    // Cargar configuraciÃ³n de esta instancia
+    // Cargar configuraciÃƒÂ³n de esta instancia
     // ---------------------------------------------------------------
-    $stmt = $pdo->prepare('SELECT clave, valor, tipo FROM configuracion_ia WHERE instancia = ?');
-    $stmt->execute([$instancia]);
     $cfg = [];
+
+    // Global (pagina IS NULL) — valores base de la instancia
+    $stmt = $pdo->prepare('SELECT clave, valor FROM configuracion_ia WHERE instancia = ? AND pagina IS NULL');
+    $stmt->execute([$instancia]);
     foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $cfg[$row['clave']] = $row['valor'];
     }
 
+    // Override de pagina (solo frontend) — sobreescribe solo las claves definidas para esta pagina
+    if ($instancia === 'frontend' && !empty($pagina)) {
+        $stmt = $pdo->prepare('SELECT clave, valor FROM configuracion_ia WHERE instancia = ? AND pagina = ?');
+        $stmt->execute([$instancia, $pagina]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $cfg[$row['clave']] = $row['valor'];
+        }
+    }
+
     $ia_activa = (($cfg['ia_activa'] ?? '0') === '1');
-    if (!$ia_activa) json_fail('IA desactivada por configuraciÃ³n.');
+    if (!$ia_activa) json_fail('IA desactivada por configuraciÃƒÂ³n.');
 
     $api_key     = $cfg['groq_api_key'] ?? '';
-    if (empty($api_key)) json_fail('âš ï¸ IA no configurada. Falta API Key.');
+    if (empty($api_key)) json_fail('Ã¢Å¡Â Ã¯Â¸Â IA no configurada. Falta API Key.');
 
     $modelos     = array_filter([
         $cfg['groq_model_1'] ?? '',
@@ -661,10 +672,10 @@ try {
     $guardrails_activos  = (($cfg['guardrails_activos'] ?? '0') === '1');
     $palabras_peligro    = json_decode($cfg['palabras_peligro']   ?? '[]', true) ?: [];
     $palabras_tematicas  = json_decode($cfg['palabras_tematicas'] ?? '[]', true) ?: [];
-    $mensaje_guardrail   = $cfg['mensaje_guardrail'] ?? 'âš ï¸ Consulta con tu profesor.';
+    $mensaje_guardrail   = $cfg['mensaje_guardrail'] ?? 'Ã¢Å¡Â Ã¯Â¸Â Consulta con tu profesor.';
 
     // ---------------------------------------------------------------
-    // SesiÃ³n anÃ³nima (solo frontend)
+    // SesiÃƒÂ³n anÃƒÂ³nima (solo frontend)
     // ---------------------------------------------------------------
     $sesion_id = null;
     if ($instancia === 'frontend') {
@@ -688,7 +699,7 @@ try {
                 $sesion_id = (int)$pdo->lastInsertId();
             }
         } catch (Exception $e) {
-            error_log('IA sesiÃ³n error: ' . $e->getMessage());
+            error_log('IA sesiÃƒÂ³n error: ' . $e->getMessage());
         }
     }
 
@@ -710,7 +721,7 @@ try {
     }
 
     // ---------------------------------------------------------------
-    // CachÃ© (solo frontend, solo cuando no hay guardrail)
+    // CachÃƒÂ© (solo frontend, solo cuando no hay guardrail)
     // ---------------------------------------------------------------
     $cached   = false;
     $respuesta = null;
@@ -747,7 +758,7 @@ try {
                 }
             }
         } else {
-            // Construir contexto segÃºn instancia
+            // Construir contexto segÃƒÂºn instancia
             if ($instancia === 'frontend') {
                 $contexto_texto = build_context_frontend($pdo, $clase_id, $kit_id, $componente_id, $manual_id, $pagina);
             } else {
@@ -759,7 +770,7 @@ try {
                 $system_content .= "\n\n" . $contexto_texto;
             }
 
-            // system + historial previo (máx 12 msgs) + pregunta actual
+            // system + historial previo (mÃ¡x 12 msgs) + pregunta actual
             $messages = array_merge(
                 [['role' => 'system', 'content' => $system_content]],
                 $historial,
@@ -775,12 +786,12 @@ try {
                 $tiempo_ms    = $resultado['tiempo_ms'];
             } else {
                 $groq_detalle = $GLOBALS['_ia_groq_ultimo_error'] ?? 'sin detalle';
-                $respuesta = 'âŒ Error al consultar la IA. Detalle: ' . $groq_detalle;
+                $respuesta = 'Ã¢ÂÅ’ Error al consultar la IA. Detalle: ' . $groq_detalle;
                 error_log('IA groq todos los modelos fallaron: ' . $groq_detalle);
             }
         }
 
-        // Guardar en cachÃ© (solo frontend, sin guardrail, con respuesta vÃ¡lida)
+        // Guardar en cachÃƒÂ© (solo frontend, sin guardrail, con respuesta vÃƒÂ¡lida)
         if ($instancia === 'frontend' && $clase_id && !$guardrail_activado && !empty($respuesta)) {
             try {
                 $pdo->prepare('INSERT IGNORE INTO ia_respuestas_cache (clase_id, pregunta_normalizada, pregunta_original, respuesta) VALUES (?, ?, ?, ?)')
@@ -804,7 +815,7 @@ try {
             $clase_id,
             $instancia,
             $tipo_evento,
-            $cached ? 'Respuesta desde cachÃ©' : ($guardrail_activado ? "Guardrail: {$guardrail_palabra}" : 'Consulta Groq'),
+            $cached ? 'Respuesta desde cachÃƒÂ©' : ($guardrail_activado ? "Guardrail: {$guardrail_palabra}" : 'Consulta Groq'),
             $tokens,
             $tiempo_ms,
             $modelo_usado,

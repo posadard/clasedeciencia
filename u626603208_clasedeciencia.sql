@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 21, 2026 at 01:58 AM
+-- Generation Time: Mar 23, 2026 at 11:32 PM
 -- Server version: 11.8.3-MariaDB-log
 -- PHP Version: 7.2.34
 
@@ -766,22 +766,22 @@ CREATE TABLE `configuracion_ia` (
 --
 
 INSERT INTO `configuracion_ia` (`id`, `instancia`, `clave`, `valor`, `tipo`, `descripcion`, `updated_at`) VALUES
-(1, 'frontend', 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2026-03-21 01:22:21'),
-(2, 'frontend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del estudiante (1=activa, 0=inactiva)', '2026-03-21 01:22:21'),
-(3, 'frontend', 'groq_api_key', 'GROQ_API_KEY_FRONTEND', 'secreto', 'API Key de Groq para la instancia frontend. Completar desde el panel admin.', '2026-03-21 01:19:55'),
-(4, 'frontend', 'groq_model_1', 'llama-3.3-70b-versatile', 'texto', 'Modelo principal frontend — pedagógico y preciso', '2026-03-21 01:22:21'),
-(5, 'frontend', 'groq_model_2', 'llama-3.1-8b-instant', 'texto', 'Fallback 1 frontend — rápido y económico (560 t/s)', '2026-03-21 01:22:21'),
-(6, 'frontend', 'groq_model_3', 'openai/gpt-oss-20b', 'texto', 'Fallback 2 frontend — último recurso (1000 t/s)', '2026-03-21 01:22:21'),
-(7, 'frontend', 'groq_temperature', '0.5', 'numero', 'Temperatura de muestreo (0-2). 0.5 = respuestas consistentes y seguras', '2026-03-21 01:22:21'),
-(8, 'frontend', 'groq_max_tokens', '800', 'numero', 'Máximo de tokens en la respuesta al estudiante', '2026-03-21 01:22:21'),
-(9, 'frontend', 'groq_top_p', '0.9', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 01:22:21'),
-(10, 'frontend', 'prompt_sistema', 'Eres un asistente científico educativo para estudiantes colombianos de secundaria (grados 6° a 11°). Tu misión es GUIAR, no resolver: usa preguntas socráticas para que el estudiante descubra las respuestas por sí mismo. NUNCA resuelvas preguntas de examen o evaluaciones directamente. SIEMPRE menciona las normas de seguridad antes de cualquier instrucción experimental. Habla con lenguaje claro, amigable y motivador, apropiado para el ciclo educativo del estudiante. Si la pregunta se sale del ámbito científico educativo, redirige amablemente al tema. Responde siempre en español colombiano.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del estudiante', '2026-03-21 01:22:21'),
-(11, 'frontend', 'guardrails_activos', '1', 'booleano', 'Activa el sistema de filtrado de contenido peligroso (1=activo, 0=desactivo)', '2026-03-21 01:22:21'),
-(12, 'frontend', 'palabras_tematicas', '[\"política\",\"religión\",\"violencia\",\"drogas\",\"alcohol\",\"armas\",\"sexo\",\"apuestas\",\"odio\",\"insultos\"]', 'json', 'Palabras fuera del ámbito educativo que activan el guardrail temático', '2026-03-21 01:22:21'),
-(13, 'frontend', 'nivel_safety', 'estricto', 'texto', 'Nivel de safety: estricto|moderado|libre', '2026-03-21 01:22:21'),
-(14, 'frontend', 'mensaje_guardrail', '⚠️ Esa pregunta está fuera del ámbito de esta clase. Consulta con tu profesor. Si tienes dudas sobre seguridad en el experimento, sigue siempre las instrucciones del kit.', 'texto', 'Mensaje mostrado al estudiante cuando se activa un guardrail', '2026-03-21 01:22:21'),
+(1, 'frontend', 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2026-03-21 02:23:32'),
+(2, 'frontend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del estudiante (1=activa, 0=inactiva)', '2026-03-21 02:23:32'),
+(3, 'frontend', 'groq_api_key', 'REEMPLAZAR_CON_API_KEY_GROQ_FRONTEND', 'secreto', 'API Key de Groq para la instancia frontend. Completar desde el panel admin.', '2026-03-21 01:19:55'),
+(4, 'frontend', 'groq_model_1', 'llama-3.3-70b-versatile', 'texto', 'Modelo principal frontend — pedagógico y preciso', '2026-03-21 02:23:32'),
+(5, 'frontend', 'groq_model_2', 'llama-3.1-8b-instant', 'texto', 'Fallback 1 frontend — rápido y económico (560 t/s)', '2026-03-21 02:23:32'),
+(6, 'frontend', 'groq_model_3', 'openai/gpt-oss-20b', 'texto', 'Fallback 2 frontend — último recurso (1000 t/s)', '2026-03-21 02:23:32'),
+(7, 'frontend', 'groq_temperature', '0.5', 'numero', 'Temperatura de muestreo (0-2). 0.5 = respuestas consistentes y seguras', '2026-03-21 02:23:32'),
+(8, 'frontend', 'groq_max_tokens', '400', 'numero', 'Máximo de tokens en la respuesta al estudiante', '2026-03-21 02:23:32'),
+(9, 'frontend', 'groq_top_p', '0.9', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 02:23:32'),
+(10, 'frontend', 'prompt_sistema', 'Eres un asistente científico educativo para estudiantes colombianos de ciencia (grados 1° a 11°). Tu misión es GUIAR, no resolver: usa preguntas socráticas para que el estudiante descubra las respuestas por sí mismo. NUNCA resuelvas preguntas de examen o evaluaciones directamente. no SIEMPRE menciona las normas de seguridad antes de cualquier instrucción experimental, solo cuando sea necesario. Habla con lenguaje claro, amigable y motivador, apropiado para el ciclo educativo del estudiante. Si la pregunta se sale del ámbito científico educativo, redirige amablemente al tema. Responde siempre en español colombiano.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del estudiante', '2026-03-21 02:23:32'),
+(11, 'frontend', 'guardrails_activos', '1', 'booleano', 'Activa el sistema de filtrado de contenido peligroso (1=activo, 0=desactivo)', '2026-03-21 02:23:32'),
+(12, 'frontend', 'palabras_tematicas', '[\"política\",\"religión\",\"violencia\",\"drogas\",\"alcohol\",\"armas\",\"sexo\",\"apuestas\",\"odio\",\"insultos\"]', 'json', 'Palabras fuera del ámbito educativo que activan el guardrail temático', '2026-03-21 02:23:32'),
+(13, 'frontend', 'nivel_safety', 'estricto', 'texto', 'Nivel de safety: estricto|moderado|libre', '2026-03-21 02:23:32'),
+(14, 'frontend', 'mensaje_guardrail', '⚠️ Esa pregunta está fuera del ámbito de esta clase. Consulta con tu profesor. Si tienes dudas sobre seguridad en el experimento, sigue siempre las instrucciones del kit.', 'texto', 'Mensaje mostrado al estudiante cuando se activa un guardrail', '2026-03-21 02:23:32'),
 (42, 'backend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del administrador (1=activa, 0=inactiva)', '2026-03-21 01:29:41'),
-(43, 'backend', 'groq_api_key', 'GROQ_API_KEY_BACKEND', 'secreto', 'API Key de Groq para la instancia backend. Puede ser la misma del frontend o diferente.', '2026-03-21 01:20:13'),
+(43, 'backend', 'groq_api_key', 'REEMPLAZAR_CON_API_KEY_GROQ_BACKEND', 'secreto', 'API Key de Groq para la instancia backend. Puede ser la misma del frontend o diferente.', '2026-03-21 01:20:13'),
 (44, 'backend', 'groq_model_1', 'openai/gpt-oss-20b', 'texto', 'Modelo principal backend — rápido y técnico (1000 t/s)', '2026-03-21 01:29:41'),
 (45, 'backend', 'groq_model_2', 'llama-3.3-70b-versatile', 'texto', 'Fallback 1 backend — preciso y capaz (280 t/s)', '2026-03-21 01:29:41'),
 (46, 'backend', 'groq_model_3', 'llama-3.1-8b-instant', 'texto', 'Fallback 2 backend — último recurso (560 t/s)', '2026-03-21 01:29:41'),
@@ -981,7 +981,31 @@ INSERT INTO `ia_logs` (`id`, `sesion_id`, `clase_id`, `tipo_evento`, `descripcio
 (18, 1, 6, 'consulta', 'Consulta Groq', 1063, 1356, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:51:34', NULL, 'frontend'),
 (19, 2, NULL, 'consulta', 'Consulta Groq', 472, 996, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:00', NULL, 'frontend'),
 (20, 2, NULL, 'consulta', 'Consulta Groq', 450, 1406, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:14', NULL, 'frontend'),
-(21, 2, NULL, 'consulta', 'Consulta Groq', 552, 3684, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:35', NULL, 'frontend');
+(21, 2, NULL, 'consulta', 'Consulta Groq', 552, 3684, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 01:55:35', NULL, 'frontend'),
+(22, 1, NULL, 'consulta', 'Consulta Groq', 470, 1532, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:05:57', NULL, 'frontend'),
+(23, 1, NULL, 'consulta', 'Consulta Groq', 414, 1035, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:06:10', NULL, 'frontend'),
+(24, 2, NULL, 'consulta', 'Consulta Groq', 277, 509, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:06:56', NULL, 'frontend'),
+(25, 2, NULL, 'consulta', 'Consulta Groq', 553, 1752, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:07:12', NULL, 'frontend'),
+(26, 1, NULL, 'consulta', 'Consulta Groq', 543, 1730, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:15:55', NULL, 'frontend'),
+(27, 1, NULL, 'consulta', 'Consulta Groq', 430, 1335, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:17:17', NULL, 'frontend'),
+(28, 1, NULL, 'consulta', 'Consulta Groq', 421, 1243, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:19:25', NULL, 'frontend'),
+(29, 1, NULL, 'consulta', 'Consulta Groq', 448, 1618, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:20:46', NULL, 'frontend'),
+(30, 1, NULL, 'consulta', 'Consulta Groq', 319, 479, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:23:51', NULL, 'frontend'),
+(31, 1, NULL, 'consulta', 'Consulta Groq', 361, 748, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:28:29', NULL, 'frontend'),
+(32, 1, NULL, 'consulta', 'Consulta Groq', 569, 809, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:28:54', NULL, 'frontend'),
+(33, 1, NULL, 'consulta', 'Consulta Groq', 868, 826, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:29:05', NULL, 'frontend'),
+(34, 1, NULL, 'consulta', 'Consulta Groq', 455, 1223, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:43:29', NULL, 'frontend'),
+(35, 1, 6, 'consulta', 'Consulta Groq', 1143, 815, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:43:52', NULL, 'frontend'),
+(36, 1, 6, 'consulta', 'Consulta Groq', 1546, 1133, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:44:07', NULL, 'frontend'),
+(37, 1, 6, 'consulta', 'Consulta Groq', 1652, 928, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:44:31', NULL, 'frontend'),
+(38, 1, 6, 'consulta', 'Consulta Groq', 2046, 1560, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 02:44:44', NULL, 'frontend'),
+(39, 2, NULL, 'consulta', 'Consulta Groq', 368, 631, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 03:14:32', NULL, 'frontend'),
+(40, 2, NULL, 'consulta', 'Consulta Groq', 436, 950, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 17:07:35', NULL, 'frontend'),
+(41, 2, NULL, 'consulta', 'Consulta Groq', 718, 944, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 17:08:12', NULL, 'frontend'),
+(42, 2, NULL, 'consulta', 'Consulta Groq', 1097, 1426, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 17:08:55', NULL, 'frontend'),
+(43, 2, NULL, 'consulta', 'Consulta Groq', 1168, 798, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 17:09:15', NULL, 'frontend'),
+(44, 1, NULL, 'consulta', 'Consulta Groq', 474, 1751, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:29:27', NULL, 'frontend'),
+(45, 1, NULL, 'consulta', 'Consulta Groq', 784, 1302, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:29:44', NULL, 'frontend');
 
 -- --------------------------------------------------------
 
@@ -1044,7 +1068,11 @@ INSERT INTO `ia_respuestas_cache` (`id`, `clase_id`, `pregunta_normalizada`, `pr
 (1, 6, 'que es este proyecto?', 'que es este proyecto?', '¡Hola! Este proyecto se trata de la emisión de ondas AM, específicamente de cómo se generan, transmiten y reciben las ondas de radio AM. En este proyecto, exploraremos el sistema emisor-canal-receptor, la modulación en amplitud, la resonancia LC y la detección por diodo.\n\nPero antes de empezar, ¿qué sabes sobre las ondas de radio AM? ¿Has escuchado alguna vez la radio y te has preguntado cómo funcionan las ondas de radio para que podamos escuchar música o programas en vivo?\n\nTambién es importante recordar que, antes de comenzar cualquier experimento, debemos seguir las normas de seguridad básicas de laboratorio, como usar equipo de protección personal, evitar cortocircuitos y no tocar componentes eléctricos con las manos desnudas. ¿Recuerdas algunas de estas normas de seguridad?', 0, NULL, 1, '2026-03-21 01:22:42'),
 (2, 1, '¿qué materiales necesito para este experimento?', '¿Qué materiales necesito para este experimento?', 'Excelente pregunta! Antes de empezar, es importante recordar las normas de seguridad básicas de laboratorio. ¿Recuerdas cuáles son algunas de las normas más importantes que debemos seguir en un entorno experimental?\n\nAhora, veamos los materiales que necesitarás para construir tu microscopio sencillo. Según la guía, necesitarás:\n\n* 2 lentes plásticas de 10x\n* 1 cartón rígido\n\n¿Puedes pensar en por qué se utilizan lentes plásticas en lugar de vidrio? ¿Y qué papel crees que juega el cartón rígido en la construcción del microscopio?\n\nRecuerda que es importante leer la guía cuidadosamente y seguir las instrucciones paso a paso para asegurarte de que tengas todo lo que necesitas para completar el experimento de manera segura y efectiva. ¿Quieres seguir adelante y explorar cómo se ensamblan estos materiales para crear un microscopio sencillo?', 1, '2026-03-21 01:25:33', 1, '2026-03-21 01:25:33'),
 (3, 6, 'hola que es este proyecto?', 'hola que es este proyecto?', '¡Hola! Este proyecto se llama \"Emisión de ondas AM\" y es parte de una clase de física y tecnología. El objetivo es que comprendas cómo se generan, transmiten y reciben las ondas de radio AM, que son un tipo de onda electromagnética.\n\nPero antes de empezar, ¿qué sabes sobre las ondas de radio? ¿Has escuchado alguna vez la radio y te has preguntado cómo funciona? ¿Qué crees que es necesario para que una radio funcione correctamente?\n\nRecuerda que es importante seguir las normas de seguridad en el laboratorio, como no tocar equipos eléctricos con las manos mojadas y no mirar directamente a las luces intensas. ¿Has trabajado antes en un laboratorio o has seguido normas de seguridad similares?', 0, NULL, 1, '2026-03-21 01:39:36'),
-(4, 6, 'como se escucha de donde entra el sonido', 'como se escucha de donde entra el sonido', 'Excelente pregunta! La emisión de ondas AM es un tema fascinante. Para entender cómo se escucha el sonido, debemos considerar el sistema emisor-canal-receptor.\n\nImagina que estás en una radio de cristal, y quieres escuchar tu programa favorito. ¿Qué crees que sucede cuando el sonido de la radio llega a tus oídos?\n\nPiensa en los siguientes pasos:\n\n1. **La señal de audio**: La radio emite una señal de audio, que es la voz o la música que se quiere transmitir.\n2. **La modulación**: La señal de audio se modula en amplitud, lo que significa que se combina con una onda portadora de alta frecuencia.\n3. **La transmisión**: La onda modulada se transmite a través del aire como una onda electromagnética.\n4. **La recepción**: La onda electromagnética llega a la antena de la radio de cristal.\n5. **La detección**: La onda electromagnética se detecta y se convierte en una señal de audio nuevamente.\n\nAhora, pregúntate: ¿Qué componente de la radio de cristal es responsable de convertir la onda electromagnética en una señal de audio que puedes escuchar?\n\n¿Es el circuito resonante LC, el diodo detector o el auricular? ¿O es una combinación de todos ellos?\n\nRecuerda que, antes de realizar cualquier experimento, debes seguir las normas de seguridad básicas de laboratorio y seguridad eléctrica. ¿Qué medidas de seguridad crees que debes tomar al trabajar con radios de cristal?', 0, NULL, 1, '2026-03-21 01:51:34');
+(4, 6, 'como se escucha de donde entra el sonido', 'como se escucha de donde entra el sonido', 'Excelente pregunta! La emisión de ondas AM es un tema fascinante. Para entender cómo se escucha el sonido, debemos considerar el sistema emisor-canal-receptor.\n\nImagina que estás en una radio de cristal, y quieres escuchar tu programa favorito. ¿Qué crees que sucede cuando el sonido de la radio llega a tus oídos?\n\nPiensa en los siguientes pasos:\n\n1. **La señal de audio**: La radio emite una señal de audio, que es la voz o la música que se quiere transmitir.\n2. **La modulación**: La señal de audio se modula en amplitud, lo que significa que se combina con una onda portadora de alta frecuencia.\n3. **La transmisión**: La onda modulada se transmite a través del aire como una onda electromagnética.\n4. **La recepción**: La onda electromagnética llega a la antena de la radio de cristal.\n5. **La detección**: La onda electromagnética se detecta y se convierte en una señal de audio nuevamente.\n\nAhora, pregúntate: ¿Qué componente de la radio de cristal es responsable de convertir la onda electromagnética en una señal de audio que puedes escuchar?\n\n¿Es el circuito resonante LC, el diodo detector o el auricular? ¿O es una combinación de todos ellos?\n\nRecuerda que, antes de realizar cualquier experimento, debes seguir las normas de seguridad básicas de laboratorio y seguridad eléctrica. ¿Qué medidas de seguridad crees que debes tomar al trabajar con radios de cristal?', 0, NULL, 1, '2026-03-21 01:51:34'),
+(5, 6, 'ok ya estamos aqui entonces que es este kit', 'ok ya estamos aqui entonces que es este kit', '¡Excelente! Ahora que estamos listos para empezar, veamos qué componentes tiene el kit de radio de cristal que tienes.\n\n¿Puedes describirme los componentes que ves en el kit? ¿Hay un cristal de galena o cuarzo, un diodo, un condensador, un resistor, un auricular, una antena y un circuito impreso?\n\n¿Sabes qué función cumple cada uno de estos componentes en el radio de cristal? Por ejemplo, ¿para qué se utiliza el cristal de galena o cuarzo? ¿Y qué papel juega el diodo en el circuito?\n\nVamos a explorar juntos cada uno de estos componentes y cómo se relacionan entre sí para crear un radio de cristal funcional.\n\n¿Qué te parece si empezamos por el cristal de galena o cuarzo? ¿Sabes qué es lo que hace que este cristal sea especial y cómo se utiliza en el radio de cristal?', 0, NULL, 1, '2026-03-21 02:43:52'),
+(6, 6, '¿hay un cristal de galena o cuarzo, un diodo, un condensador, un resistor, un auricular, una antena y un circuito impreso?', '¿Hay un cristal de galena o cuarzo, un diodo, un condensador, un resistor, un auricular, una antena y un circuito impreso?', '¡Exacto! Parece que tienes un kit de radio de cristal completo.\n\nAhora, vamos a analizar cada uno de estos componentes y su función en el radio de cristal.\n\n* El cristal de galena o cuarzo es el corazón del radio de cristal. ¿Sabes qué propiedad tiene este cristal que lo hace útil para detectar señales de radio?\n* El diodo es un componente que ayuda a \"rectificar\" la señal de radio. ¿Qué significa \"rectificar\" en este contexto?\n* El condensador es un componente que almacena energía eléctrica. ¿Cómo se utiliza el condensador en el radio de cristal para mejorar la recepción de señales?\n* El resistor es un componente que controla el flujo de corriente eléctrica. ¿Qué papel juega el resistor en el radio de cristal?\n* El auricular es el componente que convierte la señal de radio en sonido. ¿Cómo funciona el auricular para que podamos escuchar la radio?\n* La antena es el componente que recibe las señales de radio del aire. ¿Qué tipo de antena se utiliza comúnmente en los radios de cristal?\n* El circuito impreso es el \"esqueleto\" del radio de cristal, que conecta todos los componentes entre sí. ¿Qué papel juega el circuito impreso en la funcionalidad del radio de cristal?\n\nVamos a explorar cada uno de estos componentes y su función en el radio de cristal. ¿Qué te parece si empezamos por el cristal de galena o cuarzo y su propiedad especial?', 0, NULL, 1, '2026-03-21 02:44:07'),
+(7, 6, '¿qué significa \"rectificar\" en este contexto?', '¿Qué significa \"rectificar\" en este contexto?', 'Excelente pregunta! En el contexto de un radio de cristal, \"rectificar\" se refiere al proceso de convertir una señal de radio alternada (AC) en una señal de corriente continua (DC).\n\nLa señal de radio que se recibe a través de la antena es una señal alternada, lo que significa que la corriente eléctrica cambia de dirección constantemente. Sin embargo, el auricular y otros componentes del radio de cristal necesitan una señal de corriente continua para funcionar correctamente.\n\nEl diodo es el componente que se encarga de \"rectificar\" la señal de radio, es decir, de convertir la señal alternada en una señal de corriente continua. Esto se logra porque el diodo solo permite que la corriente fluya en una dirección, bloqueando la corriente en la otra dirección.\n\n¿Puedes imaginar cómo funciona esto en la práctica? ¿Qué pasaría si la señal de radio no se rectificara antes de llegar al auricular?', 0, NULL, 1, '2026-03-21 02:44:31'),
+(8, 6, 'profundiza en tu última respuesta y dame más detalles.', 'Profundiza en tu última respuesta y dame más detalles.', 'Claro, con gusto.\n\nEn un radio de cristal, la señal de radio que se recibe a través de la antena es una señal de corriente alterna (AC). Esto significa que la corriente eléctrica cambia de dirección constantemente, como una onda sinusoidal. La forma de la señal de radio es similar a una onda sinusoidal, con una parte positiva y una parte negativa.\n\nEl problema es que el auricular y otros componentes del radio de cristal necesitan una señal de corriente continua (DC) para funcionar correctamente. La corriente continua es una corriente que fluye en una sola dirección, sin cambiar de dirección.\n\nAquí es donde entra en juego el diodo. El diodo es un componente semiconductor que solo permite que la corriente fluya en una dirección, bloqueando la corriente en la otra dirección. Esto se conoce como \"rectificación\" de la señal de radio.\n\nCuando la señal de radio alternada (AC) llega al diodo, el diodo solo permite que la parte positiva de la señal de radio pase a través de él, bloqueando la parte negativa. De esta manera, la señal de radio se convierte en una señal de corriente continua (DC), que es lo que necesita el auricular y otros componentes del radio de cristal.\n\nEl proceso de rectificación es importante porque permite que el radio de cristal funcione correctamente. Sin la rectificación, la señal de radio no podría ser procesada por el auricular y otros componentes, y no podríamos escuchar la radio.\n\n¿Puedes imaginar cómo funciona esto en la práctica? ¿Cómo crees que la rectificación afecta la calidad de la señal de radio que se escucha en el auricular?\n\nAdemás, ¿sabes', 0, NULL, 1, '2026-03-21 02:44:44');
 
 --
 -- Triggers `ia_respuestas_cache`
@@ -1082,8 +1110,8 @@ CREATE TABLE `ia_sesiones` (
 --
 
 INSERT INTO `ia_sesiones` (`id`, `sesion_hash`, `clase_id`, `fecha_inicio`, `fecha_ultima_interaccion`, `total_mensajes`, `tokens_usados`, `estado`, `instancia`) VALUES
-(1, 'd5c21494d10484856db76c133c6e1e0e', 6, '2026-03-21 01:22:41', '2026-03-21 01:51:32', 12, 1582, 'activa', 'frontend'),
-(2, '2bcef2b801e0d699f7db24336d0b60f1', NULL, '2026-03-21 01:54:59', '2026-03-21 01:55:31', 0, 0, 'activa', 'frontend');
+(1, 'd5c21494d10484856db76c133c6e1e0e', 6, '2026-03-21 01:22:41', '2026-03-23 23:29:43', 12, 1582, 'activa', 'frontend'),
+(2, '2bcef2b801e0d699f7db24336d0b60f1', NULL, '2026-03-21 01:54:59', '2026-03-21 17:09:15', 0, 0, 'activa', 'frontend');
 
 -- --------------------------------------------------------
 
@@ -1967,7 +1995,7 @@ ALTER TABLE `ia_guardrails_log`
 -- AUTO_INCREMENT for table `ia_logs`
 --
 ALTER TABLE `ia_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `ia_mensajes`
@@ -1979,7 +2007,7 @@ ALTER TABLE `ia_mensajes`
 -- AUTO_INCREMENT for table `ia_respuestas_cache`
 --
 ALTER TABLE `ia_respuestas_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `ia_sesiones`
