@@ -417,6 +417,23 @@
       background: #c7d2fe;
       border-color: #818cf8;
     }
+    .ia-respuesta-chip {
+      font-size: 11.5px;
+      padding: 5px 11px;
+      border: 1.5px solid #a7f3d0;
+      border-radius: 20px;
+      background: #ecfdf5;
+      color: #065f46;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      font-family: inherit;
+      line-height: 1.4;
+      text-align: left;
+    }
+    .ia-respuesta-chip:hover {
+      background: #a7f3d0;
+      border-color: #34d399;
+    }
 
     /* Logo icon con glow — identidad visual potenciada */
     .ia-logo-icon {
@@ -580,6 +597,15 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  // Parsea el bloque "Opciones: A|B|C" que la IA puede añadir al final de su respuesta
+  function parsearOpciones(texto) {
+    var match = texto.match(/\nOpciones:\s*(.+)$/i);
+    if (!match) return { texto: texto, opciones: [] };
+    var opciones = match[1].split('|').map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0 && s.length < 60; });
+    var textoLimpio = texto.replace(/\nOpciones:\s*.+$/i, '').replace(/\s+$/, '');
+    return { texto: textoLimpio, opciones: opciones.slice(0, 4) };
+  }
+
   // Patrones de segunda persona: la IA le pregunta AL usuario → no aptos como chip
   var _SEGUNDA_PERSONA = [
     '¿estás', '¿te ', '¿te\u00a0', '¿prefieres', '¿quieres', '¿quisieras',
@@ -603,14 +629,14 @@
     return preguntas.slice(0, 2);
   }
 
-  function addIAActions(log, texto, onSend) {
+  function addIAActions(log, texto, opciones, onSend) {
     var preguntas = extraerPreguntas(texto);
     // Si la IA termina con una pregunta al usuario, está esperando respuesta:
     // no mostrar Profundiza (no hay nada que expandir aún)
     var terminaEnPregunta = texto.trim().slice(-1) === '?';
     var mostrarProfundiza  = !terminaEnPregunta && texto.length > 120;
 
-    if (!mostrarProfundiza && preguntas.length === 0) return; // nada útil que mostrar
+    if (!mostrarProfundiza && preguntas.length === 0 && opciones.length === 0) return; // nada útil que mostrar
 
     var row = document.createElement('div');
     row.className = 'ia-action-row';
@@ -624,6 +650,15 @@
       });
       row.appendChild(profBtn);
     }
+
+    // Opciones de respuesta rápida generadas por la IA (protocolo "Opciones: A|B|C")
+    opciones.forEach(function(op) {
+      var chip = document.createElement('button');
+      chip.className = 'ia-respuesta-chip';
+      chip.textContent = op;
+      chip.addEventListener('click', function() { onSend(op); });
+      row.appendChild(chip);
+    });
 
     preguntas.forEach(function(q) {
       var chip = document.createElement('button');
@@ -911,12 +946,13 @@
         console.log('✅ [asistente-ia] respuesta:', json);
         typing.remove();
         if (json && json.ok) {
+          var parsed = parsearOpciones(json.respuesta);
           // Actualizar historial con este turno y persistir en sessionStorage
           historial.push({ role: 'user',      content: pregunta       });
-          historial.push({ role: 'assistant', content: json.respuesta });
+          historial.push({ role: 'assistant', content: parsed.texto   });
           guardarHistorial(historial);
-          addBubble(ui.log, 'ia', json.respuesta);
-          addIAActions(ui.log, json.respuesta, enviar);
+          addBubble(ui.log, 'ia', parsed.texto);
+          addIAActions(ui.log, parsed.texto, parsed.opciones, enviar);
           addSugerencias(ui.log, buscarSugerencias(pregunta));
         } else {
           addBubble(ui.log, 'ia', '❌ ' + (json && json.error ? json.error : 'Error al procesar la consulta.'));

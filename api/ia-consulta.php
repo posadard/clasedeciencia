@@ -770,6 +770,12 @@ try {
                 $system_content .= "\n\n" . $contexto_texto;
             }
 
+            // Chips de respuesta rapida: cuando la IA necesita info del usuario,
+            // puede incluir "Opciones: A|B|C" al final para mostrar chips de respuesta.
+            if ($instancia === 'frontend') {
+                $system_content .= "\n\nCuando necesites informacion del usuario para responder mejor, agrega al FINAL de tu mensaje (en una linea separada) el bloque: Opciones: opcion1|opcion2|opcion3 (max 4 opciones, menos de 40 caracteres cada una, en espanol). Omite este bloque cuando das informacion directa sin necesitar aclaracion del usuario.";
+            }
+
             // system + historial previo (mÃ¡x 12 msgs) + pregunta actual
             $messages = array_merge(
                 [['role' => 'system', 'content' => $system_content]],
