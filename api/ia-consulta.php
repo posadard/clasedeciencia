@@ -332,10 +332,18 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
     }
 
     if (empty($lineas)) {
-        return "=== CATALOGO ===\nNo se encontraron clases, kits o componentes relacionados con '" . htmlspecialchars($termino, ENT_QUOTES, 'UTF-8') . "'. Informa al usuario honestamente.";
+        // Obtener conteo total para dar contexto real de escala del catalogo
+        $total_clases = 0;
+        $total_kits   = 0;
+        try {
+            $total_clases = (int)$pdo->query('SELECT COUNT(*) FROM clases WHERE activo = 1')->fetchColumn();
+            $total_kits   = (int)$pdo->query('SELECT COUNT(*) FROM kits WHERE activo = 1')->fetchColumn();
+        } catch (Exception $e) {}
+        $termino_safe = htmlspecialchars($termino, ENT_QUOTES, 'UTF-8');
+        return "=== CATALOGO: SIN COINCIDENCIAS ===\nBusqueda realizada: '{$termino_safe}'\nResultado: No existe ninguna clase, kit ni componente sobre este tema en el catalogo actual ({$total_clases} clases y {$total_kits} kits disponibles).\nCOMPORTAMIENTO REQUERIDO: Di al usuario exactamente esto (adaptado naturalmente): \"Aun no tenemos una clase o kit sobre [tema], pero podemos seguir aprendiendo juntos sobre ello.\" Luego continua la conversacion educativa sobre el tema sin inventar productos.";
     }
 
-    return "=== CATALOGO DISPONIBLE (resultados reales � usa SOLO estos) ===\nIMPORTANTE: Solo menciona los productos que aparecen aqui. NO inventes nombres de clases, kits ni componentes.\n" . implode("\n", $lineas);
+    return "=== CATALOGO DISPONIBLE (resultados reales — usa SOLO estos) ===\nREGLA: Menciona UNICAMENTE los productos listados aqui. NO inventes nombres de clases, kits, codigos ni materiales que no aparezcan en esta lista.\n" . implode("\n", $lineas);
 }
 
 function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?int $componente_id = null, ?int $manual_id = null, string $pagina = 'inicio', string $termino_busqueda = ''): string {
@@ -860,6 +868,12 @@ try {
             $system_content = $prompt_base;
             if (!empty($contexto_texto)) {
                 $system_content .= "\n\n" . $contexto_texto;
+            }
+
+            // Regla de honestidad sobre el catalogo (frontend) — va SIEMPRE en el prompt del sistema
+            // para que tenga maxima autoridad sobre el conocimiento pre-entrenado del modelo
+            if ($instancia === 'frontend') {
+                $system_content .= "\n\nREGLA DE CATALOGO (obligatoria):\n- Si el contexto incluye '=== CATALOGO DISPONIBLE ===' menciona solo esos productos reales.\n- Si el contexto incluye '=== CATALOGO: SIN COINCIDENCIAS ===' NO inventes clases, kits ni materiales. Di honestamente al usuario que aun no tienes un proyecto o kit sobre ese tema especifico, pero ofrece seguir conversando sobre el tema de forma educativa. Ejemplo: 'Aun no tenemos una clase o kit sobre [tema], pero puedo contarte mas sobre ello si te interesa seguir explorando.'";
             }
 
             // Chips de respuesta rapida: cuando la IA necesita info del usuario,
