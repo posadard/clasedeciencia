@@ -294,7 +294,7 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
         $stmt->execute($params);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $c) {
             $desc = $c['resumen'] ? mb_substr($c['resumen'], 0, 120) : '';
-            $lineas[] = "[Clase] {$c['nombre']} | Ciclo {$c['ciclo']} | {$c['dificultad']} | {$c['duracion_minutos']} min | URL: /clase.php?slug={$c['slug']}\n    Descripcion: {$desc}";
+            $lineas[] = "[Clase] {$c['nombre']} | Ciclo {$c['ciclo']} | {$c['dificultad']} | {$c['duracion_minutos']} min | URL: /{$c['slug']}\n    Descripcion: {$desc}";
         }
 
         // --- KITS ---
@@ -309,22 +309,21 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
         $stmt2->execute($params2);
         foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $k) {
             $desc = $k['resumen'] ? mb_substr($k['resumen'], 0, 100) : '';
-            $lineas[] = "[Kit] {$k['nombre']} | Codigo: {$k['codigo']} | URL: /kit.php?slug={$k['slug']}\n    Descripcion: {$desc}";
+            $lineas[] = "[Kit] {$k['nombre']} | Codigo: {$k['codigo']} | URL: /{$k['slug']}\n    Descripcion: {$desc}";
         }
 
-        // --- COMPONENTES ---
-        $where_parts3 = array_map(fn($p) => "(ki.nombre_comun LIKE ? OR ki.descripcion_corta LIKE ?)", $palabras);
+        // --- COMPONENTES (solo nombre_comun — descripcion_html es HTML no apto para LIKE) ---
+        $where_parts3 = array_map(fn($p) => "ki.nombre_comun LIKE ?", $palabras);
         $params3 = [];
-        foreach ($palabras as $p) { $params3[] = "%$p%"; $params3[] = "%$p%"; }
-        $sql3 = "SELECT ki.nombre_comun, ki.slug, ki.descripcion_corta
+        foreach ($palabras as $p) { $params3[] = "%$p%"; }
+        $sql3 = "SELECT ki.nombre_comun, ki.slug, ki.sku
                  FROM kit_items ki WHERE ki.activo = 1 AND (" . implode(' OR ', $where_parts3) . ")
                  ORDER BY ki.id ASC LIMIT ?";
         $params3[] = 3;
         $stmt3 = $pdo->prepare($sql3);
         $stmt3->execute($params3);
         foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $ki) {
-            $desc = $ki['descripcion_corta'] ? mb_substr($ki['descripcion_corta'], 0, 80) : '';
-            $lineas[] = "[Componente] {$ki['nombre_comun']} | URL: /componente.php?slug={$ki['slug']}\n    Descripcion: {$desc}";
+            $lineas[] = "[Componente] {$ki['nombre_comun']} | SKU: {$ki['sku']} | URL: /{$ki['slug']}";
         }
     } catch (Exception $e) {
         error_log('IA buscar_catalogo error: ' . $e->getMessage());
