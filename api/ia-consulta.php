@@ -254,7 +254,91 @@ function buscar_sugerencias(PDO $pdo, string $pregunta, int $limit = 4): array {
  * Construye el bloque de contexto para la instancia FRONTEND.
  * Combina: clase, ÃƒÂ¡reas, competencias, kit, manual, guÃƒÂ­a y prompt pedagÃƒÂ³gico.
  */
-function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?int $componente_id = null, ?int $manual_id = null, string $pagina = 'inicio'): string {
+/**
+ * Busca en el catalogo real (clases, kits, componentes) por palabras clave
+ * y devuelve un bloque de contexto con los resultados para inyectar a la IA.
+ */
+function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5): string {
+    $termino = trim($termino);
+    if (empty($termino)) return '';
+
+    // Stopwords en espanol � no aportan valor como terminos de busqueda
+    $stopwords = ['quiero', 'hacer', 'para', 'como', 'sobre', 'algo', 'tener', 'busco',
+                  'necesito', 'dame', 'muestra', 'proyecto', 'clase', 'trabajo', 'ayuda',
+                  'hola', 'buenas', 'quisiera', 'podria', 'puedo', 'cual', 'cuales', 'que',
+                  'una', 'uno', 'los', 'las', 'del', 'con', 'por', 'pero', 'mas'];
+
+    // Normalizar y filtrar palabras utiles (min 4 chars)
+    $palabras_raw = preg_split('/\s+/', mb_strtolower($termino));
+    $palabras = array_values(array_filter($palabras_raw, function($p) use ($stopwords) {
+        return mb_strlen($p) >= 4 && !in_array($p, $stopwords, true);
+    }));
+
+    // Si no hay palabras utiles, usar termino completo como ultima opcion
+    if (empty($palabras)) {
+        $palabras = [mb_substr($termino, 0, 30)];
+    }
+
+    $lineas = [];
+
+    try {
+        // --- CLASES ---
+        $where_parts = array_map(fn($p) => "(c.nombre LIKE ? OR c.resumen LIKE ?)", $palabras);
+        $params = [];
+        foreach ($palabras as $p) { $params[] = "%$p%"; $params[] = "%$p%"; }
+        $sql = "SELECT c.nombre, c.slug, c.resumen, c.ciclo, c.dificultad, c.duracion_minutos
+                FROM clases c WHERE c.activo = 1 AND (" . implode(' OR ', $where_parts) . ")
+                ORDER BY c.destacado DESC, c.orden_popularidad ASC LIMIT ?";
+        $params[] = $limite;
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $c) {
+            $desc = $c['resumen'] ? mb_substr($c['resumen'], 0, 120) : '';
+            $lineas[] = "[Clase] {$c['nombre']} | Ciclo {$c['ciclo']} | {$c['dificultad']} | {$c['duracion_minutos']} min | URL: /clase.php?slug={$c['slug']}\n    Descripcion: {$desc}";
+        }
+
+        // --- KITS ---
+        $where_parts2 = array_map(fn($p) => "(k.nombre LIKE ? OR k.resumen LIKE ?)", $palabras);
+        $params2 = [];
+        foreach ($palabras as $p) { $params2[] = "%$p%"; $params2[] = "%$p%"; }
+        $sql2 = "SELECT k.nombre, k.slug, k.codigo, k.resumen
+                 FROM kits k WHERE k.activo = 1 AND (" . implode(' OR ', $where_parts2) . ")
+                 ORDER BY k.id ASC LIMIT ?";
+        $params2[] = 3;
+        $stmt2 = $pdo->prepare($sql2);
+        $stmt2->execute($params2);
+        foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $k) {
+            $desc = $k['resumen'] ? mb_substr($k['resumen'], 0, 100) : '';
+            $lineas[] = "[Kit] {$k['nombre']} | Codigo: {$k['codigo']} | URL: /kit.php?slug={$k['slug']}\n    Descripcion: {$desc}";
+        }
+
+        // --- COMPONENTES ---
+        $where_parts3 = array_map(fn($p) => "(ki.nombre_comun LIKE ? OR ki.descripcion_corta LIKE ?)", $palabras);
+        $params3 = [];
+        foreach ($palabras as $p) { $params3[] = "%$p%"; $params3[] = "%$p%"; }
+        $sql3 = "SELECT ki.nombre_comun, ki.slug, ki.descripcion_corta
+                 FROM kit_items ki WHERE ki.activo = 1 AND (" . implode(' OR ', $where_parts3) . ")
+                 ORDER BY ki.id ASC LIMIT ?";
+        $params3[] = 3;
+        $stmt3 = $pdo->prepare($sql3);
+        $stmt3->execute($params3);
+        foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $ki) {
+            $desc = $ki['descripcion_corta'] ? mb_substr($ki['descripcion_corta'], 0, 80) : '';
+            $lineas[] = "[Componente] {$ki['nombre_comun']} | URL: /componente.php?slug={$ki['slug']}\n    Descripcion: {$desc}";
+        }
+    } catch (Exception $e) {
+        error_log('IA buscar_catalogo error: ' . $e->getMessage());
+        return '';
+    }
+
+    if (empty($lineas)) {
+        return "=== CATALOGO ===\nNo se encontraron clases, kits o componentes relacionados con '" . htmlspecialchars($termino, ENT_QUOTES, 'UTF-8') . "'. Informa al usuario honestamente.";
+    }
+
+    return "=== CATALOGO DISPONIBLE (resultados reales � usa SOLO estos) ===\nIMPORTANTE: Solo menciona los productos que aparecen aqui. NO inventes nombres de clases, kits ni componentes.\n" . implode("\n", $lineas);
+}
+
+function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?int $componente_id = null, ?int $manual_id = null, string $pagina = 'inicio', string $termino_busqueda = ''): string {
     $bloques = [];
 
     try {
@@ -420,16 +504,21 @@ function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?
             }
 
         } else {
-            // --- LISTING PAGE: orientacion general segun pagina ---
+            // --- LISTING PAGE: busqueda real en catalogo + orientacion ---
             $listado_hints = [
-                'inicio'      => 'El usuario esta en la pagina de inicio. Ayudale a descubrir las clases de ciencia, kits y componentes disponibles.',
-                'catalogo'    => 'El usuario esta explorando el catalogo de clases. Ayudale a encontrar el proyecto adecuado segun sus grados, areas o intereses.',
-                'kits'        => 'El usuario esta viendo el catalogo de kits de ciencia. Orientale sobre los kits disponibles, que incluyen y para que ciclo o grado son.',
-                'componentes' => 'El usuario esta viendo la lista de componentes. Puedes explicar para que sirve cada material o como se usa en experimentos.',
-                'manuales'    => 'El usuario esta explorando los manuales disponibles. Puedes orientarle sobre como seguir un manual, que tipos existen o cual le conviene.',
+                'inicio'      => 'El usuario esta en la pagina de inicio del sitio.',
+                'catalogo'    => 'El usuario esta explorando el catalogo de clases.',
+                'kits'        => 'El usuario esta viendo el catalogo de kits de ciencia.',
+                'componentes' => 'El usuario esta viendo la lista de componentes/materiales.',
+                'manuales'    => 'El usuario esta explorando los manuales disponibles.',
             ];
             if (isset($listado_hints[$pagina])) {
                 $bloques[] = "=== CONTEXTO DE NAVEGACION ===\n" . $listado_hints[$pagina];
+            }
+            // Inyectar resultados reales del catalogo si hay termino de busqueda
+            if (!empty($termino_busqueda)) {
+                $catalogo_ctx = buscar_catalogo_por_pregunta($pdo, $termino_busqueda);
+                if ($catalogo_ctx) $bloques[] = $catalogo_ctx;
             }
         }
 
@@ -628,6 +717,7 @@ try {
     $componente_id   = $instancia === 'frontend' ? (isset($data['componente_id'])   ? (int)$data['componente_id']   : null) : null;
     $manual_id       = $instancia === 'frontend' ? (isset($data['manual_id'])       ? (int)$data['manual_id']       : null) : null;
     $pagina          = $instancia === 'frontend' ? trim($data['pagina'] ?? 'inicio') : '';
+    $tema            = $instancia === 'frontend' ? trim($data['tema'] ?? '') : '';
     $contexto_pagina = $instancia === 'backend'  ? trim($data['contexto_pagina'] ?? 'dashboard') : '';
     $entidad_tipo    = $instancia === 'backend'  ? trim($data['entidad_tipo'] ?? '') : null;
     $entidad_id      = $instancia === 'backend'  ? (isset($data['entidad_id']) ? (int)$data['entidad_id'] : null) : null;
@@ -760,7 +850,9 @@ try {
         } else {
             // Construir contexto segÃƒÂºn instancia
             if ($instancia === 'frontend') {
-                $contexto_texto = build_context_frontend($pdo, $clase_id, $kit_id, $componente_id, $manual_id, $pagina);
+                // Combinar pregunta + tema del historial para busqueda enriquecida en catalogo
+                $termino_busqueda = trim($pregunta . ' ' . $tema);
+                $contexto_texto = build_context_frontend($pdo, $clase_id, $kit_id, $componente_id, $manual_id, $pagina, $termino_busqueda);
             } else {
                 $contexto_texto = build_context_backend($pdo, $contexto_pagina, $entidad_tipo, $entidad_id);
             }

@@ -877,6 +877,12 @@
       // Enviar historial previo (máx 12 mensajes = 6 turnos) para continuidad
       var historialEnvio = historial.slice(-12);
 
+      // Extraer tema: primer mensaje del usuario en el historial (captura el tema original del hilo)
+      var tema = '';
+      for (var i = 0; i < historial.length; i++) {
+        if (historial[i].role === 'user') { tema = historial[i].content; break; }
+      }
+
       try {
         var resp = await fetch('/api/ia-consulta.php', {
           method: 'POST',
@@ -889,6 +895,7 @@
             manual_id:     manualId,
             pagina:        pagina,
             pregunta:      pregunta,
+            tema:          tema,
             historial:     historialEnvio
           })
         });
@@ -904,7 +911,9 @@
           guardarHistorial(historial);
           addBubble(ui.log, 'ia', parsed.texto);
           addIAActions(ui.log, parsed.texto, parsed.opciones, enviar);
-          addSugerencias(ui.log, buscarSugerencias(pregunta));
+          // Para sugerencias usar el tema original si el mensaje actual es muy corto
+          var terminoBusqueda = pregunta.length < 10 && tema ? tema : pregunta;
+          addSugerencias(ui.log, buscarSugerencias(terminoBusqueda));
         } else {
           addBubble(ui.log, 'ia', '❌ ' + (json && json.error ? json.error : 'Error al procesar la consulta.'));
         }
