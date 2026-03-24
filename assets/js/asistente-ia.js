@@ -400,23 +400,6 @@
       border-color: #9ca3af;
       color: #374151;
     }
-    .ia-pregunta-chip {
-      font-size: 11.5px;
-      padding: 5px 11px;
-      border: 1.5px solid #c7d2fe;
-      border-radius: 20px;
-      background: #eef2ff;
-      color: #3730a3;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      font-family: inherit;
-      line-height: 1.4;
-      text-align: left;
-    }
-    .ia-pregunta-chip:hover {
-      background: #c7d2fe;
-      border-color: #818cf8;
-    }
     .ia-respuesta-chip {
       font-size: 11.5px;
       padding: 5px 11px;
@@ -606,37 +589,13 @@
     return { texto: textoLimpio, opciones: opciones.slice(0, 4) };
   }
 
-  // Patrones de segunda persona: la IA le pregunta AL usuario → no aptos como chip
-  var _SEGUNDA_PERSONA = [
-    '¿estás', '¿te ', '¿te\u00a0', '¿prefieres', '¿quieres', '¿quisieras',
-    '¿te gustaría', '¿puedes', '¿has ', '¿cuál es tu', '¿cuáles son tus',
-    '¿tienes', '¿conoces', '¿sabes', '¿podrías', '¿qué te'
-  ];
-
-  function extraerPreguntas(texto) {
-    var preguntas = [];
-    var partes = texto.split('?');
-    for (var i = 0; i < partes.length - 1; i++) {
-      var seg = partes[i];
-      var inicio = Math.max(seg.lastIndexOf('. '), seg.lastIndexOf('! '), seg.lastIndexOf('\n'));
-      var q = (inicio >= 0 ? seg.substring(inicio + 2) : seg).trim() + '?';
-      if (q.length <= 15 || q.length >= 180) continue;
-      // Filtrar preguntas dirigidas al usuario (segunda persona) — no tiene sentido enviarlas como input
-      var qLower = q.toLowerCase();
-      var dirigidaAlUsuario = _SEGUNDA_PERSONA.some(function(p) { return qLower.indexOf(p) !== -1; });
-      if (!dirigidaAlUsuario) preguntas.push(q);
-    }
-    return preguntas.slice(0, 2);
-  }
-
   function addIAActions(log, texto, opciones, onSend) {
-    var preguntas = extraerPreguntas(texto);
     // Si la IA termina con una pregunta al usuario, está esperando respuesta:
     // no mostrar Profundiza (no hay nada que expandir aún)
     var terminaEnPregunta = texto.trim().slice(-1) === '?';
     var mostrarProfundiza  = !terminaEnPregunta && texto.length > 120;
 
-    if (!mostrarProfundiza && preguntas.length === 0 && opciones.length === 0) return; // nada útil que mostrar
+    if (!mostrarProfundiza && opciones.length === 0) return; // nada útil que mostrar
 
     var row = document.createElement('div');
     row.className = 'ia-action-row';
@@ -657,14 +616,6 @@
       chip.className = 'ia-respuesta-chip';
       chip.textContent = op;
       chip.addEventListener('click', function() { onSend(op); });
-      row.appendChild(chip);
-    });
-
-    preguntas.forEach(function(q) {
-      var chip = document.createElement('button');
-      chip.className = 'ia-pregunta-chip';
-      chip.textContent = q;
-      chip.addEventListener('click', function() { onSend(q); });
       row.appendChild(chip);
     });
 
