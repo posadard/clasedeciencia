@@ -51,6 +51,18 @@ $getCount = function (PDO $pdo, string $sql) {
     }
 };
 
+$viewExists = function (PDO $pdo, string $view) {
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?");
+        if (!$stmt) { return false; }
+        $stmt->execute([$view]);
+        return ((int)$stmt->fetchColumn()) > 0;
+    } catch (PDOException $e) {
+        error_log('Admin view exists check error: ' . $e->getMessage());
+        return false;
+    }
+};
+
 // Estadísticas principales
 try {
     $stats = [
@@ -121,6 +133,70 @@ try {
     $debug_messages[] = 'IA stats error: ' . $e->getMessage();
 }
 
+// Riesgo operativo (vista IA-ready + fallback)
+$riesgo_stats = [
+    'total' => 0,
+    'contrato_por_vencer' => 0,
+    'entrega_atrasada' => 0,
+    'lote_stock_critico' => 0,
+];
+$riesgos = [];
+try {
+    if ($viewExists($pdo, 'v_admin_riesgo_operativo')) {
+        $stmt = $pdo->prepare("SELECT tipo_riesgo, entidad_id, referencia, detalle, fecha_ref
+                               FROM v_admin_riesgo_operativo
+                               ORDER BY fecha_ref DESC
+                               LIMIT 8");
+        $stmt->execute([]);
+        $riesgos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $pdo->prepare("SELECT tipo_riesgo, COUNT(*) AS total
+                               FROM v_admin_riesgo_operativo
+                               GROUP BY tipo_riesgo");
+        $stmt->execute([]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $tipo = (string)($r['tipo_riesgo'] ?? '');
+            $total = (int)($r['total'] ?? 0);
+            if (array_key_exists($tipo, $riesgo_stats)) {
+                $riesgo_stats[$tipo] = $total;
+                $riesgo_stats['total'] += $total;
+            }
+        }
+    } else {
+        if ($tableExists($pdo, 'contratos')) {
+            $riesgo_stats['contrato_por_vencer'] = $getCount(
+                $pdo,
+                "SELECT COUNT(*) FROM contratos
+                 WHERE fecha_fin IS NOT NULL
+                   AND estado_contrato IN ('vigente','suspendido')
+                   AND DATEDIFF(fecha_fin, CURDATE()) BETWEEN 0 AND 30"
+            );
+        }
+        if ($tableExists($pdo, 'entregas')) {
+            $riesgo_stats['entrega_atrasada'] = $getCount(
+                $pdo,
+                "SELECT COUNT(*) FROM entregas
+                 WHERE estado_entrega IN ('programada','reprogramada','en_transito')
+                   AND fecha_programada IS NOT NULL
+                   AND fecha_programada < CURDATE()"
+            );
+        }
+        if ($tableExists($pdo, 'lotes')) {
+            $riesgo_stats['lote_stock_critico'] = $getCount(
+                $pdo,
+                "SELECT COUNT(*) FROM lotes
+                 WHERE estado_lote = 'activo'
+                   AND cantidad_total > 0
+                   AND ((cantidad_disponible / cantidad_total) * 100) < 15"
+            );
+        }
+        $riesgo_stats['total'] = $riesgo_stats['contrato_por_vencer'] + $riesgo_stats['entrega_atrasada'] + $riesgo_stats['lote_stock_critico'];
+    }
+} catch (PDOException $e) {
+    error_log('Admin risk stats error: ' . $e->getMessage());
+    $debug_messages[] = 'Risk stats error: ' . $e->getMessage();
+}
+
 include 'header.php';
 ?>
 
@@ -144,6 +220,12 @@ include 'header.php';
                 consultas: <?= (int)$ia_stats['consultas'] ?>,
                 respuestas: <?= (int)$ia_stats['respuestas'] ?>,
                 guardrails: <?= (int)$ia_stats['guardrails'] ?>
+            });
+            console.log('🔍 [Admin] Riesgos:', {
+                total: <?= (int)$riesgo_stats['total'] ?>,
+                contrato_por_vencer: <?= (int)$riesgo_stats['contrato_por_vencer'] ?>,
+                entrega_atrasada: <?= (int)$riesgo_stats['entrega_atrasada'] ?>,
+                lote_stock_critico: <?= (int)$riesgo_stats['lote_stock_critico'] ?>
             });
             <?php if (!empty($debug_messages)): ?>
             console.log('⚠️ [Admin] Debug mensajes:');
@@ -184,6 +266,62 @@ include 'header.php';
 <div class="card">
     <h3>Actividad IA (7 días)</h3>
     <p>Consultas: <strong><?= $ia_stats['consultas'] ?></strong> · Respuestas: <strong><?= $ia_stats['respuestas'] ?></strong> · Guardrails: <strong><?= $ia_stats['guardrails'] ?></strong></p>
+</div>
+
+<!-- Riesgo operativo -->
+<div class="card">
+    <h3>Riesgo Operativo</h3>
+    <p>
+        Total alertas: <strong><?= (int)$riesgo_stats['total'] ?></strong> ·
+        Contratos por vencer: <strong><?= (int)$riesgo_stats['contrato_por_vencer'] ?></strong> ·
+        Entregas atrasadas: <strong><?= (int)$riesgo_stats['entrega_atrasada'] ?></strong> ·
+        Stock crítico: <strong><?= (int)$riesgo_stats['lote_stock_critico'] ?></strong>
+    </p>
+
+    <?php if (!empty($riesgos)): ?>
+    <table class="data-table" style="margin-top:0.75rem;">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Referencia</th>
+                <th>Detalle</th>
+                <th>Fecha</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($riesgos as $r): ?>
+            <?php
+                $tipo = (string)($r['tipo_riesgo'] ?? '');
+                $entidad_id = (int)($r['entidad_id'] ?? 0);
+                $accion_url = '#';
+                if ($tipo === 'contrato_por_vencer') {
+                    $accion_url = '/admin/contratos/index.php?edit=' . $entidad_id;
+                } elseif ($tipo === 'entrega_atrasada') {
+                    $accion_url = '/admin/entregas/index.php?edit=' . $entidad_id;
+                } elseif ($tipo === 'lote_stock_critico') {
+                    $accion_url = '/admin/lotes/index.php?edit=' . $entidad_id;
+                }
+            ?>
+            <tr>
+                <td><?= htmlspecialchars(strtoupper(str_replace('_', ' ', $tipo)), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)($r['referencia'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)($r['detalle'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)($r['fecha_ref'] ?? '-'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td>
+                    <?php if ($accion_url !== '#'): ?>
+                    <a href="<?= htmlspecialchars($accion_url, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-sm">Revisar</a>
+                    <?php else: ?>
+                    <span class="help-text">N/A</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <?php else: ?>
+    <p class="help-text" style="margin-top:0.5rem;">No hay alertas detalladas disponibles en este momento.</p>
+    <?php endif; ?>
 </div>
 
 <!-- Acciones rápidas -->
