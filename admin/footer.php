@@ -43,6 +43,7 @@
       }
       window.initAsistenteIA({
         instancia: 'backend',
+                contextoScope: 'admin_global',
         pagina: '<?= htmlspecialchars($contexto_pagina, ENT_QUOTES, 'UTF-8') ?>',
         contextoPagina: '<?= htmlspecialchars($contexto_pagina, ENT_QUOTES, 'UTF-8') ?>',
         entidadTipo: '<?= htmlspecialchars($entidad_tipo, ENT_QUOTES, 'UTF-8') ?>',

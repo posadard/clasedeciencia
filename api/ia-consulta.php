@@ -33,6 +33,108 @@ function json_fail(string $message, array $extra = []): void {
     exit;
 }
 
+function get_backend_session_id(PDO $pdo, string $admin_user, string $contexto_scope, string $contexto_pagina, ?string $entidad_tipo, ?int $entidad_id): ?int {
+    $contexto_scope = $contexto_scope !== '' ? $contexto_scope : 'admin_global';
+    $entidad_tipo = $entidad_tipo ?: null;
+    $entidad_id = $entidad_id ?: null;
+
+    $sesion_clave = 'backend:' . $admin_user . ':' . $contexto_scope;
+    if ($contexto_scope !== 'admin_global') {
+        $sesion_clave .= ':' . ($contexto_pagina !== '' ? $contexto_pagina : 'admin');
+        if ($entidad_tipo && $entidad_id) {
+            $sesion_clave .= ':' . $entidad_tipo . ':' . (int)$entidad_id;
+        }
+    }
+    $sesion_clave = mb_substr($sesion_clave, 0, 160);
+    $sesion_hash = hash('sha256', $sesion_clave);
+
+    try {
+        $stmt = $pdo->prepare('SELECT sesion_id FROM ia_sesiones_contexto WHERE instancia = ? AND sesion_clave = ? AND activa = 1 LIMIT 1');
+        $stmt->execute(['backend', $sesion_clave]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row && !empty($row['sesion_id'])) {
+            $sesion_id = (int)$row['sesion_id'];
+            $pdo->prepare('UPDATE ia_sesiones SET fecha_ultima_interaccion = NOW(), admin_user = ?, contexto_scope = ?, contexto_pagina = ?, entidad_tipo = ?, entidad_id = ? WHERE id = ?')
+                ->execute([$admin_user, $contexto_scope, $contexto_pagina ?: null, $entidad_tipo, $entidad_id, $sesion_id]);
+            return $sesion_id;
+        }
+
+        $pdo->prepare('INSERT INTO ia_sesiones (sesion_hash, clase_id, instancia, admin_user, contexto_scope, contexto_pagina, entidad_tipo, entidad_id)
+                       VALUES (?, NULL, ?, ?, ?, ?, ?, ?)')
+            ->execute([$sesion_hash, 'backend', $admin_user, $contexto_scope, $contexto_pagina ?: null, $entidad_tipo, $entidad_id]);
+        $sesion_id = (int)$pdo->lastInsertId();
+
+        $pdo->prepare('INSERT INTO ia_sesiones_contexto (instancia, sesion_clave, sesion_id, activa) VALUES (?, ?, ?, 1)
+                       ON DUPLICATE KEY UPDATE sesion_id = VALUES(sesion_id), activa = 1, updated_at = NOW()')
+            ->execute(['backend', $sesion_clave, $sesion_id]);
+        return $sesion_id;
+    } catch (Exception $e) {
+        error_log('IA backend session resolver (new schema) error: ' . $e->getMessage());
+    }
+
+    // Fallback para esquemas sin ia_sesiones_contexto o sin columnas nuevas.
+    try {
+        $stmt = $pdo->prepare('SELECT id FROM ia_sesiones WHERE sesion_hash = ? LIMIT 1');
+        $stmt->execute([$sesion_hash]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            $sesion_id = (int)$row['id'];
+            $pdo->prepare('UPDATE ia_sesiones SET fecha_ultima_interaccion = NOW(), instancia = ? WHERE id = ?')
+                ->execute(['backend', $sesion_id]);
+            return $sesion_id;
+        }
+
+        $pdo->prepare('INSERT INTO ia_sesiones (sesion_hash, clase_id, instancia) VALUES (?, NULL, ?)')
+            ->execute([$sesion_hash, 'backend']);
+        return (int)$pdo->lastInsertId();
+    } catch (Exception $e) {
+        error_log('IA backend session resolver (legacy schema) error: ' . $e->getMessage());
+        return null;
+    }
+}
+
+function hydrate_historial_from_db(PDO $pdo, int $sesion_id, int $max_rows = 12): array {
+    $out = [];
+    if ($sesion_id <= 0) return $out;
+    try {
+        $stmt = $pdo->prepare('SELECT rol, contenido FROM ia_mensajes WHERE sesion_id = ? AND rol IN (\'user\', \'assistant\') ORDER BY id DESC LIMIT ?');
+        $stmt->bindValue(1, $sesion_id, PDO::PARAM_INT);
+        $stmt->bindValue(2, $max_rows, PDO::PARAM_INT);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = array_reverse($rows);
+        foreach ($rows as $r) {
+            $role = (string)($r['rol'] ?? '');
+            $content = mb_substr(trim((string)($r['contenido'] ?? '')), 0, 800);
+            if (($role === 'user' || $role === 'assistant') && $content !== '') {
+                $out[] = ['role' => $role, 'content' => $content];
+            }
+        }
+    } catch (Exception $e) {
+        error_log('IA hydrate historial error: ' . $e->getMessage());
+    }
+    return $out;
+}
+
+function persist_ia_messages(PDO $pdo, int $sesion_id, string $instancia, string $pregunta, string $respuesta, int $tokens, string $modelo): void {
+    if ($sesion_id <= 0) return;
+    try {
+        $pdo->prepare('INSERT INTO ia_mensajes (sesion_id, rol, contenido, tokens, instancia, metadata) VALUES (?, \'user\', ?, 0, ?, JSON_OBJECT(\'timestamp\', NOW()))')
+            ->execute([$sesion_id, $pregunta, $instancia]);
+        $pdo->prepare('INSERT INTO ia_mensajes (sesion_id, rol, contenido, tokens, instancia, metadata) VALUES (?, \'assistant\', ?, ?, ?, JSON_OBJECT(\'modelo\', ?))')
+            ->execute([$sesion_id, $respuesta, $tokens, $instancia, $modelo]);
+
+        $pdo->prepare('UPDATE ia_sesiones
+                       SET total_mensajes = COALESCE(total_mensajes, 0) + 2,
+                           tokens_usados = COALESCE(tokens_usados, 0) + ?,
+                           fecha_ultima_interaccion = NOW()
+                       WHERE id = ?')
+            ->execute([$tokens, $sesion_id]);
+    } catch (Exception $e) {
+        error_log('IA persist mensajes error: ' . $e->getMessage());
+    }
+}
+
 /**
  * Realiza una llamada a la API de Groq.
  * Retorna array con: raw, errno, http_status, tiempo_ms
@@ -726,6 +828,7 @@ try {
     $pagina          = $instancia === 'frontend' ? trim($data['pagina'] ?? 'inicio') : '';
     $tema            = $instancia === 'frontend' ? trim($data['tema'] ?? '') : '';
     $contexto_pagina = $instancia === 'backend'  ? trim($data['contexto_pagina'] ?? 'dashboard') : '';
+    $contexto_scope  = $instancia === 'backend'  ? trim($data['contexto_scope'] ?? 'admin_global') : '';
     $entidad_tipo    = $instancia === 'backend'  ? trim($data['entidad_tipo'] ?? '') : null;
     $entidad_id      = $instancia === 'backend'  ? (isset($data['entidad_id']) ? (int)$data['entidad_id'] : null) : null;
 
@@ -772,7 +875,7 @@ try {
     $mensaje_guardrail   = $cfg['mensaje_guardrail'] ?? 'Ã¢Å¡Â Ã¯Â¸Â Consulta con tu profesor.';
 
     // ---------------------------------------------------------------
-    // SesiÃƒÂ³n anÃƒÂ³nima (solo frontend)
+    // Sesiones por instancia (frontend anÃƒÂ³nima / backend por usuario admin+scope)
     // ---------------------------------------------------------------
     $sesion_id = null;
     if ($instancia === 'frontend') {
@@ -797,6 +900,12 @@ try {
             }
         } catch (Exception $e) {
             error_log('IA sesiÃƒÂ³n error: ' . $e->getMessage());
+        }
+    } else {
+        $admin_user = (string)($_SESSION['admin_username'] ?? 'admin');
+        $sesion_id = get_backend_session_id($pdo, $admin_user, $contexto_scope, $contexto_pagina, $entidad_tipo, $entidad_id);
+        if (empty($historial)) {
+            $historial = hydrate_historial_from_db($pdo, (int)$sesion_id, 12);
         }
     }
 
@@ -935,6 +1044,16 @@ try {
     } catch (Exception $e) {
         error_log('IA log error: ' . $e->getMessage());
     }
+
+    persist_ia_messages(
+        $pdo,
+        (int)$sesion_id,
+        $instancia,
+        $pregunta,
+        (string)$respuesta,
+        (int)$tokens,
+        (string)$modelo_usado
+    );
 
     ob_end_clean(); // descartar warnings/notices PHP antes de responder
     echo json_encode([

@@ -739,34 +739,34 @@
     }).slice(0, limit);
   }
 
-  var SS_KEY = 'cdc_ia_historial';
+  var SS_PREFIX = 'cdc_ia_historial';
   var SS_TTL  = 4 * 60 * 60 * 1000; // 4 horas en ms
 
-  function guardarHistorial(historial) {
+  function guardarHistorial(ssKey, historial) {
     try {
-      sessionStorage.setItem(SS_KEY, JSON.stringify({
+      sessionStorage.setItem(ssKey, JSON.stringify({
         ts: Date.now(),
         items: historial.slice(-24) // guardar máx 24 entradas (12 turnos)
       }));
     } catch(e) { /* sessionStorage no disponible */ }
   }
 
-  function restaurarHistorial() {
+  function restaurarHistorial(ssKey) {
     try {
-      var raw = sessionStorage.getItem(SS_KEY);
+      var raw = sessionStorage.getItem(ssKey);
       if (!raw) return [];
       var data = JSON.parse(raw);
       if (!data || !data.ts || !Array.isArray(data.items)) return [];
       if (Date.now() - data.ts > SS_TTL) {
-        sessionStorage.removeItem(SS_KEY);
+        sessionStorage.removeItem(ssKey);
         return [];
       }
       return data.items;
     } catch(e) { return []; }
   }
 
-  function limpiarHistorialSS() {
-    try { sessionStorage.removeItem(SS_KEY); } catch(e) {}
+  function limpiarHistorialSS(ssKey) {
+    try { sessionStorage.removeItem(ssKey); } catch(e) {}
   }
 
   window.initAsistenteIA = function (ctx) {
@@ -776,18 +776,21 @@
     var kitId        = ctx.kitId        || null;
     var componenteId = ctx.componenteId || null;
     var manualId     = ctx.manualId     || null;
+    var contextoScope  = ctx.contextoScope || '';
     var contextoPagina = ctx.contextoPagina || '';
     var entidadTipo    = ctx.entidadTipo || '';
     var entidadId      = ctx.entidadId || null;
     var pagina       = ctx.pagina       || (claseId ? 'clase' : 'inicio');
     var usarSugerencias = instancia !== 'backend';
-    console.log('🔍 [asistente-ia] init', pagina, { instancia, claseId, kitId, componenteId, manualId, contextoPagina, entidadTipo, entidadId });
+    var scopeKey = contextoScope || pagina || 'global';
+    var ssKey = SS_PREFIX + ':' + instancia + ':' + scopeKey;
+    console.log('🔍 [asistente-ia] init', pagina, { instancia, claseId, kitId, componenteId, manualId, contextoScope, contextoPagina, entidadTipo, entidadId, ssKey });
 
     injectCSS();
     var ui = createUI();
     var isExpanded = false;
     var expandState = 0;
-    var historial = restaurarHistorial(); // restaurar historial de sessionStorage si existe
+    var historial = restaurarHistorial(ssKey); // restaurar historial de sessionStorage si existe
     var sesionRestaurada = historial.length > 0;
     if (usarSugerencias) {
       cargarCatalogo();
@@ -816,7 +819,7 @@
         '<button class="ia-session-clear" title="Borrar historial y empezar de nuevo">× Nueva sesión</button>';
       banner.querySelector('.ia-session-clear').addEventListener('click', function() {
         historial = [];
-        limpiarHistorialSS();
+        limpiarHistorialSS(ssKey);
         banner.remove();
         sesionRestaurada = false;
         console.log('🗑️ [asistente-ia] historial limpiado por usuario');
@@ -908,6 +911,7 @@
 
         if (instancia === 'backend') {
           payload.contexto_pagina = contextoPagina || pagina || 'admin';
+          payload.contexto_scope = contextoScope || 'admin_global';
           if (entidadTipo) payload.entidad_tipo = entidadTipo;
           if (entidadId !== null && entidadId !== '' && !isNaN(Number(entidadId))) {
             payload.entidad_id = Number(entidadId);
@@ -934,7 +938,7 @@
           // Actualizar historial con este turno y persistir en sessionStorage
           historial.push({ role: 'user',      content: pregunta       });
           historial.push({ role: 'assistant', content: parsed.texto   });
-          guardarHistorial(historial);
+          guardarHistorial(ssKey, historial);
           addBubble(ui.log, 'ia', parsed.texto);
           addIAActions(ui.log, parsed.texto, parsed.opciones, enviar);
           // Para sugerencias usar el tema original si el mensaje actual es muy corto
