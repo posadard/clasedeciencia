@@ -81,6 +81,11 @@ function ia_generate_context_files(PDO $pdo): array {
         'kits_activos' => 0,
         'componentes_activos' => 0,
         'manuales_publicados' => 0,
+        'manuales_total' => 0,
+        'manuales_borrador' => 0,
+        'manuales_archivados' => 0,
+        'manuales_publicados_kit' => 0,
+        'manuales_publicados_componente' => 0,
         'contratos' => 0,
         'entregas' => 0,
         'lotes' => 0,
@@ -90,7 +95,12 @@ function ia_generate_context_files(PDO $pdo): array {
         $resumen['clases_activas'] = (int)($pdo->query('SELECT COUNT(*) FROM clases WHERE activo = 1')->fetchColumn() ?: 0);
         $resumen['kits_activos'] = (int)($pdo->query('SELECT COUNT(*) FROM kits WHERE activo = 1')->fetchColumn() ?: 0);
         $resumen['componentes_activos'] = (int)($pdo->query('SELECT COUNT(*) FROM kit_items WHERE activo = 1')->fetchColumn() ?: 0);
+        $resumen['manuales_total'] = (int)($pdo->query('SELECT COUNT(*) FROM kit_manuals')->fetchColumn() ?: 0);
         $resumen['manuales_publicados'] = (int)($pdo->query("SELECT COUNT(*) FROM kit_manuals WHERE status = 'published'")->fetchColumn() ?: 0);
+        $resumen['manuales_borrador'] = (int)($pdo->query("SELECT COUNT(*) FROM kit_manuals WHERE status = 'draft'")->fetchColumn() ?: 0);
+        $resumen['manuales_archivados'] = (int)($pdo->query("SELECT COUNT(*) FROM kit_manuals WHERE status IN ('archived','inactive')")->fetchColumn() ?: 0);
+        $resumen['manuales_publicados_kit'] = (int)($pdo->query("SELECT COUNT(*) FROM kit_manuals WHERE status = 'published' AND kit_id IS NOT NULL")->fetchColumn() ?: 0);
+        $resumen['manuales_publicados_componente'] = (int)($pdo->query("SELECT COUNT(*) FROM kit_manuals WHERE status = 'published' AND item_id IS NOT NULL")->fetchColumn() ?: 0);
         $resumen['contratos'] = (int)($pdo->query('SELECT COUNT(*) FROM contratos')->fetchColumn() ?: 0);
         $resumen['entregas'] = (int)($pdo->query('SELECT COUNT(*) FROM entregas')->fetchColumn() ?: 0);
         $resumen['lotes'] = (int)($pdo->query('SELECT COUNT(*) FROM lotes')->fetchColumn() ?: 0);
@@ -137,6 +147,38 @@ function ia_generate_context_files(PDO $pdo): array {
          ORDER BY kits_asociados DESC, i.nombre_comun ASC"
     );
 
+    $rows_manuales = ia_safe_query(
+        $pdo,
+        "SELECT
+            km.id,
+            km.titulo,
+            km.status,
+            km.ambito,
+            km.tipo_manual,
+            km.kit_id,
+            k.nombre AS kit_nombre,
+            km.item_id,
+            i.nombre_comun AS componente_nombre,
+            (
+                SELECT GROUP_CONCAT(DISTINCT c1.nombre ORDER BY c1.nombre SEPARATOR ', ')
+                FROM clase_kits ck1
+                JOIN clases c1 ON c1.id = ck1.clase_id
+                WHERE ck1.kit_id = km.kit_id
+            ) AS clases_por_kit,
+            (
+                SELECT GROUP_CONCAT(DISTINCT c2.nombre ORDER BY c2.nombre SEPARATOR ', ')
+                FROM kit_componentes kcx
+                JOIN clase_kits ck2 ON ck2.kit_id = kcx.kit_id
+                JOIN clases c2 ON c2.id = ck2.clase_id
+                WHERE kcx.item_id = km.item_id
+            ) AS clases_por_componente
+         FROM kit_manuals km
+         LEFT JOIN kits k ON k.id = km.kit_id
+         LEFT JOIN kit_items i ON i.id = km.item_id
+         ORDER BY (km.status = 'published') DESC, km.id DESC
+         LIMIT 500"
+    );
+
     $rows_operacion = ia_safe_query(
         $pdo,
         "SELECT
@@ -153,7 +195,12 @@ function ia_generate_context_files(PDO $pdo): array {
     $md_global[] = '- Clases activas: ' . $resumen['clases_activas'];
     $md_global[] = '- Kits activos: ' . $resumen['kits_activos'];
     $md_global[] = '- Componentes activos: ' . $resumen['componentes_activos'];
+    $md_global[] = '- Manuales totales: ' . $resumen['manuales_total'];
     $md_global[] = '- Manuales publicados: ' . $resumen['manuales_publicados'];
+    $md_global[] = '- Manuales borrador: ' . $resumen['manuales_borrador'];
+    $md_global[] = '- Manuales archivados/inactivos: ' . $resumen['manuales_archivados'];
+    $md_global[] = '- Manuales publicados (kit): ' . $resumen['manuales_publicados_kit'];
+    $md_global[] = '- Manuales publicados (componente): ' . $resumen['manuales_publicados_componente'];
     $md_global[] = '- Contratos: ' . $resumen['contratos'];
     $md_global[] = '- Entregas: ' . $resumen['entregas'];
     $md_global[] = '- Lotes: ' . $resumen['lotes'];
@@ -203,11 +250,43 @@ function ia_generate_context_files(PDO $pdo): array {
             . ' | activo=' . (int)$r['activo'];
     }
 
+    $md_manuales = [];
+    $md_manuales[] = '# Contexto IA - Manuales';
+    $md_manuales[] = 'Generado: ' . $ts;
+    $md_manuales[] = '';
+    $md_manuales[] = '## Estado de manuales';
+    $md_manuales[] = '- total=' . $resumen['manuales_total']
+        . ' | publicados=' . $resumen['manuales_publicados']
+        . ' | borrador=' . $resumen['manuales_borrador']
+        . ' | archivados_inactivos=' . $resumen['manuales_archivados'];
+    $md_manuales[] = '- publicados_kit=' . $resumen['manuales_publicados_kit']
+        . ' | publicados_componente=' . $resumen['manuales_publicados_componente'];
+    $md_manuales[] = '';
+    $md_manuales[] = '## Trazabilidad manual -> entidad -> clases';
+    foreach ($rows_manuales as $r) {
+        $destino = '';
+        if (!empty($r['kit_id'])) {
+            $destino = 'kit:[' . (int)$r['kit_id'] . '] ' . (string)($r['kit_nombre'] ?? 'N/A');
+        } elseif (!empty($r['item_id'])) {
+            $destino = 'componente:[' . (int)$r['item_id'] . '] ' . (string)($r['componente_nombre'] ?? 'N/A');
+        } else {
+            $destino = 'sin_destino';
+        }
+        $clases = trim((string)($r['clases_por_kit'] ?: $r['clases_por_componente'] ?: 'sin_clases_relacionadas'));
+        $md_manuales[] = '- [' . (int)$r['id'] . '] ' . (string)$r['titulo']
+            . ' | status=' . (string)$r['status']
+            . ' | ambito=' . (string)$r['ambito']
+            . ' | tipo=' . (string)$r['tipo_manual']
+            . ' | destino=' . $destino
+            . ' | clases=' . $clases;
+    }
+
     $files = [
         $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_global.md' => implode("\n", $md_global) . "\n",
         $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_clases.md' => implode("\n", $md_clases) . "\n",
         $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_kits.md' => implode("\n", $md_kits) . "\n",
         $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_componentes.md' => implode("\n", $md_componentes) . "\n",
+        $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_manuales.md' => implode("\n", $md_manuales) . "\n",
         $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_resumen.json' => json_encode([
             'generado_en' => $ts,
             'resumen' => $resumen,
@@ -215,6 +294,7 @@ function ia_generate_context_files(PDO $pdo): array {
                 'clases' => count($rows_clases),
                 'kits' => count($rows_kits),
                 'componentes' => count($rows_componentes),
+                'manuales' => count($rows_manuales),
             ]
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
     ];

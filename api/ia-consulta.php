@@ -741,8 +741,26 @@ function read_backend_context_snapshot_file(string $name, int $max_chars = 12000
     return mb_substr(trim($txt), 0, $max_chars);
 }
 
+function get_backend_snapshot_age_minutes(string $name): ?int {
+    $base = realpath(__DIR__ . '/../marco/estado');
+    if ($base === false) return null;
+    $path = $base . DIRECTORY_SEPARATOR . $name;
+    if (!is_file($path)) return null;
+    $mtime = @filemtime($path);
+    if ($mtime === false) return null;
+    $age = (int) floor((time() - (int)$mtime) / 60);
+    return max(0, $age);
+}
+
 function build_backend_snapshot_blocks(string $contexto_pagina): array {
     $bloques = [];
+
+    $age_global = get_backend_snapshot_age_minutes('ia_contexto_global.md');
+    if ($age_global !== null) {
+        $bloques[] = "=== METADATOS SNAPSHOT ===\n"
+            . "edad_minutos_global={$age_global}\n"
+            . "aviso=" . ($age_global > 240 ? 'snapshot_potencialmente_desactualizado' : 'snapshot_reciente');
+    }
 
     $global = read_backend_context_snapshot_file('ia_contexto_global.md');
     if ($global) {
@@ -751,17 +769,17 @@ function build_backend_snapshot_blocks(string $contexto_pagina): array {
 
     $map = [
         'clases' => ['ia_contexto_clases.md'],
-        'kits' => ['ia_contexto_kits.md', 'ia_contexto_clases.md'],
-        'componentes' => ['ia_contexto_componentes.md', 'ia_contexto_kits.md'],
-        'manuales' => ['ia_contexto_kits.md', 'ia_contexto_clases.md'],
-        'dashboard' => ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_componentes.md'],
+        'kits' => ['ia_contexto_kits.md', 'ia_contexto_clases.md', 'ia_contexto_manuales.md'],
+        'componentes' => ['ia_contexto_componentes.md', 'ia_contexto_kits.md', 'ia_contexto_manuales.md'],
+        'manuales' => ['ia_contexto_manuales.md', 'ia_contexto_kits.md', 'ia_contexto_clases.md'],
+        'dashboard' => ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_componentes.md', 'ia_contexto_manuales.md'],
         'contratos' => ['ia_contexto_global.md'],
         'entregas' => ['ia_contexto_global.md'],
-        'lotes' => ['ia_contexto_kits.md', 'ia_contexto_componentes.md'],
-        'ia' => ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_componentes.md'],
+        'lotes' => ['ia_contexto_kits.md', 'ia_contexto_componentes.md', 'ia_contexto_manuales.md'],
+        'ia' => ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_componentes.md', 'ia_contexto_manuales.md'],
     ];
 
-    $targets = $map[$contexto_pagina] ?? ['ia_contexto_clases.md', 'ia_contexto_kits.md'];
+    $targets = $map[$contexto_pagina] ?? ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_manuales.md'];
     foreach ($targets as $file) {
         $txt = read_backend_context_snapshot_file($file, 14000);
         if ($txt) {
@@ -790,6 +808,27 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
     }
 
     try {
+        // Estado en vivo para evitar errores por snapshots viejos en manuales.
+        $manuales_estado = $pdo->query(
+            "SELECT
+                COUNT(*) AS manuales_total,
+                SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) AS manuales_publicados,
+                SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS manuales_borrador,
+                SUM(CASE WHEN status IN ('archived','inactive') THEN 1 ELSE 0 END) AS manuales_archivados,
+                SUM(CASE WHEN status = 'published' AND kit_id IS NOT NULL THEN 1 ELSE 0 END) AS manuales_publicados_kit,
+                SUM(CASE WHEN status = 'published' AND item_id IS NOT NULL THEN 1 ELSE 0 END) AS manuales_publicados_componente
+             FROM kit_manuals"
+        )->fetch(PDO::FETCH_ASSOC);
+        if ($manuales_estado) {
+            $bloques[] = "=== MANUALES EN VIVO (DB) ===\n"
+                . "total=" . (int)$manuales_estado['manuales_total'] . "\n"
+                . "publicados=" . (int)$manuales_estado['manuales_publicados'] . "\n"
+                . "borrador=" . (int)$manuales_estado['manuales_borrador'] . "\n"
+                . "archivados_inactivos=" . (int)$manuales_estado['manuales_archivados'] . "\n"
+                . "publicados_kit=" . (int)$manuales_estado['manuales_publicados_kit'] . "\n"
+                . "publicados_componente=" . (int)$manuales_estado['manuales_publicados_componente'];
+        }
+
         switch ($contexto_pagina) {
             case 'clases':
                 $rows = $pdo->query(
@@ -816,6 +855,22 @@ function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entid
                 $bloques[] = "=== COMPONENTES (" . count($rows) . " registros) ===\n"
                     . implode("\n", array_map(fn($r) =>
                         "  [{$r['id']}] {$r['nombre_comun']} ({$r['sku']}) | CategorÃƒÂ­a: {$r['categoria']}", $rows));
+                break;
+
+            case 'manuales':
+                $rows = $pdo->query(
+                    "SELECT km.id, km.titulo, km.status, km.ambito, k.nombre AS kit_nombre, i.nombre_comun AS componente_nombre
+                     FROM kit_manuals km
+                     LEFT JOIN kits k ON k.id = km.kit_id
+                     LEFT JOIN kit_items i ON i.id = km.item_id
+                     ORDER BY (km.status = 'published') DESC, km.id DESC
+                     LIMIT 150"
+                )->fetchAll(PDO::FETCH_ASSOC);
+                $bloques[] = "=== MANUALES (" . count($rows) . " registros) ===\n"
+                    . implode("\n", array_map(function ($r) {
+                        $dest = $r['kit_nombre'] ?: ($r['componente_nombre'] ?: 'sin_destino');
+                        return "  [{$r['id']}] {$r['titulo']} | status={$r['status']} | ambito={$r['ambito']} | destino={$dest}";
+                    }, $rows));
                 break;
 
             case 'contratos':
