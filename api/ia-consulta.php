@@ -90,6 +90,164 @@ function normalize_backend_chat_response(string $text, int $max_content_lines = 
     return $normalized !== '' ? $normalized : 'No tengo suficientes datos para responder con claridad en este momento.';
 }
 
+function detect_backend_intent(string $pregunta): ?string {
+    $q = mb_strtolower(trim($pregunta));
+    if ($q === '') return null;
+
+    $has_manual = preg_match('/\bmanual(?:es)?\b/u', $q) === 1;
+    $has_pertenece = preg_match('/\b(pertenece|pertenecen|a que pertenece|de que es|de cual)\b/u', $q) === 1;
+    $has_completa = preg_match('/\b(mas completa|completitud|completa)\b/u', $q) === 1;
+    $has_clase = preg_match('/\bclase(?:s)?\b/u', $q) === 1;
+
+    if ($has_clase && $has_completa) {
+        return 'clase_mas_completa';
+    }
+    if ($has_manual && $has_pertenece) {
+        return 'manual_pertenencia';
+    }
+    if ($has_manual && preg_match('/\b(hay|existe|cuantos|cuantas)\b/u', $q) === 1) {
+        return 'manuales_estado';
+    }
+
+    return null;
+}
+
+function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pregunta): ?string {
+    try {
+        if ($intent === 'manuales_estado') {
+            $row = $pdo->query(
+                "SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN status = 'published' THEN 1 ELSE 0 END) AS publicados,
+                    SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) AS borrador,
+                    SUM(CASE WHEN status IN ('archived','inactive') THEN 1 ELSE 0 END) AS archivados,
+                    SUM(CASE WHEN status = 'published' AND kit_id IS NOT NULL THEN 1 ELSE 0 END) AS publicados_kit,
+                    SUM(CASE WHEN status = 'published' AND item_id IS NOT NULL THEN 1 ELSE 0 END) AS publicados_componente
+                 FROM kit_manuals"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            return "Respuesta corta: Si hay manuales en el sistema.\n"
+                . "Evidencia:\n"
+                . "- Total: " . (int)$row['total'] . "\n"
+                . "- Publicados: " . (int)$row['publicados'] . "\n"
+                . "- Borrador: " . (int)$row['borrador'] . "\n"
+                . "- Archivados/Inactivos: " . (int)$row['archivados'] . "\n"
+                . "- Publicados de kit: " . (int)$row['publicados_kit'] . "\n"
+                . "- Publicados de componente: " . (int)$row['publicados_componente'] . "\n"
+                . "Siguiente accion: Si quieres, te filtro por componente o por kit especifico.";
+        }
+
+        if ($intent === 'clase_mas_completa') {
+            $row = $pdo->query(
+                "SELECT
+                    c.id,
+                    c.nombre,
+                    COUNT(DISTINCT ck.kit_id) AS total_kits,
+                    COUNT(DISTINCT kc.item_id) AS total_componentes,
+                    COUNT(DISTINCT km.id) AS total_manuales_publicados,
+                    ROUND(COUNT(DISTINCT ck.kit_id) * 0.40 + COUNT(DISTINCT km.id) * 0.35 + COUNT(DISTINCT kc.item_id) * 0.25, 2) AS score_completitud
+                 FROM clases c
+                 LEFT JOIN clase_kits ck ON ck.clase_id = c.id
+                 LEFT JOIN kit_componentes kc ON kc.kit_id = ck.kit_id
+                 LEFT JOIN kit_manuals km ON km.status = 'published' AND (km.kit_id = ck.kit_id OR km.item_id = kc.item_id)
+                 GROUP BY c.id, c.nombre
+                 ORDER BY score_completitud DESC, total_kits DESC, total_manuales_publicados DESC, total_componentes DESC, c.nombre ASC
+                 LIMIT 1"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            return "Respuesta corta: La clase mas completa es " . $row['nombre'] . ".\n"
+                . "Evidencia:\n"
+                . "- Kits: " . (int)$row['total_kits'] . "\n"
+                . "- Manuales publicados: " . (int)$row['total_manuales_publicados'] . "\n"
+                . "- Componentes: " . (int)$row['total_componentes'] . "\n"
+                . "- Score: " . (float)$row['score_completitud'] . "\n"
+                . "Siguiente accion: Si quieres, te doy tambien el top 3 con el mismo criterio.";
+        }
+
+        if ($intent === 'manual_pertenencia') {
+            $q = mb_strtolower(trim($pregunta));
+            $terms = preg_split('/\s+/u', preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $q) ?? '') ?: [];
+            $terms = array_values(array_filter($terms, static fn($t) => mb_strlen($t) >= 4));
+            $terms = array_slice($terms, 0, 6);
+
+            $where = [];
+            $params = [];
+            if (!empty($terms)) {
+                foreach ($terms as $t) {
+                    $where[] = '(LOWER(km.titulo) LIKE ? OR LOWER(i.nombre_comun) LIKE ? OR LOWER(k.nombre) LIKE ?)';
+                    $like = '%' . $t . '%';
+                    $params[] = $like;
+                    $params[] = $like;
+                    $params[] = $like;
+                }
+            } else {
+                $where[] = '1=1';
+            }
+
+            $sql = "SELECT
+                        km.id,
+                        km.titulo,
+                        km.status,
+                        km.ambito,
+                        km.kit_id,
+                        k.nombre AS kit_nombre,
+                        km.item_id,
+                        i.nombre_comun AS componente_nombre,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT c1.nombre ORDER BY c1.nombre SEPARATOR ', ')
+                            FROM clase_kits ck1
+                            JOIN clases c1 ON c1.id = ck1.clase_id
+                            WHERE ck1.kit_id = km.kit_id
+                        ) AS clases_kit,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT c2.nombre ORDER BY c2.nombre SEPARATOR ', ')
+                            FROM kit_componentes kcx
+                            JOIN clase_kits ck2 ON ck2.kit_id = kcx.kit_id
+                            JOIN clases c2 ON c2.id = ck2.clase_id
+                            WHERE kcx.item_id = km.item_id
+                        ) AS clases_comp
+                    FROM kit_manuals km
+                    LEFT JOIN kits k ON k.id = km.kit_id
+                    LEFT JOIN kit_items i ON i.id = km.item_id
+                    WHERE " . implode(' AND ', $where) . "
+                    ORDER BY (km.status = 'published') DESC, km.id DESC
+                    LIMIT 1";
+
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row) {
+                return "Respuesta corta: No encontre un manual que coincida claramente con tu pregunta.\n"
+                    . "Evidencia:\n"
+                    . "- No hubo coincidencias por titulo de manual, componente o kit.\n"
+                    . "Siguiente accion: Comparte el nombre del manual o del componente para ubicarlo con precision.";
+            }
+
+            $destino = 'sin destino definido';
+            if (!empty($row['kit_id'])) {
+                $destino = 'kit ' . ($row['kit_nombre'] ?: ('#' . (int)$row['kit_id']));
+            } elseif (!empty($row['item_id'])) {
+                $destino = 'componente ' . ($row['componente_nombre'] ?: ('#' . (int)$row['item_id']));
+            }
+            $clases = $row['clases_kit'] ?: ($row['clases_comp'] ?: 'sin clases relacionadas');
+
+            return "Respuesta corta: El manual encontrado pertenece a " . $destino . ".\n"
+                . "Evidencia:\n"
+                . "- Manual: " . $row['titulo'] . "\n"
+                . "- Estado: " . $row['status'] . "\n"
+                . "- Ambito: " . $row['ambito'] . "\n"
+                . "- Clases relacionadas: " . $clases . "\n"
+                . "Siguiente accion: Si me das otro nombre exacto, te confirmo su pertenencia puntual.";
+        }
+    } catch (Exception $e) {
+        error_log('IA deterministic backend error: ' . $e->getMessage());
+    }
+
+    return null;
+}
+
 function get_backend_session_id(PDO $pdo, string $admin_user, string $contexto_scope, string $contexto_pagina, ?string $entidad_tipo, ?int $entidad_id): ?int {
     $contexto_scope = $contexto_scope !== '' ? $contexto_scope : 'admin_global';
     $entidad_tipo = $entidad_tipo ?: null;
@@ -1190,6 +1348,21 @@ try {
                 }
             }
         } else {
+            $intent_backend = null;
+            if ($instancia === 'backend') {
+                $intent_backend = detect_backend_intent($pregunta);
+                if ($intent_backend !== null) {
+                    $det_resp = build_backend_deterministic_answer($pdo, $intent_backend, $pregunta);
+                    if (!empty($det_resp)) {
+                        $respuesta = normalize_backend_chat_response((string)$det_resp, 10);
+                        $modelo_usado = 'deterministic-backend:' . $intent_backend;
+                    }
+                }
+            }
+
+            if (!empty($respuesta)) {
+                // Respuesta deterministica backend ya resuelta.
+            } else {
             // Construir contexto segÃƒÂºn instancia
             if ($instancia === 'frontend') {
                 // Combinar pregunta + tema del historial para busqueda enriquecida en catalogo
@@ -1248,6 +1421,7 @@ try {
                 $groq_detalle = $GLOBALS['_ia_groq_ultimo_error'] ?? 'sin detalle';
                 $respuesta = 'Ã¢ÂÅ’ Error al consultar la IA. Detalle: ' . $groq_detalle;
                 error_log('IA groq todos los modelos fallaron: ' . $groq_detalle);
+            }
             }
         }
 
