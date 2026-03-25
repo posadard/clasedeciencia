@@ -2,6 +2,24 @@
 require_once '../auth.php';
 $page_title = 'Lotes';
 
+function admin_audit(PDO $pdo, string $modulo, string $entidad, int $entidad_id, string $accion, array $detalle = []): void {
+  try {
+    $stmt = $pdo->prepare("INSERT INTO auditoria_admin (modulo, entidad, entidad_id, accion, usuario, detalle_json, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([
+      $modulo,
+      $entidad,
+      $entidad_id,
+      $accion,
+      (string)($_SESSION['admin_username'] ?? 'admin'),
+      json_encode($detalle, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+      (string)($_SERVER['REMOTE_ADDR'] ?? ''),
+      mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255)
+    ]);
+  } catch (Exception $e) {
+    error_log('Admin audit lotes: ' . $e->getMessage());
+  }
+}
+
 if (!isset($_SESSION['csrf_token'])) {
     try {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
@@ -75,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 try {
                     $pdo->prepare("DELETE FROM lotes WHERE id = ?")->execute([$id]);
+                  admin_audit($pdo, 'lotes', 'lote', $id, 'eliminar', ['source' => 'admin/lotes/index.php']);
                     $flash_ok = 'Lote eliminado correctamente.';
                     echo '<script>console.log("✅ [Lotes] Lote eliminado:", ' . (int)$id . ');</script>';
                     if ($edit_id === $id) {
@@ -123,6 +142,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $estado_lote, $ubicacion, $observaciones,
                             $id
                         ]);
+                        admin_audit($pdo, 'lotes', 'lote', $id, 'editar', [
+                          'codigo_lote' => $codigo_lote,
+                          'estado' => $estado_lote,
+                          'cantidad_total' => $cantidad_total,
+                          'cantidad_disponible' => $cantidad_disponible
+                        ]);
                         $edit_id = $id;
                         $flash_ok = 'Lote actualizado correctamente.';
                         echo '<script>console.log("✅ [Lotes] Lote actualizado:", ' . (int)$id . ');</script>';
@@ -140,6 +165,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $estado_lote, $ubicacion, $observaciones
                         ]);
                         $edit_id = (int)$pdo->lastInsertId();
+                        admin_audit($pdo, 'lotes', 'lote', $edit_id, 'crear', [
+                          'codigo_lote' => $codigo_lote,
+                          'estado' => $estado_lote,
+                          'cantidad_total' => $cantidad_total
+                        ]);
                         $flash_ok = 'Lote creado correctamente.';
                         echo '<script>console.log("✅ [Lotes] Lote creado:", ' . (int)$edit_id . ');</script>';
                     }

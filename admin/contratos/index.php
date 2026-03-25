@@ -2,6 +2,24 @@
 require_once '../auth.php';
 $page_title = 'Contratos';
 
+function admin_audit(PDO $pdo, string $modulo, string $entidad, int $entidad_id, string $accion, array $detalle = []): void {
+  try {
+    $stmt = $pdo->prepare("INSERT INTO auditoria_admin (modulo, entidad, entidad_id, accion, usuario, detalle_json, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([
+      $modulo,
+      $entidad,
+      $entidad_id,
+      $accion,
+      (string)($_SESSION['admin_username'] ?? 'admin'),
+      json_encode($detalle, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+      (string)($_SERVER['REMOTE_ADDR'] ?? ''),
+      mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255)
+    ]);
+  } catch (Exception $e) {
+    error_log('Admin audit contratos: ' . $e->getMessage());
+  }
+}
+
 if (!isset($_SESSION['csrf_token'])) {
     try {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
@@ -70,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     $stmt = $pdo->prepare("DELETE FROM contratos WHERE id = ?");
                     $stmt->execute([$id]);
+                  admin_audit($pdo, 'contratos', 'contrato', $id, 'eliminar', ['source' => 'admin/contratos/index.php']);
                     $flash_ok = 'Contrato eliminado correctamente.';
                     echo '<script>console.log("✅ [Contratos] Contrato eliminado:", ' . (int)$id . ');</script>';
                     if ($edit_id === $id) {
@@ -116,6 +135,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $valor, $valor_ejecutado, $estado_contrato, $supervisor,
                             $objeto, $contrato_pdf, $observaciones, $id
                         ]);
+                        admin_audit($pdo, 'contratos', 'contrato', $id, 'editar', [
+                          'numero' => $numero,
+                          'estado' => $estado_contrato,
+                          'valor' => $valor,
+                          'valor_ejecutado' => $valor_ejecutado
+                        ]);
                         $flash_ok = 'Contrato actualizado correctamente.';
                         echo '<script>console.log("✅ [Contratos] Contrato actualizado:", ' . (int)$id . ');</script>';
                         $edit_id = $id;
@@ -132,6 +157,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $objeto, $contrato_pdf, $observaciones
                         ]);
                         $new_id = (int)$pdo->lastInsertId();
+                        admin_audit($pdo, 'contratos', 'contrato', $new_id, 'crear', [
+                          'numero' => $numero,
+                          'estado' => $estado_contrato,
+                          'valor' => $valor
+                        ]);
                         $flash_ok = 'Contrato creado correctamente.';
                         echo '<script>console.log("✅ [Contratos] Contrato creado:", ' . (int)$new_id . ');</script>';
                         $edit_id = $new_id;

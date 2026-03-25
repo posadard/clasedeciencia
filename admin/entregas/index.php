@@ -2,6 +2,40 @@
 require_once '../auth.php';
 $page_title = 'Entregas';
 
+function admin_audit(PDO $pdo, string $modulo, string $entidad, int $entidad_id, string $accion, array $detalle = []): void {
+  try {
+    $stmt = $pdo->prepare("INSERT INTO auditoria_admin (modulo, entidad, entidad_id, accion, usuario, detalle_json, ip, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([
+      $modulo,
+      $entidad,
+      $entidad_id,
+      $accion,
+      (string)($_SESSION['admin_username'] ?? 'admin'),
+      json_encode($detalle, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+      (string)($_SERVER['REMOTE_ADDR'] ?? ''),
+      mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255)
+    ]);
+  } catch (Exception $e) {
+    error_log('Admin audit entregas: ' . $e->getMessage());
+  }
+}
+
+function sync_lote_stock(PDO $pdo, int $lote_id): void {
+  try {
+    $stmt = $pdo->prepare("SELECT COALESCE(SUM(cantidad_asignada),0) AS a, COALESCE(SUM(cantidad_entregada),0) AS e FROM entrega_lotes WHERE lote_id = ?");
+    $stmt->execute([$lote_id]);
+    $tot = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['a' => 0, 'e' => 0];
+    $stmtUp = $pdo->prepare("UPDATE lotes
+                 SET cantidad_asignada = ?,
+                   cantidad_entregada = ?,
+                   cantidad_disponible = GREATEST(cantidad_total - ? - ?, 0)
+                 WHERE id = ?");
+    $stmtUp->execute([(int)$tot['a'], (int)$tot['e'], (int)$tot['a'], (int)$tot['e'], $lote_id]);
+  } catch (Exception $e) {
+    error_log('Sync lote stock error: ' . $e->getMessage());
+  }
+}
+
 if (!isset($_SESSION['csrf_token'])) {
     try {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
@@ -74,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 try {
                     $pdo->prepare("DELETE FROM entregas WHERE id = ?")->execute([$id]);
+                  admin_audit($pdo, 'entregas', 'entrega', $id, 'eliminar', ['source' => 'admin/entregas/index.php']);
                     $flash_ok = 'Entrega eliminada correctamente.';
                     echo '<script>console.log("✅ [Entregas] Entrega eliminada:", ' . (int)$id . ');</script>';
                     if ($edit_id === $id) {
@@ -84,6 +119,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     echo '<script>console.log("❌ [Entregas] Error al eliminar:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
                 }
             }
+        } elseif ($action === 'assign_lote') {
+          $id = isset($_POST['id']) && ctype_digit((string)$_POST['id']) ? (int)$_POST['id'] : 0;
+          $lote_id = isset($_POST['lote_id']) && ctype_digit((string)$_POST['lote_id']) ? (int)$_POST['lote_id'] : 0;
+          $cantidad_asignada = max(0, (int)($_POST['cantidad_asignada_lote'] ?? 0));
+          $cantidad_entregada = max(0, (int)($_POST['cantidad_entregada_lote'] ?? 0));
+          $obs_lote = trim($_POST['observaciones_lote'] ?? '');
+
+          if ($id <= 0 || $lote_id <= 0) {
+            $flash_error = 'Entrega o lote invalido para asignacion.';
+          } else {
+            try {
+              $stmt = $pdo->prepare("INSERT INTO entrega_lotes (entrega_id, lote_id, cantidad_asignada, cantidad_entregada, observaciones)
+                           VALUES (?, ?, ?, ?, ?)
+                           ON DUPLICATE KEY UPDATE
+                             cantidad_asignada = VALUES(cantidad_asignada),
+                             cantidad_entregada = VALUES(cantidad_entregada),
+                             observaciones = VALUES(observaciones)");
+              $stmt->execute([$id, $lote_id, $cantidad_asignada, $cantidad_entregada, $obs_lote]);
+              sync_lote_stock($pdo, $lote_id);
+              admin_audit($pdo, 'entregas', 'entrega', $id, 'editar', [
+                'accion_secundaria' => 'assign_lote',
+                'lote_id' => $lote_id,
+                'cantidad_asignada' => $cantidad_asignada,
+                'cantidad_entregada' => $cantidad_entregada
+              ]);
+              $flash_ok = 'Asignacion de lote guardada correctamente.';
+              $edit_id = $id;
+            } catch (PDOException $e) {
+              $flash_error = 'No se pudo guardar la asignacion de lote.';
+              echo '<script>console.log("❌ [Entregas] Error assign_lote:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
+            }
+          }
+        } elseif ($action === 'remove_lote') {
+          $id = isset($_POST['id']) && ctype_digit((string)$_POST['id']) ? (int)$_POST['id'] : 0;
+          $lote_id = isset($_POST['lote_id']) && ctype_digit((string)$_POST['lote_id']) ? (int)$_POST['lote_id'] : 0;
+          if ($id <= 0 || $lote_id <= 0) {
+            $flash_error = 'Entrega o lote invalido para eliminar asignacion.';
+          } else {
+            try {
+              $pdo->prepare("DELETE FROM entrega_lotes WHERE entrega_id = ? AND lote_id = ?")->execute([$id, $lote_id]);
+              sync_lote_stock($pdo, $lote_id);
+              admin_audit($pdo, 'entregas', 'entrega', $id, 'editar', [
+                'accion_secundaria' => 'remove_lote',
+                'lote_id' => $lote_id
+              ]);
+              $flash_ok = 'Asignacion de lote eliminada.';
+              $edit_id = $id;
+            } catch (PDOException $e) {
+              $flash_error = 'No se pudo eliminar la asignacion de lote.';
+            }
+          }
         } else {
             $id = isset($_POST['id']) && ctype_digit((string)$_POST['id']) ? (int)$_POST['id'] : 0;
             $codigo_entrega = trim($_POST['codigo_entrega'] ?? '');
@@ -126,6 +212,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $responsable_entrega, $responsable_recepcion, $cantidad_kits,
                             $recibido_ok, $acta_pdf, $novedad, $id
                         ]);
+                        admin_audit($pdo, 'entregas', 'entrega', $id, 'editar', [
+                          'estado' => $estado_entrega,
+                          'cantidad_kits' => $cantidad_kits,
+                          'institucion' => $institucion
+                        ]);
 
                         if ($codigo_entrega === '' || strpos($codigo_entrega, 'ENT-') !== 0) {
                             $pdo->prepare("UPDATE entregas SET codigo_entrega = CONCAT('ENT-', LPAD(id, 6, '0')) WHERE id = ?")->execute([$id]);
@@ -150,6 +241,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
 
                         $new_id = (int)$pdo->lastInsertId();
+                        admin_audit($pdo, 'entregas', 'entrega', $new_id, 'crear', [
+                          'estado' => $estado_entrega,
+                          'cantidad_kits' => $cantidad_kits,
+                          'institucion' => $institucion
+                        ]);
                         $pdo->prepare("UPDATE entregas SET codigo_entrega = CONCAT('ENT-', LPAD(id, 6, '0')) WHERE id = ? AND (codigo_entrega IS NULL OR codigo_entrega = '')")
                             ->execute([$new_id]);
 
@@ -171,6 +267,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+}
+
+$lotes_disponibles = [];
+$lotes_asignados = [];
+if ($edit_id > 0) {
+  try {
+    $stmt = $pdo->prepare("SELECT l.id, l.codigo_lote, l.cantidad_disponible, l.estado_lote, k.nombre AS kit_nombre
+                 FROM lotes l
+                 JOIN kits k ON k.id = l.kit_id
+                 ORDER BY l.estado_lote ASC, l.codigo_lote ASC");
+    $stmt->execute();
+    $lotes_disponibles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $stmt = $pdo->prepare("SELECT el.*, l.codigo_lote, l.estado_lote, k.nombre AS kit_nombre
+                 FROM entrega_lotes el
+                 JOIN lotes l ON l.id = el.lote_id
+                 JOIN kits k ON k.id = l.kit_id
+                 WHERE el.entrega_id = ?
+                 ORDER BY l.codigo_lote ASC");
+    $stmt->execute([$edit_id]);
+    $lotes_asignados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+  } catch (PDOException $e) {
+    // Si la tabla no existe en algun entorno, no rompe la vista.
+    $lotes_disponibles = [];
+    $lotes_asignados = [];
+  }
 }
 
 $params = [];
@@ -342,6 +464,81 @@ include '../header.php';
     </div>
   </form>
 </div>
+
+<?php if ($edit_id > 0): ?>
+<div class="card" style="margin-bottom:1rem;">
+  <h3>Asignación de lotes a la entrega #<?= (int)$edit_id ?></h3>
+  <form method="POST" class="admin-form-grid">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+    <input type="hidden" name="action" value="assign_lote" />
+    <input type="hidden" name="id" value="<?= (int)$edit_id ?>" />
+
+    <div class="form-group">
+      <label>Lote</label>
+      <select name="lote_id" required>
+        <option value="">Seleccionar lote...</option>
+        <?php foreach ($lotes_disponibles as $ld): ?>
+          <option value="<?= (int)$ld['id'] ?>">
+            <?= htmlspecialchars((string)$ld['codigo_lote'], ENT_QUOTES, 'UTF-8') ?> - <?= htmlspecialchars((string)$ld['kit_nombre'], ENT_QUOTES, 'UTF-8') ?> (disp: <?= (int)$ld['cantidad_disponible'] ?>)
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Cantidad asignada</label>
+      <input type="number" min="0" name="cantidad_asignada_lote" value="0" />
+    </div>
+    <div class="form-group">
+      <label>Cantidad entregada</label>
+      <input type="number" min="0" name="cantidad_entregada_lote" value="0" />
+    </div>
+    <div class="form-group">
+      <label>Observaciones</label>
+      <input type="text" name="observaciones_lote" maxlength="255" value="" />
+    </div>
+    <div class="form-actions full-width">
+      <button type="submit" class="btn">Guardar asignación</button>
+    </div>
+  </form>
+
+  <?php if (!empty($lotes_asignados)): ?>
+    <table class="data-table" style="margin-top:1rem;">
+      <thead>
+        <tr>
+          <th>Lote</th>
+          <th>Kit</th>
+          <th>Asignada</th>
+          <th>Entregada</th>
+          <th>Observaciones</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($lotes_asignados as $la): ?>
+          <tr>
+            <td><?= htmlspecialchars((string)$la['codigo_lote'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td><?= htmlspecialchars((string)$la['kit_nombre'], ENT_QUOTES, 'UTF-8') ?></td>
+            <td><?= (int)$la['cantidad_asignada'] ?></td>
+            <td><?= (int)$la['cantidad_entregada'] ?></td>
+            <td><?= htmlspecialchars((string)($la['observaciones'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+            <td>
+              <form method="POST" class="inline-form" onsubmit="return confirm('¿Eliminar asignación de lote?');">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+                <input type="hidden" name="action" value="remove_lote" />
+                <input type="hidden" name="id" value="<?= (int)$edit_id ?>" />
+                <input type="hidden" name="lote_id" value="<?= (int)$la['lote_id'] ?>" />
+                <button type="submit" class="btn btn-sm btn-danger">Quitar</button>
+              </form>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php else: ?>
+    <p class="help-text" style="margin-top:0.75rem;">Esta entrega aún no tiene lotes asignados.</p>
+  <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <div class="card" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
   <h3 style="margin:0;">Listado de entregas</h3>
