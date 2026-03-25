@@ -633,6 +633,10 @@
     'kits':        { icono: '🧰', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Cuéntame qué necesitas y te oriento<br>hacia el kit más adecuado.' },
     'componentes': { icono: '⚗️', titulo: '¡Hola! Soy Clase de CiencIA',      hint: 'Pregúntame sobre materiales,<br>usos, cuidados o alternativas.' },
     'manuales':    { icono: '📖', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Pregúntame qué tipo de guía buscas<br>y te ayudo a encontrarla.' },
+    'admin':       { icono: '🧠', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Puedo ayudarte con análisis operativo,<br>riesgos y redacción administrativa.' },
+    'contratos':   { icono: '📄', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Consulta vencimientos, ejecución<br>y consistencia contractual.' },
+    'entregas':    { icono: '🚚', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Consulta atrasos, actas pendientes<br>y estado de las entregas.' },
+    'lotes':       { icono: '📦', titulo: '¡Hola! Soy Clase de CiencIA',       hint: 'Consulta stock, disponibilidad<br>y riesgos por lote.' },
   };
 
   var SUBTITULOS = {
@@ -645,6 +649,10 @@
     'kits':        '¿Te ayudo a encontrar un kit?',
     'componentes': '¿Te ayudo con un componente?',
     'manuales':    '¿Te ayudo a encontrar un manual?',
+    'admin':       'Asistente IA Administrativo',
+    'contratos':   'Asistente IA - Contratos',
+    'entregas':    'Asistente IA - Entregas',
+    'lotes':       'Asistente IA - Lotes',
   };
 
   // ======== Catálogo local para sugerencias (reutiliza mismas APIs del buscador del header) ========
@@ -763,12 +771,17 @@
 
   window.initAsistenteIA = function (ctx) {
     ctx = ctx || {};
+    var instancia    = ctx.instancia || 'frontend';
     var claseId      = ctx.claseId      || null;
     var kitId        = ctx.kitId        || null;
     var componenteId = ctx.componenteId || null;
     var manualId     = ctx.manualId     || null;
+    var contextoPagina = ctx.contextoPagina || '';
+    var entidadTipo    = ctx.entidadTipo || '';
+    var entidadId      = ctx.entidadId || null;
     var pagina       = ctx.pagina       || (claseId ? 'clase' : 'inicio');
-    console.log('🔍 [asistente-ia] init', pagina, { claseId, kitId, componenteId, manualId });
+    var usarSugerencias = instancia !== 'backend';
+    console.log('🔍 [asistente-ia] init', pagina, { instancia, claseId, kitId, componenteId, manualId, contextoPagina, entidadTipo, entidadId });
 
     injectCSS();
     var ui = createUI();
@@ -776,7 +789,9 @@
     var expandState = 0;
     var historial = restaurarHistorial(); // restaurar historial de sessionStorage si existe
     var sesionRestaurada = historial.length > 0;
-    cargarCatalogo();
+    if (usarSugerencias) {
+      cargarCatalogo();
+    }
 
     // Subtítulo del header según página
     var subEl = ui.panel.querySelector('.ia-panel-header-sub');
@@ -884,20 +899,31 @@
       }
 
       try {
+        var payload = {
+          instancia: instancia,
+          pregunta: pregunta,
+          tema: tema,
+          historial: historialEnvio
+        };
+
+        if (instancia === 'backend') {
+          payload.contexto_pagina = contextoPagina || pagina || 'admin';
+          if (entidadTipo) payload.entidad_tipo = entidadTipo;
+          if (entidadId !== null && entidadId !== '' && !isNaN(Number(entidadId))) {
+            payload.entidad_id = Number(entidadId);
+          }
+        } else {
+          payload.clase_id = claseId;
+          payload.kit_id = kitId;
+          payload.componente_id = componenteId;
+          payload.manual_id = manualId;
+          payload.pagina = pagina;
+        }
+
         var resp = await fetch('/api/ia-consulta.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instancia:     'frontend',
-            clase_id:      claseId,
-            kit_id:        kitId,
-            componente_id: componenteId,
-            manual_id:     manualId,
-            pagina:        pagina,
-            pregunta:      pregunta,
-            tema:          tema,
-            historial:     historialEnvio
-          })
+          body: JSON.stringify(payload)
         });
         console.log('📡 [asistente-ia] status:', resp.status);
         var json = await resp.json();
@@ -912,8 +938,10 @@
           addBubble(ui.log, 'ia', parsed.texto);
           addIAActions(ui.log, parsed.texto, parsed.opciones, enviar);
           // Para sugerencias usar el tema original si el mensaje actual es muy corto
-          var terminoBusqueda = pregunta.length < 10 && tema ? tema : pregunta;
-          addSugerencias(ui.log, buscarSugerencias(terminoBusqueda));
+          if (usarSugerencias) {
+            var terminoBusqueda = pregunta.length < 10 && tema ? tema : pregunta;
+            addSugerencias(ui.log, buscarSugerencias(terminoBusqueda));
+          }
         } else {
           addBubble(ui.log, 'ia', '❌ ' + (json && json.error ? json.error : 'Error al procesar la consulta.'));
         }
