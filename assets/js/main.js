@@ -5,6 +5,49 @@
 
 (function() {
     'use strict';
+
+    // Global analytics helper for unified website events.
+    window.cdcTrackEvent = async function(payload) {
+        try {
+            if (!payload || !payload.evento) return;
+            await fetch('/api/analytics-event.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            console.log('✅ [Analytics] Evento enviado:', payload.evento);
+        } catch (err) {
+            console.log('⚠️ [Analytics] Error enviando evento:', err && err.message);
+        }
+    };
+
+    // Track page view once per load.
+    (function trackPageView() {
+        const path = window.location.pathname || '/';
+        let tipoPagina = 'otro';
+        if (path === '/' || path === '/index.php') tipoPagina = 'inicio';
+        else if (path.includes('/clases')) tipoPagina = 'clases';
+        else if (path.includes('/clase') || path.match(/^\/[a-z0-9\-]+$/i)) tipoPagina = 'clase';
+        else if (path.includes('/kits')) tipoPagina = 'kits';
+        else if (path.includes('/kit')) tipoPagina = 'kit';
+        else if (path.includes('/componentes')) tipoPagina = 'componentes';
+        else if (path.includes('/componente')) tipoPagina = 'componente';
+        else if (path.includes('/manuales')) tipoPagina = 'manuales';
+        else if (path.includes('/manual')) tipoPagina = 'manual';
+        else if (path.includes('/buscar')) tipoPagina = 'buscar';
+
+        const dispositivo = (window.innerWidth && window.innerWidth < 768) ? 'mobile' : 'desktop';
+        window.cdcTrackEvent({
+            instancia: 'frontend',
+            evento: 'page_view',
+            tipo_pagina: tipoPagina,
+            metadata: {
+                path: path,
+                title: document.title || ''
+            },
+            dispositivo: dispositivo
+        });
+    })();
     
     // Simple form validation
     const forms = document.querySelectorAll('form');

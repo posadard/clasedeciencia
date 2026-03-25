@@ -14,7 +14,15 @@ class ClaseDeCienciaSearch {
     this.kitsData = null;
     this.componentesData = null;
     this.isLoading = false;
+    this.lastTrackedQuery = '';
+    this.currentQuery = '';
     this.init();
+  }
+
+  trackEvent(payload) {
+    if (window.cdcTrackEvent && typeof window.cdcTrackEvent === 'function') {
+      window.cdcTrackEvent(payload);
+    }
   }
   
   init() {
@@ -459,6 +467,20 @@ class ClaseDeCienciaSearch {
       this.searchResults.addEventListener('click', (e) => {
         if (e.target.classList.contains('close-search')) {
           this.hideSearchResults();
+          return;
+        }
+
+        const resultItem = e.target.closest('.search-result-item');
+        if (resultItem) {
+          this.trackEvent({
+            instancia: 'frontend',
+            evento: 'search_result_click',
+            tipo_pagina: 'buscar',
+            entidad_tipo: resultItem.getAttribute('data-entity-type') || null,
+            entidad_id: resultItem.getAttribute('data-entity-id') || null,
+            termino_busqueda: this.currentQuery || '',
+            resultado_posicion: parseInt(resultItem.getAttribute('data-posicion') || '0', 10) || null
+          });
         }
       });
     }
@@ -512,6 +534,22 @@ class ClaseDeCienciaSearch {
     const kits = (this.kitsData || []).filter(match).slice(0, 4);
     const componentes = (this.componentesData || []).filter(match).slice(0, 4);
 
+    if (query !== this.lastTrackedQuery) {
+      this.trackEvent({
+        instancia: 'frontend',
+        evento: 'search_query',
+        tipo_pagina: 'buscar',
+        termino_busqueda: query,
+        valor_numerico: clases.length + kits.length + componentes.length,
+        metadata: {
+          clases: clases.length,
+          kits: kits.length,
+          componentes: componentes.length
+        }
+      });
+      this.lastTrackedQuery = query;
+    }
+
     console.log('✅ [ClaseDeCienciaSearch] Encontrados:', { clases: clases.length, kits: kits.length, componentes: componentes.length }, 'para:', query);
 
     this.displayResults({ clases, kits, componentes, query });
@@ -527,6 +565,7 @@ class ClaseDeCienciaSearch {
   }
 
   displayResults({ clases, kits, componentes, query }) {
+    this.currentQuery = query || '';
     const clasesContainer = document.getElementById('clases-results');
     const kitsContainer = document.getElementById('kits-results');
     const compContainer = document.getElementById('componentes-results');
@@ -548,7 +587,7 @@ class ClaseDeCienciaSearch {
 
     // Render por categoría
     if (clases && clases.length > 0) {
-      clasesContainer.innerHTML = clases.map(item => this.createResultItem(item)).join('');
+      clasesContainer.innerHTML = clases.map((item, idx) => this.createResultItem(item, idx + 1)).join('');
       clasesContainer.parentElement.style.display = 'block';
     } else {
       clasesContainer.innerHTML = '';
@@ -556,7 +595,7 @@ class ClaseDeCienciaSearch {
     }
 
     if (kits && kits.length > 0) {
-      kitsContainer.innerHTML = kits.map(item => this.createResultItem(item)).join('');
+      kitsContainer.innerHTML = kits.map((item, idx) => this.createResultItem(item, idx + 1)).join('');
       kitsContainer.parentElement.style.display = 'block';
     } else {
       kitsContainer.innerHTML = '';
@@ -564,7 +603,7 @@ class ClaseDeCienciaSearch {
     }
 
     if (componentes && componentes.length > 0) {
-      compContainer.innerHTML = componentes.map(item => this.createResultItem(item)).join('');
+      compContainer.innerHTML = componentes.map((item, idx) => this.createResultItem(item, idx + 1)).join('');
       compContainer.parentElement.style.display = 'block';
     } else {
       compContainer.innerHTML = '';
@@ -589,7 +628,7 @@ class ClaseDeCienciaSearch {
     if (compContainer) compContainer.parentElement.style.display = 'none';
   }
   
-  createResultItem(item) {
+  createResultItem(item, position) {
     const type = (item.type || 'clase').toLowerCase();
     const isClase = type === 'clase';
     const isKit = type === 'kit';
@@ -612,7 +651,10 @@ class ClaseDeCienciaSearch {
     const compBadge = isComp && item.categoria ? `<span class="result-badge result-subject">${this.escapeHtml(item.categoria)}</span>` : '';
 
     return `
-      <a href="${item.url}" class="search-result-item">
+      <a href="${item.url}" class="search-result-item"
+        data-entity-type="${this.escapeHtml(type)}"
+        data-entity-id="${this.escapeHtml((item.id || '').toString())}"
+        data-posicion="${this.escapeHtml((position || 0).toString())}">
         <div class="result-icon ${iconClass}">${iconText}</div>
         <div class="result-content">
           <div class="result-title">${this.escapeHtml(item.title)}</div>

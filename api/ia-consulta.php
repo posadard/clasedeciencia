@@ -135,6 +135,42 @@ function persist_ia_messages(PDO $pdo, int $sesion_id, string $instancia, string
     }
 }
 
+function log_analytics_event(PDO $pdo, array $event): void {
+    try {
+        $stmt = $pdo->prepare("INSERT INTO analytics_eventos
+            (session_hash, sesion_ia_id, instancia, evento, tipo_pagina, modulo, entidad_tipo, entidad_id,
+             clase_id, kit_id, componente_id, manual_id, termino_busqueda, resultado_posicion, referrer,
+             departamento, dispositivo, ip_anon, user_agent, duracion_ms, valor_numerico, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $event['session_hash'] ?? null,
+            $event['sesion_ia_id'] ?? null,
+            $event['instancia'] ?? 'frontend',
+            $event['evento'] ?? null,
+            $event['tipo_pagina'] ?? null,
+            $event['modulo'] ?? null,
+            $event['entidad_tipo'] ?? null,
+            $event['entidad_id'] ?? null,
+            $event['clase_id'] ?? null,
+            $event['kit_id'] ?? null,
+            $event['componente_id'] ?? null,
+            $event['manual_id'] ?? null,
+            $event['termino_busqueda'] ?? null,
+            $event['resultado_posicion'] ?? null,
+            $event['referrer'] ?? null,
+            $event['departamento'] ?? null,
+            $event['dispositivo'] ?? null,
+            $event['ip_anon'] ?? null,
+            $event['user_agent'] ?? null,
+            $event['duracion_ms'] ?? null,
+            $event['valor_numerico'] ?? null,
+            isset($event['metadata']) ? json_encode($event['metadata'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null,
+        ]);
+    } catch (Exception $e) {
+        error_log('IA analytics_event insert error: ' . $e->getMessage());
+    }
+}
+
 /**
  * Realiza una llamada a la API de Groq.
  * Retorna array con: raw, errno, http_status, tiempo_ms
@@ -950,6 +986,33 @@ try {
     $tokens       = 0;
     $tiempo_ms    = 0;
     $modelo_usado = '';
+    $tipo_pagina_analytics = $instancia === 'backend' ? 'admin' : ($pagina !== '' ? $pagina : 'frontend');
+    $modulo_analytics = $instancia === 'backend' ? ($contexto_pagina !== '' ? $contexto_pagina : 'admin') : null;
+    $session_hash_analytics = null;
+    if ($instancia === 'frontend') {
+        $session_hash_analytics = $_COOKIE['cdc_session'] ?? null;
+    }
+
+    log_analytics_event($pdo, [
+        'session_hash' => $session_hash_analytics,
+        'sesion_ia_id' => $sesion_id,
+        'instancia' => $instancia,
+        'evento' => 'ia_question',
+        'tipo_pagina' => $tipo_pagina_analytics,
+        'modulo' => $modulo_analytics,
+        'entidad_tipo' => $entidad_tipo,
+        'entidad_id' => $entidad_id,
+        'clase_id' => $clase_id,
+        'kit_id' => $kit_id,
+        'componente_id' => $componente_id,
+        'manual_id' => $manual_id,
+        'termino_busqueda' => mb_substr($pregunta, 0, 255),
+        'referrer' => mb_substr((string)($_SERVER['HTTP_REFERER'] ?? ''), 0, 255),
+        'dispositivo' => (strpos(strtolower((string)($_SERVER['HTTP_USER_AGENT'] ?? '')), 'mobile') !== false ? 'mobile' : 'desktop'),
+        'ip_anon' => null,
+        'user_agent' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
+        'metadata' => ['source' => 'api/ia-consulta.php']
+    ]);
 
     if (!$cached) {
         if ($guardrail_activado) {
@@ -1044,6 +1107,28 @@ try {
     } catch (Exception $e) {
         error_log('IA log error: ' . $e->getMessage());
     }
+
+    log_analytics_event($pdo, [
+        'session_hash' => $session_hash_analytics,
+        'sesion_ia_id' => $sesion_id,
+        'instancia' => $instancia,
+        'evento' => ($respuesta && strpos((string)$respuesta, '❌') === 0) ? 'ia_error' : 'ia_answer',
+        'tipo_pagina' => $tipo_pagina_analytics,
+        'modulo' => $modulo_analytics,
+        'entidad_tipo' => $entidad_tipo,
+        'entidad_id' => $entidad_id,
+        'clase_id' => $clase_id,
+        'kit_id' => $kit_id,
+        'componente_id' => $componente_id,
+        'manual_id' => $manual_id,
+        'duracion_ms' => $tiempo_ms,
+        'valor_numerico' => $tokens,
+        'metadata' => [
+            'guardrail_activado' => $guardrail_activado,
+            'cached' => $cached,
+            'modelo_usado' => $modelo_usado
+        ]
+    ]);
 
     persist_ia_messages(
         $pdo,

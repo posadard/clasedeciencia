@@ -29,6 +29,33 @@
                     }
                     console.log('🔍 [Admin] PHP file:', '<?= htmlspecialchars(basename($_SERVER['PHP_SELF']), ENT_QUOTES, 'UTF-8') ?>');
                     console.log('🔍 [Admin] User:', '<?= isset($_SESSION['admin_username']) ? htmlspecialchars($_SESSION['admin_username'], ENT_QUOTES, 'UTF-8') : '(none)' ?>');
+
+                    var path = '<?= htmlspecialchars($_SERVER['PHP_SELF'] ?? '', ENT_QUOTES, 'UTF-8') ?>';
+                    var modulo = 'admin';
+                    if (path.indexOf('/admin/contratos/') !== -1) modulo = 'contratos';
+                    else if (path.indexOf('/admin/entregas/') !== -1) modulo = 'entregas';
+                    else if (path.indexOf('/admin/lotes/') !== -1) modulo = 'lotes';
+                    else if (path.indexOf('/admin/clases/') !== -1) modulo = 'clases';
+                    else if (path.indexOf('/admin/kits/') !== -1) modulo = 'kits';
+                    else if (path.indexOf('/admin/componentes/') !== -1) modulo = 'componentes';
+                    else if (path.indexOf('/admin/ia/') !== -1) modulo = 'ia';
+                    else if (path.indexOf('/admin/paginas/') !== -1) modulo = 'paginas';
+
+                    fetch('/api/analytics-event.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            instancia: 'backend',
+                            evento: 'page_view',
+                            tipo_pagina: 'admin',
+                            modulo: modulo,
+                            metadata: { path: path }
+                        })
+                    }).then(function(){
+                        console.log('✅ [Admin] analytics page_view enviado:', modulo);
+                    }).catch(function(err){
+                        console.log('⚠️ [Admin] analytics page_view error:', err && err.message);
+                    });
                 } catch (e) {
                     console.log('❌ [Admin] Diagnostics emit error:', e && e.message);
                 }
