@@ -200,6 +200,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               echo '<script>console.log("⚠️ [Entregas] Validación assign_lote:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
             }
           }
+        } elseif ($action === 'update_lote') {
+          $id = isset($_POST['id']) && ctype_digit((string)$_POST['id']) ? (int)$_POST['id'] : 0;
+          $lote_id = isset($_POST['lote_id']) && ctype_digit((string)$_POST['lote_id']) ? (int)$_POST['lote_id'] : 0;
+          $cantidad_asignada = max(0, (int)($_POST['cantidad_asignada_lote'] ?? 0));
+          $cantidad_entregada = max(0, (int)($_POST['cantidad_entregada_lote'] ?? 0));
+          $obs_lote = trim($_POST['observaciones_lote'] ?? '');
+
+          if ($id <= 0 || $lote_id <= 0) {
+            $flash_error = 'Entrega o lote invalido para actualizar asignacion.';
+          } else {
+            try {
+              $valid = validate_lote_assignment($pdo, $id, $lote_id, $cantidad_asignada, $cantidad_entregada);
+              if (!$valid['ok']) {
+                $flash_error = $valid['msg'];
+                throw new RuntimeException($valid['msg']);
+              }
+
+              $stmt = $pdo->prepare("UPDATE entrega_lotes
+                           SET cantidad_asignada = ?, cantidad_entregada = ?, observaciones = ?
+                           WHERE entrega_id = ? AND lote_id = ?");
+              $stmt->execute([$cantidad_asignada, $cantidad_entregada, $obs_lote, $id, $lote_id]);
+
+              if ($stmt->rowCount() <= 0) {
+                throw new RuntimeException('No existe una asignacion previa para ese lote en esta entrega.');
+              }
+
+              sync_lote_stock($pdo, $lote_id);
+              admin_audit($pdo, 'entregas', 'entrega', $id, 'editar', [
+                'accion_secundaria' => 'update_lote',
+                'lote_id' => $lote_id,
+                'cantidad_asignada' => $cantidad_asignada,
+                'cantidad_entregada' => $cantidad_entregada
+              ]);
+              $flash_ok = 'Asignacion de lote actualizada correctamente.';
+              $edit_id = $id;
+              echo '<script>console.log("✅ [Entregas] Lote actualizado en entrega:", ' . (int)$id . ', "lote:", ' . (int)$lote_id . ');</script>';
+            } catch (PDOException $e) {
+              $flash_error = 'No se pudo actualizar la asignacion de lote.';
+              echo '<script>console.log("❌ [Entregas] Error update_lote:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
+            } catch (RuntimeException $e) {
+              $flash_error = $flash_error ?: $e->getMessage();
+              echo '<script>console.log("⚠️ [Entregas] Validación update_lote:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
+            }
+          }
         } elseif ($action === 'remove_lote') {
           $id = isset($_POST['id']) && ctype_digit((string)$_POST['id']) ? (int)$_POST['id'] : 0;
           $lote_id = isset($_POST['lote_id']) && ctype_digit((string)$_POST['lote_id']) ? (int)$_POST['lote_id'] : 0;
@@ -376,6 +420,49 @@ try {
     $flash_error = $flash_error ?: 'No se pudo cargar el listado de entregas.';
 }
 
+$metricas = [
+  'total' => 0,
+  'entregadas' => 0,
+  'atrasadas' => 0,
+  'sin_acta' => 0
+];
+try {
+  $stmt = $pdo->query("SELECT
+                  COUNT(*) AS total,
+                  SUM(CASE WHEN estado_entrega = 'entregada' THEN 1 ELSE 0 END) AS entregadas,
+                  SUM(CASE WHEN entrega_atrasada = 1 THEN 1 ELSE 0 END) AS atrasadas,
+                  SUM(CASE WHEN acta_pdf IS NULL OR TRIM(acta_pdf) = '' THEN 1 ELSE 0 END) AS sin_acta
+                FROM v_admin_entregas_resumen");
+  $row = $stmt->fetch(PDO::FETCH_ASSOC);
+  if ($row) {
+    $metricas = [
+      'total' => (int)($row['total'] ?? 0),
+      'entregadas' => (int)($row['entregadas'] ?? 0),
+      'atrasadas' => (int)($row['atrasadas'] ?? 0),
+      'sin_acta' => (int)($row['sin_acta'] ?? 0)
+    ];
+  }
+} catch (PDOException $e) {
+  try {
+    $stmt = $pdo->query("SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN estado_entrega = 'entregada' THEN 1 ELSE 0 END) AS entregadas,
+                    SUM(CASE WHEN estado_entrega IN ('programada','reprogramada','en_transito') AND fecha_programada IS NOT NULL AND fecha_programada < CURDATE() THEN 1 ELSE 0 END) AS atrasadas,
+                    SUM(CASE WHEN acta_pdf IS NULL OR TRIM(acta_pdf) = '' THEN 1 ELSE 0 END) AS sin_acta
+                  FROM entregas");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+      $metricas = [
+        'total' => (int)($row['total'] ?? 0),
+        'entregadas' => (int)($row['entregadas'] ?? 0),
+        'atrasadas' => (int)($row['atrasadas'] ?? 0),
+        'sin_acta' => (int)($row['sin_acta'] ?? 0)
+      ];
+    }
+  } catch (PDOException $ignored) {
+  }
+}
+
 include '../header.php';
 ?>
 <div class="page-header">
@@ -407,6 +494,25 @@ include '../header.php';
 <?php if ($flash_error): ?>
   <div class="message error"><?= htmlspecialchars($flash_error, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <span class="metric-label">Total entregas</span>
+    <strong class="metric-value"><?= (int)$metricas['total'] ?></strong>
+  </div>
+  <div class="metric-card metric-ok">
+    <span class="metric-label">Entregadas</span>
+    <strong class="metric-value"><?= (int)$metricas['entregadas'] ?></strong>
+  </div>
+  <div class="metric-card metric-warn">
+    <span class="metric-label">Atrasadas</span>
+    <strong class="metric-value"><?= (int)$metricas['atrasadas'] ?></strong>
+  </div>
+  <div class="metric-card metric-risk">
+    <span class="metric-label">Sin acta</span>
+    <strong class="metric-value"><?= (int)$metricas['sin_acta'] ?></strong>
+  </div>
+</div>
 
 <div class="filters-bar">
   <form method="GET" class="filters-form">
@@ -580,10 +686,23 @@ include '../header.php';
           <tr>
             <td><?= htmlspecialchars((string)$la['codigo_lote'], ENT_QUOTES, 'UTF-8') ?></td>
             <td><?= htmlspecialchars((string)$la['kit_nombre'], ENT_QUOTES, 'UTF-8') ?></td>
-            <td><?= (int)$la['cantidad_asignada'] ?></td>
-            <td><?= (int)$la['cantidad_entregada'] ?></td>
-            <td><?= htmlspecialchars((string)($la['observaciones'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
             <td>
+              <form method="POST" class="inline-form lote-inline-edit">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
+                <input type="hidden" name="action" value="update_lote" />
+                <input type="hidden" name="id" value="<?= (int)$edit_id ?>" />
+                <input type="hidden" name="lote_id" value="<?= (int)$la['lote_id'] ?>" />
+                <input type="number" min="0" name="cantidad_asignada_lote" value="<?= (int)$la['cantidad_asignada'] ?>" />
+            </td>
+            <td>
+                <input type="number" min="0" name="cantidad_entregada_lote" value="<?= (int)$la['cantidad_entregada'] ?>" />
+            </td>
+            <td>
+                <input type="text" maxlength="255" name="observaciones_lote" value="<?= htmlspecialchars((string)($la['observaciones'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+            </td>
+            <td>
+                <button type="submit" class="btn btn-sm">Guardar</button>
+              </form>
               <form method="POST" class="inline-form" onsubmit="return confirm('¿Eliminar asignación de lote?');">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
                 <input type="hidden" name="action" value="remove_lote" />
@@ -659,6 +778,14 @@ include '../header.php';
 <?php endif; ?>
 
 <style>
+.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 0.75rem; margin: 0 0 1rem; }
+.metric-card { background: #f5f8fb; border: 1px solid #d8e0e8; border-radius: 8px; padding: 0.75rem; }
+.metric-label { display: block; font-size: 0.8rem; color: #54606c; }
+.metric-value { font-size: 1.35rem; color: #1f2a37; }
+.metric-ok { background: #eef9f1; border-color: #cfe8d5; }
+.metric-warn { background: #fff8ea; border-color: #f0dfb1; }
+.metric-risk { background: #fff0f0; border-color: #f2cccc; }
+
 .filters-bar { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
 .filters-form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
 .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -674,6 +801,9 @@ include '../header.php';
 .form-actions { display: flex; gap: 0.5rem; }
 
 .inline-form { display: inline-block; margin: 0; }
+.lote-inline-edit { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+.lote-inline-edit input[type="number"] { width: 90px; }
+.lote-inline-edit input[type="text"] { width: 220px; }
 .actions { white-space: nowrap; }
 .estado-pill { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.75rem; font-weight: 700; color: #fff; }
 .estado-programada { background: #607d8b; }
@@ -683,9 +813,11 @@ include '../header.php';
 .estado-reprogramada { background: #3f51b5; }
 
 @media (max-width: 1000px) {
+  .metrics-grid { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
   .admin-form-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
 }
 @media (max-width: 700px) {
+  .metrics-grid { grid-template-columns: 1fr; }
   .admin-form-grid { grid-template-columns: 1fr; }
 }
 </style>

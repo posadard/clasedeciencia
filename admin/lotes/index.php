@@ -222,6 +222,49 @@ try {
     $flash_error = $flash_error ?: 'No se pudo cargar el listado de lotes.';
 }
 
+$metricas = [
+  'total' => 0,
+  'activos' => 0,
+  'sin_disponible' => 0,
+  'stock_promedio' => 0.0
+];
+try {
+  $stmt = $pdo->query("SELECT
+                  COUNT(*) AS total,
+                  SUM(CASE WHEN estado_lote = 'activo' THEN 1 ELSE 0 END) AS activos,
+                  SUM(CASE WHEN cantidad_disponible = 0 THEN 1 ELSE 0 END) AS sin_disponible,
+                  AVG(stock_disponible_pct) AS stock_promedio
+                FROM v_admin_lotes_resumen");
+  $row = $stmt->fetch(PDO::FETCH_ASSOC);
+  if ($row) {
+    $metricas = [
+      'total' => (int)($row['total'] ?? 0),
+      'activos' => (int)($row['activos'] ?? 0),
+      'sin_disponible' => (int)($row['sin_disponible'] ?? 0),
+      'stock_promedio' => (float)($row['stock_promedio'] ?? 0)
+    ];
+  }
+} catch (PDOException $e) {
+  try {
+    $stmt = $pdo->query("SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN estado_lote = 'activo' THEN 1 ELSE 0 END) AS activos,
+                    SUM(CASE WHEN cantidad_disponible = 0 THEN 1 ELSE 0 END) AS sin_disponible,
+                    AVG(CASE WHEN cantidad_total > 0 THEN (cantidad_disponible / cantidad_total) * 100 ELSE 0 END) AS stock_promedio
+                  FROM lotes");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+      $metricas = [
+        'total' => (int)($row['total'] ?? 0),
+        'activos' => (int)($row['activos'] ?? 0),
+        'sin_disponible' => (int)($row['sin_disponible'] ?? 0),
+        'stock_promedio' => (float)($row['stock_promedio'] ?? 0)
+      ];
+    }
+  } catch (PDOException $ignored) {
+  }
+}
+
 include '../header.php';
 ?>
 <div class="page-header">
@@ -253,6 +296,25 @@ include '../header.php';
 <?php if ($flash_error): ?>
   <div class="message error"><?= htmlspecialchars($flash_error, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <span class="metric-label">Total lotes</span>
+    <strong class="metric-value"><?= (int)$metricas['total'] ?></strong>
+  </div>
+  <div class="metric-card metric-ok">
+    <span class="metric-label">Activos</span>
+    <strong class="metric-value"><?= (int)$metricas['activos'] ?></strong>
+  </div>
+  <div class="metric-card metric-risk">
+    <span class="metric-label">Sin disponible</span>
+    <strong class="metric-value"><?= (int)$metricas['sin_disponible'] ?></strong>
+  </div>
+  <div class="metric-card metric-info">
+    <span class="metric-label">Stock promedio</span>
+    <strong class="metric-value"><?= number_format((float)$metricas['stock_promedio'], 1, ',', '.') ?>%</strong>
+  </div>
+</div>
 
 <div class="filters-bar">
   <form method="GET" class="filters-form">
@@ -424,6 +486,14 @@ include '../header.php';
 <?php endif; ?>
 
 <style>
+.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 0.75rem; margin: 0 0 1rem; }
+.metric-card { background: #f5f8fb; border: 1px solid #d8e0e8; border-radius: 8px; padding: 0.75rem; }
+.metric-label { display: block; font-size: 0.8rem; color: #54606c; }
+.metric-value { font-size: 1.35rem; color: #1f2a37; }
+.metric-ok { background: #eef9f1; border-color: #cfe8d5; }
+.metric-risk { background: #fff0f0; border-color: #f2cccc; }
+.metric-info { background: #eef4ff; border-color: #d1ddff; }
+
 .filters-bar { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
 .filters-form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
 .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -447,9 +517,11 @@ include '../header.php';
 .estado-cerrado { background: #424242; }
 
 @media (max-width: 1000px) {
+  .metrics-grid { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
   .admin-form-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
 }
 @media (max-width: 700px) {
+  .metrics-grid { grid-template-columns: 1fr; }
   .admin-form-grid { grid-template-columns: 1fr; }
 }
 </style>

@@ -223,6 +223,49 @@ try {
     $flash_error = $flash_error ?: 'No se pudo cargar el listado de contratos.';
 }
 
+$metricas = [
+  'total' => 0,
+  'vigentes' => 0,
+  'con_saldo' => 0,
+  'avance_promedio' => 0.0
+];
+try {
+  $stmt = $pdo->query("SELECT
+                  COUNT(*) AS total,
+                  SUM(CASE WHEN estado_contrato = 'vigente' THEN 1 ELSE 0 END) AS vigentes,
+                  SUM(CASE WHEN saldo_pendiente > 0 THEN 1 ELSE 0 END) AS con_saldo,
+                  AVG(avance_financiero_pct) AS avance_promedio
+                FROM v_admin_contratos_resumen");
+  $row = $stmt->fetch(PDO::FETCH_ASSOC);
+  if ($row) {
+    $metricas = [
+      'total' => (int)($row['total'] ?? 0),
+      'vigentes' => (int)($row['vigentes'] ?? 0),
+      'con_saldo' => (int)($row['con_saldo'] ?? 0),
+      'avance_promedio' => (float)($row['avance_promedio'] ?? 0)
+    ];
+  }
+} catch (PDOException $e) {
+  try {
+    $stmt = $pdo->query("SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN estado_contrato = 'vigente' THEN 1 ELSE 0 END) AS vigentes,
+                    SUM(CASE WHEN (valor - valor_ejecutado) > 0 THEN 1 ELSE 0 END) AS con_saldo,
+                    AVG(CASE WHEN valor > 0 THEN (valor_ejecutado / valor) * 100 ELSE 0 END) AS avance_promedio
+                  FROM contratos");
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+      $metricas = [
+        'total' => (int)($row['total'] ?? 0),
+        'vigentes' => (int)($row['vigentes'] ?? 0),
+        'con_saldo' => (int)($row['con_saldo'] ?? 0),
+        'avance_promedio' => (float)($row['avance_promedio'] ?? 0)
+      ];
+    }
+  } catch (PDOException $ignored) {
+  }
+}
+
 include '../header.php';
 ?>
 <div class="page-header">
@@ -254,6 +297,25 @@ include '../header.php';
 <?php if ($flash_error): ?>
   <div class="message error"><?= htmlspecialchars($flash_error, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <span class="metric-label">Total contratos</span>
+    <strong class="metric-value"><?= (int)$metricas['total'] ?></strong>
+  </div>
+  <div class="metric-card metric-ok">
+    <span class="metric-label">Vigentes</span>
+    <strong class="metric-value"><?= (int)$metricas['vigentes'] ?></strong>
+  </div>
+  <div class="metric-card metric-warn">
+    <span class="metric-label">Con saldo pendiente</span>
+    <strong class="metric-value"><?= (int)$metricas['con_saldo'] ?></strong>
+  </div>
+  <div class="metric-card metric-info">
+    <span class="metric-label">Avance promedio</span>
+    <strong class="metric-value"><?= number_format((float)$metricas['avance_promedio'], 1, ',', '.') ?>%</strong>
+  </div>
+</div>
 
 <div class="filters-bar">
   <form method="GET" class="filters-form">
@@ -420,6 +482,14 @@ include '../header.php';
 <?php endif; ?>
 
 <style>
+.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(130px, 1fr)); gap: 0.75rem; margin: 0 0 1rem; }
+.metric-card { background: #f5f8fb; border: 1px solid #d8e0e8; border-radius: 8px; padding: 0.75rem; }
+.metric-label { display: block; font-size: 0.8rem; color: #54606c; }
+.metric-value { font-size: 1.35rem; color: #1f2a37; }
+.metric-ok { background: #eef9f1; border-color: #cfe8d5; }
+.metric-warn { background: #fff8ea; border-color: #f0dfb1; }
+.metric-info { background: #eef4ff; border-color: #d1ddff; }
+
 .filters-bar { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; }
 .filters-form { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
 .filter-group { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -444,9 +514,11 @@ include '../header.php';
 .estado-cerrado { background: #212121; }
 
 @media (max-width: 1000px) {
+  .metrics-grid { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
   .admin-form-grid { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
 }
 @media (max-width: 700px) {
+  .metrics-grid { grid-template-columns: 1fr; }
   .admin-form-grid { grid-template-columns: 1fr; }
 }
 </style>
