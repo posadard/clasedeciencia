@@ -33,6 +33,63 @@ function json_fail(string $message, array $extra = []): void {
     exit;
 }
 
+function normalize_backend_chat_response(string $text, int $max_content_lines = 10): string {
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    // Evitar bloques markdown/codigo en el panel lateral.
+    $text = preg_replace('/```[\s\S]*?```/u', '', $text) ?? $text;
+
+    $lines = preg_split('/\n/u', $text) ?: [];
+    $out = [];
+    $content_lines = 0;
+    $prev_empty = false;
+
+    foreach ($lines as $line_raw) {
+        $line = trim((string)$line_raw);
+
+        if ($line === '') {
+            if (!$prev_empty && !empty($out)) {
+                $out[] = '';
+                $prev_empty = true;
+            }
+            continue;
+        }
+        $prev_empty = false;
+
+        // Quitar encabezados markdown y estilos simples.
+        $line = preg_replace('/^#{1,6}\s*/u', '', $line) ?? $line;
+        $line = preg_replace('/\*\*(.*?)\*\*/u', '$1', $line) ?? $line;
+        $line = preg_replace('/\*(.*?)\*/u', '$1', $line) ?? $line;
+        $line = preg_replace('/`([^`]+)`/u', '$1', $line) ?? $line;
+
+        // Eliminar separadores de tabla markdown.
+        if (preg_match('/^\s*\|?\s*:?[-]{3,}:?\s*(\|\s*:?[-]{3,}:?\s*)+\|?\s*$/u', $line)) {
+            continue;
+        }
+
+        // Convertir filas de tabla a texto lineal.
+        if (substr_count($line, '|') >= 2) {
+            $cells = array_values(array_filter(array_map('trim', explode('|', $line)), static fn($c) => $c !== ''));
+            if (count($cells) > 0) {
+                $line = implode(' - ', $cells);
+            }
+        }
+
+        // Si es muy larga, recortar para preservar legibilidad en panel.
+        if (mb_strlen($line) > 220) {
+            $line = mb_substr($line, 0, 220) . '...';
+        }
+
+        $out[] = $line;
+        $content_lines++;
+        if ($content_lines >= $max_content_lines) {
+            break;
+        }
+    }
+
+    $normalized = trim(implode("\n", $out));
+    return $normalized !== '' ? $normalized : 'No tengo suficientes datos para responder con claridad en este momento.';
+}
+
 function get_backend_session_id(PDO $pdo, string $admin_user, string $contexto_scope, string $contexto_pagina, ?string $entidad_tipo, ?int $entidad_id): ?int {
     $contexto_scope = $contexto_scope !== '' ? $contexto_scope : 'admin_global';
     $entidad_tipo = $entidad_tipo ?: null;
@@ -1098,6 +1155,16 @@ try {
                 $system_content .= "\n\nREGLA DE CATALOGO (obligatoria):\n- Si el contexto incluye '=== CATALOGO DISPONIBLE ===' menciona solo esos productos reales.\n- Si el contexto incluye '=== CATALOGO: SIN COINCIDENCIAS ===' NO inventes clases, kits ni materiales. Di honestamente al usuario que aun no tienes un proyecto o kit sobre ese tema especifico, pero ofrece seguir conversando sobre el tema de forma educativa. Ejemplo: 'Aun no tenemos una clase o kit sobre [tema], pero puedo contarte mas sobre ello si te interesa seguir explorando.'";
             }
 
+            if ($instancia === 'backend') {
+                $system_content .= "\n\nFORMATO OBLIGATORIO BACKEND (panel lateral):\n"
+                    . "- Responde SIEMPRE en texto simple, corto y legible.\n"
+                    . "- Estructura exacta: 'Respuesta corta:', 'Evidencia:', 'Siguiente accion:'.\n"
+                    . "- En 'Evidencia' usa solo lista con guiones.\n"
+                    . "- Prohibido usar tablas markdown, separadores con '|', HTML o bloques de codigo.\n"
+                    . "- Maximo 10 lineas de contenido.\n"
+                    . "- Si faltan datos, dilo explicitamente y pide un dato concreto.";
+            }
+
             // Chips de respuesta rapida: cuando la IA necesita info del usuario,
             // puede incluir "Opciones: A|B|C" al final para mostrar chips de respuesta.
             if ($instancia === 'frontend') {
@@ -1118,6 +1185,10 @@ try {
                 $modelo_usado = $resultado['modelo_usado'];
                 $tokens       = $resultado['tokens'];
                 $tiempo_ms    = $resultado['tiempo_ms'];
+
+                if ($instancia === 'backend' && !empty($respuesta) && mb_strpos((string)$respuesta, '❌') !== 0) {
+                    $respuesta = normalize_backend_chat_response((string)$respuesta, 10);
+                }
             } else {
                 $groq_detalle = $GLOBALS['_ia_groq_ultimo_error'] ?? 'sin detalle';
                 $respuesta = 'Ã¢ÂÅ’ Error al consultar la IA. Detalle: ' . $groq_detalle;
