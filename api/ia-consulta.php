@@ -98,6 +98,7 @@ function detect_backend_intent(string $pregunta): ?string {
     $has_pertenece = preg_match('/\b(pertenece|pertenecen|a que pertenece|de que es|de cual)\b/u', $q) === 1;
     $has_completa = preg_match('/\b(mas completa|completitud|completa)\b/u', $q) === 1;
     $has_clase = preg_match('/\bclase(?:s)?\b/u', $q) === 1;
+    $has_nombre = preg_match('/\b(nombre|nombres|cual|cuales|dime|listar|lista)\b/u', $q) === 1;
 
     if ($has_clase && $has_completa) {
         return 'clase_mas_completa';
@@ -105,7 +106,10 @@ function detect_backend_intent(string $pregunta): ?string {
     if ($has_manual && $has_pertenece) {
         return 'manual_pertenencia';
     }
-    if ($has_manual && preg_match('/\b(hay|existe|cuantos|cuantas)\b/u', $q) === 1) {
+    if ($has_manual && $has_nombre) {
+        return 'manuales_nombres';
+    }
+    if ($has_manual && preg_match('/\b(hay|existe|cuantos|cuantas|tenemos|tienen)\b/u', $q) === 1) {
         return 'manuales_estado';
     }
 
@@ -114,6 +118,41 @@ function detect_backend_intent(string $pregunta): ?string {
 
 function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pregunta): ?string {
     try {
+        if ($intent === 'manuales_nombres') {
+            $rows = $pdo->query(
+                "SELECT
+                    km.id,
+                    km.titulo,
+                    km.status,
+                    k.nombre AS kit_nombre,
+                    i.nombre_comun AS componente_nombre
+                 FROM kit_manuals km
+                 LEFT JOIN kits k ON k.id = km.kit_id
+                 LEFT JOIN kit_items i ON i.id = km.item_id
+                 WHERE km.status = 'published'
+                 ORDER BY km.id DESC
+                 LIMIT 5"
+            )->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!$rows) {
+                return "Respuesta corta: No hay manuales publicados en este momento.\n"
+                    . "Evidencia:\n"
+                    . "- Coincidencias de manuales publicados: 0\n"
+                    . "Siguiente accion: Publica un manual y te confirmo el nombre y su pertenencia.";
+            }
+
+            $lineas = [];
+            foreach ($rows as $r) {
+                $dest = $r['kit_nombre'] ?: ($r['componente_nombre'] ?: 'sin destino');
+                $lineas[] = '- ' . (string)$r['titulo'] . ' (destino: ' . $dest . ')';
+            }
+
+            return "Respuesta corta: Estos son los manuales publicados que tengo registrados.\n"
+                . "Evidencia:\n"
+                . implode("\n", $lineas) . "\n"
+                . "Siguiente accion: Si quieres, te digo a que clases impacta cada manual.";
+        }
+
         if ($intent === 'manuales_estado') {
             $row = $pdo->query(
                 "SELECT
