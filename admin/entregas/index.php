@@ -44,6 +44,46 @@ if (!isset($_SESSION['csrf_token'])) {
     }
 }
 
+  function validate_lote_assignment(PDO $pdo, int $entrega_id, int $lote_id, int $new_asignada, int $new_entregada): array {
+    try {
+      $stmt = $pdo->prepare("SELECT cantidad_total FROM lotes WHERE id = ? LIMIT 1");
+      $stmt->execute([$lote_id]);
+      $lote = $stmt->fetch(PDO::FETCH_ASSOC);
+      if (!$lote) {
+        return ['ok' => false, 'msg' => 'El lote seleccionado no existe.'];
+      }
+
+      $stmt = $pdo->prepare("SELECT COALESCE(SUM(cantidad_asignada),0) AS suma_asignada, COALESCE(SUM(cantidad_entregada),0) AS suma_entregada
+                   FROM entrega_lotes WHERE lote_id = ?");
+      $stmt->execute([$lote_id]);
+      $totales = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['suma_asignada' => 0, 'suma_entregada' => 0];
+
+      $stmt = $pdo->prepare("SELECT cantidad_asignada, cantidad_entregada FROM entrega_lotes WHERE entrega_id = ? AND lote_id = ? LIMIT 1");
+      $stmt->execute([$entrega_id, $lote_id]);
+      $actual = $stmt->fetch(PDO::FETCH_ASSOC) ?: ['cantidad_asignada' => 0, 'cantidad_entregada' => 0];
+
+      if ($new_entregada > $new_asignada) {
+        return ['ok' => false, 'msg' => 'La cantidad entregada no puede ser mayor que la cantidad asignada para ese lote.'];
+      }
+
+      $new_sum_asignada = (int)$totales['suma_asignada'] - (int)$actual['cantidad_asignada'] + $new_asignada;
+      $new_sum_entregada = (int)$totales['suma_entregada'] - (int)$actual['cantidad_entregada'] + $new_entregada;
+      $total = (int)$lote['cantidad_total'];
+
+      if (($new_sum_asignada + $new_sum_entregada) > $total) {
+        return [
+          'ok' => false,
+          'msg' => 'La asignacion supera la capacidad del lote. Revisa cantidades asignadas/entregadas en otras entregas.'
+        ];
+      }
+
+      return ['ok' => true, 'msg' => 'ok'];
+    } catch (Exception $e) {
+      error_log('Validate lote assignment error: ' . $e->getMessage());
+      return ['ok' => false, 'msg' => 'No se pudo validar la asignacion de lote.'];
+    }
+  }
+
 $edit_id = isset($_GET['edit']) && ctype_digit((string)$_GET['edit']) ? (int)$_GET['edit'] : 0;
 $search = trim($_GET['search'] ?? '');
 $estado = trim($_GET['estado'] ?? '');
@@ -130,6 +170,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $flash_error = 'Entrega o lote invalido para asignacion.';
           } else {
             try {
+              $valid = validate_lote_assignment($pdo, $id, $lote_id, $cantidad_asignada, $cantidad_entregada);
+              if (!$valid['ok']) {
+                $flash_error = $valid['msg'];
+                throw new RuntimeException($valid['msg']);
+              }
+
               $stmt = $pdo->prepare("INSERT INTO entrega_lotes (entrega_id, lote_id, cantidad_asignada, cantidad_entregada, observaciones)
                            VALUES (?, ?, ?, ?, ?)
                            ON DUPLICATE KEY UPDATE
@@ -146,9 +192,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               ]);
               $flash_ok = 'Asignacion de lote guardada correctamente.';
               $edit_id = $id;
+              echo '<script>console.log("✅ [Entregas] Lote asignado a entrega:", ' . (int)$id . ', "lote:", ' . (int)$lote_id . ');</script>';
             } catch (PDOException $e) {
               $flash_error = 'No se pudo guardar la asignacion de lote.';
               echo '<script>console.log("❌ [Entregas] Error assign_lote:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
+            } catch (RuntimeException $e) {
+              echo '<script>console.log("⚠️ [Entregas] Validación assign_lote:", ' . json_encode($e->getMessage(), JSON_UNESCAPED_UNICODE) . ');</script>';
             }
           }
         } elseif ($action === 'remove_lote') {
@@ -337,6 +386,19 @@ include '../header.php';
     console.log('🔍 [Admin] Total entregas:', <?= count($entregas) ?>);
     console.log('🔍 [Admin] Editando entrega ID:', <?= (int)$edit_id ?>);
   </script>
+</div>
+
+<div class="card" style="margin-bottom:1rem;">
+  <h3>Asistente IA Administrativo - Entregas</h3>
+  <p class="help-text">Consulta estados, atrasos, validaciones y redacción administrativa usando el contexto de este módulo.</p>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;">
+    <div style="flex:1;min-width:280px;">
+      <label for="ia-admin-pregunta-entregas">Pregunta</label>
+      <textarea id="ia-admin-pregunta-entregas" rows="2" style="width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:4px;" placeholder="Ej: ¿Qué entregas están atrasadas y sin acta?"></textarea>
+    </div>
+    <button type="button" id="ia-admin-btn-entregas" class="btn">Consultar IA</button>
+  </div>
+  <div id="ia-admin-respuesta-entregas" style="margin-top:0.75rem;padding:0.75rem;border:1px solid #ddd;border-radius:6px;background:#fafafa;white-space:pre-wrap;min-height:48px;">Escribe una pregunta y presiona Consultar IA.</div>
 </div>
 
 <?php if ($flash_ok): ?>
@@ -627,4 +689,54 @@ include '../header.php';
   .admin-form-grid { grid-template-columns: 1fr; }
 }
 </style>
+<script>
+(function(){
+  const btn = document.getElementById('ia-admin-btn-entregas');
+  const input = document.getElementById('ia-admin-pregunta-entregas');
+  const out = document.getElementById('ia-admin-respuesta-entregas');
+  if (!btn || !input || !out) return;
+
+  btn.addEventListener('click', async function(){
+    const pregunta = (input.value || '').trim();
+    if (!pregunta) {
+      out.textContent = 'Escribe una pregunta antes de consultar.';
+      return;
+    }
+
+    btn.disabled = true;
+    out.textContent = 'Consultando...';
+    console.log('🔍 [IA Admin Entregas] Consulta enviada');
+    try {
+      const payload = {
+        instancia: 'backend',
+        contexto_pagina: 'entregas',
+        pregunta: pregunta
+      };
+      <?php if ($edit_id > 0): ?>
+      payload.entidad_tipo = 'entrega';
+      payload.entidad_id = <?= (int)$edit_id ?>;
+      <?php endif; ?>
+
+      const resp = await fetch('/api/ia-consulta.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        out.textContent = (data && (data.error || data.respuesta)) ? (data.error || data.respuesta) : 'No fue posible obtener respuesta.';
+        console.log('❌ [IA Admin Entregas] Error:', data);
+      } else {
+        out.textContent = data.respuesta || 'Sin respuesta.';
+        console.log('✅ [IA Admin Entregas] Respuesta recibida');
+      }
+    } catch (err) {
+      out.textContent = 'Error de red o servidor al consultar IA.';
+      console.log('❌ [IA Admin Entregas] Excepción:', err && err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
 <?php include '../footer.php'; ?>

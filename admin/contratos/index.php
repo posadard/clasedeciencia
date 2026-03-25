@@ -235,6 +235,19 @@ include '../header.php';
   </script>
 </div>
 
+<div class="card" style="margin-bottom:1rem;">
+  <h3>Asistente IA Administrativo - Contratos</h3>
+  <p class="help-text">Consulta riesgos de vencimiento, avance y consistencia contractual con contexto de este módulo.</p>
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;">
+    <div style="flex:1;min-width:280px;">
+      <label for="ia-admin-pregunta-contratos">Pregunta</label>
+      <textarea id="ia-admin-pregunta-contratos" rows="2" style="width:100%;padding:0.5rem;border:1px solid #ddd;border-radius:4px;" placeholder="Ej: ¿Qué contratos vencen en los próximos 30 días?"></textarea>
+    </div>
+    <button type="button" id="ia-admin-btn-contratos" class="btn">Consultar IA</button>
+  </div>
+  <div id="ia-admin-respuesta-contratos" style="margin-top:0.75rem;padding:0.75rem;border:1px solid #ddd;border-radius:6px;background:#fafafa;white-space:pre-wrap;min-height:48px;">Escribe una pregunta y presiona Consultar IA.</div>
+</div>
+
 <?php if ($flash_ok): ?>
   <div class="message success"><?= htmlspecialchars($flash_ok, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
@@ -437,4 +450,54 @@ include '../header.php';
   .admin-form-grid { grid-template-columns: 1fr; }
 }
 </style>
+<script>
+(function(){
+  const btn = document.getElementById('ia-admin-btn-contratos');
+  const input = document.getElementById('ia-admin-pregunta-contratos');
+  const out = document.getElementById('ia-admin-respuesta-contratos');
+  if (!btn || !input || !out) return;
+
+  btn.addEventListener('click', async function(){
+    const pregunta = (input.value || '').trim();
+    if (!pregunta) {
+      out.textContent = 'Escribe una pregunta antes de consultar.';
+      return;
+    }
+
+    btn.disabled = true;
+    out.textContent = 'Consultando...';
+    console.log('🔍 [IA Admin Contratos] Consulta enviada');
+    try {
+      const payload = {
+        instancia: 'backend',
+        contexto_pagina: 'contratos',
+        pregunta: pregunta
+      };
+      <?php if ($edit_id > 0): ?>
+      payload.entidad_tipo = 'contrato';
+      payload.entidad_id = <?= (int)$edit_id ?>;
+      <?php endif; ?>
+
+      const resp = await fetch('/api/ia-consulta.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (!resp.ok || !data.ok) {
+        out.textContent = (data && (data.error || data.respuesta)) ? (data.error || data.respuesta) : 'No fue posible obtener respuesta.';
+        console.log('❌ [IA Admin Contratos] Error:', data);
+      } else {
+        out.textContent = data.respuesta || 'Sin respuesta.';
+        console.log('✅ [IA Admin Contratos] Respuesta recibida');
+      }
+    } catch (err) {
+      out.textContent = 'Error de red o servidor al consultar IA.';
+      console.log('❌ [IA Admin Contratos] Excepción:', err && err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
 <?php include '../footer.php'; ?>
