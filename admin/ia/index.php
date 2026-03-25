@@ -52,6 +52,182 @@ function ia_field_label(string $clave): string {
     return $labels[$clave] ?? ucwords(str_replace('_', ' ', $clave));
 }
 
+function ia_safe_query(PDO $pdo, string $sql, array $params = []): array {
+    try {
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log('[IA Admin] ia_safe_query error: ' . $e->getMessage());
+        return [];
+    }
+}
+
+function ia_generate_context_files(PDO $pdo): array {
+    $base_dir = realpath(__DIR__ . '/../../marco');
+    if ($base_dir === false) {
+        return ['ok' => false, 'msg' => 'No se encontró carpeta marco/.'];
+    }
+    $estado_dir = $base_dir . DIRECTORY_SEPARATOR . 'estado';
+    if (!is_dir($estado_dir) && !mkdir($estado_dir, 0775, true)) {
+        return ['ok' => false, 'msg' => 'No se pudo crear marco/estado.'];
+    }
+
+    $ts = date('Y-m-d H:i:s');
+
+    $resumen = [
+        'generado_en' => $ts,
+        'clases_activas' => 0,
+        'kits_activos' => 0,
+        'componentes_activos' => 0,
+        'manuales_publicados' => 0,
+        'contratos' => 0,
+        'entregas' => 0,
+        'lotes' => 0,
+    ];
+
+    try {
+        $resumen['clases_activas'] = (int)($pdo->query('SELECT COUNT(*) FROM clases WHERE activo = 1')->fetchColumn() ?: 0);
+        $resumen['kits_activos'] = (int)($pdo->query('SELECT COUNT(*) FROM kits WHERE activo = 1')->fetchColumn() ?: 0);
+        $resumen['componentes_activos'] = (int)($pdo->query('SELECT COUNT(*) FROM kit_items WHERE activo = 1')->fetchColumn() ?: 0);
+        $resumen['manuales_publicados'] = (int)($pdo->query("SELECT COUNT(*) FROM kit_manuals WHERE status = 'published'")->fetchColumn() ?: 0);
+        $resumen['contratos'] = (int)($pdo->query('SELECT COUNT(*) FROM contratos')->fetchColumn() ?: 0);
+        $resumen['entregas'] = (int)($pdo->query('SELECT COUNT(*) FROM entregas')->fetchColumn() ?: 0);
+        $resumen['lotes'] = (int)($pdo->query('SELECT COUNT(*) FROM lotes')->fetchColumn() ?: 0);
+    } catch (Exception $e) {
+        error_log('[IA Admin] resumen error: ' . $e->getMessage());
+    }
+
+    $rows_clases = ia_safe_query(
+        $pdo,
+        "SELECT c.id, c.nombre, c.ciclo, c.dificultad, c.activo,
+                COUNT(DISTINCT ck.kit_id) AS total_kits,
+                COUNT(DISTINCT km.id) AS total_manuales_publicados,
+                COUNT(DISTINCT kc.item_id) AS total_componentes,
+                ROUND(COUNT(DISTINCT ck.kit_id) * 0.45 + COUNT(DISTINCT km.id) * 0.35 + COUNT(DISTINCT kc.item_id) * 0.20, 2) AS score_completitud
+         FROM clases c
+         LEFT JOIN clase_kits ck ON ck.clase_id = c.id
+         LEFT JOIN kits k ON k.id = ck.kit_id
+         LEFT JOIN kit_manuals km ON km.kit_id = k.id AND km.status = 'published'
+         LEFT JOIN kit_componentes kc ON kc.kit_id = k.id
+         GROUP BY c.id, c.nombre, c.ciclo, c.dificultad, c.activo
+         ORDER BY score_completitud DESC, total_kits DESC, c.nombre ASC"
+    );
+
+    $rows_kits = ia_safe_query(
+        $pdo,
+        "SELECT k.id, k.nombre, k.codigo, k.activo,
+                COUNT(DISTINCT ck.clase_id) AS total_clases_relacionadas,
+                COUNT(DISTINCT km.id) AS total_manuales_publicados,
+                COUNT(DISTINCT kc.item_id) AS total_componentes
+         FROM kits k
+         LEFT JOIN clase_kits ck ON ck.kit_id = k.id
+         LEFT JOIN kit_manuals km ON km.kit_id = k.id AND km.status = 'published'
+         LEFT JOIN kit_componentes kc ON kc.kit_id = k.id
+         GROUP BY k.id, k.nombre, k.codigo, k.activo
+         ORDER BY total_clases_relacionadas DESC, total_manuales_publicados DESC, total_componentes DESC, k.nombre ASC"
+    );
+
+    $rows_componentes = ia_safe_query(
+        $pdo,
+        "SELECT i.id, i.nombre_comun, i.sku, i.activo, COUNT(DISTINCT kc.kit_id) AS kits_asociados
+         FROM kit_items i
+         LEFT JOIN kit_componentes kc ON kc.item_id = i.id
+         GROUP BY i.id, i.nombre_comun, i.sku, i.activo
+         ORDER BY kits_asociados DESC, i.nombre_comun ASC"
+    );
+
+    $rows_operacion = ia_safe_query(
+        $pdo,
+        "SELECT
+            (SELECT COUNT(*) FROM contratos WHERE estado_contrato IN ('vigente','suspendido')) AS contratos_vivos,
+            (SELECT COUNT(*) FROM entregas WHERE estado_entrega IN ('programada','reprogramada','en_transito')) AS entregas_abiertas,
+            (SELECT COUNT(*) FROM lotes WHERE estado_lote = 'activo') AS lotes_activos"
+    );
+
+    $md_global = [];
+    $md_global[] = '# Contexto Global IA (Backend)';
+    $md_global[] = 'Generado: ' . $ts;
+    $md_global[] = '';
+    $md_global[] = '## Resumen';
+    $md_global[] = '- Clases activas: ' . $resumen['clases_activas'];
+    $md_global[] = '- Kits activos: ' . $resumen['kits_activos'];
+    $md_global[] = '- Componentes activos: ' . $resumen['componentes_activos'];
+    $md_global[] = '- Manuales publicados: ' . $resumen['manuales_publicados'];
+    $md_global[] = '- Contratos: ' . $resumen['contratos'];
+    $md_global[] = '- Entregas: ' . $resumen['entregas'];
+    $md_global[] = '- Lotes: ' . $resumen['lotes'];
+    if (!empty($rows_operacion[0])) {
+        $md_global[] = '- Contratos vivos: ' . (int)$rows_operacion[0]['contratos_vivos'];
+        $md_global[] = '- Entregas abiertas: ' . (int)$rows_operacion[0]['entregas_abiertas'];
+        $md_global[] = '- Lotes activos: ' . (int)$rows_operacion[0]['lotes_activos'];
+    }
+
+    $md_clases = [];
+    $md_clases[] = '# Contexto IA - Clases';
+    $md_clases[] = 'Generado: ' . $ts;
+    $md_clases[] = '';
+    $md_clases[] = '## Ranking de completitud (kits/manuales/componentes)';
+    foreach ($rows_clases as $r) {
+        $md_clases[] = '- [' . (int)$r['id'] . '] ' . $r['nombre']
+            . ' | ciclo=' . $r['ciclo']
+            . ' | kits=' . (int)$r['total_kits']
+            . ' | manuales=' . (int)$r['total_manuales_publicados']
+            . ' | componentes=' . (int)$r['total_componentes']
+            . ' | score=' . (float)$r['score_completitud'];
+    }
+
+    $md_kits = [];
+    $md_kits[] = '# Contexto IA - Kits';
+    $md_kits[] = 'Generado: ' . $ts;
+    $md_kits[] = '';
+    $md_kits[] = '## Cobertura por kit';
+    foreach ($rows_kits as $r) {
+        $md_kits[] = '- [' . (int)$r['id'] . '] ' . $r['nombre']
+            . ' (' . $r['codigo'] . ')'
+            . ' | clases=' . (int)$r['total_clases_relacionadas']
+            . ' | manuales=' . (int)$r['total_manuales_publicados']
+            . ' | componentes=' . (int)$r['total_componentes']
+            . ' | activo=' . (int)$r['activo'];
+    }
+
+    $md_componentes = [];
+    $md_componentes[] = '# Contexto IA - Componentes';
+    $md_componentes[] = 'Generado: ' . $ts;
+    $md_componentes[] = '';
+    $md_componentes[] = '## Componentes más reutilizados';
+    foreach ($rows_componentes as $r) {
+        $md_componentes[] = '- [' . (int)$r['id'] . '] ' . $r['nombre_comun']
+            . ' (' . $r['sku'] . ')'
+            . ' | kits_asociados=' . (int)$r['kits_asociados']
+            . ' | activo=' . (int)$r['activo'];
+    }
+
+    $files = [
+        $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_global.md' => implode("\n", $md_global) . "\n",
+        $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_clases.md' => implode("\n", $md_clases) . "\n",
+        $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_kits.md' => implode("\n", $md_kits) . "\n",
+        $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_componentes.md' => implode("\n", $md_componentes) . "\n",
+        $estado_dir . DIRECTORY_SEPARATOR . 'ia_contexto_resumen.json' => json_encode([
+            'generado_en' => $ts,
+            'resumen' => $resumen,
+            'rows' => [
+                'clases' => count($rows_clases),
+                'kits' => count($rows_kits),
+                'componentes' => count($rows_componentes),
+            ]
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+    ];
+
+    foreach ($files as $path => $content) {
+        if (file_put_contents($path, $content) === false) {
+            return ['ok' => false, 'msg' => 'Error escribiendo archivo de contexto: ' . basename($path)];
+        }
+    }
+
+    return ['ok' => true, 'msg' => 'Contexto IA regenerado (' . count($files) . ' archivos).'];
+}
+
 // ---------------------------------------------------------------
 // POST: Guardar configuración
 // ---------------------------------------------------------------
@@ -59,7 +235,17 @@ $save_ok     = false;
 $save_msg    = '';
 $save_error  = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_config') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $action = (string)($_POST['action'] ?? '');
+    if ($action === 'generate_context') {
+        $r = ia_generate_context_files($pdo);
+        if (!empty($r['ok'])) {
+            $save_ok = true;
+            $save_msg = (string)$r['msg'];
+        } else {
+            $save_error = (string)($r['msg'] ?? 'No se pudo regenerar el contexto IA.');
+        }
+    } elseif ($action === 'save_config') {
     $instancia_save = in_array($_POST['instancia'] ?? '', ['frontend', 'backend']) ? $_POST['instancia'] : null;
     // pagina_save: NULL = global, o nombre de página (clase, kit, etc.)
     $paginas_validas = ['clase', 'kit', 'componente', 'manual', 'inicio', 'catalogo'];
@@ -134,6 +320,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             error_log('[IA Admin] save error: ' . $e->getMessage());
             $save_error = 'Error al guardar: ' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8');
         }
+    }
     }
 }
 
@@ -271,6 +458,15 @@ include '../header.php';
 <?php elseif ($save_error): ?>
     <div class="flash-err">❌ <?= htmlspecialchars($save_error, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
+
+<div class="card" style="margin-bottom:1rem;">
+    <h3>Contexto Expandido del Sitio</h3>
+    <p class="hint" style="margin-bottom:0.8rem;">Genera snapshots en marco/estado para que la IA backend responda con contexto más amplio y consistente del sitio completo.</p>
+    <form method="post" action="/admin/ia/index.php?tab=estado">
+        <input type="hidden" name="action" value="generate_context">
+        <button type="submit" class="btn">🧠 Regenerar contexto IA del sitio</button>
+    </form>
+</div>
 
 <!-- Tab navigation -->
 <div class="ia-tabs" role="tablist">

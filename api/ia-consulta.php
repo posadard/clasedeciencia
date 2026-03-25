@@ -674,12 +674,63 @@ function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?
     return implode("\n\n", array_filter($bloques));
 }
 
+function read_backend_context_snapshot_file(string $name, int $max_chars = 12000): ?string {
+    $base = realpath(__DIR__ . '/../marco/estado');
+    if ($base === false) return null;
+    $path = $base . DIRECTORY_SEPARATOR . $name;
+    if (!is_file($path) || !is_readable($path)) return null;
+    $txt = @file_get_contents($path);
+    if ($txt === false || trim($txt) === '') return null;
+    return mb_substr(trim($txt), 0, $max_chars);
+}
+
+function build_backend_snapshot_blocks(string $contexto_pagina): array {
+    $bloques = [];
+
+    $global = read_backend_context_snapshot_file('ia_contexto_global.md');
+    if ($global) {
+        $bloques[] = "=== CONTEXTO PERSISTENTE GLOBAL ===\n" . $global;
+    }
+
+    $map = [
+        'clases' => ['ia_contexto_clases.md'],
+        'kits' => ['ia_contexto_kits.md', 'ia_contexto_clases.md'],
+        'componentes' => ['ia_contexto_componentes.md', 'ia_contexto_kits.md'],
+        'manuales' => ['ia_contexto_kits.md', 'ia_contexto_clases.md'],
+        'dashboard' => ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_componentes.md'],
+        'contratos' => ['ia_contexto_global.md'],
+        'entregas' => ['ia_contexto_global.md'],
+        'lotes' => ['ia_contexto_kits.md', 'ia_contexto_componentes.md'],
+        'ia' => ['ia_contexto_clases.md', 'ia_contexto_kits.md', 'ia_contexto_componentes.md'],
+    ];
+
+    $targets = $map[$contexto_pagina] ?? ['ia_contexto_clases.md', 'ia_contexto_kits.md'];
+    foreach ($targets as $file) {
+        $txt = read_backend_context_snapshot_file($file, 14000);
+        if ($txt) {
+            $bloques[] = "=== CONTEXTO SNAPSHOT: {$file} ===\n" . $txt;
+        }
+    }
+
+    $json = read_backend_context_snapshot_file('ia_contexto_resumen.json', 3000);
+    if ($json) {
+        $bloques[] = "=== CONTEXTO SNAPSHOT JSON ===\n" . $json;
+    }
+
+    return $bloques;
+}
+
 /**
  * Construye el bloque de contexto para la instancia BACKEND.
  * Datos varÃƒÂ­an segÃƒÂºn la pÃƒÂ¡gina admin activa.
  */
 function build_context_backend(PDO $pdo, string $contexto_pagina, ?string $entidad_tipo, ?int $entidad_id): string {
     $bloques = [];
+
+    $snapshot_blocks = build_backend_snapshot_blocks($contexto_pagina);
+    if (!empty($snapshot_blocks)) {
+        $bloques = array_merge($bloques, $snapshot_blocks);
+    }
 
     try {
         switch ($contexto_pagina) {
