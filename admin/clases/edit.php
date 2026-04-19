@@ -964,7 +964,10 @@ include '../header.php';
     </div>
     
     <!-- Competencias MEN - Dual Listbox -->
-    <h3 style="margin-top:.5rem">Competencias MEN</h3>
+    <h3 style="margin-top:.5rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <span>Competencias MEN</span>
+      <button type="button" class="btn btn-secondary" id="btn_sugerir_competencias_ia">🤖 Sugerir con IA</button>
+    </h3>
     <small class="hint" style="display: block; margin-bottom: 10px;">Selecciona las competencias que desarrolla esta clase. Recomendado: 3-7 competencias.</small>
     
     <div class="dual-listbox-container">
@@ -1798,6 +1801,145 @@ include '../header.php';
   // Inicializar
   initCompetencias();
   console.log('✅ [Competencias] Dual Listbox inicializado');
+
+  // ========================================================
+  // SUGERENCIA IA PARA COMPETENCIAS MEN
+  // ========================================================
+  const btnSugerirCompetenciasIa = document.getElementById('btn_sugerir_competencias_ia');
+  if (btnSugerirCompetenciasIa) {
+    btnSugerirCompetenciasIa.addEventListener('click', async function() {
+      const btn = this;
+      const nombre = (document.getElementById('nombre')?.value || '').trim();
+      const ciclo = (document.getElementById('ciclo')?.value || '').trim();
+      const dificultad = (document.getElementById('dificultad')?.value || '').trim();
+      const resumen = (document.getElementById('resumen')?.value || '').trim();
+      const objetivo = (document.getElementById('objetivo_aprendizaje')?.value || '').trim();
+      const tags = (document.getElementById('tags')?.value || '').trim();
+      const grados = Array.from(document.querySelectorAll('input[name="grados[]"]:checked')).map(x => parseInt(x.value, 10)).filter(Number.isInteger);
+      const areas = Array.from(document.querySelectorAll('input[name="areas[]"]:checked')).map((c) => {
+        const lbl = c.closest('label');
+        return lbl ? lbl.textContent.trim() : c.value;
+      });
+
+      if (!nombre && !resumen && !objetivo) {
+        alert('Primero completa al menos nombre, resumen u objetivo para sugerir competencias.');
+        return;
+      }
+
+      const allCompItems = Array.from(document.querySelectorAll('#available-list .competencia-item'));
+      const competenciasCatalogo = allCompItems.map((el) => ({
+        id: parseInt(el.dataset.id || '0', 10),
+        codigo: (el.dataset.codigo || '').trim(),
+        nombre: (el.dataset.nombre || '').trim(),
+        explicacion: (el.dataset.explicacion || '').trim()
+      })).filter((x) => Number.isInteger(x.id) && x.id > 0 && x.codigo && x.nombre);
+
+      if (competenciasCatalogo.length === 0) {
+        alert('No hay competencias disponibles para sugerir.');
+        return;
+      }
+
+      const prompt = [
+        'Eres asesor curricular MEN para Clase de Ciencia.',
+        'Debes seleccionar las 3 a 7 competencias MEN mas pertinentes para la clase.',
+        'Responde SOLO JSON valido, sin markdown ni texto extra.',
+        'Schema exacto:',
+        '{"competencia_ids":[1,2,3],"competencia_codigos":["CB-01"],"justificacion":"texto corto"}',
+        'Reglas:',
+        '- Prioriza pertinencia con objetivo de aprendizaje, ciclo y dificultad.',
+        '- Usa SOLO competencias existentes en el catalogo entregado.',
+        '- Si hay duda, prioriza indagacion, explicacion y uso del conocimiento.',
+        'Contexto clase: ' + JSON.stringify({ nombre, ciclo, grados, dificultad, areas, resumen, objetivo, tags }),
+        'Catalogo competencias MEN (usar ids/codigos de aqui): ' + JSON.stringify(competenciasCatalogo)
+      ].join('\n');
+
+      function parseJsonSafe(raw) {
+        const t = String(raw || '').trim();
+        if (!t) return null;
+        try { return JSON.parse(t); } catch (_e) {}
+        const s = t.indexOf('{');
+        const e = t.lastIndexOf('}');
+        if (s >= 0 && e > s) {
+          try { return JSON.parse(t.slice(s, e + 1)); } catch (_e) {}
+        }
+        return null;
+      }
+
+      try {
+        btn.disabled = true;
+        const oldLabel = btn.textContent;
+        btn.textContent = '⏳ Sugiriendo...';
+
+        const payload = {
+          instancia: 'backend',
+          contexto_scope: 'admin_clases_builder',
+          contexto_pagina: 'clases',
+          entidad_tipo: 'clase',
+          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+          pregunta: prompt
+        };
+
+        const res = await fetch('/api/ia-consulta.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!data || !data.ok) {
+          throw new Error((data && data.error) ? data.error : 'No se pudo obtener sugerencias de competencias.');
+        }
+
+        const parsed = parseJsonSafe(data.respuesta || '');
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('La IA no devolvió JSON parseable para competencias.');
+        }
+
+        const idsFromJson = Array.isArray(parsed.competencia_ids)
+          ? parsed.competencia_ids.map((n) => parseInt(n, 10)).filter((n) => Number.isInteger(n) && n > 0)
+          : [];
+        const codigosFromJson = Array.isArray(parsed.competencia_codigos)
+          ? parsed.competencia_codigos.map((c) => String(c || '').trim().toUpperCase()).filter(Boolean)
+          : [];
+
+        const mapByCodigo = new Map(competenciasCatalogo.map((c) => [c.codigo.toUpperCase(), c.id]));
+        const idsFromCodes = codigosFromJson.map((code) => mapByCodigo.get(code)).filter((id) => Number.isInteger(id));
+        const idsFinal = Array.from(new Set([...idsFromJson, ...idsFromCodes])).slice(0, 7);
+
+        if (idsFinal.length === 0) {
+          throw new Error('La IA no devolvió competencias válidas del catálogo.');
+        }
+
+        const replaceCurrent = confirm('¿Quieres REEMPLAZAR las competencias actuales con la sugerencia IA?\nAceptar = reemplazar\nCancelar = agregar a las ya seleccionadas');
+
+        if (replaceCurrent) {
+          const selectedItems = Array.from(document.querySelectorAll('#selected-list .competencia-item'));
+          selectedItems.forEach((item) => window.deselectCompetencia(item));
+        }
+
+        let applied = 0;
+        idsFinal.forEach((id) => {
+          const alreadySel = document.querySelector(`#selected-list .competencia-item[data-id="${id}"]`);
+          if (alreadySel) return;
+          const availableItem = document.querySelector(`#available-list .competencia-item[data-id="${id}"]`);
+          if (availableItem) {
+            window.selectCompetencia(availableItem);
+            applied++;
+          }
+        });
+
+        alert('Competencias IA aplicadas: ' + applied + (parsed.justificacion ? ('\n\nJustificación:\n' + parsed.justificacion) : ''));
+        console.log('✅ [Competencias IA] IDs sugeridos:', idsFinal, 'aplicadas:', applied);
+
+        btn.textContent = oldLabel;
+        btn.disabled = false;
+      } catch (err) {
+        console.log('❌ [Competencias IA] Error:', err && err.message ? err.message : err);
+        alert('No se pudo sugerir competencias MEN: ' + (err && err.message ? err.message : 'Error desconocido'));
+        btn.textContent = '🤖 Sugerir con IA';
+        btn.disabled = false;
+      }
+    });
+  }
   
   // ========================================================
   // AUTOCOMPLETE KITS CON CHIPS
