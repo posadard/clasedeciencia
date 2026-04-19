@@ -866,7 +866,6 @@ include '../header.php';
   <span class="help-text">Completa los campos del kit y gestiona sus componentes.</span>
   <div class="page-header-actions" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
     <button type="button" class="btn" id="btn_open_ia_kit_modal">Asistente IA de kit</button>
-    <button type="button" class="btn btn-secondary" id="btn_open_ia_kit_content_modal_head">Asistente IA de contenido</button>
   </div>
   <script>
     console.log('✅ [Admin] Kits edit cargado');
@@ -3201,7 +3200,6 @@ include '../header.php';
   (function initIaKitContentBuilder() {
     const modal = document.getElementById('ia_kit_content_modal');
     const btnOpen = document.getElementById('btn_open_ia_kit_content_modal');
-    const btnOpenHead = document.getElementById('btn_open_ia_kit_content_modal_head');
     const btnClose = document.getElementById('ia_kit_content_modal_close_top');
     const btnSend = document.getElementById('ia_kit_content_send');
     const btnApplyReplace = document.getElementById('ia_kit_content_apply_replace');
@@ -3481,7 +3479,6 @@ include '../header.php';
     }
 
     btnOpen?.addEventListener('click', openModal);
-    btnOpenHead?.addEventListener('click', openModal);
     btnClose?.addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
 
