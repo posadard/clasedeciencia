@@ -18,6 +18,21 @@ if ($is_edit) {
   }
 }
 
+$advertencias_seguridad_text = '';
+if (isset($material['advertencias_seguridad']) && $material['advertencias_seguridad'] !== null) {
+  $raw_adv = (string)$material['advertencias_seguridad'];
+  $dec_adv = json_decode($raw_adv, true);
+  if (is_array($dec_adv)) {
+    if (isset($dec_adv['notas']) && is_string($dec_adv['notas'])) {
+      $advertencias_seguridad_text = trim($dec_adv['notas']);
+    } else {
+      $advertencias_seguridad_text = trim($raw_adv);
+    }
+  } else {
+    $advertencias_seguridad_text = trim($raw_adv);
+  }
+}
+
 // Categorías
 $categorias = get_material_categories($pdo);
 
@@ -57,14 +72,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($errores)) {
         try {
+            $advertencias_seguridad_json = null;
+            if ($advertencias_seguridad !== '') {
+              $tmp_adv = json_decode($advertencias_seguridad, true);
+              if (is_array($tmp_adv) || $advertencias_seguridad === 'null') {
+                $advertencias_seguridad_json = $advertencias_seguridad;
+              } else {
+                $advertencias_seguridad_json = json_encode(['notas' => $advertencias_seguridad], JSON_UNESCAPED_UNICODE);
+              }
+            }
+
             if ($is_edit) {
               $sql = "UPDATE kit_items SET nombre_comun = ?, sku = ?, categoria_id = ?, advertencias_seguridad = ?, unidad = ? WHERE id = ?";
               $stmt = $pdo->prepare($sql);
-              $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad, $id]);
+              $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad_json, $unidad, $id]);
             } else {
               $sql = "INSERT INTO kit_items (nombre_comun, sku, categoria_id, advertencias_seguridad, unidad) VALUES (?, ?, ?, ?, ?)";
               $stmt = $pdo->prepare($sql);
-              $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad, $unidad]);
+              $stmt->execute([$nombre_comun, $sku, $categoria_id, $advertencias_seguridad_json, $unidad]);
               $id = (int)$pdo->lastInsertId();
             }
             echo "<script>console.log('✅ [Admin] Material guardado');</script>";
@@ -121,7 +146,7 @@ include '../header.php';
   </div>
   <div class="form-group">
     <label for="advertencias_seguridad">Advertencias de seguridad</label>
-    <textarea id="advertencias_seguridad" name="advertencias_seguridad" rows="4"><?= htmlspecialchars($material['advertencias_seguridad'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
+    <textarea id="advertencias_seguridad" name="advertencias_seguridad" rows="4"><?= htmlspecialchars($advertencias_seguridad_text, ENT_QUOTES, 'UTF-8') ?></textarea>
   </div>
   <div class="form-group">
     <label for="unidad">Unidad</label>
