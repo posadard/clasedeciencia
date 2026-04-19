@@ -511,7 +511,7 @@ include '../header.php';
   <h2><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></h2>
   <span class="help-text">Completa los campos de la clase y asigna áreas/competencias.</span>
   <div class="page-header-actions" style="margin-top:10px;">
-    <button type="button" class="btn" id="btn_open_ia_class_modal">Asistente IA de clase</button>
+    <button type="button" class="btn ia-assistant-btn" id="btn_open_ia_class_modal">Asistente <span class="ia-word">IA</span> de clase</button>
   </div>
   <script>
     console.log('✅ [Admin] Clases edit cargado');
@@ -811,7 +811,7 @@ include '../header.php';
   <div class="form-group">
     <label for="contenido_html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
       <span>Contenido (HTML)</span>
-      <button type="button" class="btn btn-secondary" id="btn_open_ia_content_modal">Asistente IA de contenido</button>
+      <button type="button" class="btn btn-secondary ia-assistant-btn" id="btn_open_ia_content_modal">Asistente <span class="ia-word">IA</span> de contenido</button>
     </label>
     <textarea id="contenido_html" name="contenido_html" rows="12"><?= htmlspecialchars($clase['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>

@@ -2843,6 +2843,44 @@ strong, b {
     background: #b71c1c;
 }
 
+/* === Admin IA Buttons (Clases/Kits) === */
+.admin-main .ia-assistant-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #ffffff;
+    border: 1px solid #1f3c88;
+    background: linear-gradient(135deg, #1f3c88 0%, #3d5ba9 100%);
+    box-shadow:
+        0 0 0 1px rgba(125, 211, 252, 0.20),
+        0 0 12px rgba(61, 91, 169, 0.35);
+    transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.admin-main .ia-assistant-btn:hover,
+.admin-main .ia-assistant-btn:focus {
+    color: #ffffff;
+    border-color: #3d5ba9;
+    background: linear-gradient(135deg, #1f3c88 0%, #4a6ec6 100%);
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+    box-shadow:
+        0 0 0 1px rgba(125, 211, 252, 0.35),
+        0 0 16px rgba(125, 211, 252, 0.35),
+        0 0 26px rgba(61, 91, 169, 0.35);
+}
+
+.admin-main .ia-assistant-btn .ia-word {
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #7dd3fc;
+    text-shadow:
+        0 0 6px rgba(125, 211, 252, 0.9),
+        0 0 14px rgba(125, 211, 252, 0.55),
+        0 0 24px rgba(56, 189, 248, 0.35);
+}
+
 /* === Admin Tables === */
 .data-table {
     width: 100%;

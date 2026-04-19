@@ -1035,29 +1035,6 @@ include '../header.php';
     gap: 14px;
     flex-wrap: wrap;
   }
-  .ia-assistant-btn {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid #0e7490;
-    color: #ecfeff;
-    background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
-    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2), 0 0 12px rgba(34, 211, 238, 0.35);
-    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  }
-  .ia-assistant-btn:hover,
-  .ia-assistant-btn:focus {
-    transform: translateY(-1px);
-    filter: brightness(1.06);
-    box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.45), 0 0 18px rgba(56, 189, 248, 0.5);
-  }
-  .ia-assistant-btn .ia-word {
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    color: #ffffff;
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.55), 0 0 14px rgba(103, 232, 249, 0.45);
-  }
   @media (max-width: 900px) {
     .ia-class-body { grid-template-columns: 1fr; }
     .ia-class-chat { border-right: none; border-bottom: 1px solid #e5e7eb; }
