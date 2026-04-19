@@ -966,7 +966,7 @@ include '../header.php';
     <!-- Competencias MEN - Dual Listbox -->
     <h3 style="margin-top:.5rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
       <span>Competencias MEN</span>
-      <button type="button" class="btn btn-secondary ia-assistant-btn" id="btn_sugerir_competencias_ia">🤖 Sugerir con <span class="ia-word">IA</span></button>
+      <button type="button" class="btn btn-secondary ia-assistant-btn" id="btn_sugerir_competencias_ia">Sugerir con <span class="ia-word">IA</span></button>
     </h3>
     <small class="hint" style="display: block; margin-bottom: 10px;">Selecciona las competencias que desarrolla esta clase. Recomendado: 3-7 competencias.</small>
     
@@ -1935,7 +1935,7 @@ include '../header.php';
       } catch (err) {
         console.log('❌ [Competencias IA] Error:', err && err.message ? err.message : err);
         alert('No se pudo sugerir competencias MEN: ' + (err && err.message ? err.message : 'Error desconocido'));
-        btn.textContent = '🤖 Sugerir con IA';
+        btn.textContent = 'Sugerir con IA';
         btn.disabled = false;
       }
     });
