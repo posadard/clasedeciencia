@@ -510,6 +510,9 @@ include '../header.php';
 <div class="page-header">
   <h2><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></h2>
   <span class="help-text">Completa los campos de la clase y asigna áreas/competencias.</span>
+  <div class="page-header-actions" style="margin-top:10px;">
+    <button type="button" class="btn" id="btn_open_ia_class_modal">Asistente IA de clase</button>
+  </div>
   <script>
     console.log('✅ [Admin] Clases edit cargado');
     console.log('🔍 [Admin] Edit mode:', <?= $is_edit ? 'true' : 'false' ?>);
@@ -521,6 +524,138 @@ include '../header.php';
 <?php if ($error_msg !== ''): ?>
   <div class="message error"><?= htmlspecialchars($error_msg, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
+
+<style>
+  .ia-class-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+  }
+  .ia-class-modal.active { display: flex; }
+  .ia-class-dialog {
+    width: min(980px, 96vw);
+    max-height: 92vh;
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 12px 45px rgba(2, 6, 23, 0.35);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .ia-class-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ia-class-head h3 { margin: 0; font-size: 18px; }
+  .ia-class-body {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    min-height: 420px;
+  }
+  .ia-class-chat {
+    border-right: 1px solid #e5e7eb;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+  }
+  .ia-class-messages {
+    overflow-y: auto;
+    padding: 14px;
+    background: #f8fafc;
+  }
+  .ia-msg {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  .ia-msg.user { background: #dbeafe; margin-left: 12%; }
+  .ia-msg.assistant { background: #eef2ff; margin-right: 10%; }
+  .ia-msg.system { background: #ecfeff; border: 1px solid #bae6fd; }
+  .ia-class-input {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+  }
+  .ia-class-input textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+  }
+  .ia-class-input-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ia-class-side {
+    padding: 14px;
+    overflow-y: auto;
+    background: #fff;
+  }
+  .ia-class-side h4 { margin: 0 0 10px 0; }
+  .ia-class-side p { margin: 0 0 10px 0; color: #475569; }
+  .ia-suggestion-json {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 170px;
+    max-height: 280px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .ia-class-foot {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .ia-content-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ia-content-preview {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #020617;
+    color: #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 170px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .ia-content-settings {
+    margin-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 10px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 900px) {
+    .ia-class-body { grid-template-columns: 1fr; }
+    .ia-class-chat { border-right: none; border-bottom: 1px solid #e5e7eb; }
+  }
+</style>
 
 <form method="POST">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -674,7 +809,10 @@ include '../header.php';
   <div class="form-section">
     <h2>Contenido</h2>
   <div class="form-group">
-    <label for="contenido_html">Contenido (HTML)</label>
+    <label for="contenido_html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <span>Contenido (HTML)</span>
+      <button type="button" class="btn btn-secondary" id="btn_open_ia_content_modal">Asistente IA de contenido</button>
+    </label>
     <textarea id="contenido_html" name="contenido_html" rows="12"><?= htmlspecialchars($clase['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="help-text">Puedes editar como HTML; se validará en el frontend.</small>
   </div>
@@ -960,6 +1098,78 @@ include '../header.php';
     <?php endif; ?>
   </div>
 </form>
+
+<div class="ia-class-modal" id="ia_class_modal" aria-hidden="true">
+  <div class="ia-class-dialog" role="dialog" aria-modal="true" aria-labelledby="ia_class_modal_title">
+    <div class="ia-class-head">
+      <h3 id="ia_class_modal_title">Asistente IA: creador de clase</h3>
+      <button type="button" class="btn btn-secondary" id="ia_class_modal_close_top">Cerrar</button>
+    </div>
+    <div class="ia-class-body">
+      <div class="ia-class-chat">
+        <div class="ia-class-messages" id="ia_class_messages"></div>
+        <div class="ia-class-input">
+          <textarea id="ia_class_user_input" placeholder="Ejemplo: Quiero crear una clase de energía solar para 8° y 9°, nivel medio, 90 minutos."></textarea>
+          <div class="ia-class-input-actions">
+            <button type="button" class="btn" id="ia_class_send">Enviar a IA</button>
+            <button type="button" class="btn btn-secondary" id="ia_class_quick_brief">Generar borrador completo</button>
+          </div>
+        </div>
+      </div>
+      <aside class="ia-class-side">
+        <h4>Borrador estructurado</h4>
+        <p>Cuando la IA devuelva un JSON valido, podras aplicarlo a todos los campos del formulario.</p>
+        <pre class="ia-suggestion-json" id="ia_class_json_preview">Esperando sugerencia...</pre>
+      </aside>
+    </div>
+    <div class="ia-class-foot">
+      <button type="button" class="btn btn-secondary" id="ia_class_reset">Limpiar borrador</button>
+      <button type="button" class="btn" id="ia_class_apply" disabled>Aplicar al formulario</button>
+    </div>
+  </div>
+</div>
+
+<div class="ia-class-modal" id="ia_content_modal" aria-hidden="true">
+  <div class="ia-class-dialog" role="dialog" aria-modal="true" aria-labelledby="ia_content_modal_title">
+    <div class="ia-class-head">
+      <h3 id="ia_content_modal_title">Asistente IA: contenido especializado</h3>
+      <button type="button" class="btn btn-secondary" id="ia_content_modal_close_top">Cerrar</button>
+    </div>
+    <div class="ia-class-body">
+      <div class="ia-class-chat">
+        <div class="ia-class-messages" id="ia_content_messages"></div>
+        <div class="ia-class-input">
+          <textarea id="ia_content_user_input" placeholder="Ejemplo: Profundiza la parte experimental con un enfoque para 10° y 11°."></textarea>
+          <div class="ia-content-chip-row">
+            <button type="button" class="btn btn-secondary ia-content-quick" data-focus="estructura completa">Estructura completa</button>
+            <button type="button" class="btn btn-secondary ia-content-quick" data-focus="introduccion y contexto">Introducción</button>
+            <button type="button" class="btn btn-secondary ia-content-quick" data-focus="materiales y preparacion">Materiales</button>
+            <button type="button" class="btn btn-secondary ia-content-quick" data-focus="paso a paso del experimento">Paso a paso</button>
+            <button type="button" class="btn btn-secondary ia-content-quick" data-focus="explicacion cientifica">Explicación científica</button>
+            <button type="button" class="btn btn-secondary ia-content-quick" data-focus="evaluacion y cierre">Evaluación y cierre</button>
+          </div>
+          <div class="ia-class-input-actions">
+            <button type="button" class="btn" id="ia_content_send">Generar contenido</button>
+          </div>
+          <div class="ia-content-settings">
+            <label><input type="checkbox" id="ia_content_update_resumen"> Actualizar resumen</label>
+            <label><input type="checkbox" id="ia_content_update_objetivo"> Actualizar objetivo</label>
+          </div>
+        </div>
+      </div>
+      <aside class="ia-class-side">
+        <h4>Vista previa</h4>
+        <p>La IA debe devolver JSON con contenido_html y opcionalmente resumen y objetivo_aprendizaje.</p>
+        <pre class="ia-content-preview" id="ia_content_json_preview">Esperando propuesta de contenido...</pre>
+      </aside>
+    </div>
+    <div class="ia-class-foot">
+      <button type="button" class="btn btn-secondary" id="ia_content_reset">Limpiar propuesta</button>
+      <button type="button" class="btn" id="ia_content_apply_replace" disabled>Reemplazar contenido actual</button>
+      <button type="button" class="btn" id="ia_content_apply_append" disabled>Anexar al contenido actual</button>
+    </div>
+  </div>
+</div>
 
 <?php if ($is_edit): ?>
 <!-- Hidden delete form for Clase attributes (outside main form) -->
@@ -1727,6 +1937,499 @@ include '../header.php';
   }
   
   console.log('✅ [Kits] Autocomplete inicializado');
+
+  // ========================================================
+  // MODAL IA CREADOR DE CLASE
+  // ========================================================
+  (function initIaClassBuilder() {
+    const modal = document.getElementById('ia_class_modal');
+    const btnOpen = document.getElementById('btn_open_ia_class_modal');
+    const btnClose = document.getElementById('ia_class_modal_close_top');
+    const btnSend = document.getElementById('ia_class_send');
+    const btnQuick = document.getElementById('ia_class_quick_brief');
+    const btnApply = document.getElementById('ia_class_apply');
+    const btnReset = document.getElementById('ia_class_reset');
+    const input = document.getElementById('ia_class_user_input');
+    const messages = document.getElementById('ia_class_messages');
+    const preview = document.getElementById('ia_class_json_preview');
+
+    if (!modal || !btnOpen || !messages || !preview || !input || !btnSend || !btnApply) {
+      console.log('⚠️ [IA Class Modal] No se inicializa por elementos faltantes');
+      return;
+    }
+
+    let lastSuggestion = null;
+    let isBusy = false;
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'ia-msg ' + role;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function openModal() {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.welcome) {
+        addMsg('system', '🧪 Cuéntame la clase que quieres crear. Te devuelvo un borrador completo y luego lo aplicas al formulario.');
+        messages.dataset.welcome = '1';
+      }
+      input.focus();
+      console.log('✅ [IA Class Modal] abierto');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      console.log('🔍 [IA Class Modal] cerrado');
+    }
+
+    function normalizeSlugBase(val) {
+      return (val || '').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function toClaseSlug(val) {
+      const base = normalizeSlugBase(val || '');
+      if (!base) return '';
+      return base.startsWith('clase-') ? base : ('clase-' + base.replace(/^clase-+/,'').replace(/^-+/,''));
+    }
+
+    function safeJsonParse(text) {
+      if (!text) return null;
+      const raw = String(text).trim();
+      try { return JSON.parse(raw); } catch (_e) {}
+      const start = raw.indexOf('{');
+      const end = raw.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const maybe = raw.slice(start, end + 1);
+        try { return JSON.parse(maybe); } catch (_e) {}
+      }
+      return null;
+    }
+
+    function collectFormSnapshot() {
+      const areas = Array.from(document.querySelectorAll('input[name="areas[]"]:checked')).map((c) => {
+        const label = c.closest('label');
+        return label ? label.textContent.trim() : c.value;
+      });
+      const grados = Array.from(document.querySelectorAll('input[name="grados[]"]:checked')).map(c => parseInt(c.value, 10)).filter(n => Number.isInteger(n));
+      return {
+        nombre: (document.getElementById('nombre')?.value || '').trim(),
+        ciclo: parseInt(document.getElementById('ciclo')?.value || '', 10) || null,
+        dificultad: (document.getElementById('dificultad')?.value || '').trim(),
+        duracion_minutos: parseInt(document.getElementById('duracion_minutos')?.value || '', 10) || null,
+        resumen: (document.getElementById('resumen')?.value || '').trim(),
+        objetivo_aprendizaje: (document.getElementById('objetivo_aprendizaje')?.value || '').trim(),
+        areas: areas,
+        grados: grados,
+        tags: (document.getElementById('tags')?.value || '').trim()
+      };
+    }
+
+    function buildIaPrompt(userMessage) {
+      const snapshot = collectFormSnapshot();
+      return [
+        'Eres asistente pedagógico de Clase de Ciencia para Colombia.',
+        'Devuelve SOLO JSON válido, sin markdown, sin texto fuera del JSON.',
+        'El JSON debe seguir exactamente este esquema:',
+        '{"nombre":"","slug":"","ciclo":1,"grados":[6,7],"dificultad":"facil|media|dificil","duracion_minutos":60,"resumen":"","objetivo_aprendizaje":"","contenido_html":"","seo_title":"","seo_description":"","seguridad":{"edad_min":0,"edad_max":0,"notas":""},"tags":["tag1","tag2"],"autor":"","status":"draft|published","areas_nombres":["Física"],"competencias_sugeridas":["texto breve"]}',
+        'Reglas:',
+        '- slug debe iniciar por clase-.',
+        '- contenido_html debe traer estructura HTML simple con h3, p y ul/li cuando aplique.',
+        '- enfoque escolar, claro y seguro.',
+        '- si falta información, completa con supuestos razonables.',
+        'Contexto actual del formulario: ' + JSON.stringify(snapshot),
+        'Solicitud del usuario: ' + userMessage
+      ].join('\n');
+    }
+
+    function setSelectedByLabel(name, expectedList) {
+      if (!Array.isArray(expectedList) || expectedList.length === 0) return;
+      const wanted = expectedList.map(x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')).filter(Boolean);
+      document.querySelectorAll('input[name="' + name + '"]').forEach((el) => {
+        const label = el.closest('label');
+        const txt = (label ? label.textContent : el.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        el.checked = wanted.some(w => txt.indexOf(w) !== -1);
+      });
+    }
+
+    function applySuggestion(data) {
+      if (!data || typeof data !== 'object') return;
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = val == null ? '' : String(val);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      if (data.nombre) setVal('nombre', data.nombre);
+      if (data.slug || data.nombre) setVal('slug', toClaseSlug(data.slug || data.nombre));
+      if (Number.isInteger(data.ciclo) || (typeof data.ciclo === 'string' && data.ciclo !== '')) setVal('ciclo', parseInt(data.ciclo, 10));
+      if (data.dificultad) setVal('dificultad', data.dificultad);
+      if (data.duracion_minutos) setVal('duracion_minutos', parseInt(data.duracion_minutos, 10));
+      if (data.resumen) setVal('resumen', data.resumen);
+      if (data.objetivo_aprendizaje) setVal('objetivo_aprendizaje', data.objetivo_aprendizaje);
+      if (data.seo_title) setVal('seo_title', data.seo_title);
+      if (data.seo_description) setVal('seo_description', data.seo_description);
+      if (data.autor) setVal('autor', data.autor);
+      if (data.status && (data.status === 'draft' || data.status === 'published')) setVal('status', data.status);
+
+      if (Array.isArray(data.grados)) {
+        const gradosSet = new Set(data.grados.map((n) => parseInt(n, 10)).filter((n) => Number.isInteger(n)));
+        document.querySelectorAll('input[name="grados[]"]').forEach((cb) => {
+          cb.checked = gradosSet.has(parseInt(cb.value, 10));
+        });
+      }
+
+      if (data.seguridad && typeof data.seguridad === 'object') {
+        if (data.seguridad.edad_min != null) setVal('seg_edad_min', parseInt(data.seguridad.edad_min, 10));
+        if (data.seguridad.edad_max != null) setVal('seg_edad_max', parseInt(data.seguridad.edad_max, 10));
+        if (data.seguridad.notas) setVal('seg_notas', data.seguridad.notas);
+      }
+
+      if (Array.isArray(data.tags)) {
+        setVal('tags', data.tags.map((t) => String(t).trim()).filter(Boolean).join(', '));
+      }
+
+      if (Array.isArray(data.areas_nombres)) {
+        setSelectedByLabel('areas[]', data.areas_nombres);
+      }
+
+      if (data.contenido_html) {
+        const ta = document.getElementById('contenido_html');
+        if (ta) {
+          ta.value = String(data.contenido_html);
+        }
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+          CKEDITOR.instances.contenido_html.setData(String(data.contenido_html));
+        }
+      }
+
+      if (typeof computeSeo === 'function') {
+        computeSeo();
+      }
+      console.log('✅ [IA Class Modal] Campos autollenados');
+    }
+
+    async function askIa(userText) {
+      if (isBusy) return;
+      const text = String(userText || '').trim();
+      if (!text) return;
+      isBusy = true;
+      btnSend.disabled = true;
+      addMsg('user', text);
+      input.value = '';
+      console.log('🔍 [IA Class Modal] Enviando solicitud IA');
+
+      try {
+        const payload = {
+          instancia: 'backend',
+          contexto_scope: 'admin_clases_builder',
+          contexto_pagina: 'clases',
+          entidad_tipo: 'clase',
+          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+          pregunta: buildIaPrompt(text)
+        };
+
+        const res = await fetch('/api/ia-consulta.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json || !json.ok) {
+          const msg = (json && json.error) ? json.error : 'No se pudo generar el borrador.';
+          addMsg('assistant', '❌ ' + msg);
+          console.log('❌ [IA Class Modal] Error API:', msg);
+          return;
+        }
+
+        const respuesta = String(json.respuesta || '').trim();
+        addMsg('assistant', respuesta || 'Respuesta vacía de IA.');
+
+        const parsed = safeJsonParse(respuesta);
+        if (parsed && typeof parsed === 'object') {
+          lastSuggestion = parsed;
+          preview.textContent = JSON.stringify(parsed, null, 2);
+          btnApply.disabled = false;
+          addMsg('system', '✅ Borrador estructurado detectado. Puedes aplicar al formulario.');
+          console.log('✅ [IA Class Modal] JSON estructurado listo');
+        } else {
+          addMsg('system', '⚠️ No se detectó JSON válido. Pídele que responda solo JSON.');
+          console.log('⚠️ [IA Class Modal] Respuesta sin JSON parseable');
+        }
+      } catch (err) {
+        addMsg('assistant', '❌ Error de red o de procesamiento.');
+        console.log('❌ [IA Class Modal] Excepción:', err && err.message ? err.message : err);
+      } finally {
+        isBusy = false;
+        btnSend.disabled = false;
+      }
+    }
+
+    btnOpen.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    btnSend.addEventListener('click', () => askIa(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askIa(input.value);
+      }
+    });
+
+    btnQuick?.addEventListener('click', () => {
+      askIa('Genera un borrador completo de clase a partir de lo ya diligenciado y mejora pedagogicamente todos los campos.');
+    });
+
+    btnApply.addEventListener('click', () => {
+      if (!lastSuggestion) {
+        addMsg('system', '⚠️ Aún no hay borrador para aplicar.');
+        return;
+      }
+      applySuggestion(lastSuggestion);
+      addMsg('system', '✅ Borrador aplicado al formulario. Revisa y ajusta antes de guardar.');
+    });
+
+    btnReset?.addEventListener('click', () => {
+      lastSuggestion = null;
+      btnApply.disabled = true;
+      preview.textContent = 'Esperando sugerencia...';
+      addMsg('system', '🔍 Borrador reiniciado.');
+    });
+  })();
+
+  // ========================================================
+  // MODAL IA ESPECIALIZADO EN CONTENIDO
+  // ========================================================
+  (function initIaContentBuilder() {
+    const modal = document.getElementById('ia_content_modal');
+    const btnOpen = document.getElementById('btn_open_ia_content_modal');
+    const btnClose = document.getElementById('ia_content_modal_close_top');
+    const btnSend = document.getElementById('ia_content_send');
+    const btnApplyReplace = document.getElementById('ia_content_apply_replace');
+    const btnApplyAppend = document.getElementById('ia_content_apply_append');
+    const btnReset = document.getElementById('ia_content_reset');
+    const input = document.getElementById('ia_content_user_input');
+    const messages = document.getElementById('ia_content_messages');
+    const preview = document.getElementById('ia_content_json_preview');
+    const quickButtons = Array.from(document.querySelectorAll('.ia-content-quick'));
+    const cbResumen = document.getElementById('ia_content_update_resumen');
+    const cbObjetivo = document.getElementById('ia_content_update_objetivo');
+
+    if (!modal || !btnOpen || !btnSend || !btnApplyReplace || !btnApplyAppend || !input || !messages || !preview) {
+      console.log('⚠️ [IA Content Modal] No se inicializa por elementos faltantes');
+      return;
+    }
+
+    let lastSuggestion = null;
+    let busy = false;
+    let currentFocus = '';
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'ia-msg ' + role;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function openModal() {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.welcome) {
+        addMsg('system', '🧪 Genera contenido por bloques o completo. Puedes reemplazar o anexar al HTML actual.');
+        messages.dataset.welcome = '1';
+      }
+      input.focus();
+      console.log('✅ [IA Content Modal] abierto');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      console.log('🔍 [IA Content Modal] cerrado');
+    }
+
+    function getEditorHtml() {
+      try {
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+          return String(CKEDITOR.instances.contenido_html.getData() || '');
+        }
+      } catch (_e) {}
+      return String(document.getElementById('contenido_html')?.value || '');
+    }
+
+    function safeJsonParse(rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) return null;
+      try { return JSON.parse(text); } catch (_e) {}
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const maybe = text.slice(start, end + 1);
+        try { return JSON.parse(maybe); } catch (_e) {}
+      }
+      return null;
+    }
+
+    function buildPrompt(userText) {
+      const nombre = (document.getElementById('nombre')?.value || '').trim();
+      const ciclo = (document.getElementById('ciclo')?.value || '').trim();
+      const grados = Array.from(document.querySelectorAll('input[name="grados[]"]:checked')).map((x) => parseInt(x.value, 10)).filter((x) => Number.isInteger(x));
+      const dificultad = (document.getElementById('dificultad')?.value || '').trim();
+      const duracion = (document.getElementById('duracion_minutos')?.value || '').trim();
+      const resumen = (document.getElementById('resumen')?.value || '').trim();
+      const objetivo = (document.getElementById('objetivo_aprendizaje')?.value || '').trim();
+      const contenidoActual = getEditorHtml();
+
+      return [
+        'Eres editor pedagógico experto para clases de ciencias en Colombia.',
+        'Devuelve SOLO JSON válido, sin markdown y sin texto fuera del JSON.',
+        'Schema obligatorio:',
+        '{"contenido_html":"","resumen":"","objetivo_aprendizaje":"","notas_autor":""}',
+        'Reglas:',
+        '- contenido_html debe usar solo etiquetas seguras: h3, h4, p, ul, ol, li, strong, em, table, thead, tbody, tr, th, td, blockquote.',
+        '- Incluir enfoque didáctico, lenguaje claro, seguridad y evaluación breve.',
+        '- Mantener coherencia con ciclo, grados y dificultad.',
+        '- No inventar bloques peligrosos ni instrucciones riesgosas.',
+        'Contexto clase: ' + JSON.stringify({ nombre, ciclo, grados, dificultad, duracion_minutos: duracion, resumen, objetivo }),
+        'Contenido actual: ' + contenidoActual,
+        'Foco solicitado: ' + (currentFocus || 'sin foco específico'),
+        'Solicitud del usuario: ' + userText
+      ].join('\n');
+    }
+
+    function setEditorHtml(html, mode) {
+      const incoming = String(html || '').trim();
+      if (!incoming) return;
+      const ta = document.getElementById('contenido_html');
+      const current = getEditorHtml();
+      const finalHtml = mode === 'append' && current ? (current + '\n\n' + incoming) : incoming;
+
+      if (ta) ta.value = finalHtml;
+      if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+        CKEDITOR.instances.contenido_html.setData(finalHtml);
+      }
+      console.log('✅ [IA Content Modal] contenido_html actualizado en modo:', mode);
+    }
+
+    function applySuggestion(mode) {
+      if (!lastSuggestion || typeof lastSuggestion !== 'object') {
+        addMsg('system', '⚠️ No hay propuesta de contenido para aplicar.');
+        return;
+      }
+      if (lastSuggestion.contenido_html) {
+        setEditorHtml(lastSuggestion.contenido_html, mode);
+      }
+      if (cbResumen?.checked && lastSuggestion.resumen) {
+        const el = document.getElementById('resumen');
+        if (el) {
+          el.value = String(lastSuggestion.resumen);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      if (cbObjetivo?.checked && lastSuggestion.objetivo_aprendizaje) {
+        const el = document.getElementById('objetivo_aprendizaje');
+        if (el) {
+          el.value = String(lastSuggestion.objetivo_aprendizaje);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      if (typeof computeSeo === 'function') {
+        computeSeo(true);
+      }
+      addMsg('system', '✅ Contenido aplicado. Revisa antes de guardar.');
+    }
+
+    async function askContentIa(messageText) {
+      const message = String(messageText || '').trim();
+      if (!message || busy) return;
+
+      busy = true;
+      btnSend.disabled = true;
+      addMsg('user', message);
+      input.value = '';
+      console.log('🔍 [IA Content Modal] Enviando solicitud IA con foco:', currentFocus || '(general)');
+
+      try {
+        const payload = {
+          instancia: 'backend',
+          contexto_scope: 'admin_clases_content_builder',
+          contexto_pagina: 'clases',
+          entidad_tipo: 'clase',
+          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+          pregunta: buildPrompt(message)
+        };
+
+        const res = await fetch('/api/ia-consulta.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json || !json.ok) {
+          const msg = (json && json.error) ? json.error : 'No se pudo generar contenido.';
+          addMsg('assistant', '❌ ' + msg);
+          return;
+        }
+
+        const respuesta = String(json.respuesta || '').trim();
+        addMsg('assistant', respuesta || 'Respuesta vacía.');
+        const parsed = safeJsonParse(respuesta);
+        if (parsed && typeof parsed === 'object' && parsed.contenido_html) {
+          lastSuggestion = parsed;
+          preview.textContent = JSON.stringify(parsed, null, 2);
+          btnApplyReplace.disabled = false;
+          btnApplyAppend.disabled = false;
+          addMsg('system', '✅ Propuesta de contenido lista para aplicar.');
+          console.log('✅ [IA Content Modal] JSON parseado correctamente');
+        } else {
+          addMsg('system', '⚠️ La respuesta no trae JSON válido con contenido_html.');
+          console.log('⚠️ [IA Content Modal] Respuesta no parseable como JSON de contenido');
+        }
+      } catch (err) {
+        addMsg('assistant', '❌ Error al consultar IA para contenido.');
+        console.log('❌ [IA Content Modal] Excepción:', err && err.message ? err.message : err);
+      } finally {
+        busy = false;
+        btnSend.disabled = false;
+      }
+    }
+
+    btnOpen.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    btnSend.addEventListener('click', () => askContentIa(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askContentIa(input.value);
+      }
+    });
+
+    quickButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentFocus = btn.getAttribute('data-focus') || '';
+        askContentIa('Genera una propuesta enfocada en: ' + currentFocus + '.');
+      });
+    });
+
+    btnApplyReplace.addEventListener('click', () => applySuggestion('replace'));
+    btnApplyAppend.addEventListener('click', () => applySuggestion('append'));
+    btnReset?.addEventListener('click', () => {
+      lastSuggestion = null;
+      preview.textContent = 'Esperando propuesta de contenido...';
+      btnApplyReplace.disabled = true;
+      btnApplyAppend.disabled = true;
+      addMsg('system', '🔍 Propuesta de contenido reiniciada.');
+    });
+  })();
   
 </script>
 
