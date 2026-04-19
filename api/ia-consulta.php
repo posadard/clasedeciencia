@@ -1873,6 +1873,8 @@ try {
     $tiempo_ms    = 0;
     $modelo_usado = '';
     $respuesta_links = [];
+    $backend_builder_scopes = ['admin_clases_builder', 'admin_clases_content_builder'];
+    $is_backend_builder_scope = ($instancia === 'backend' && in_array($contexto_scope, $backend_builder_scopes, true));
     $tipo_pagina_analytics = $instancia === 'backend' ? 'admin' : ($pagina !== '' ? $pagina : 'frontend');
     $modulo_analytics = $instancia === 'backend' ? ($contexto_pagina !== '' ? $contexto_pagina : 'admin') : null;
     $session_hash_analytics = null;
@@ -1915,7 +1917,7 @@ try {
             }
         } else {
             $intent_backend = null;
-            if ($instancia === 'backend') {
+            if ($instancia === 'backend' && !$is_backend_builder_scope) {
                 $intent_backend = detect_backend_intent($pregunta);
                 if ($intent_backend !== null) {
                     $det_resp = build_backend_deterministic_answer($pdo, $intent_backend, $pregunta);
@@ -1961,13 +1963,20 @@ try {
             }
 
             if ($instancia === 'backend') {
-                $system_content .= "\n\nFORMATO OBLIGATORIO BACKEND (panel lateral):\n"
-                    . "- Responde SIEMPRE en texto simple, corto y legible.\n"
-                    . "- Estructura exacta: 'Respuesta corta:', 'Evidencia:', 'Siguiente accion:'.\n"
-                    . "- En 'Evidencia' usa solo lista con guiones.\n"
-                    . "- Prohibido usar tablas markdown, separadores con '|', HTML o bloques de codigo.\n"
-                    . "- Maximo 10 lineas de contenido.\n"
-                    . "- Si faltan datos, dilo explicitamente y pide un dato concreto.";
+                if ($is_backend_builder_scope) {
+                    $system_content .= "\n\nFORMATO OBLIGATORIO BUILDER (admin clases):\n"
+                        . "- Respeta exactamente el formato solicitado por el usuario o por su prompt.\n"
+                        . "- Si se solicita JSON, devuelve SOLO JSON valido, sin texto extra.\n"
+                        . "- No apliques el formato de panel lateral (Respuesta corta / Evidencia / Siguiente accion).";
+                } else {
+                    $system_content .= "\n\nFORMATO OBLIGATORIO BACKEND (panel lateral):\n"
+                        . "- Responde SIEMPRE en texto simple, corto y legible.\n"
+                        . "- Estructura exacta: 'Respuesta corta:', 'Evidencia:', 'Siguiente accion:'.\n"
+                        . "- En 'Evidencia' usa solo lista con guiones.\n"
+                        . "- Prohibido usar tablas markdown, separadores con '|', HTML o bloques de codigo.\n"
+                        . "- Maximo 10 lineas de contenido.\n"
+                        . "- Si faltan datos, dilo explicitamente y pide un dato concreto.";
+                }
             }
 
             // Chips de respuesta rapida: cuando la IA necesita info del usuario,
@@ -1991,7 +2000,7 @@ try {
                 $tokens       = $resultado['tokens'];
                 $tiempo_ms    = $resultado['tiempo_ms'];
 
-                if ($instancia === 'backend' && !empty($respuesta) && mb_strpos((string)$respuesta, '❌') !== 0) {
+                if ($instancia === 'backend' && !$is_backend_builder_scope && !empty($respuesta) && mb_strpos((string)$respuesta, '❌') !== 0) {
                     $respuesta = normalize_backend_chat_response((string)$respuesta, 10);
                 }
             } else {
@@ -2002,7 +2011,7 @@ try {
             }
         }
 
-        if ($instancia === 'backend') {
+        if ($instancia === 'backend' && !$is_backend_builder_scope) {
             $search_links = ia_backend_links_from_search($pdo, $contexto_pagina, $pregunta, (string)$respuesta);
             $respuesta_links = ia_unique_links(array_merge($respuesta_links, $search_links), 8);
         }
