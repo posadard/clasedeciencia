@@ -2889,6 +2889,66 @@ include '../header.php';
       return null;
     }
 
+    function extractContenidoHtmlFallback(rawText) {
+      const text = String(rawText || '');
+      if (!text) return '';
+      const key = '"contenido_html":"';
+      const idx = text.indexOf(key);
+      if (idx < 0) return '';
+
+      let chunk = text.slice(idx + key.length);
+      const endCandidates = ['","time_minutes"', '","dificultad_ensamble"', '","seguridad"', '","seo_title"', '","seo_description"', '"}'];
+      let endAt = -1;
+      for (const marker of endCandidates) {
+        const p = chunk.indexOf(marker);
+        if (p >= 0 && (endAt < 0 || p < endAt)) endAt = p;
+      }
+      if (endAt >= 0) {
+        chunk = chunk.slice(0, endAt);
+      }
+
+      chunk = chunk.replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      chunk = chunk.replace(/\s+$/g, '').replace(/\\+$/g, '');
+
+      const trimmed = chunk.trim();
+      if (trimmed.length < 40 || trimmed.indexOf('<h2>') === -1) return '';
+      return trimmed;
+    }
+
+    function extractStringField(rawText, key) {
+      const text = String(rawText || '');
+      const escKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const rx = new RegExp('"' + escKey + '"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"');
+      const m = text.match(rx);
+      if (!m || !m[1]) return '';
+      return m[1].replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\').trim();
+    }
+
+    function extractPartialSuggestion(rawText) {
+      const partial = {};
+      const nombre = extractStringField(rawText, 'nombre');
+      const slug = extractStringField(rawText, 'slug');
+      const codigo = extractStringField(rawText, 'codigo');
+      const version = extractStringField(rawText, 'version');
+      const resumen = extractStringField(rawText, 'resumen');
+      const seoTitle = extractStringField(rawText, 'seo_title');
+      const seoDesc = extractStringField(rawText, 'seo_description');
+      const dificultad = extractStringField(rawText, 'dificultad_ensamble');
+      const contenidoHtml = extractContenidoHtmlFallback(rawText);
+
+      if (nombre) partial.nombre = nombre;
+      if (slug) partial.slug = slug;
+      if (codigo) partial.codigo = codigo;
+      if (version) partial.version = version;
+      if (resumen) partial.resumen = resumen;
+      if (seoTitle) partial.seo_title = seoTitle;
+      if (seoDesc) partial.seo_description = seoDesc;
+      if (dificultad) partial.dificultad_ensamble = dificultad;
+      if (contenidoHtml) partial.contenido_html = contenidoHtml;
+
+      return Object.keys(partial).length ? partial : null;
+    }
+
     function collectFormSnapshot() {
       const areas = Array.from(document.querySelectorAll('input[name="areas[]"]:checked')).map((c) => {
         const label = c.closest('label');
@@ -3017,21 +3077,25 @@ include '../header.php';
       console.log('🔍 [IA Kit Modal] Enviando solicitud IA');
 
       try {
-        const payload = {
-          instancia: 'backend',
-          contexto_scope: 'admin_kits_builder',
-          contexto_pagina: 'kits',
-          entidad_tipo: 'kit',
-          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
-          pregunta: buildIaPrompt(text)
-        };
+        async function callIaWithPrompt(promptText) {
+          const payload = {
+            instancia: 'backend',
+            contexto_scope: 'admin_kits_builder',
+            contexto_pagina: 'kits',
+            entidad_tipo: 'kit',
+            entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+            pregunta: promptText
+          };
+          const res = await fetch('/api/ia-consulta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return res.json();
+        }
 
-        const res = await fetch('/api/ia-consulta.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const json = await res.json();
+        const firstPrompt = buildIaPrompt(text);
+        let json = await callIaWithPrompt(firstPrompt);
         if (!json || !json.ok) {
           const msg = (json && json.error) ? json.error : 'No se pudo generar el borrador.';
           addMsg('assistant', '❌ ' + msg);
@@ -3039,10 +3103,33 @@ include '../header.php';
           return;
         }
 
-        const respuesta = String(json.respuesta || '').trim();
-        addMsg('assistant', respuesta || 'Respuesta vacía de IA.');
+        let respuesta = String(json.respuesta || '').trim();
+        let parsed = safeJsonParse(respuesta);
+        if (!respuesta || !parsed || typeof parsed !== 'object') {
+          addMsg('system', '⚠️ Primera respuesta no válida. Reintentando con formato de rescate...');
+          console.log('⚠️ [IA Kit Modal] Primera respuesta vacía/no JSON, reintento rescate');
 
-        const parsed = safeJsonParse(respuesta);
+          const rescuePrompt = [
+            'RESPUESTA DE RESCATE OBLIGATORIA.',
+            'Devuelve SOLO JSON válido en UNA sola línea.',
+            'Sin markdown. Sin texto extra. Sin explicación.',
+            'Schema exacto:',
+            '{"nombre":"","slug":"","codigo":"","version":"1","resumen":"","contenido_html":"","time_minutes":60,"dificultad_ensamble":"Fácil|Media|Difícil","seguridad":{"edad_min":0,"edad_max":0,"notas":""},"seo_title":"","seo_description":"","areas_nombres":["Física"],"activo":1,"clases_sugeridas":["nombre clase"],"componentes_sugeridos":[{"nombre":"","cantidad":1,"unidad":""}],"plantilla_estructura":{"secciones":["Introduccion del kit","Para que sirve en clase","Fundamento cientifico","Componentes del kit y funcion","Armado y puesta en marcha","Actividades sugeridas","Seguridad y buenas practicas","Evaluacion y cierre","Glosario basico"]}}',
+            'contenido_html debe incluir 9 secciones h2 con contenido real. No truncar la respuesta.',
+            'Solicitud original del usuario: ' + text
+          ].join('\n');
+
+          json = await callIaWithPrompt(rescuePrompt);
+          if (!json || !json.ok) {
+            const msg = (json && json.error) ? json.error : 'No se pudo generar el borrador (reintento).';
+            addMsg('assistant', '❌ ' + msg);
+            return;
+          }
+          respuesta = String(json.respuesta || '').trim();
+          parsed = safeJsonParse(respuesta);
+        }
+
+        addMsg('assistant', respuesta || 'Respuesta vacía de IA.');
         if (parsed && typeof parsed === 'object') {
           lastSuggestion = parsed;
           preview.textContent = JSON.stringify(parsed, null, 2);
@@ -3050,8 +3137,17 @@ include '../header.php';
           addMsg('system', '✅ Borrador estructurado detectado. Puedes aplicar al formulario.');
           console.log('✅ [IA Kit Modal] JSON estructurado listo');
         } else {
-          addMsg('system', '⚠️ No se detectó JSON válido. Pídele que responda solo JSON.');
-          console.log('⚠️ [IA Kit Modal] Respuesta sin JSON parseable');
+          const partial = extractPartialSuggestion(respuesta);
+          if (partial) {
+            lastSuggestion = partial;
+            preview.textContent = JSON.stringify(partial, null, 2);
+            btnApply.disabled = false;
+            addMsg('system', '⚠️ JSON incompleto: se recuperó un borrador parcial. Revisa antes de aplicar.');
+            console.log('⚠️ [IA Kit Modal] Fallback parcial aplicado');
+          } else {
+            addMsg('system', '⚠️ No se detectó JSON válido. Pídele que responda solo JSON.');
+            console.log('⚠️ [IA Kit Modal] Respuesta sin JSON parseable');
+          }
         }
       } catch (err) {
         addMsg('assistant', '❌ Error de red o de procesamiento.');
