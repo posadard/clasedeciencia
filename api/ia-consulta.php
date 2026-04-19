@@ -98,6 +98,7 @@ function detect_backend_intent(string $pregunta): ?string {
     $has_pertenece = preg_match('/\b(pertenece|pertenecen|a que pertenece|de que es|de cual)\b/u', $q) === 1;
     $has_completa = preg_match('/\b(mas completa|completitud|completa)\b/u', $q) === 1;
     $has_clase = preg_match('/\bclase(?:s)?\b/u', $q) === 1;
+    $has_kit_word = preg_match('/\bkit(?:s)?\b/u', $q) === 1;
     $has_nombre = preg_match('/\b(nombre|nombres|cual|cuales|dime|listar|lista)\b/u', $q) === 1;
     $has_contrato = preg_match('/\bcontrato(?:s)?\b/u', $q) === 1;
     $has_entrega = preg_match('/\bentrega(?:s)?\b/u', $q) === 1;
@@ -108,9 +109,13 @@ function detect_backend_intent(string $pregunta): ?string {
     $has_sin = preg_match('/\b(sin|faltan|falta|faltante|incompleto|incompleta)\b/u', $q) === 1;
     $has_pendiente = preg_match('/\b(pendiente|pendientes|atrasad|reprogramad|abiert)\w*\b/u', $q) === 1;
     $has_quiebre = preg_match('/\b(quiebre|agot|stock|disponible)\w*\b/u', $q) === 1;
+    $has_top = preg_match('/\b(mas|más|mayor|top|numero\s*de|n[uú]mero\s*de)\b/u', $q) === 1;
 
     if ($has_clase && $has_completa) {
         return 'clase_mas_completa';
+    }
+    if ($has_clase && $has_kit_word && $has_top) {
+        return 'clase_mas_kits';
     }
     if ($has_manual && $has_pertenece) {
         return 'manual_pertenencia';
@@ -227,7 +232,11 @@ function ia_base_module_links(string $contexto_pagina): array {
         'kits' => [['label' => 'Abrir módulo de kits', 'url' => '/admin/kits/index.php', 'entity_type' => 'kit', 'entity_id' => 0]],
         'componentes' => [['label' => 'Abrir módulo de componentes', 'url' => '/admin/componentes/index.php', 'entity_type' => 'componente', 'entity_id' => 0]],
         'manuales' => [['label' => 'Abrir módulo de manuales', 'url' => '/admin/kits/manuals/index.php', 'entity_type' => 'manual', 'entity_id' => 0]],
-        'ia' => [['label' => 'Abrir panel IA', 'url' => '/admin/ia/index.php?tab=estado', 'entity_type' => 'ia', 'entity_id' => 0]],
+        'ia' => [
+            ['label' => 'Abrir módulo de clases', 'url' => '/admin/clases/index.php', 'entity_type' => 'clase', 'entity_id' => 0],
+            ['label' => 'Abrir módulo de kits', 'url' => '/admin/kits/index.php', 'entity_type' => 'kit', 'entity_id' => 0],
+            ['label' => 'Abrir panel IA', 'url' => '/admin/ia/index.php?tab=estado', 'entity_type' => 'ia', 'entity_id' => 0],
+        ],
     ];
 
     $default = [
@@ -334,6 +343,58 @@ function ia_backend_links_from_search(PDO $pdo, string $contexto_pagina, string 
 
 function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pregunta): array|string|null {
     try {
+        if ($intent === 'clase_mas_kits') {
+            $row = $pdo->query(
+                "SELECT
+                    c.id,
+                    c.nombre,
+                    COUNT(DISTINCT ck.kit_id) AS total_kits,
+                    ROUND(COUNT(DISTINCT ck.kit_id) * 1.0 + COUNT(DISTINCT km.id) * 0.35 + COUNT(DISTINCT kc.item_id) * 0.20, 2) AS score_ref
+                 FROM clases c
+                 LEFT JOIN clase_kits ck ON ck.clase_id = c.id
+                 LEFT JOIN kits k ON k.id = ck.kit_id
+                 LEFT JOIN kit_componentes kc ON kc.kit_id = ck.kit_id
+                 LEFT JOIN kit_manuals km ON km.status = 'published' AND (km.kit_id = ck.kit_id OR km.item_id = kc.item_id)
+                 GROUP BY c.id, c.nombre
+                 ORDER BY total_kits DESC, score_ref DESC, c.nombre ASC
+                 LIMIT 1"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            $kit_rows = [];
+            try {
+                $stmt = $pdo->prepare(
+                    "SELECT k.id, k.nombre
+                     FROM clase_kits ck
+                     JOIN kits k ON k.id = ck.kit_id
+                     WHERE ck.clase_id = ?
+                     ORDER BY k.nombre ASC
+                     LIMIT 6"
+                );
+                $stmt->execute([(int)$row['id']]);
+                $kit_rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            } catch (Exception $e) {
+                error_log('IA deterministic class top kits links error: ' . $e->getMessage());
+            }
+
+            $links = [];
+            $class_link = ia_build_link('Clase: ' . (string)$row['nombre'] . ' (ID ' . (int)$row['id'] . ')', 'clase', (int)$row['id']);
+            if ($class_link) $links[] = $class_link;
+            foreach ($kit_rows as $k) {
+                $kit_link = ia_build_link('Kit: ' . (string)$k['nombre'] . ' (ID ' . (int)$k['id'] . ')', 'kit', (int)$k['id']);
+                if ($kit_link) $links[] = $kit_link;
+            }
+
+            return [
+                'text' => "Respuesta corta: La clase " . $row['nombre'] . " (ID " . (int)$row['id'] . ") tiene más kits, con " . (int)$row['total_kits'] . " kits asociados.\n"
+                    . "Evidencia:\n"
+                    . "- Ranking por número de kits: " . $row['nombre'] . " → kits=" . (int)$row['total_kits'] . "\n"
+                    . "- Referencia de score combinado: " . (float)$row['score_ref'] . "\n"
+                    . "Siguiente accion: Si quieres, te detallo cada kit y su relación con manuales y componentes.",
+                'links' => array_slice($links, 0, 8)
+            ];
+        }
+
         if ($intent === 'manuales_nombres') {
             $rows = $pdo->query(
                 "SELECT
