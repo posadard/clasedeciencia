@@ -1734,7 +1734,7 @@ try {
     }
     if ($pregunta === '') json_fail('Pregunta vacÃƒÂ­a.');
     $max_pregunta_chars = 2000;
-    if ($instancia === 'backend' && in_array($contexto_scope_in, ['admin_clases_builder', 'admin_clases_content_builder'], true)) {
+    if ($instancia === 'backend' && in_array($contexto_scope_in, ['admin_clases_builder', 'admin_clases_content_builder', 'admin_kits_builder', 'admin_kits_content_builder'], true)) {
         $max_pregunta_chars = 14000;
     }
     if (mb_strlen($pregunta) > $max_pregunta_chars) json_fail('Pregunta demasiado larga.');
@@ -1796,7 +1796,7 @@ try {
     $top_p       = (float)($cfg['groq_top_p']     ?? '0.9');
     $prompt_base = $cfg['prompt_sistema']          ?? '';
 
-    if ($instancia === 'backend' && in_array($contexto_scope, ['admin_clases_builder', 'admin_clases_content_builder'], true)) {
+    if ($instancia === 'backend' && in_array($contexto_scope, ['admin_clases_builder', 'admin_clases_content_builder', 'admin_kits_builder', 'admin_kits_content_builder'], true)) {
         // Los builders requieren respuestas JSON largas (contenido_html completo).
         $max_tokens = max($max_tokens, 2200);
     }
@@ -1883,7 +1883,7 @@ try {
     $tiempo_ms    = 0;
     $modelo_usado = '';
     $respuesta_links = [];
-    $backend_builder_scopes = ['admin_clases_builder', 'admin_clases_content_builder'];
+    $backend_builder_scopes = ['admin_clases_builder', 'admin_clases_content_builder', 'admin_kits_builder', 'admin_kits_content_builder'];
     $is_backend_builder_scope = ($instancia === 'backend' && in_array($contexto_scope, $backend_builder_scopes, true));
     $tipo_pagina_analytics = $instancia === 'backend' ? 'admin' : ($pagina !== '' ? $pagina : 'frontend');
     $modulo_analytics = $instancia === 'backend' ? ($contexto_pagina !== '' ? $contexto_pagina : 'admin') : null;
@@ -1974,7 +1974,7 @@ try {
 
             if ($instancia === 'backend') {
                 if ($is_backend_builder_scope) {
-                    $system_content .= "\n\nFORMATO OBLIGATORIO BUILDER (admin clases):\n"
+                    $system_content .= "\n\nFORMATO OBLIGATORIO BUILDER (admin builders):\n"
                         . "- Respeta exactamente el formato solicitado por el usuario o por su prompt.\n"
                         . "- Si se solicita JSON, devuelve SOLO JSON valido, sin texto extra.\n"
                         . "- No apliques el formato de panel lateral (Respuesta corta / Evidencia / Siguiente accion).";

@@ -864,6 +864,10 @@ include '../header.php';
 <div class="page-header">
   <h2><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></h2>
   <span class="help-text">Completa los campos del kit y gestiona sus componentes.</span>
+  <div class="page-header-actions" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+    <button type="button" class="btn" id="btn_open_ia_kit_modal">Asistente IA de kit</button>
+    <button type="button" class="btn btn-secondary" id="btn_open_ia_kit_content_modal_head">Asistente IA de contenido</button>
+  </div>
   <script>
     console.log('✅ [Admin] Kits edit cargado');
     console.log('🔍 [Admin] Edit mode:', <?= $is_edit ? 'true' : 'false' ?>);
@@ -905,6 +909,138 @@ include '../header.php';
 <?php if ($action_msg !== ''): ?>
   <div class="message success"><?= htmlspecialchars($action_msg, ENT_QUOTES, 'UTF-8') ?></div>
 <?php endif; ?>
+
+<style>
+  .ia-class-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+  }
+  .ia-class-modal.active { display: flex; }
+  .ia-class-dialog {
+    width: min(980px, 96vw);
+    max-height: 92vh;
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 12px 45px rgba(2, 6, 23, 0.35);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .ia-class-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ia-class-head h3 { margin: 0; font-size: 18px; }
+  .ia-class-body {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    min-height: 420px;
+  }
+  .ia-class-chat {
+    border-right: 1px solid #e5e7eb;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+  }
+  .ia-class-messages {
+    overflow-y: auto;
+    padding: 14px;
+    background: #f8fafc;
+  }
+  .ia-msg {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  .ia-msg.user { background: #dbeafe; margin-left: 12%; }
+  .ia-msg.assistant { background: #eef2ff; margin-right: 10%; }
+  .ia-msg.system { background: #ecfeff; border: 1px solid #bae6fd; }
+  .ia-class-input {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+  }
+  .ia-class-input textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+  }
+  .ia-class-input-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ia-class-side {
+    padding: 14px;
+    overflow-y: auto;
+    background: #fff;
+  }
+  .ia-class-side h4 { margin: 0 0 10px 0; }
+  .ia-class-side p { margin: 0 0 10px 0; color: #475569; }
+  .ia-suggestion-json {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 170px;
+    max-height: 280px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .ia-class-foot {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .ia-content-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ia-content-preview {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #020617;
+    color: #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 170px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .ia-content-settings {
+    margin-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 10px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 900px) {
+    .ia-class-body { grid-template-columns: 1fr; }
+    .ia-class-chat { border-right: none; border-bottom: 1px solid #e5e7eb; }
+  }
+</style>
 
 <form method="POST" id="kit-form" class="compact-form">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -1024,7 +1160,10 @@ include '../header.php';
     </div>
   </div>
   <div class="form-group">
-    <label for="contenido_html">Contenido HTML</label>
+    <label for="contenido_html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <span>Contenido HTML</span>
+      <button type="button" class="btn btn-secondary" id="btn_open_ia_kit_content_modal">Asistente IA de contenido</button>
+    </label>
     <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
   </div>
@@ -1209,6 +1348,78 @@ include '../header.php';
     <div id="seo-manual"></div>
   </div>
 </form>
+
+<div class="ia-class-modal" id="ia_kit_modal" aria-hidden="true">
+  <div class="ia-class-dialog" role="dialog" aria-modal="true" aria-labelledby="ia_kit_modal_title">
+    <div class="ia-class-head">
+      <h3 id="ia_kit_modal_title">Asistente IA: creador de kit</h3>
+      <button type="button" class="btn btn-secondary" id="ia_kit_modal_close_top">Cerrar</button>
+    </div>
+    <div class="ia-class-body">
+      <div class="ia-class-chat">
+        <div class="ia-class-messages" id="ia_kit_messages"></div>
+        <div class="ia-class-input">
+          <textarea id="ia_kit_user_input" placeholder="Ejemplo: Quiero un kit de energía eólica para ciclo 3, dificultad media, armado de 75 minutos."></textarea>
+          <div class="ia-class-input-actions">
+            <button type="button" class="btn" id="ia_kit_send">Enviar a IA</button>
+            <button type="button" class="btn btn-secondary" id="ia_kit_quick_brief">Generar borrador completo</button>
+          </div>
+        </div>
+      </div>
+      <aside class="ia-class-side">
+        <h4>Borrador estructurado</h4>
+        <p>Cuando la IA devuelva JSON válido, podrás aplicarlo a los campos del kit.</p>
+        <pre class="ia-suggestion-json" id="ia_kit_json_preview">Esperando sugerencia...</pre>
+      </aside>
+    </div>
+    <div class="ia-class-foot">
+      <button type="button" class="btn btn-secondary" id="ia_kit_reset">Limpiar borrador</button>
+      <button type="button" class="btn" id="ia_kit_apply" disabled>Aplicar al formulario</button>
+    </div>
+  </div>
+</div>
+
+<div class="ia-class-modal" id="ia_kit_content_modal" aria-hidden="true">
+  <div class="ia-class-dialog" role="dialog" aria-modal="true" aria-labelledby="ia_kit_content_modal_title">
+    <div class="ia-class-head">
+      <h3 id="ia_kit_content_modal_title">Asistente IA: contenido de kit</h3>
+      <button type="button" class="btn btn-secondary" id="ia_kit_content_modal_close_top">Cerrar</button>
+    </div>
+    <div class="ia-class-body">
+      <div class="ia-class-chat">
+        <div class="ia-class-messages" id="ia_kit_content_messages"></div>
+        <div class="ia-class-input">
+          <textarea id="ia_kit_content_user_input" placeholder="Ejemplo: Refuerza seguridad y actividades de aula para grados 8° y 9°."></textarea>
+          <div class="ia-content-chip-row">
+            <button type="button" class="btn btn-secondary ia-kit-content-quick" data-focus="estructura completa">Estructura completa</button>
+            <button type="button" class="btn btn-secondary ia-kit-content-quick" data-focus="introduccion y proposito del kit">Introducción</button>
+            <button type="button" class="btn btn-secondary ia-kit-content-quick" data-focus="componentes y armado">Componentes y armado</button>
+            <button type="button" class="btn btn-secondary ia-kit-content-quick" data-focus="seguridad y buenas practicas">Seguridad</button>
+            <button type="button" class="btn btn-secondary ia-kit-content-quick" data-focus="actividades sugeridas">Actividades</button>
+            <button type="button" class="btn btn-secondary ia-kit-content-quick" data-focus="evaluacion y cierre">Evaluación</button>
+          </div>
+          <div class="ia-class-input-actions">
+            <button type="button" class="btn" id="ia_kit_content_send">Generar contenido</button>
+          </div>
+          <div class="ia-content-settings">
+            <label><input type="checkbox" id="ia_kit_content_update_resumen"> Actualizar resumen</label>
+            <label><input type="checkbox" id="ia_kit_content_update_seguridad"> Actualizar notas de seguridad</label>
+          </div>
+        </div>
+      </div>
+      <aside class="ia-class-side">
+        <h4>Vista previa</h4>
+        <p>La IA debe devolver JSON con contenido_html y opcionalmente resumen y seguridad.notas.</p>
+        <pre class="ia-content-preview" id="ia_kit_content_json_preview">Esperando propuesta de contenido...</pre>
+      </aside>
+    </div>
+    <div class="ia-class-foot">
+      <button type="button" class="btn btn-secondary" id="ia_kit_content_reset">Limpiar propuesta</button>
+      <button type="button" class="btn" id="ia_kit_content_apply_replace" disabled>Reemplazar contenido actual</button>
+      <button type="button" class="btn" id="ia_kit_content_apply_append" disabled>Anexar al contenido actual</button>
+    </div>
+  </div>
+</div>
 
   <!-- Modal Editar Atributo -->
   <div class="modal-overlay" id="modalEditAttr">
@@ -2605,6 +2816,576 @@ include '../header.php';
     const seoDesc = document.getElementById('seo_description');
     if (seoTitle) seoTitle.addEventListener('input', ()=>{ if (seoTitle.value.length>160) console.log('⚠️ [KitsEdit] SEO title >160'); });
     if (seoDesc) seoDesc.addEventListener('input', ()=>{ if (seoDesc.value.length>255) console.log('⚠️ [KitsEdit] SEO description >255'); });
+  })();
+</script>
+<script>
+  // ========================================================
+  // MODAL IA CREADOR DE KIT
+  // ========================================================
+  (function initIaKitBuilder() {
+    const modal = document.getElementById('ia_kit_modal');
+    const btnOpen = document.getElementById('btn_open_ia_kit_modal');
+    const btnClose = document.getElementById('ia_kit_modal_close_top');
+    const btnSend = document.getElementById('ia_kit_send');
+    const btnQuick = document.getElementById('ia_kit_quick_brief');
+    const btnApply = document.getElementById('ia_kit_apply');
+    const btnReset = document.getElementById('ia_kit_reset');
+    const input = document.getElementById('ia_kit_user_input');
+    const messages = document.getElementById('ia_kit_messages');
+    const preview = document.getElementById('ia_kit_json_preview');
+
+    if (!modal || !btnOpen || !messages || !preview || !input || !btnSend || !btnApply) {
+      console.log('⚠️ [IA Kit Modal] No se inicializa por elementos faltantes');
+      return;
+    }
+
+    let lastSuggestion = null;
+    let isBusy = false;
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'ia-msg ' + role;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function openModal() {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.welcome) {
+        addMsg('system', '🧪 Describe el kit que quieres crear y te devuelvo un borrador estructurado en JSON.');
+        messages.dataset.welcome = '1';
+      }
+      input.focus();
+      console.log('✅ [IA Kit Modal] abierto');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      console.log('🔍 [IA Kit Modal] cerrado');
+    }
+
+    function normalizeSlugBase(val) {
+      return (val || '').toLowerCase().replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function toKitSlug(val) {
+      const base = normalizeSlugBase(val || '').replace(/^kit-+/, '');
+      return base ? ('kit-' + base) : '';
+    }
+
+    function safeJsonParse(text) {
+      if (!text) return null;
+      const raw = String(text).trim();
+      try { return JSON.parse(raw); } catch (_e) {}
+      const start = raw.indexOf('{');
+      const end = raw.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const maybe = raw.slice(start, end + 1);
+        try { return JSON.parse(maybe); } catch (_e) {}
+      }
+      return null;
+    }
+
+    function collectFormSnapshot() {
+      const areas = Array.from(document.querySelectorAll('input[name="areas[]"]:checked')).map((c) => {
+        const label = c.closest('label');
+        return label ? label.textContent.trim() : c.value;
+      });
+      const clases = Array.from(document.querySelectorAll('#selected-clases .competencia-item')).map((el) => ({
+        id: parseInt(el.dataset.id || '0', 10),
+        nombre: String(el.dataset.nombre || '').trim(),
+        ciclo: String(el.dataset.ciclo || '').trim()
+      })).filter((x) => Number.isInteger(x.id) && x.id > 0);
+
+      return {
+        nombre: (document.getElementById('nombre')?.value || '').trim(),
+        codigo: (document.getElementById('codigo')?.value || '').trim(),
+        version: (document.getElementById('version')?.value || '').trim(),
+        resumen: (document.getElementById('resumen')?.value || '').trim(),
+        time_minutes: parseInt(document.getElementById('time_minutes')?.value || '', 10) || null,
+        dificultad_ensamble: (document.getElementById('dificultad_ensamble')?.value || '').trim(),
+        seg_edad_min: parseInt(document.getElementById('seg_edad_min')?.value || '', 10) || null,
+        seg_edad_max: parseInt(document.getElementById('seg_edad_max')?.value || '', 10) || null,
+        seg_notas: (document.getElementById('seg_notas')?.value || '').trim(),
+        seo_title: (document.getElementById('seo_title')?.value || '').trim(),
+        seo_description: (document.getElementById('seo_description')?.value || '').trim(),
+        areas,
+        clases
+      };
+    }
+
+    function buildIaPrompt(userMessage) {
+      const snapshot = collectFormSnapshot();
+      return [
+        'Eres asistente experto en diseno de kits educativos de ciencias para Colombia.',
+        'Devuelve SOLO JSON valido, sin markdown, sin comentarios, sin texto fuera del JSON.',
+        'Schema obligatorio exacto:',
+        '{"nombre":"","slug":"","codigo":"","version":"1","resumen":"","contenido_html":"","time_minutes":60,"dificultad_ensamble":"Fácil|Media|Difícil","seguridad":{"edad_min":0,"edad_max":0,"notas":""},"seo_title":"","seo_description":"","areas_nombres":["Física"],"activo":1,"clases_sugeridas":["nombre clase"],"componentes_sugeridos":[{"nombre":"","cantidad":1,"unidad":""}],"plantilla_estructura":{"secciones":["Introduccion del kit","Para que sirve en clase","Fundamento cientifico","Componentes del kit y funcion","Armado y puesta en marcha","Actividades sugeridas","Seguridad y buenas practicas","Evaluacion y cierre","Glosario basico"]}}',
+        'Reglas obligatorias para contenido_html:',
+        '- Debe usar esta secuencia de secciones con h2 en este orden exacto:',
+        '  1) Introduccion del kit',
+        '  2) Para que sirve en clase',
+        '  3) Fundamento cientifico',
+        '  4) Componentes del kit y funcion',
+        '  5) Armado y puesta en marcha',
+        '  6) Actividades sugeridas',
+        '  7) Seguridad y buenas practicas',
+        '  8) Evaluacion y cierre',
+        '  9) Glosario basico',
+        '- Usar solo etiquetas: h2, p, ul, ol, li, strong, em.',
+        '- Escribir en tono escolar claro, preciso y seguro.',
+        '- No inventar datos imposibles del kit ni instrucciones riesgosas.',
+        '- slug debe iniciar por kit-.',
+        '- codigo debe ser corto, claro y en MAYUSCULAS con guiones (ej: KIT-ENERGIA-01).',
+        'Contexto actual del formulario: ' + JSON.stringify(snapshot),
+        'Solicitud del usuario: ' + userMessage
+      ].join('\n');
+    }
+
+    function setSelectedByLabel(name, expectedList) {
+      if (!Array.isArray(expectedList) || expectedList.length === 0) return;
+      const wanted = expectedList.map(x => String(x || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')).filter(Boolean);
+      document.querySelectorAll('input[name="' + name + '"]').forEach((el) => {
+        const label = el.closest('label');
+        const txt = (label ? label.textContent : el.value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        el.checked = wanted.some(w => txt.indexOf(w) !== -1);
+        if (el.checked) el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
+    function applySuggestion(data) {
+      if (!data || typeof data !== 'object') return;
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = val == null ? '' : String(val);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      if (data.nombre) setVal('nombre', data.nombre);
+      if (data.slug || data.nombre) setVal('slug', toKitSlug(data.slug || data.nombre));
+      if (data.codigo) setVal('codigo', String(data.codigo).toUpperCase());
+      if (data.version) setVal('version', data.version);
+      if (data.resumen) setVal('resumen', data.resumen);
+      if (data.time_minutes) setVal('time_minutes', parseInt(data.time_minutes, 10));
+      if (data.dificultad_ensamble) setVal('dificultad_ensamble', data.dificultad_ensamble);
+      if (data.seo_title) setVal('seo_title', data.seo_title);
+      if (data.seo_description) setVal('seo_description', data.seo_description);
+      if (Number(data.activo) === 0 || Number(data.activo) === 1) {
+        const activoEl = document.querySelector('input[name="activo"]');
+        if (activoEl) activoEl.checked = Number(data.activo) === 1;
+      }
+
+      if (data.seguridad && typeof data.seguridad === 'object') {
+        if (data.seguridad.edad_min != null) setVal('seg_edad_min', parseInt(data.seguridad.edad_min, 10));
+        if (data.seguridad.edad_max != null) setVal('seg_edad_max', parseInt(data.seguridad.edad_max, 10));
+        if (data.seguridad.notas) setVal('seg_notas', data.seguridad.notas);
+      }
+
+      if (Array.isArray(data.areas_nombres)) {
+        setSelectedByLabel('areas[]', data.areas_nombres);
+      }
+
+      if (data.contenido_html) {
+        const ta = document.getElementById('contenido_html');
+        if (ta) ta.value = String(data.contenido_html);
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+          CKEDITOR.instances.contenido_html.setData(String(data.contenido_html));
+        }
+      }
+
+      const nombreEl = document.getElementById('nombre');
+      if (nombreEl) nombreEl.dispatchEvent(new Event('input', { bubbles: true }));
+      const resumenEl = document.getElementById('resumen');
+      if (resumenEl) resumenEl.dispatchEvent(new Event('input', { bubbles: true }));
+
+      console.log('✅ [IA Kit Modal] Campos autollenados');
+    }
+
+    async function askIa(userText) {
+      if (isBusy) return;
+      const text = String(userText || '').trim();
+      if (!text) return;
+      isBusy = true;
+      btnSend.disabled = true;
+      addMsg('user', text);
+      input.value = '';
+      console.log('🔍 [IA Kit Modal] Enviando solicitud IA');
+
+      try {
+        const payload = {
+          instancia: 'backend',
+          contexto_scope: 'admin_kits_builder',
+          contexto_pagina: 'kits',
+          entidad_tipo: 'kit',
+          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+          pregunta: buildIaPrompt(text)
+        };
+
+        const res = await fetch('/api/ia-consulta.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json || !json.ok) {
+          const msg = (json && json.error) ? json.error : 'No se pudo generar el borrador.';
+          addMsg('assistant', '❌ ' + msg);
+          console.log('❌ [IA Kit Modal] Error API:', msg);
+          return;
+        }
+
+        const respuesta = String(json.respuesta || '').trim();
+        addMsg('assistant', respuesta || 'Respuesta vacía de IA.');
+
+        const parsed = safeJsonParse(respuesta);
+        if (parsed && typeof parsed === 'object') {
+          lastSuggestion = parsed;
+          preview.textContent = JSON.stringify(parsed, null, 2);
+          btnApply.disabled = false;
+          addMsg('system', '✅ Borrador estructurado detectado. Puedes aplicar al formulario.');
+          console.log('✅ [IA Kit Modal] JSON estructurado listo');
+        } else {
+          addMsg('system', '⚠️ No se detectó JSON válido. Pídele que responda solo JSON.');
+          console.log('⚠️ [IA Kit Modal] Respuesta sin JSON parseable');
+        }
+      } catch (err) {
+        addMsg('assistant', '❌ Error de red o de procesamiento.');
+        console.log('❌ [IA Kit Modal] Excepción:', err && err.message ? err.message : err);
+      } finally {
+        isBusy = false;
+        btnSend.disabled = false;
+      }
+    }
+
+    btnOpen.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    btnSend.addEventListener('click', () => askIa(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askIa(input.value);
+      }
+    });
+
+    btnQuick?.addEventListener('click', () => {
+      askIa('Genera un borrador completo del kit para publicar en Clase de Ciencia.');
+    });
+
+    btnApply.addEventListener('click', () => {
+      if (!lastSuggestion) {
+        addMsg('system', '⚠️ No hay borrador para aplicar.');
+        return;
+      }
+      applySuggestion(lastSuggestion);
+      addMsg('system', '✅ Datos aplicados al formulario. Revisa y guarda.');
+    });
+
+    btnReset?.addEventListener('click', () => {
+      lastSuggestion = null;
+      preview.textContent = 'Esperando sugerencia...';
+      btnApply.disabled = true;
+      input.value = '';
+      messages.innerHTML = '';
+      delete messages.dataset.welcome;
+      addMsg('system', '🧹 Borrador limpiado.');
+    });
+  })();
+
+  // ========================================================
+  // MODAL IA DE CONTENIDO DEL KIT
+  // ========================================================
+  (function initIaKitContentBuilder() {
+    const modal = document.getElementById('ia_kit_content_modal');
+    const btnOpen = document.getElementById('btn_open_ia_kit_content_modal');
+    const btnOpenHead = document.getElementById('btn_open_ia_kit_content_modal_head');
+    const btnClose = document.getElementById('ia_kit_content_modal_close_top');
+    const btnSend = document.getElementById('ia_kit_content_send');
+    const btnApplyReplace = document.getElementById('ia_kit_content_apply_replace');
+    const btnApplyAppend = document.getElementById('ia_kit_content_apply_append');
+    const btnReset = document.getElementById('ia_kit_content_reset');
+    const input = document.getElementById('ia_kit_content_user_input');
+    const messages = document.getElementById('ia_kit_content_messages');
+    const preview = document.getElementById('ia_kit_content_json_preview');
+    const cbResumen = document.getElementById('ia_kit_content_update_resumen');
+    const cbSeguridad = document.getElementById('ia_kit_content_update_seguridad');
+    const quickButtons = Array.from(document.querySelectorAll('.ia-kit-content-quick'));
+
+    if (!modal || !messages || !preview || !input || !btnSend || !btnApplyReplace || !btnApplyAppend) {
+      console.log('⚠️ [IA Kit Content Modal] No se inicializa por elementos faltantes');
+      return;
+    }
+
+    let lastSuggestion = null;
+    let busy = false;
+    let currentFocus = '';
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'ia-msg ' + role;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function openModal() {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.welcome) {
+        addMsg('system', '🧪 Genera contenido para el kit por bloques o completo. Puedes reemplazar o anexar.');
+        messages.dataset.welcome = '1';
+      }
+      input.focus();
+      console.log('✅ [IA Kit Content Modal] abierto');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      console.log('🔍 [IA Kit Content Modal] cerrado');
+    }
+
+    function getEditorHtml() {
+      try {
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+          return String(CKEDITOR.instances.contenido_html.getData() || '');
+        }
+      } catch (_e) {}
+      return String(document.getElementById('contenido_html')?.value || '');
+    }
+
+    function safeJsonParse(rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) return null;
+      try { return JSON.parse(text); } catch (_e) {}
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const maybe = text.slice(start, end + 1);
+        try { return JSON.parse(maybe); } catch (_e) {}
+      }
+      return null;
+    }
+
+    function extractContenidoHtmlFallback(rawText) {
+      const text = String(rawText || '');
+      if (!text) return '';
+      const key = '"contenido_html":"';
+      const idx = text.indexOf(key);
+      if (idx < 0) return '';
+
+      let chunk = text.slice(idx + key.length);
+      const endCandidates = ['","resumen"', '","seguridad"', '","notas_autor"', '"}'];
+      let endAt = -1;
+      for (const marker of endCandidates) {
+        const p = chunk.indexOf(marker);
+        if (p >= 0 && (endAt < 0 || p < endAt)) endAt = p;
+      }
+      if (endAt >= 0) {
+        chunk = chunk.slice(0, endAt);
+      }
+
+      chunk = chunk.replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      chunk = chunk.replace(/\s+$/g, '').replace(/\\+$/g, '');
+
+      const trimmed = chunk.trim();
+      if (trimmed.length < 40 || trimmed.indexOf('<h2>') === -1) return '';
+      return trimmed;
+    }
+
+    function buildPrompt(userText) {
+      const nombre = (document.getElementById('nombre')?.value || '').trim();
+      const codigo = (document.getElementById('codigo')?.value || '').trim();
+      const version = (document.getElementById('version')?.value || '').trim();
+      const dificultad = (document.getElementById('dificultad_ensamble')?.value || '').trim();
+      const duracion = (document.getElementById('time_minutes')?.value || '').trim();
+      const resumen = (document.getElementById('resumen')?.value || '').trim();
+      const segNotas = (document.getElementById('seg_notas')?.value || '').trim();
+      const areas = Array.from(document.querySelectorAll('input[name="areas[]"]:checked')).map((x) => {
+        const lbl = x.closest('label');
+        return lbl ? lbl.textContent.trim() : x.value;
+      });
+      const contenidoActual = getEditorHtml();
+      const contenidoActualResumido = contenidoActual.length > 2600
+        ? (contenidoActual.slice(0, 2600) + '\n...[CONTENIDO ACTUAL RECORTADO PARA CONTEXTO]...')
+        : contenidoActual;
+
+      return [
+        'Eres editor experto en fichas de kits educativos de ciencias para Colombia.',
+        'Devuelve SOLO JSON valido, sin markdown y sin texto fuera del JSON.',
+        'Schema obligatorio:',
+        '{"contenido_html":"","resumen":"","seguridad":{"notas":""},"notas_autor":"","plantilla_validada":true,"secciones_detectadas":["Introduccion del kit","Para que sirve en clase","Fundamento cientifico","Componentes del kit y funcion","Armado y puesta en marcha","Actividades sugeridas","Seguridad y buenas practicas","Evaluacion y cierre","Glosario basico"]}',
+        'Reglas:',
+        '- contenido_html debe usar SOLO etiquetas seguras: h2, p, ul, ol, li, strong, em.',
+        '- Estructura obligatoria con h2 y en este orden:',
+        '  1) Introduccion del kit',
+        '  2) Para que sirve en clase',
+        '  3) Fundamento cientifico',
+        '  4) Componentes del kit y funcion',
+        '  5) Armado y puesta en marcha',
+        '  6) Actividades sugeridas',
+        '  7) Seguridad y buenas practicas',
+        '  8) Evaluacion y cierre',
+        '  9) Glosario basico',
+        '- Mantener lenguaje claro, didactico y seguro.',
+        '- Incluir seguridad y recomendaciones de uso responsable.',
+        '- No inventar elementos peligrosos ni instrucciones de riesgo.',
+        '- No devolver placeholders vacios; cada seccion debe tener contenido real.',
+        'Contexto kit: ' + JSON.stringify({ nombre, codigo, version, dificultad_ensamble: dificultad, time_minutes: duracion, resumen, seg_notas: segNotas, areas }),
+        'Contenido actual: ' + contenidoActualResumido,
+        'Foco solicitado: ' + (currentFocus || 'sin foco específico'),
+        'Solicitud del usuario: ' + userText
+      ].join('\n');
+    }
+
+    function setEditorHtml(html, mode) {
+      const incoming = String(html || '').trim();
+      if (!incoming) return;
+      const ta = document.getElementById('contenido_html');
+      const current = getEditorHtml();
+      const finalHtml = mode === 'append' && current ? (current + '\n\n' + incoming) : incoming;
+
+      if (ta) ta.value = finalHtml;
+      if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.contenido_html) {
+        CKEDITOR.instances.contenido_html.setData(finalHtml);
+      }
+      console.log('✅ [IA Kit Content Modal] contenido_html actualizado en modo:', mode);
+    }
+
+    function applySuggestion(mode) {
+      if (!lastSuggestion || typeof lastSuggestion !== 'object') {
+        addMsg('system', '⚠️ No hay propuesta de contenido para aplicar.');
+        return;
+      }
+      if (lastSuggestion.contenido_html) {
+        setEditorHtml(lastSuggestion.contenido_html, mode);
+      }
+      if (cbResumen?.checked && lastSuggestion.resumen) {
+        const el = document.getElementById('resumen');
+        if (el) {
+          el.value = String(lastSuggestion.resumen);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      if (cbSeguridad?.checked && lastSuggestion.seguridad && typeof lastSuggestion.seguridad === 'object' && lastSuggestion.seguridad.notas) {
+        const el = document.getElementById('seg_notas');
+        if (el) {
+          el.value = String(lastSuggestion.seguridad.notas);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      addMsg('system', '✅ Contenido aplicado. Revisa antes de guardar.');
+    }
+
+    async function askContentIa(messageText) {
+      const message = String(messageText || '').trim();
+      if (!message || busy) return;
+
+      busy = true;
+      btnSend.disabled = true;
+      addMsg('user', message);
+      input.value = '';
+      console.log('🔍 [IA Kit Content Modal] Enviando solicitud IA con foco:', currentFocus || '(general)');
+
+      try {
+        const payload = {
+          instancia: 'backend',
+          contexto_scope: 'admin_kits_content_builder',
+          contexto_pagina: 'kits',
+          entidad_tipo: 'kit',
+          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+          pregunta: buildPrompt(message)
+        };
+
+        const res = await fetch('/api/ia-consulta.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (!json || !json.ok) {
+          const msg = (json && json.error) ? json.error : 'No se pudo generar contenido.';
+          addMsg('assistant', '❌ ' + msg);
+          return;
+        }
+
+        const respuesta = String(json.respuesta || '').trim();
+        addMsg('assistant', respuesta || 'Respuesta vacía.');
+        const parsed = safeJsonParse(respuesta);
+        if (parsed && typeof parsed === 'object' && parsed.contenido_html) {
+          lastSuggestion = parsed;
+          preview.textContent = JSON.stringify(parsed, null, 2);
+          btnApplyReplace.disabled = false;
+          btnApplyAppend.disabled = false;
+          addMsg('system', '✅ Propuesta de contenido lista para aplicar.');
+          console.log('✅ [IA Kit Content Modal] JSON parseado correctamente');
+        } else {
+          const rescuedHtml = extractContenidoHtmlFallback(respuesta);
+          if (rescuedHtml) {
+            lastSuggestion = {
+              contenido_html: rescuedHtml,
+              resumen: '',
+              seguridad: { notas: '' },
+              notas_autor: 'fallback_from_truncated_json'
+            };
+            preview.textContent = JSON.stringify(lastSuggestion, null, 2);
+            btnApplyReplace.disabled = false;
+            btnApplyAppend.disabled = false;
+            addMsg('system', '⚠️ JSON truncado: se recuperó contenido_html de forma parcial. Revisa antes de aplicar.');
+            console.log('⚠️ [IA Kit Content Modal] Se aplicó fallback por JSON truncado');
+          } else {
+            addMsg('system', '⚠️ La respuesta no trae JSON válido con contenido_html.');
+            console.log('⚠️ [IA Kit Content Modal] Respuesta no parseable como JSON de contenido');
+          }
+        }
+      } catch (err) {
+        addMsg('assistant', '❌ Error al consultar IA para contenido.');
+        console.log('❌ [IA Kit Content Modal] Excepción:', err && err.message ? err.message : err);
+      } finally {
+        busy = false;
+        btnSend.disabled = false;
+      }
+    }
+
+    btnOpen?.addEventListener('click', openModal);
+    btnOpenHead?.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    btnSend.addEventListener('click', () => askContentIa(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askContentIa(input.value);
+      }
+    });
+
+    quickButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentFocus = btn.getAttribute('data-focus') || '';
+        askContentIa('Genera una propuesta enfocada en: ' + currentFocus + '.');
+      });
+    });
+
+    btnApplyReplace.addEventListener('click', () => applySuggestion('replace'));
+    btnApplyAppend.addEventListener('click', () => applySuggestion('append'));
+    btnReset?.addEventListener('click', () => {
+      lastSuggestion = null;
+      preview.textContent = 'Esperando propuesta de contenido...';
+      btnApplyReplace.disabled = true;
+      btnApplyAppend.disabled = true;
+      input.value = '';
+      messages.innerHTML = '';
+      delete messages.dataset.welcome;
+      currentFocus = '';
+      addMsg('system', '🧹 Propuesta limpiada.');
+    });
   })();
 </script>
 <script>
