@@ -1720,6 +1720,7 @@ try {
     // ParÃƒÂ¡metros comunes
     $instancia       = ($data['instancia'] ?? 'frontend') === 'backend' ? 'backend' : 'frontend';
     $pregunta        = trim($data['pregunta'] ?? '');
+    $contexto_scope_in = $instancia === 'backend' ? trim((string)($data['contexto_scope'] ?? 'admin_global')) : '';
     // Historial de conversaciÃ³n: array de {role, content} enviado por el cliente
     $historial_raw = isset($data['historial']) && is_array($data['historial']) ? $data['historial'] : [];
     $historial = [];
@@ -1732,7 +1733,11 @@ try {
         $historial[] = ['role' => $role, 'content' => $content];
     }
     if ($pregunta === '') json_fail('Pregunta vacÃƒÂ­a.');
-    if (mb_strlen($pregunta) > 2000) json_fail('Pregunta demasiado larga.');
+    $max_pregunta_chars = 2000;
+    if ($instancia === 'backend' && in_array($contexto_scope_in, ['admin_clases_builder', 'admin_clases_content_builder'], true)) {
+        $max_pregunta_chars = 14000;
+    }
+    if (mb_strlen($pregunta) > $max_pregunta_chars) json_fail('Pregunta demasiado larga.');
 
     // Frontend: proteger el endpoint backend de acceso externo
     if ($instancia === 'backend') {
