@@ -436,6 +436,9 @@ include '../header.php';
 <div class="page-header">
   <h2><?= $is_edit ? 'Editar Componente' : 'Nuevo Componente' ?></h2>
   <span class="help-text">Campos mínimos del esquema CdC (kit_items).</span>
+  <div class="page-header-actions" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+    <button type="button" class="btn ia-assistant-btn" id="btn_open_ia_componente_modal">Asistente <span class="ia-word">IA</span> de componente</button>
+  </div>
   <script>
     console.log('✅ [Admin] Componentes edit cargado');
     console.log('🔍 [Admin] Modo:', '<?= $is_edit ? 'edit' : 'create' ?>');
@@ -452,6 +455,138 @@ include '../header.php';
   </ul>
 </div>
 <?php endif; ?>
+
+<style>
+  .ia-class-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 20px;
+  }
+  .ia-class-modal.active { display: flex; }
+  .ia-class-dialog {
+    width: min(980px, 96vw);
+    max-height: 92vh;
+    overflow: hidden;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 12px 45px rgba(2, 6, 23, 0.35);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .ia-class-head {
+    padding: 14px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ia-class-head h3 { margin: 0; font-size: 18px; }
+  .ia-class-body {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    min-height: 420px;
+  }
+  .ia-class-chat {
+    border-right: 1px solid #e5e7eb;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 0;
+  }
+  .ia-class-messages {
+    overflow-y: auto;
+    padding: 14px;
+    background: #f8fafc;
+  }
+  .ia-msg {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    line-height: 1.35;
+    white-space: pre-wrap;
+    font-size: 14px;
+  }
+  .ia-msg.user { background: #dbeafe; margin-left: 12%; }
+  .ia-msg.assistant { background: #eef2ff; margin-right: 10%; }
+  .ia-msg.system { background: #ecfeff; border: 1px solid #bae6fd; }
+  .ia-class-input {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+  }
+  .ia-class-input textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+  }
+  .ia-class-input-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .ia-class-side {
+    padding: 14px;
+    overflow-y: auto;
+    background: #fff;
+  }
+  .ia-class-side h4 { margin: 0 0 10px 0; }
+  .ia-class-side p { margin: 0 0 10px 0; color: #475569; }
+  .ia-suggestion-json {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 170px;
+    max-height: 280px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .ia-class-foot {
+    border-top: 1px solid #e5e7eb;
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .ia-content-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .ia-content-preview {
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #020617;
+    color: #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    min-height: 170px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .ia-content-settings {
+    margin-top: 10px;
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 10px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 900px) {
+    .ia-class-body { grid-template-columns: 1fr; }
+    .ia-class-chat { border-right: none; border-bottom: 1px solid #e5e7eb; }
+  }
+</style>
 
 <form method="POST" id="cmp-form" class="compact-form">
   <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>" />
@@ -485,7 +620,10 @@ include '../header.php';
     <input type="text" id="unidad" name="unidad" value="<?= htmlspecialchars($material['unidad'] ?? 'pcs', ENT_QUOTES, 'UTF-8') ?>" placeholder="Ej: pcs, g, ml" />
   </div>
   <div class="form-group">
-    <label for="descripcion_html">Descripción HTML</label>
+    <label for="descripcion_html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <span>Descripción HTML</span>
+      <button type="button" class="btn btn-secondary ia-assistant-btn" id="btn_open_ia_componente_content_modal">Asistente <span class="ia-word">IA</span> de contenido</button>
+    </label>
     <textarea id="descripcion_html" name="descripcion_html" rows="6" placeholder="Se renderiza como HTML en la página del componente."><?= htmlspecialchars($material['descripcion_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="help-text">Usa etiquetas básicas; se mostrará tal cual.</small>
   </div>
@@ -512,6 +650,76 @@ include '../header.php';
     <a href="/admin/componentes/index.php" class="btn btn-secondary">Cancelar</a>
   </div>
 </form>
+
+<div class="ia-class-modal" id="ia_componente_modal" aria-hidden="true">
+  <div class="ia-class-dialog" role="dialog" aria-modal="true" aria-labelledby="ia_componente_modal_title">
+    <div class="ia-class-head">
+      <h3 id="ia_componente_modal_title">Asistente IA: creador de componente</h3>
+      <button type="button" class="btn btn-secondary" id="ia_componente_modal_close_top">Cerrar</button>
+    </div>
+    <div class="ia-class-body">
+      <div class="ia-class-chat">
+        <div class="ia-class-messages" id="ia_componente_messages"></div>
+        <div class="ia-class-input">
+          <textarea id="ia_componente_user_input" placeholder="Ejemplo: Necesito un componente para medir pH, seguro para grado 8°, con uso en laboratorio escolar."></textarea>
+          <div class="ia-class-input-actions">
+            <button type="button" class="btn" id="ia_componente_send">Enviar a IA</button>
+            <button type="button" class="btn btn-secondary" id="ia_componente_quick_brief">Generar borrador completo</button>
+          </div>
+        </div>
+      </div>
+      <aside class="ia-class-side">
+        <h4>Borrador estructurado</h4>
+        <p>Cuando la IA devuelva JSON válido, podrás aplicarlo a los campos del componente.</p>
+        <pre class="ia-suggestion-json" id="ia_componente_json_preview">Esperando sugerencia...</pre>
+      </aside>
+    </div>
+    <div class="ia-class-foot">
+      <button type="button" class="btn btn-secondary" id="ia_componente_reset">Limpiar borrador</button>
+      <button type="button" class="btn" id="ia_componente_apply" disabled>Aplicar al formulario</button>
+    </div>
+  </div>
+</div>
+
+<div class="ia-class-modal" id="ia_componente_content_modal" aria-hidden="true">
+  <div class="ia-class-dialog" role="dialog" aria-modal="true" aria-labelledby="ia_componente_content_modal_title">
+    <div class="ia-class-head">
+      <h3 id="ia_componente_content_modal_title">Asistente IA: contenido de componente</h3>
+      <button type="button" class="btn btn-secondary" id="ia_componente_content_modal_close_top">Cerrar</button>
+    </div>
+    <div class="ia-class-body">
+      <div class="ia-class-chat">
+        <div class="ia-class-messages" id="ia_componente_content_messages"></div>
+        <div class="ia-class-input">
+          <textarea id="ia_componente_content_user_input" placeholder="Ejemplo: mejora la sección de seguridad y agrega mantenimiento preventivo."></textarea>
+          <div class="ia-content-chip-row">
+            <button type="button" class="btn btn-secondary ia-componente-content-quick" data-focus="estructura completa">Estructura completa</button>
+            <button type="button" class="btn btn-secondary ia-componente-content-quick" data-focus="uso en clase">Uso en clase</button>
+            <button type="button" class="btn btn-secondary ia-componente-content-quick" data-focus="seguridad y cuidados">Seguridad</button>
+            <button type="button" class="btn btn-secondary ia-componente-content-quick" data-focus="mantenimiento y almacenamiento">Mantenimiento</button>
+            <button type="button" class="btn btn-secondary ia-componente-content-quick" data-focus="preguntas frecuentes">FAQ</button>
+          </div>
+          <div class="ia-class-input-actions">
+            <button type="button" class="btn" id="ia_componente_content_send">Generar contenido</button>
+          </div>
+          <div class="ia-content-settings">
+            <label><input type="checkbox" id="ia_componente_content_update_seguridad"> Actualizar advertencias de seguridad</label>
+          </div>
+        </div>
+      </div>
+      <aside class="ia-class-side">
+        <h4>Vista previa</h4>
+        <p>La IA debe devolver JSON con descripcion_html y opcionalmente advertencias_seguridad.</p>
+        <pre class="ia-content-preview" id="ia_componente_content_json_preview">Esperando propuesta de contenido...</pre>
+      </aside>
+    </div>
+    <div class="ia-class-foot">
+      <button type="button" class="btn btn-secondary" id="ia_componente_content_reset">Limpiar propuesta</button>
+      <button type="button" class="btn" id="ia_componente_content_apply_replace" disabled>Reemplazar descripción</button>
+      <button type="button" class="btn" id="ia_componente_content_apply_append" disabled>Anexar a descripción</button>
+    </div>
+  </div>
+</div>
 
 <?php
 // Ficha técnica para componente
@@ -1057,6 +1265,648 @@ if ($is_edit) {
   })();
 </script>
 <?php endif; ?>
+
+<script>
+  // ========================================================
+  // MODAL IA DE COMPONENTE (AUTOFILL FORMULARIO)
+  // ========================================================
+  (function initIaComponenteBuilder() {
+    const modal = document.getElementById('ia_componente_modal');
+    const btnOpen = document.getElementById('btn_open_ia_componente_modal');
+    const btnClose = document.getElementById('ia_componente_modal_close_top');
+    const btnSend = document.getElementById('ia_componente_send');
+    const btnQuick = document.getElementById('ia_componente_quick_brief');
+    const btnApply = document.getElementById('ia_componente_apply');
+    const btnReset = document.getElementById('ia_componente_reset');
+    const input = document.getElementById('ia_componente_user_input');
+    const messages = document.getElementById('ia_componente_messages');
+    const preview = document.getElementById('ia_componente_json_preview');
+
+    if (!modal || !btnOpen || !btnSend || !btnApply || !input || !messages || !preview) {
+      console.log('⚠️ [IA Componente Modal] No se inicializa por elementos faltantes');
+      return;
+    }
+
+    let lastSuggestion = null;
+    let isBusy = false;
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'ia-msg ' + role;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function openModal() {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.welcome) {
+        addMsg('system', '🧪 Describe el componente y yo te devuelvo un JSON aplicable al formulario.');
+        messages.dataset.welcome = '1';
+      }
+      input.focus();
+      console.log('✅ [IA Componente Modal] abierto');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      console.log('🔍 [IA Componente Modal] cerrado');
+    }
+
+    function normalizeSku(val) {
+      return String(val || '').toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
+    function safeJsonParse(text) {
+      if (!text) return null;
+      const raw = String(text).trim();
+      try { return JSON.parse(raw); } catch (_e) {}
+      const start = raw.indexOf('{');
+      const end = raw.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const maybe = raw.slice(start, end + 1);
+        try { return JSON.parse(maybe); } catch (_e) {}
+      }
+      return null;
+    }
+
+    function extractStringField(rawText, key) {
+      const text = String(rawText || '');
+      const escKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const rx = new RegExp('"' + escKey + '"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"');
+      const m = text.match(rx);
+      if (!m || !m[1]) return '';
+      return m[1].replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\').trim();
+    }
+
+    function extractDescripcionHtmlFallback(rawText) {
+      const text = String(rawText || '');
+      if (!text) return '';
+      const key = '"descripcion_html":"';
+      const idx = text.indexOf(key);
+      if (idx < 0) return '';
+
+      let chunk = text.slice(idx + key.length);
+      const endCandidates = ['","advertencias_seguridad"', '","unidad"', '","foto_url"', '","notas_autor"', '"}'];
+      let endAt = -1;
+      for (const marker of endCandidates) {
+        const p = chunk.indexOf(marker);
+        if (p >= 0 && (endAt < 0 || p < endAt)) endAt = p;
+      }
+      if (endAt >= 0) chunk = chunk.slice(0, endAt);
+
+      chunk = chunk.replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      chunk = chunk.replace(/\s+$/g, '').replace(/\\+$/g, '');
+
+      const trimmed = chunk.trim();
+      if (trimmed.length < 30 || trimmed.indexOf('<h2>') === -1) return '';
+      return trimmed;
+    }
+
+    function extractPartialSuggestion(rawText) {
+      const partial = {};
+      const nombre = extractStringField(rawText, 'nombre_comun');
+      const sku = extractStringField(rawText, 'sku');
+      const unidad = extractStringField(rawText, 'unidad');
+      const seguridad = extractStringField(rawText, 'advertencias_seguridad');
+      const foto = extractStringField(rawText, 'foto_url');
+      const categoriaNombre = extractStringField(rawText, 'categoria_nombre');
+      const descripcion = extractDescripcionHtmlFallback(rawText);
+
+      if (nombre) partial.nombre_comun = nombre;
+      if (sku) partial.sku = sku;
+      if (unidad) partial.unidad = unidad;
+      if (seguridad) partial.advertencias_seguridad = seguridad;
+      if (foto) partial.foto_url = foto;
+      if (categoriaNombre) partial.categoria_nombre = categoriaNombre;
+      if (descripcion) partial.descripcion_html = descripcion;
+
+      return Object.keys(partial).length ? partial : null;
+    }
+
+    function getDescripcionEditorHtml() {
+      try {
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.descripcion_html) {
+          return String(CKEDITOR.instances.descripcion_html.getData() || '');
+        }
+      } catch (_e) {}
+      return String(document.getElementById('descripcion_html')?.value || '');
+    }
+
+    function collectFormSnapshot() {
+      const categorySelect = document.getElementById('categoria_id');
+      const options = categorySelect ? Array.from(categorySelect.options).map((o) => ({ id: parseInt(o.value || '0', 10) || 0, nombre: String(o.textContent || '').trim() })).filter((x) => x.id > 0) : [];
+      const categoriaActualId = categorySelect ? parseInt(categorySelect.value || '0', 10) || 0 : 0;
+      const categoriaActualNombre = (categorySelect && categorySelect.selectedOptions && categorySelect.selectedOptions[0]) ? String(categorySelect.selectedOptions[0].textContent || '').trim() : '';
+
+      return {
+        nombre_comun: (document.getElementById('nombre_comun')?.value || '').trim(),
+        sku: (document.getElementById('slug')?.value || '').trim(),
+        categoria_id: categoriaActualId,
+        categoria_nombre: categoriaActualNombre,
+        unidad: (document.getElementById('unidad')?.value || '').trim(),
+        advertencias_seguridad: (document.getElementById('advertencias_seguridad')?.value || '').trim(),
+        foto_url: (document.getElementById('foto_url')?.value || '').trim(),
+        descripcion_html: getDescripcionEditorHtml(),
+        categorias_disponibles: options
+      };
+    }
+
+    function buildIaPrompt(userMessage) {
+      const snapshot = collectFormSnapshot();
+      return [
+        'Eres asistente experto en redaccion tecnica y pedagogica de componentes para kits educativos de ciencias en Colombia.',
+        'Devuelve SOLO JSON valido, sin markdown, sin comentarios, sin texto fuera del JSON.',
+        'Schema obligatorio exacto:',
+        '{"nombre_comun":"","sku":"","categoria_id":0,"categoria_nombre":"","unidad":"pcs","advertencias_seguridad":"","descripcion_html":"","foto_url":"","notas_autor":"","plantilla_estructura":{"secciones":["Que es este componente","Para que sirve en clase","Uso recomendado paso a paso","Seguridad y cuidados","Mantenimiento y almacenamiento","Preguntas frecuentes"]}}',
+        'Reglas obligatorias para descripcion_html:',
+        '- Debe incluir h2 con este orden exacto: Que es este componente; Para que sirve en clase; Uso recomendado paso a paso; Seguridad y cuidados; Mantenimiento y almacenamiento; Preguntas frecuentes.',
+        '- Usar solo etiquetas seguras: h2, p, ul, ol, li, strong, em.',
+        '- Escribir en tono claro, didactico y seguro.',
+        '- No inventar instrucciones peligrosas ni uso de sustancias de riesgo.',
+        '- sku debe quedar en MAYUSCULAS y con guiones (ejemplo: SENSOR-PH-01).',
+        'Contexto actual del formulario: ' + JSON.stringify(snapshot),
+        'Solicitud del usuario: ' + userMessage
+      ].join('\n');
+    }
+
+    function setCategoriaByData(data) {
+      const sel = document.getElementById('categoria_id');
+      if (!sel) return;
+
+      const byId = parseInt(String(data.categoria_id || '0'), 10) || 0;
+      if (byId > 0 && sel.querySelector('option[value="' + byId + '"]')) {
+        sel.value = String(byId);
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+
+      const catName = String(data.categoria_nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      if (!catName) return;
+      const match = Array.from(sel.options).find((opt) => String(opt.textContent || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').indexOf(catName) !== -1);
+      if (match) {
+        sel.value = String(match.value);
+        sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    function applySuggestion(data) {
+      if (!data || typeof data !== 'object') return;
+      const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = val == null ? '' : String(val);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+
+      if (data.nombre_comun) setVal('nombre_comun', data.nombre_comun);
+      if (data.sku || data.nombre_comun) setVal('slug', normalizeSku(data.sku || data.nombre_comun));
+      if (data.unidad) setVal('unidad', data.unidad);
+      if (data.advertencias_seguridad) setVal('advertencias_seguridad', data.advertencias_seguridad);
+      if (data.foto_url) setVal('foto_url', data.foto_url);
+      setCategoriaByData(data);
+
+      if (data.descripcion_html) {
+        const html = String(data.descripcion_html);
+        const ta = document.getElementById('descripcion_html');
+        if (ta) ta.value = html;
+        try {
+          if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.descripcion_html) {
+            CKEDITOR.instances.descripcion_html.setData(html);
+          }
+        } catch (_e) {}
+      }
+
+      console.log('✅ [IA Componente Modal] Campos autollenados');
+    }
+
+    async function askIa(userText) {
+      if (isBusy) return;
+      const text = String(userText || '').trim();
+      if (!text) return;
+
+      isBusy = true;
+      btnSend.disabled = true;
+      addMsg('user', text);
+      input.value = '';
+      console.log('🔍 [IA Componente Modal] Enviando solicitud IA');
+
+      try {
+        async function callIaWithPrompt(promptText) {
+          const payload = {
+            instancia: 'backend',
+            contexto_scope: 'admin_componentes_builder',
+            contexto_pagina: 'componentes',
+            entidad_tipo: 'componente',
+            entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+            pregunta: promptText
+          };
+          const res = await fetch('/api/ia-consulta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return res.json();
+        }
+
+        const firstPrompt = buildIaPrompt(text);
+        let json = await callIaWithPrompt(firstPrompt);
+        if (!json || !json.ok) {
+          const msg = (json && json.error) ? json.error : 'No se pudo generar el borrador.';
+          addMsg('assistant', '❌ ' + msg);
+          console.log('❌ [IA Componente Modal] Error API:', msg);
+          return;
+        }
+
+        let respuesta = String(json.respuesta || '').trim();
+        let parsed = safeJsonParse(respuesta);
+        if (!respuesta || !parsed || typeof parsed !== 'object') {
+          addMsg('system', '⚠️ Primera respuesta no válida. Reintentando con formato de rescate...');
+          console.log('⚠️ [IA Componente Modal] Primera respuesta vacía/no JSON, reintento rescate');
+
+          const rescuePrompt = [
+            'RESPUESTA DE RESCATE OBLIGATORIA.',
+            'Devuelve SOLO JSON válido en UNA sola línea.',
+            'Sin markdown. Sin texto extra. Sin explicación.',
+            'Schema exacto:',
+            '{"nombre_comun":"","sku":"","categoria_id":0,"categoria_nombre":"","unidad":"pcs","advertencias_seguridad":"","descripcion_html":"","foto_url":"","notas_autor":"","plantilla_estructura":{"secciones":["Que es este componente","Para que sirve en clase","Uso recomendado paso a paso","Seguridad y cuidados","Mantenimiento y almacenamiento","Preguntas frecuentes"]}}',
+            'descripcion_html debe incluir al menos 6 secciones h2 con contenido real. No truncar respuesta.',
+            'Solicitud original del usuario: ' + text
+          ].join('\n');
+
+          json = await callIaWithPrompt(rescuePrompt);
+          if (!json || !json.ok) {
+            const msg = (json && json.error) ? json.error : 'No se pudo generar el borrador (reintento).';
+            addMsg('assistant', '❌ ' + msg);
+            return;
+          }
+
+          respuesta = String(json.respuesta || '').trim();
+          parsed = safeJsonParse(respuesta);
+        }
+
+        addMsg('assistant', respuesta || 'Respuesta vacía de IA.');
+        if (parsed && typeof parsed === 'object') {
+          lastSuggestion = parsed;
+          preview.textContent = JSON.stringify(parsed, null, 2);
+          btnApply.disabled = false;
+          addMsg('system', '✅ Borrador estructurado detectado. Puedes aplicar al formulario.');
+          console.log('✅ [IA Componente Modal] JSON estructurado listo');
+        } else {
+          const partial = extractPartialSuggestion(respuesta);
+          if (partial) {
+            lastSuggestion = partial;
+            preview.textContent = JSON.stringify(partial, null, 2);
+            btnApply.disabled = false;
+            addMsg('system', '⚠️ JSON incompleto: se recuperó un borrador parcial. Revisa antes de aplicar.');
+            console.log('⚠️ [IA Componente Modal] Fallback parcial aplicado');
+          } else {
+            addMsg('system', '⚠️ No se detectó JSON válido. Pídele que responda solo JSON.');
+            console.log('⚠️ [IA Componente Modal] Respuesta sin JSON parseable');
+          }
+        }
+      } catch (err) {
+        addMsg('assistant', '❌ Error de red o de procesamiento.');
+        console.log('❌ [IA Componente Modal] Excepción:', err && err.message ? err.message : err);
+      } finally {
+        isBusy = false;
+        btnSend.disabled = false;
+      }
+    }
+
+    btnOpen.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    btnSend.addEventListener('click', () => askIa(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askIa(input.value);
+      }
+    });
+
+    btnQuick?.addEventListener('click', () => {
+      askIa('Genera un borrador completo del componente para publicar en Clase de Ciencia.');
+    });
+
+    btnApply.addEventListener('click', () => {
+      if (!lastSuggestion) {
+        addMsg('system', '⚠️ No hay borrador para aplicar.');
+        return;
+      }
+      applySuggestion(lastSuggestion);
+      addMsg('system', '✅ Datos aplicados al formulario. Revisa y guarda.');
+    });
+
+    btnReset?.addEventListener('click', () => {
+      lastSuggestion = null;
+      preview.textContent = 'Esperando sugerencia...';
+      btnApply.disabled = true;
+      input.value = '';
+      messages.innerHTML = '';
+      delete messages.dataset.welcome;
+      addMsg('system', '🧹 Borrador limpiado.');
+    });
+  })();
+
+  // ========================================================
+  // MODAL IA DE CONTENIDO DEL COMPONENTE
+  // ========================================================
+  (function initIaComponenteContentBuilder() {
+    const modal = document.getElementById('ia_componente_content_modal');
+    const btnOpen = document.getElementById('btn_open_ia_componente_content_modal');
+    const btnClose = document.getElementById('ia_componente_content_modal_close_top');
+    const btnSend = document.getElementById('ia_componente_content_send');
+    const btnApplyReplace = document.getElementById('ia_componente_content_apply_replace');
+    const btnApplyAppend = document.getElementById('ia_componente_content_apply_append');
+    const btnReset = document.getElementById('ia_componente_content_reset');
+    const input = document.getElementById('ia_componente_content_user_input');
+    const messages = document.getElementById('ia_componente_content_messages');
+    const preview = document.getElementById('ia_componente_content_json_preview');
+    const cbSeguridad = document.getElementById('ia_componente_content_update_seguridad');
+    const quickButtons = Array.from(document.querySelectorAll('.ia-componente-content-quick'));
+
+    if (!modal || !btnOpen || !messages || !preview || !input || !btnSend || !btnApplyReplace || !btnApplyAppend) {
+      console.log('⚠️ [IA Componente Content Modal] No se inicializa por elementos faltantes');
+      return;
+    }
+
+    let lastSuggestion = null;
+    let busy = false;
+    let currentFocus = '';
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'ia-msg ' + role;
+      el.textContent = text;
+      messages.appendChild(el);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function openModal() {
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      if (!messages.dataset.welcome) {
+        addMsg('system', '🧪 Genera la descripción del componente por bloques o completa.');
+        messages.dataset.welcome = '1';
+      }
+      input.focus();
+      console.log('✅ [IA Componente Content Modal] abierto');
+    }
+
+    function closeModal() {
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      console.log('🔍 [IA Componente Content Modal] cerrado');
+    }
+
+    function getEditorHtml() {
+      try {
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.descripcion_html) {
+          return String(CKEDITOR.instances.descripcion_html.getData() || '');
+        }
+      } catch (_e) {}
+      return String(document.getElementById('descripcion_html')?.value || '');
+    }
+
+    function safeJsonParse(rawText) {
+      const text = String(rawText || '').trim();
+      if (!text) return null;
+      try { return JSON.parse(text); } catch (_e) {}
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start >= 0 && end > start) {
+        const maybe = text.slice(start, end + 1);
+        try { return JSON.parse(maybe); } catch (_e) {}
+      }
+      return null;
+    }
+
+    function extractDescripcionHtmlFallback(rawText) {
+      const text = String(rawText || '');
+      if (!text) return '';
+      const key = '"descripcion_html":"';
+      const idx = text.indexOf(key);
+      if (idx < 0) return '';
+
+      let chunk = text.slice(idx + key.length);
+      const endCandidates = ['","advertencias_seguridad"', '","notas_autor"', '"}'];
+      let endAt = -1;
+      for (const marker of endCandidates) {
+        const p = chunk.indexOf(marker);
+        if (p >= 0 && (endAt < 0 || p < endAt)) endAt = p;
+      }
+      if (endAt >= 0) chunk = chunk.slice(0, endAt);
+
+      chunk = chunk.replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      chunk = chunk.replace(/\s+$/g, '').replace(/\\+$/g, '');
+
+      const trimmed = chunk.trim();
+      if (trimmed.length < 30 || trimmed.indexOf('<h2>') === -1) return '';
+      return trimmed;
+    }
+
+    function buildPrompt(userText) {
+      const nombre = (document.getElementById('nombre_comun')?.value || '').trim();
+      const sku = (document.getElementById('slug')?.value || '').trim();
+      const unidad = (document.getElementById('unidad')?.value || '').trim();
+      const advertencias = (document.getElementById('advertencias_seguridad')?.value || '').trim();
+      const categoriaSelect = document.getElementById('categoria_id');
+      const categoria = (categoriaSelect && categoriaSelect.selectedOptions && categoriaSelect.selectedOptions[0]) ? String(categoriaSelect.selectedOptions[0].textContent || '').trim() : '';
+      const descripcionActual = getEditorHtml();
+      const descripcionResumida = descripcionActual.length > 2400
+        ? (descripcionActual.slice(0, 2400) + '\n...[DESCRIPCION ACTUAL RECORTADA PARA CONTEXTO]...')
+        : descripcionActual;
+
+      return [
+        'Eres editor experto en fichas de componentes para kits educativos de ciencias en Colombia.',
+        'Devuelve SOLO JSON valido, sin markdown y sin texto fuera del JSON.',
+        'Schema obligatorio:',
+        '{"descripcion_html":"","advertencias_seguridad":"","notas_autor":"","plantilla_validada":true,"secciones_detectadas":["Que es este componente","Para que sirve en clase","Uso recomendado paso a paso","Seguridad y cuidados","Mantenimiento y almacenamiento","Preguntas frecuentes"]}',
+        'Reglas:',
+        '- descripcion_html debe usar SOLO etiquetas seguras: h2, p, ul, ol, li, strong, em.',
+        '- Estructura obligatoria con h2 y en este orden: Que es este componente; Para que sirve en clase; Uso recomendado paso a paso; Seguridad y cuidados; Mantenimiento y almacenamiento; Preguntas frecuentes.',
+        '- Mantener lenguaje claro, didactico y seguro para docentes y estudiantes.',
+        '- Incluir advertencias y recomendaciones de uso responsable.',
+        '- No devolver placeholders vacios; cada sección debe tener contenido real.',
+        'Contexto componente: ' + JSON.stringify({ nombre_comun: nombre, sku, unidad, categoria, advertencias_seguridad: advertencias }),
+        'Descripción actual: ' + descripcionResumida,
+        'Foco solicitado: ' + (currentFocus || 'sin foco específico'),
+        'Solicitud del usuario: ' + userText
+      ].join('\n');
+    }
+
+    function setEditorHtml(html, mode) {
+      const incoming = String(html || '').trim();
+      if (!incoming) return;
+      const ta = document.getElementById('descripcion_html');
+      const current = getEditorHtml();
+      const finalHtml = mode === 'append' && current ? (current + '\n\n' + incoming) : incoming;
+
+      if (ta) ta.value = finalHtml;
+      try {
+        if (window.CKEDITOR && CKEDITOR.instances && CKEDITOR.instances.descripcion_html) {
+          CKEDITOR.instances.descripcion_html.setData(finalHtml);
+        }
+      } catch (_e) {}
+      console.log('✅ [IA Componente Content Modal] descripcion_html actualizada en modo:', mode);
+    }
+
+    function applySuggestion(mode) {
+      if (!lastSuggestion || typeof lastSuggestion !== 'object') {
+        addMsg('system', '⚠️ No hay propuesta de contenido para aplicar.');
+        return;
+      }
+      if (lastSuggestion.descripcion_html) {
+        setEditorHtml(lastSuggestion.descripcion_html, mode);
+      }
+      if (cbSeguridad?.checked && lastSuggestion.advertencias_seguridad) {
+        const el = document.getElementById('advertencias_seguridad');
+        if (el) {
+          el.value = String(lastSuggestion.advertencias_seguridad);
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+      addMsg('system', '✅ Contenido aplicado. Revisa antes de guardar.');
+    }
+
+    async function askContentIa(messageText) {
+      const message = String(messageText || '').trim();
+      if (!message || busy) return;
+
+      busy = true;
+      btnSend.disabled = true;
+      addMsg('user', message);
+      input.value = '';
+      console.log('🔍 [IA Componente Content Modal] Enviando solicitud IA con foco:', currentFocus || '(general)');
+
+      try {
+        async function callIaWithPrompt(promptText) {
+          const payload = {
+            instancia: 'backend',
+            contexto_scope: 'admin_componentes_content_builder',
+            contexto_pagina: 'componentes',
+            entidad_tipo: 'componente',
+            entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+            pregunta: promptText
+          };
+          const res = await fetch('/api/ia-consulta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return res.json();
+        }
+
+        const primaryPrompt = buildPrompt(message);
+        let json = await callIaWithPrompt(primaryPrompt);
+        if (!json || !json.ok) {
+          const msg = (json && json.error) ? json.error : 'No se pudo generar contenido.';
+          addMsg('assistant', '❌ ' + msg);
+          return;
+        }
+
+        let respuesta = String(json.respuesta || '').trim();
+        let parsed = safeJsonParse(respuesta);
+
+        if (!respuesta || !(parsed && typeof parsed === 'object' && parsed.descripcion_html)) {
+          console.log('⚠️ [IA Componente Content Modal] Primera respuesta vacía/no válida, activando reintento de rescate');
+          addMsg('system', '⚠️ La primera respuesta no fue utilizable. Reintentando con formato de rescate...');
+
+          const rescuePrompt = [
+            'RESPUESTA DE RESCATE OBLIGATORIA.',
+            'Devuelve SOLO JSON válido en UNA sola línea.',
+            'Sin markdown. Sin texto extra. Sin explicación.',
+            'Schema exacto:',
+            '{"descripcion_html":"","advertencias_seguridad":"","notas_autor":"","plantilla_validada":true,"secciones_detectadas":["Que es este componente","Para que sirve en clase","Uso recomendado paso a paso","Seguridad y cuidados","Mantenimiento y almacenamiento","Preguntas frecuentes"]}',
+            'La clave descripcion_html es obligatoria y debe traer HTML real con al menos 6 bloques h2.',
+            'Solicitud original del usuario: ' + message
+          ].join('\n');
+
+          json = await callIaWithPrompt(rescuePrompt);
+          if (!json || !json.ok) {
+            const msg = (json && json.error) ? json.error : 'No se pudo generar contenido (reintento).';
+            addMsg('assistant', '❌ ' + msg);
+            return;
+          }
+
+          respuesta = String(json.respuesta || '').trim();
+          parsed = safeJsonParse(respuesta);
+        }
+
+        addMsg('assistant', respuesta || 'Respuesta vacía.');
+        if (parsed && typeof parsed === 'object' && parsed.descripcion_html) {
+          lastSuggestion = parsed;
+          preview.textContent = JSON.stringify(parsed, null, 2);
+          btnApplyReplace.disabled = false;
+          btnApplyAppend.disabled = false;
+          addMsg('system', '✅ Propuesta de contenido lista para aplicar.');
+          console.log('✅ [IA Componente Content Modal] JSON parseado correctamente');
+        } else {
+          const rescuedHtml = extractDescripcionHtmlFallback(respuesta);
+          if (rescuedHtml) {
+            lastSuggestion = {
+              descripcion_html: rescuedHtml,
+              advertencias_seguridad: '',
+              notas_autor: 'fallback_from_truncated_json'
+            };
+            preview.textContent = JSON.stringify(lastSuggestion, null, 2);
+            btnApplyReplace.disabled = false;
+            btnApplyAppend.disabled = false;
+            addMsg('system', '⚠️ JSON truncado: se recuperó descripcion_html de forma parcial. Revisa antes de aplicar.');
+            console.log('⚠️ [IA Componente Content Modal] Se aplicó fallback por JSON truncado');
+          } else {
+            addMsg('system', '⚠️ La respuesta no trae JSON válido con descripcion_html.');
+            console.log('⚠️ [IA Componente Content Modal] Respuesta no parseable como JSON de contenido');
+          }
+        }
+      } catch (err) {
+        addMsg('assistant', '❌ Error al consultar IA para contenido.');
+        console.log('❌ [IA Componente Content Modal] Excepción:', err && err.message ? err.message : err);
+      } finally {
+        busy = false;
+        btnSend.disabled = false;
+      }
+    }
+
+    btnOpen?.addEventListener('click', openModal);
+    btnClose?.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+    btnSend.addEventListener('click', () => askContentIa(input.value));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        askContentIa(input.value);
+      }
+    });
+
+    quickButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentFocus = btn.getAttribute('data-focus') || '';
+        askContentIa('Genera una propuesta enfocada en: ' + currentFocus + '.');
+      });
+    });
+
+    btnApplyReplace.addEventListener('click', () => applySuggestion('replace'));
+    btnApplyAppend.addEventListener('click', () => applySuggestion('append'));
+    btnReset?.addEventListener('click', () => {
+      lastSuggestion = null;
+      preview.textContent = 'Esperando propuesta de contenido...';
+      btnApplyReplace.disabled = true;
+      btnApplyAppend.disabled = true;
+      input.value = '';
+      messages.innerHTML = '';
+      delete messages.dataset.welcome;
+      currentFocus = '';
+      addMsg('system', '🧹 Propuesta limpiada.');
+    });
+  })();
+</script>
 
 <script src="/assets/js/admin-image-editor.js"></script>
 
