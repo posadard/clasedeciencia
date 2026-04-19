@@ -2289,6 +2289,32 @@ include '../header.php';
       return null;
     }
 
+    function extractContenidoHtmlFallback(rawText) {
+      const text = String(rawText || '');
+      if (!text) return '';
+      const key = '"contenido_html":"';
+      const idx = text.indexOf(key);
+      if (idx < 0) return '';
+
+      let chunk = text.slice(idx + key.length);
+      const endCandidates = ['","resumen"', '","objetivo_aprendizaje"', '","notas_autor"', '"}'];
+      let endAt = -1;
+      for (const marker of endCandidates) {
+        const p = chunk.indexOf(marker);
+        if (p >= 0 && (endAt < 0 || p < endAt)) endAt = p;
+      }
+      if (endAt >= 0) {
+        chunk = chunk.slice(0, endAt);
+      }
+
+      chunk = chunk.replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\t/g, '\t').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      chunk = chunk.replace(/\s+$/g, '').replace(/\\+$/g, '');
+
+      const trimmed = chunk.trim();
+      if (trimmed.length < 40 || trimmed.indexOf('<h2>') === -1) return '';
+      return trimmed;
+    }
+
     function buildPrompt(userText) {
       const nombre = (document.getElementById('nombre')?.value || '').trim();
       const ciclo = (document.getElementById('ciclo')?.value || '').trim();
@@ -2298,6 +2324,9 @@ include '../header.php';
       const resumen = (document.getElementById('resumen')?.value || '').trim();
       const objetivo = (document.getElementById('objetivo_aprendizaje')?.value || '').trim();
       const contenidoActual = getEditorHtml();
+      const contenidoActualResumido = contenidoActual.length > 2600
+        ? (contenidoActual.slice(0, 2600) + '\n...[CONTENIDO ACTUAL RECORTADO PARA CONTEXTO]...')
+        : contenidoActual;
 
       return [
         'Eres editor pedagogico experto para clases de ciencias en Colombia.',
@@ -2321,7 +2350,7 @@ include '../header.php';
         '- No inventar bloques peligrosos ni instrucciones riesgosas.',
         '- No devolver placeholders vacios; cada seccion debe tener contenido real.',
         'Contexto clase: ' + JSON.stringify({ nombre, ciclo, grados, dificultad, duracion_minutos: duracion, resumen, objetivo }),
-        'Contenido actual: ' + contenidoActual,
+        'Contenido actual: ' + contenidoActualResumido,
         'Foco solicitado: ' + (currentFocus || 'sin foco específico'),
         'Solicitud del usuario: ' + userText
       ].join('\n');
@@ -2412,8 +2441,23 @@ include '../header.php';
           addMsg('system', '✅ Propuesta de contenido lista para aplicar.');
           console.log('✅ [IA Content Modal] JSON parseado correctamente');
         } else {
-          addMsg('system', '⚠️ La respuesta no trae JSON válido con contenido_html.');
-          console.log('⚠️ [IA Content Modal] Respuesta no parseable como JSON de contenido');
+          const rescuedHtml = extractContenidoHtmlFallback(respuesta);
+          if (rescuedHtml) {
+            lastSuggestion = {
+              contenido_html: rescuedHtml,
+              resumen: '',
+              objetivo_aprendizaje: '',
+              notas_autor: 'fallback_from_truncated_json'
+            };
+            preview.textContent = JSON.stringify(lastSuggestion, null, 2);
+            btnApplyReplace.disabled = false;
+            btnApplyAppend.disabled = false;
+            addMsg('system', '⚠️ JSON truncado: se recuperó contenido_html de forma parcial. Revisa antes de aplicar.');
+            console.log('⚠️ [IA Content Modal] Se aplicó fallback por JSON truncado');
+          } else {
+            addMsg('system', '⚠️ La respuesta no trae JSON válido con contenido_html.');
+            console.log('⚠️ [IA Content Modal] Respuesta no parseable como JSON de contenido');
+          }
         }
       } catch (err) {
         addMsg('assistant', '❌ Error al consultar IA para contenido.');

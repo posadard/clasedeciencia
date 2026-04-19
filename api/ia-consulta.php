@@ -1796,6 +1796,11 @@ try {
     $top_p       = (float)($cfg['groq_top_p']     ?? '0.9');
     $prompt_base = $cfg['prompt_sistema']          ?? '';
 
+    if ($instancia === 'backend' && in_array($contexto_scope, ['admin_clases_builder', 'admin_clases_content_builder'], true)) {
+        // Los builders requieren respuestas JSON largas (contenido_html completo).
+        $max_tokens = max($max_tokens, 2200);
+    }
+
     $guardrails_activos  = (($cfg['guardrails_activos'] ?? '0') === '1');
     $palabras_peligro    = json_decode($cfg['palabras_peligro']   ?? '[]', true) ?: [];
     $palabras_tematicas  = json_decode($cfg['palabras_tematicas'] ?? '[]', true) ?: [];
