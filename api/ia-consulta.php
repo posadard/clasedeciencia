@@ -173,6 +173,165 @@ function ia_build_link(string $label, string $tipo, int $id): ?array {
     ];
 }
 
+function ia_unique_links(array $links, int $max = 8): array {
+    $out = [];
+    $seen = [];
+    foreach ($links as $link) {
+        if (!is_array($link)) continue;
+        $url = (string)($link['url'] ?? '');
+        $label = trim((string)($link['label'] ?? ''));
+        if ($url === '' || $label === '') continue;
+        if (strpos($url, '/') !== 0 || strpos($url, '//') === 0 || stripos($url, 'javascript:') === 0) continue;
+        if (isset($seen[$url])) continue;
+        $seen[$url] = true;
+        $out[] = [
+            'label' => $label,
+            'url' => $url,
+            'entity_type' => (string)($link['entity_type'] ?? ''),
+            'entity_id' => (int)($link['entity_id'] ?? 0),
+        ];
+        if (count($out) >= $max) break;
+    }
+    return $out;
+}
+
+function ia_extract_terms(string $text, int $max = 6): array {
+    $clean = mb_strtolower(trim($text));
+    if ($clean === '') return [];
+    $clean = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $clean) ?? $clean;
+    $parts = preg_split('/\s+/u', $clean) ?: [];
+    $stop = [
+        'para', 'pero', 'esta', 'este', 'estos', 'estas', 'donde', 'como', 'cual', 'cuales', 'quiero',
+        'tengo', 'tiene', 'tienen', 'sobre', 'desde', 'hasta', 'porque', 'cuando', 'cuanto', 'cuantos',
+        'cuantas', 'solo', 'con', 'sin', 'los', 'las', 'del', 'que', 'una', 'uno', 'unos', 'unas',
+        'admin', 'chat', 'ia', 'mas', 'más'
+    ];
+    $stopMap = array_fill_keys($stop, true);
+    $terms = [];
+    foreach ($parts as $p) {
+        $p = trim($p);
+        if ($p === '' || mb_strlen($p) < 3) continue;
+        if (isset($stopMap[$p])) continue;
+        $terms[$p] = true;
+        if (count($terms) >= $max) break;
+    }
+    return array_keys($terms);
+}
+
+function ia_base_module_links(string $contexto_pagina): array {
+    $map = [
+        'contratos' => [['label' => 'Abrir módulo de contratos', 'url' => '/admin/contratos/index.php', 'entity_type' => 'contrato', 'entity_id' => 0]],
+        'entregas' => [['label' => 'Abrir módulo de entregas', 'url' => '/admin/entregas/index.php', 'entity_type' => 'entrega', 'entity_id' => 0]],
+        'lotes' => [['label' => 'Abrir módulo de lotes', 'url' => '/admin/lotes/index.php', 'entity_type' => 'lote', 'entity_id' => 0]],
+        'clases' => [['label' => 'Abrir módulo de clases', 'url' => '/admin/clases/index.php', 'entity_type' => 'clase', 'entity_id' => 0]],
+        'kits' => [['label' => 'Abrir módulo de kits', 'url' => '/admin/kits/index.php', 'entity_type' => 'kit', 'entity_id' => 0]],
+        'componentes' => [['label' => 'Abrir módulo de componentes', 'url' => '/admin/componentes/index.php', 'entity_type' => 'componente', 'entity_id' => 0]],
+        'manuales' => [['label' => 'Abrir módulo de manuales', 'url' => '/admin/kits/manuals/index.php', 'entity_type' => 'manual', 'entity_id' => 0]],
+        'ia' => [['label' => 'Abrir panel IA', 'url' => '/admin/ia/index.php?tab=estado', 'entity_type' => 'ia', 'entity_id' => 0]],
+    ];
+
+    $default = [
+        ['label' => 'Contratos', 'url' => '/admin/contratos/index.php', 'entity_type' => 'contrato', 'entity_id' => 0],
+        ['label' => 'Entregas', 'url' => '/admin/entregas/index.php', 'entity_type' => 'entrega', 'entity_id' => 0],
+        ['label' => 'Lotes', 'url' => '/admin/lotes/index.php', 'entity_type' => 'lote', 'entity_id' => 0],
+    ];
+
+    return $map[$contexto_pagina] ?? $default;
+}
+
+function ia_backend_links_from_entities(string $contexto_pagina, ?string $entidad_tipo, ?int $entidad_id): array {
+    $links = ia_base_module_links($contexto_pagina);
+    if (!empty($entidad_tipo) && !empty($entidad_id)) {
+        $link = ia_build_link('Abrir ' . $entidad_tipo . ' #' . (int)$entidad_id, (string)$entidad_tipo, (int)$entidad_id);
+        if ($link) array_unshift($links, $link);
+    }
+    return ia_unique_links($links, 8);
+}
+
+function ia_backend_links_from_search(PDO $pdo, string $contexto_pagina, string $pregunta, string $respuesta): array {
+    $links = [];
+    $text = trim($pregunta . ' ' . $respuesta);
+    $terms = ia_extract_terms($text, 4);
+    $term = $terms[0] ?? '';
+
+    if ($term === '') {
+        return [];
+    }
+
+    $like = '%' . $term . '%';
+
+    try {
+        $stmt = $pdo->prepare("SELECT id, nombre FROM clases WHERE LOWER(nombre) LIKE ? ORDER BY activo DESC, nombre ASC LIMIT 2");
+        $stmt->execute([$like]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $l = ia_build_link('Clase: ' . (string)$r['nombre'] . ' (ID ' . (int)$r['id'] . ')', 'clase', (int)$r['id']);
+            if ($l) $links[] = $l;
+        }
+    } catch (Exception $e) {
+        error_log('IA links clases error: ' . $e->getMessage());
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT id, nombre FROM kits WHERE LOWER(nombre) LIKE ? ORDER BY activo DESC, nombre ASC LIMIT 2");
+        $stmt->execute([$like]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $l = ia_build_link('Kit: ' . (string)$r['nombre'] . ' (ID ' . (int)$r['id'] . ')', 'kit', (int)$r['id']);
+            if ($l) $links[] = $l;
+        }
+    } catch (Exception $e) {
+        error_log('IA links kits error: ' . $e->getMessage());
+    }
+
+    try {
+        $stmt = $pdo->prepare("SELECT id, nombre_comun FROM kit_items WHERE LOWER(nombre_comun) LIKE ? ORDER BY activo DESC, nombre_comun ASC LIMIT 2");
+        $stmt->execute([$like]);
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+            $l = ia_build_link('Componente: ' . (string)$r['nombre_comun'] . ' (ID ' . (int)$r['id'] . ')', 'componente', (int)$r['id']);
+            if ($l) $links[] = $l;
+        }
+    } catch (Exception $e) {
+        error_log('IA links componentes error: ' . $e->getMessage());
+    }
+
+    if (in_array($contexto_pagina, ['contratos', 'entregas', 'lotes'], true)) {
+        try {
+            $stmt = $pdo->prepare("SELECT id, numero FROM contratos WHERE LOWER(numero) LIKE ? OR LOWER(entidad_contratante) LIKE ? ORDER BY id DESC LIMIT 2");
+            $stmt->execute([$like, $like]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $l = ia_build_link('Contrato: ' . (string)$r['numero'], 'contrato', (int)$r['id']);
+                if ($l) $links[] = $l;
+            }
+        } catch (Exception $e) {
+            error_log('IA links contratos error: ' . $e->getMessage());
+        }
+
+        try {
+            $stmt = $pdo->prepare("SELECT id, codigo_entrega, institucion_educativa FROM entregas WHERE LOWER(COALESCE(codigo_entrega, '')) LIKE ? OR LOWER(institucion_educativa) LIKE ? ORDER BY id DESC LIMIT 2");
+            $stmt->execute([$like, $like]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $label = !empty($r['codigo_entrega']) ? ('Entrega: ' . (string)$r['codigo_entrega']) : ('Entrega ID ' . (int)$r['id'] . ' · ' . (string)$r['institucion_educativa']);
+                $l = ia_build_link($label, 'entrega', (int)$r['id']);
+                if ($l) $links[] = $l;
+            }
+        } catch (Exception $e) {
+            error_log('IA links entregas error: ' . $e->getMessage());
+        }
+
+        try {
+            $stmt = $pdo->prepare("SELECT id, codigo_lote FROM lotes WHERE LOWER(codigo_lote) LIKE ? ORDER BY id DESC LIMIT 2");
+            $stmt->execute([$like]);
+            foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $l = ia_build_link('Lote: ' . (string)$r['codigo_lote'], 'lote', (int)$r['id']);
+                if ($l) $links[] = $l;
+            }
+        } catch (Exception $e) {
+            error_log('IA links lotes error: ' . $e->getMessage());
+        }
+    }
+
+    return ia_unique_links($links, 8);
+}
+
 function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pregunta): array|string|null {
     try {
         if ($intent === 'manuales_nombres') {
@@ -1699,6 +1858,9 @@ try {
                         $modelo_usado = 'deterministic-backend:' . $intent_backend;
                     }
                 }
+                if (empty($respuesta_links)) {
+                    $respuesta_links = ia_backend_links_from_entities($contexto_pagina, $entidad_tipo, $entidad_id);
+                }
             }
 
             if (!empty($respuesta)) {
@@ -1764,6 +1926,11 @@ try {
                 error_log('IA groq todos los modelos fallaron: ' . $groq_detalle);
             }
             }
+        }
+
+        if ($instancia === 'backend') {
+            $search_links = ia_backend_links_from_search($pdo, $contexto_pagina, $pregunta, (string)$respuesta);
+            $respuesta_links = ia_unique_links(array_merge($respuesta_links, $search_links), 8);
         }
 
         // Guardar en cachÃƒÂ© (solo frontend, sin guardrail, con respuesta vÃƒÂ¡lida)
