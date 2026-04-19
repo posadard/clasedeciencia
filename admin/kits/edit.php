@@ -2676,6 +2676,7 @@ include '../header.php';
     Array.from(document.querySelectorAll('#selected-components .component-chip')).forEach(bindChipEvents);
   })();
 </script>
+<?php endif; ?>
 <!-- Editor: CKEditor 4 for Kit contenido_html (match Clases) -->
 <script src="https://cdn.ckeditor.com/4.21.0/standard/ckeditor.js"></script>
 <script>
@@ -3596,7 +3597,6 @@ include '../header.php';
     updateHidden();
   })();
 </script>
-<?php endif; ?>
 <script src="/assets/js/admin-image-editor.js"></script>
 <div class="form-actions" style="margin-top:2rem;">
   <button type="submit" class="btn" form="kit-form">Guardar</button>
