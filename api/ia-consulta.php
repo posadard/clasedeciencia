@@ -1202,7 +1202,7 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
         $stmt->execute($params);
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $c) {
             $desc = $c['resumen'] ? mb_substr($c['resumen'], 0, 120) : '';
-            $lineas[] = "[Clase] {$c['nombre']} | Ciclo {$c['ciclo']} | {$c['dificultad']} | {$c['duracion_minutos']} min | URL: /{$c['slug']}\n    Descripcion: {$desc}";
+            $lineas[] = "[Clase] {$c['nombre']} | Ciclo {$c['ciclo']} | {$c['dificultad']} | {$c['duracion_minutos']} min | URL: /clase.php?slug={$c['slug']}\n    Descripcion: {$desc}";
         }
 
         // --- KITS ---
@@ -1217,7 +1217,7 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
         $stmt2->execute($params2);
         foreach ($stmt2->fetchAll(PDO::FETCH_ASSOC) as $k) {
             $desc = $k['resumen'] ? mb_substr($k['resumen'], 0, 100) : '';
-            $lineas[] = "[Kit] {$k['nombre']} | Codigo: {$k['codigo']} | URL: /{$k['slug']}\n    Descripcion: {$desc}";
+            $lineas[] = "[Kit] {$k['nombre']} | Codigo: {$k['codigo']} | URL: /kit.php?slug={$k['slug']}\n    Descripcion: {$desc}";
         }
 
         // --- COMPONENTES (solo nombre_comun — descripcion_html es HTML no apto para LIKE) ---
@@ -1231,7 +1231,7 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
         $stmt3 = $pdo->prepare($sql3);
         $stmt3->execute($params3);
         foreach ($stmt3->fetchAll(PDO::FETCH_ASSOC) as $ki) {
-            $lineas[] = "[Componente] {$ki['nombre_comun']} | SKU: {$ki['sku']} | URL: /{$ki['slug']}";
+            $lineas[] = "[Componente] {$ki['nombre_comun']} | SKU: {$ki['sku']} | URL: /componente.php?slug={$ki['slug']}";
         }
     } catch (Exception $e) {
         error_log('IA buscar_catalogo error: ' . $e->getMessage());
@@ -1247,10 +1247,20 @@ function buscar_catalogo_por_pregunta(PDO $pdo, string $termino, int $limite = 5
             $total_kits   = (int)$pdo->query('SELECT COUNT(*) FROM kits WHERE activo = 1')->fetchColumn();
         } catch (Exception $e) {}
         $termino_safe = htmlspecialchars($termino, ENT_QUOTES, 'UTF-8');
-        return "=== CATALOGO: SIN COINCIDENCIAS ===\nBusqueda realizada: '{$termino_safe}'\nResultado: No existe ninguna clase, kit ni componente sobre este tema en el catalogo actual ({$total_clases} clases y {$total_kits} kits disponibles).\nCOMPORTAMIENTO REQUERIDO: Di al usuario exactamente esto (adaptado naturalmente): \"Aun no tenemos una clase o kit sobre [tema], pero podemos seguir aprendiendo juntos sobre ello.\" Luego continua la conversacion educativa sobre el tema sin inventar productos.";
+        return "=== CATALOGO VERDICT ===\n"
+            . "CATALOGO_VERDICT: EMPTY\n"
+            . "Busqueda realizada: '{$termino_safe}'\n"
+            . "Resultado: No existe ninguna clase, kit ni componente sobre este tema en el catalogo actual ({$total_clases} clases y {$total_kits} kits disponibles).\n"
+            . "COMPORTAMIENTO REQUERIDO: Di al usuario que aun no tenemos una clase o kit especifico sobre su tema y ofrece continuar la explicacion educativa sin inventar productos.";
     }
 
-    return "=== CATALOGO DISPONIBLE (resultados reales — usa SOLO estos) ===\nREGLA: Menciona UNICAMENTE los productos listados aqui. NO inventes nombres de clases, kits, codigos ni materiales que no aparezcan en esta lista.\n" . implode("\n", $lineas);
+    return "=== CATALOGO VERDICT ===\n"
+        . "CATALOGO_VERDICT: FOUND\n"
+        . "CATALOGO_TOTAL_RESULTADOS: " . count($lineas) . "\n"
+        . "REGLA: Debes mencionar al menos 1 resultado real listado abajo. Prohibido decir 'aun no tenemos' cuando el veredicto es FOUND.\n"
+        . "=== CATALOGO DISPONIBLE (resultados reales — usa SOLO estos) ===\n"
+        . "REGLA: Menciona UNICAMENTE los productos listados aqui. NO inventes nombres de clases, kits, codigos ni materiales que no aparezcan en esta lista.\n"
+        . implode("\n", $lineas);
 }
 
 function build_context_frontend(PDO $pdo, ?int $clase_id, ?int $kit_id = null, ?int $componente_id = null, ?int $manual_id = null, string $pagina = 'inicio', string $termino_busqueda = ''): string {
@@ -1944,7 +1954,10 @@ try {
             // Regla de honestidad sobre el catalogo (frontend) — va SIEMPRE en el prompt del sistema
             // para que tenga maxima autoridad sobre el conocimiento pre-entrenado del modelo
             if ($instancia === 'frontend') {
-                $system_content .= "\n\nREGLA DE CATALOGO (obligatoria):\n- Si el contexto incluye '=== CATALOGO DISPONIBLE ===' menciona solo esos productos reales.\n- Si el contexto incluye '=== CATALOGO: SIN COINCIDENCIAS ===' NO inventes clases, kits ni materiales. Di honestamente al usuario que aun no tienes un proyecto o kit sobre ese tema especifico, pero ofrece seguir conversando sobre el tema de forma educativa. Ejemplo: 'Aun no tenemos una clase o kit sobre [tema], pero puedo contarte mas sobre ello si te interesa seguir explorando.'";
+                $system_content .= "\n\nREGLA DE CATALOGO (obligatoria):\n"
+                    . "- Si el contexto incluye 'CATALOGO_VERDICT: FOUND', DEBES mencionar al menos un resultado real del catálogo y NO puedes decir 'aun no tenemos'.\n"
+                    . "- Si el contexto incluye 'CATALOGO_VERDICT: EMPTY', NO inventes clases, kits ni materiales. Di honestamente que aun no hay un producto específico y ofrece continuar la explicación educativa.\n"
+                    . "- Usa solo URLs y nombres que aparezcan en el bloque de catálogo.";
             }
 
             if ($instancia === 'backend') {
