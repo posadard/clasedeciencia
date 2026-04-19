@@ -966,7 +966,7 @@ include '../header.php';
     <!-- Competencias MEN - Dual Listbox -->
     <h3 style="margin-top:.5rem; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
       <span>Competencias MEN</span>
-      <button type="button" class="btn btn-secondary" id="btn_sugerir_competencias_ia">🤖 Sugerir con IA</button>
+      <button type="button" class="btn btn-secondary ia-assistant-btn" id="btn_sugerir_competencias_ia">🤖 Sugerir con <span class="ia-word">IA</span></button>
     </h3>
     <small class="hint" style="display: block; margin-bottom: 10px;">Selecciona las competencias que desarrolla esta clase. Recomendado: 3-7 competencias.</small>
     
