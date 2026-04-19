@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 23, 2026 at 11:32 PM
--- Server version: 11.8.3-MariaDB-log
+-- Generation Time: Apr 19, 2026 at 07:55 PM
+-- Server version: 11.8.6-MariaDB-log
 -- PHP Version: 7.2.34
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -112,6 +112,332 @@ CREATE DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` FUNCTION `fn_es_pregunta_
 END$$
 
 DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `analytics_eventos`
+--
+
+CREATE TABLE `analytics_eventos` (
+  `id` bigint(20) NOT NULL,
+  `session_hash` varchar(64) DEFAULT NULL,
+  `sesion_ia_id` int(11) DEFAULT NULL,
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend',
+  `evento` varchar(64) NOT NULL COMMENT 'page_view, search_query, search_result_click, ia_question, ia_answer, ia_error, cta_click, admin_entity_update, etc.',
+  `tipo_pagina` varchar(80) DEFAULT NULL,
+  `modulo` varchar(80) DEFAULT NULL,
+  `entidad_tipo` varchar(40) DEFAULT NULL,
+  `entidad_id` int(11) DEFAULT NULL,
+  `clase_id` int(11) DEFAULT NULL,
+  `kit_id` int(11) DEFAULT NULL,
+  `componente_id` int(11) DEFAULT NULL,
+  `manual_id` int(11) DEFAULT NULL,
+  `termino_busqueda` varchar(255) DEFAULT NULL,
+  `resultado_posicion` int(11) DEFAULT NULL,
+  `referrer` varchar(255) DEFAULT NULL,
+  `departamento` varchar(120) DEFAULT NULL,
+  `dispositivo` varchar(64) DEFAULT NULL,
+  `ip_anon` varchar(80) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `duracion_ms` int(11) DEFAULT NULL,
+  `valor_numerico` decimal(18,6) DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `analytics_eventos`
+--
+
+INSERT INTO `analytics_eventos` (`id`, `session_hash`, `sesion_ia_id`, `instancia`, `evento`, `tipo_pagina`, `modulo`, `entidad_tipo`, `entidad_id`, `clase_id`, `kit_id`, `componente_id`, `manual_id`, `termino_busqueda`, `resultado_posicion`, `referrer`, `departamento`, `dispositivo`, `ip_anon`, `user_agent`, `duracion_ms`, `valor_numerico`, `metadata`, `created_at`) VALUES
+(1, NULL, NULL, 'backend', 'page_view', 'admin', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/clases/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/clases/index.php\"}', '2026-03-25 00:48:38'),
+(2, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/index.php\"}', '2026-03-25 00:48:40'),
+(3, NULL, 3, 'backend', 'ia_question', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, 'cual kit tiene el mayor numero de clases', NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 00:48:55'),
+(4, NULL, 3, 'backend', 'ia_answer', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 287, 1095.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 00:48:55'),
+(5, NULL, 3, 'backend', 'ia_question', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, 'cual clase es l;a mas completa en relacion a manuales, kits componentes', NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 00:49:16'),
+(6, NULL, 3, 'backend', 'ia_answer', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 613, 1191.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 00:49:16'),
+(7, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/index.php\"}', '2026-03-25 00:56:41'),
+(8, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 00:56:57'),
+(9, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 00:57:04'),
+(10, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'hola cual es la clase mas completa lo que implica numero de kits, componentes, manuales', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 00:57:32'),
+(11, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1158, 3004.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 00:57:33'),
+(12, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:03:10'),
+(13, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:03:24'),
+(14, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'que clase tiene mas elementos es decir kit, manual, componentes, la que almenos tenga uno', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:03:46'),
+(15, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1093, 3482.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:03:47'),
+(16, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'que hay de el emisor de ondas', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:04:10'),
+(17, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 434, 2254.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:04:11'),
+(18, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/manuals/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/manuals/index.php\"}', '2026-03-25 01:04:17'),
+(19, NULL, 3, 'backend', 'ia_question', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, 'hay un manual de un coponente a que pertenece?', NULL, 'https://clasedeciencia.com/admin/kits/manuals/index.php', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:04:32'),
+(20, NULL, 3, 'backend', 'ia_answer', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 368, 2581.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:04:33'),
+(21, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:06:48'),
+(22, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:12:43'),
+(23, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:12:45'),
+(24, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'que manuales tenemos?', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:12:55'),
+(25, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 844, 2880.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:12:56'),
+(26, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'que manual es dime el nombre', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:13:11'),
+(27, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 492, 2882.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:13:11'),
+(28, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:14:41'),
+(29, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:14:42'),
+(30, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:14:43'),
+(31, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:14:45'),
+(32, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:14:46'),
+(33, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'que manuales tenemos?', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:14:55'),
+(34, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"deterministic-backend:manuales_estado\"}', '2026-03-25 01:14:55'),
+(35, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'Profundiza en tu última respuesta y dame más detalles.', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:15:00'),
+(36, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 575, 2661.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:15:01'),
+(37, NULL, 3, 'backend', 'ia_question', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, 'cual es el manual?', NULL, 'https://clasedeciencia.com/admin/ia/index.php?tab=estado', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:15:09'),
+(38, NULL, 3, 'backend', 'ia_answer', 'admin', 'ia', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 381, 2619.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:15:09'),
+(39, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/manuals/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/manuals/index.php\"}', '2026-03-25 01:15:16'),
+(40, NULL, 3, 'backend', 'ia_question', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, 'dime que manual tenemos?', NULL, 'https://clasedeciencia.com/admin/kits/manuals/index.php', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 01:15:27'),
+(41, NULL, 3, 'backend', 'ia_answer', 'admin', 'kits', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 412, 3009.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"openai/gpt-oss-20b\"}', '2026-03-25 01:15:27'),
+(42, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 01:16:05'),
+(43, 'deb5d8db30982bc67f2d9fc0cb38b71a', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.79.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.153 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-25 04:26:17'),
+(44, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-25 19:15:09'),
+(45, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-25 19:15:20'),
+(46, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clase-emision-de-ondas-am', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/clase-emision-de-ondas-am\",\"title\":\"Clase de Ciencia - Ciencias Ambientales: Emisión de ondas AM - Clase de Ciencia\"}', '2026-03-25 19:15:22'),
+(47, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kit-radio-de-cristal', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/kit-radio-de-cristal\",\"title\":\"Kit de Ciencia - Ciencias Ambientales: Radio de cristal - Clase de Ciencia\"}', '2026-03-25 19:15:24'),
+(48, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-diode-germanio', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/componente-diode-germanio\",\"title\":\"Diode germanio - Clase de Ciencia\"}', '2026-03-25 19:15:28'),
+(49, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/manual-armado-componente-diode-germanio-09-03-26-v1-0', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/manual-armado-componente-diode-germanio-09-03-26-v1-0\",\"title\":\"Manual de Armado Diode germanio versión 1.0 - Clase de Ciencia\"}', '2026-03-25 19:15:30'),
+(50, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_question', 'manual', NULL, NULL, NULL, NULL, NULL, NULL, 1, 'what is this for', NULL, 'https://clasedeciencia.com/manual-armado-componente-diode-germanio-09-03-26-v1-0', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 19:15:38'),
+(51, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_answer', 'manual', NULL, NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1052, 700.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-03-25 19:15:39'),
+(52, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-25 19:15:46'),
+(53, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'search_query', 'buscar', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'crista', NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, 2.000000, '{\"clases\":0,\"kits\":1,\"componentes\":1}', '2026-03-25 19:15:59'),
+(54, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'search_query', 'buscar', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'cristal', NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, 2.000000, '{\"clases\":0,\"kits\":1,\"componentes\":1}', '2026-03-25 19:16:00'),
+(55, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-25 19:16:02'),
+(56, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clase-emision-de-ondas-am', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/clase-emision-de-ondas-am\",\"title\":\"Clase de Ciencia - Ciencias Ambientales: Emisión de ondas AM - Clase de Ciencia\"}', '2026-03-25 19:16:05'),
+(57, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-diode-germanio', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/componente-diode-germanio\",\"title\":\"Diode germanio - Clase de Ciencia\"}', '2026-03-25 19:16:19'),
+(58, NULL, NULL, 'backend', 'page_view', 'admin', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/dashboard.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/dashboard.php\"}', '2026-03-25 19:16:52'),
+(59, NULL, NULL, 'backend', 'page_view', 'admin', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/clases/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/clases/index.php\"}', '2026-03-25 19:17:00'),
+(60, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/index.php\"}', '2026-03-25 19:17:01'),
+(61, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/manuals/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/manuals/index.php\"}', '2026-03-25 19:17:02'),
+(62, NULL, NULL, 'backend', 'page_view', 'admin', 'contratos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/contratos/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/contratos/index.php\"}', '2026-03-25 19:17:02'),
+(63, NULL, NULL, 'backend', 'page_view', 'admin', 'entregas', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/entregas/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/entregas/index.php\"}', '2026-03-25 19:17:05'),
+(64, NULL, NULL, 'backend', 'page_view', 'admin', 'lotes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/lotes/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/lotes/index.php\"}', '2026-03-25 19:17:06'),
+(65, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 19:17:07'),
+(66, NULL, NULL, 'backend', 'page_view', 'admin', 'lotes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/lotes/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/lotes/index.php\"}', '2026-03-25 19:17:24'),
+(67, NULL, NULL, 'backend', 'page_view', 'admin', 'entregas', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/entregas/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/entregas/index.php\"}', '2026-03-25 19:17:25'),
+(68, NULL, NULL, 'backend', 'page_view', 'admin', 'contratos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/contratos/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/contratos/index.php\"}', '2026-03-25 19:17:26'),
+(69, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/manuals/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/manuals/index.php\"}', '2026-03-25 19:17:26'),
+(70, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/index.php\"}', '2026-03-25 19:17:27'),
+(71, NULL, NULL, 'backend', 'page_view', 'admin', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/clases/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/clases/index.php\"}', '2026-03-25 19:17:28'),
+(72, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-25 19:17:30'),
+(73, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/cimentacion', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/cimentacion\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-25 19:18:12'),
+(74, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'search_query', 'buscar', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'rq', NULL, 'https://clasedeciencia.com/cimentacion', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, 0.000000, '{\"clases\":0,\"kits\":0,\"componentes\":0}', '2026-03-25 19:18:30'),
+(75, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'search_query', 'buscar', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'emison', NULL, 'https://clasedeciencia.com/cimentacion', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, 0.000000, '{\"clases\":0,\"kits\":0,\"componentes\":0}', '2026-03-25 19:18:33'),
+(76, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'search_query', 'buscar', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'em', NULL, 'https://clasedeciencia.com/cimentacion', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, 7.000000, '{\"clases\":6,\"kits\":0,\"componentes\":1}', '2026-03-25 19:18:35'),
+(77, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'search_result_click', 'buscar', NULL, 'clase', 6, NULL, NULL, NULL, NULL, 'em', 1, 'https://clasedeciencia.com/cimentacion', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, NULL, '2026-03-25 19:18:40'),
+(78, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clase-emision-de-ondas-am', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/clase-emision-de-ondas-am\",\"title\":\"Clase de Ciencia - Ciencias Ambientales: Emisión de ondas AM - Clase de Ciencia\"}', '2026-03-25 19:18:40'),
+(79, NULL, NULL, 'backend', 'page_view', 'admin', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/dashboard.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/dashboard.php\"}', '2026-03-25 19:19:14'),
+(80, NULL, NULL, 'backend', 'page_view', 'admin', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/clases/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/clases/index.php\"}', '2026-03-25 19:19:16'),
+(81, NULL, NULL, 'backend', 'page_view', 'admin', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/clases/edit.php?id=6', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/clases/edit.php\"}', '2026-03-25 19:19:18'),
+(82, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-03-25 19:20:08'),
+(83, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-25 19:20:30'),
+(84, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_question', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'i need a kit for waves emision electromagnetism', NULL, 'https://clasedeciencia.com/', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 19:20:43'),
+(85, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_answer', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 397, 449.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-03-25 19:20:44'),
+(86, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_question', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Electromagnetismo', NULL, 'https://clasedeciencia.com/', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 19:20:53'),
+(87, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_answer', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 450, 522.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-03-25 19:20:53'),
+(88, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_question', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Profundiza en tu última respuesta y dame más detalles.', NULL, 'https://clasedeciencia.com/', NULL, 'desktop', NULL, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-03-25 19:20:57'),
+(89, '9bf772e005fd63f4f40ce2f67bd921e8', 4, 'frontend', 'ia_answer', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 767, 724.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-03-25 19:20:58'),
+(90, NULL, NULL, 'backend', 'page_view', 'admin', 'kits', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/kits/index.php', NULL, 'desktop', '108.35.206.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/kits/index.php\"}', '2026-03-25 19:21:35'),
+(91, 'a92122f99f5f17962a4ab99bdf8acc76', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-alambre-esmaltado-28awg', NULL, 'desktop', '17.241.75.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-alambre-esmaltado-28awg\",\"title\":\"Alambre esmaltado 28AWG - Clase de Ciencia\"}', '2026-03-25 20:57:42'),
+(92, '6914e9ce257e8e9b61edc57ba87facc7', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-bombillo-led-3v', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-bombillo-led-3v\",\"title\":\"Bombillo LED 3V - Clase de Ciencia\"}', '2026-03-25 21:13:10'),
+(93, '908f837fa39957c87ec929e8eead3af1', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-iman-neodimio', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-iman-neodimio\",\"title\":\"Imán neodimio - Clase de Ciencia\"}', '2026-03-26 03:31:42'),
+(94, 'dd50b716bc92ad7b022c03eb6d06a5be', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=optica', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-26 05:55:57'),
+(95, 'ecb70a8ce28be0c20fcdabb68fc5e31b', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-pila-aa', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-pila-aa\",\"title\":\"Pila AA - Clase de Ciencia\"}', '2026-03-26 07:44:49'),
+(96, 'bab71d2c63f8f918e5729b9361a9f4a4', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=induccion', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-26 14:27:55'),
+(97, '78cd45d38476259fe7f90d80e71d170c', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?ciclo=1', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-26 22:52:16'),
+(98, '438846641b451889ac3432e0ce944f22', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '2a02:9130:2ef::0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-26 23:10:48'),
+(99, '215077e6e01f425772dab0d2aaa4854d', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '79.117.255.0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.138 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-26 23:10:51'),
+(100, '490efd87bdc791b579502ac030420cab', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?ciclo=2', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-26 23:21:45'),
+(101, '03d95ee9b0dd28361beaf0ee0872087f', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=experimento', NULL, 'desktop', '17.241.75.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-26 23:59:12'),
+(102, '71ce99e77a5a4b4d55328d519b245eed', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=anatomia', NULL, 'mobile', '66.249.79.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.153 Mobile Safari/537.36 (compatible; GoogleOther)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-27 00:46:45'),
+(103, '21d2a10c37904c621878cb14318c4f33', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?ciclo=1', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-27 06:07:05'),
+(104, '8a9ba459db6c557626a370a6df3e0b40', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=aumento', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-27 15:22:23'),
+(105, '8cd6fd951eaf037b73805a756cb05f75', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=ondas', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-27 20:44:20'),
+(106, 'b2d2ab7794ca798c6203425fa8e4741e', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/kits?page=2', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/kits\",\"title\":\"Kits - Clase de Ciencia\"}', '2026-03-27 23:08:13'),
+(107, '8311dec381a87fca22db2b33530d7487', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?area=biologia', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-27 23:21:34'),
+(108, 'c22f3398113783facffe4d7b51133581', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=generador', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-27 23:37:51'),
+(109, 'a5f836e6701a053602205e115493a91f', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/biologia', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/biologia\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-28 02:35:13'),
+(110, '1065b33752d1d16f9142845c4b792cfe', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '202.8.42.0', 'Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-28 10:02:34'),
+(111, '18f11509b2af872e9f92babea9166fd5', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=led', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-28 12:09:55'),
+(112, '47135e9e74d1fee23a6dea78c88a9ce2', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/proyecto.php?slug=radio-de-cristal', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/proyecto.php\",\"title\":\"404 - Page Not Found - Clase de Ciencia\"}', '2026-03-28 14:31:35'),
+(113, 'da13e5e31d01fe08224d4d9933c18cab', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=generador', NULL, 'mobile', '66.249.79.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.153 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-28 22:40:55'),
+(114, '21b885b6803d7115dfc8607a19437a37', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=celula', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-30 05:40:55'),
+(115, 'dbd9b5a6a658ba8cee2f10b487004d95', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=acidos', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-30 14:50:46'),
+(116, 'c65de7cb74186ca7428fe0e33d69e4ae', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-motor-dc-3-6v', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-motor-dc-3-6v\",\"title\":\"Motor DC 3-6V - Clase de Ciencia\"}', '2026-03-30 21:24:52'),
+(117, '92fb743c6a550f2c231c3a1c47d34174', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componentes?category=quimica', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-03-31 05:04:34'),
+(118, 'f6ba3717917be386cfdd7ca025ff0bb2', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '49.12.126.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-31 08:00:20'),
+(119, 'bde282c86c3e210a6b35eac27de78698', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '49.12.126.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-31 08:00:30'),
+(120, '1df10f32a7422d80af98821293ef6091', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '49.12.126.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-31 08:00:37'),
+(121, '9f389c723a686f0d66ebdb02518a2d9b', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '49.12.126.0', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-31 08:01:30');
+INSERT INTO `analytics_eventos` (`id`, `session_hash`, `sesion_ia_id`, `instancia`, `evento`, `tipo_pagina`, `modulo`, `entidad_tipo`, `entidad_id`, `clase_id`, `kit_id`, `componente_id`, `manual_id`, `termino_busqueda`, `resultado_posicion`, `referrer`, `departamento`, `dispositivo`, `ip_anon`, `user_agent`, `duracion_ms`, `valor_numerico`, `metadata`, `created_at`) VALUES
+(122, '01703b0392b14e7432c66fc812a02b09', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '49.12.126.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-31 08:01:37'),
+(123, '24a83b7b296689a5648dc57c79fcac93', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/kit-separacion-de-mezclas', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/kit-separacion-de-mezclas\",\"title\":\"Kit educativo: Separación de mezclas - Clase de Ciencia\"}', '2026-03-31 08:55:52'),
+(124, '1e5018a05e3ffed2d68846d51271f7df', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '65.55.210.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/100.0.4896.127 Safari/537.36', NULL, NULL, '{\"path\":\"/carro-trampa-de-raton\",\"title\":\"Carro trampa de ratón - Clase de Ciencia - Clase de Ciencia\"}', '2026-03-31 09:21:01'),
+(125, '0504532cfddca1ed86a0c374abc0c8a5', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=viento', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-31 11:47:06'),
+(126, 'a2eb36fe61b944910b1e454238bde9f3', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/kits?page=1', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/kits\",\"title\":\"Kits - Clase de Ciencia\"}', '2026-03-31 14:33:17'),
+(127, 'd3001315f31713c247b20cc64859898b', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=electromagnetismo', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-31 15:56:05'),
+(128, '5b47983b9a8cc53f7c502bee91b35ede', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.79.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.164 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-03-31 19:54:24'),
+(129, '87b74dd87b6cdb50b505b31d6fbcc500', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/proyecto.php?slug=separacion-de-mezclas', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/proyecto.php\",\"title\":\"404 - Page Not Found - Clase de Ciencia\"}', '2026-03-31 20:07:10'),
+(130, '1cc3e7bc0fde94fa1ad81809f338ad59', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=vegetales', NULL, 'mobile', '66.249.79.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.164 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-03-31 22:22:22'),
+(131, '734143b9f03c60e8cd82288d83b2526b', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '40.77.167.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-01 05:09:32'),
+(132, '11c7f1469a104cdf23d9857d9eb68102', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/kits?area=ambiental', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/kits\",\"title\":\"Kits - Clase de Ciencia\"}', '2026-04-01 08:41:06'),
+(133, '61aee2d3115e5b41c10ce700b99ace64', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '40.77.167.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', NULL, NULL, '{\"path\":\"/kit-tratamiento-de-agua\",\"title\":\"Kit educativo: Kit: Tratamiento de agua - Clase de Ciencia\"}', '2026-04-02 14:00:35'),
+(134, '3fb0f8a8d70ae5396d7665d3e16ac989', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=osmosis', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-03 02:09:04'),
+(135, 'b842fafec5bd987420a215b1f0e70211', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=volumen', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-03 07:19:08'),
+(136, 'f6aff420b3a86aaaa877099af0bdb6d7', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kits?page=1', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/kits\",\"title\":\"Kits - Clase de Ciencia\"}', '2026-04-03 08:30:27'),
+(137, '8e394010f4937e5945e133004a71ba39', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=bateria', NULL, 'desktop', '17.246.19.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-03 08:46:32'),
+(138, '20b71bdc478cc1918aac97a56b91fc21', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-motor-dc-3-6v', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-motor-dc-3-6v\",\"title\":\"Motor DC 3-6V - Clase de Ciencia\"}', '2026-04-03 11:38:06'),
+(139, '54deada0c720cbe01033eed6c460d0f1', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-sal-de-mesa', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-sal-de-mesa\",\"title\":\"Sal de mesa - Clase de Ciencia\"}', '2026-04-03 23:39:52'),
+(140, 'f87e8bc6e7d4bfb9cc182fe7fd07eee7', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-embudo-plastico', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-embudo-plastico\",\"title\":\"Embudo plástico - Clase de Ciencia\"}', '2026-04-04 04:24:13'),
+(141, '60327823c152360c81747129e8be51de', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/proyecto.php?slug=test-de-ph', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/proyecto.php\",\"title\":\"404 - Page Not Found - Clase de Ciencia\"}', '2026-04-04 04:40:48'),
+(142, 'dce887c74139325c258efbd8e3804f78', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-vaso-precipitado-plastico', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-vaso-precipitado-plastico\",\"title\":\"Vaso precipitado plástico - Clase de Ciencia\"}', '2026-04-04 06:57:36'),
+(143, '23e5f2b3147de2ebd12bafe73dc9c9e1', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=presion', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-04 08:55:50'),
+(144, 'dfd9ee776a1f37174495647b604075db', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/proyecto.php?slug=circuito-electrico-basico', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/proyecto.php\",\"title\":\"404 - Page Not Found - Clase de Ciencia\"}', '2026-04-04 09:09:43'),
+(145, '41fa135bae02d578586cfbbd73bba31f', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-tiras-de-ph', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-tiras-de-ph\",\"title\":\"Tiras de pH - Clase de Ciencia\"}', '2026-04-04 09:34:30'),
+(146, '80c8af86023b8a50a63edb453016b8a5', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=respiracion', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-04 10:27:34'),
+(147, 'c8beed283587f752b4a73ed923bb34bf', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '40.77.167.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', NULL, NULL, '{\"path\":\"/microscopio-sencillo\",\"title\":\"Microscopio sencillo - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-04 11:07:44'),
+(148, 'd33b47ef2a003a09400fc35697214089', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-papel-filtro', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-papel-filtro\",\"title\":\"Papel filtro - Clase de Ciencia\"}', '2026-04-04 11:15:57'),
+(149, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '2607:fb91:1ce9::0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-04 17:58:48'),
+(150, '54279147b23545f494659de89bf62719', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-04 22:57:09'),
+(151, '0ae6d0c4de3e21f2e6f1e783130bf70e', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.164 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-04 22:57:18'),
+(152, '4b7eabf32ca0b273ea1822e5f8a28473', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'desktop', '66.249.66.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/146.0.7680.164 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-04 22:57:20'),
+(153, 'ff1fb4359192198cf42c3cd45e837bc7', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-05 08:10:33'),
+(154, '8ee53def8bdee30042ea40b333aa6463', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=electricidad', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-05 23:19:39'),
+(155, '0e55fe599544924e6c68d3c45b06aefd', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clase-emision-de-ondas-am', NULL, 'desktop', '40.77.179.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/clase-emision-de-ondas-am\",\"title\":\"Clase de Ciencia - Ciencias Ambientales: Emisión de ondas AM - Clase de Ciencia\"}', '2026-04-06 19:39:35'),
+(156, '253215fa8d1dd0402d365780e7a780bc', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componentes?category=quimica', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-06 21:14:13'),
+(157, '00c1dd17eafce3acacd6a6e7e3aa2602', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '157.55.39.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', NULL, NULL, '{\"path\":\"/kit-separacion-de-mezclas\",\"title\":\"Kit educativo: Separación de mezclas - Clase de Ciencia\"}', '2026-04-06 23:14:38'),
+(158, 'a455cdcd64014906bd055a461925c311', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kit-separacion-de-mezclas', NULL, 'desktop', '65.55.210.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/kit-separacion-de-mezclas\",\"title\":\"Kit educativo: Separación de mezclas - Clase de Ciencia\"}', '2026-04-06 23:30:43'),
+(159, '401b2bbdda4c8e2ab4f741f778322873', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '157.55.39.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', NULL, NULL, '{\"path\":\"/clases/ciclos/5\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-07 00:47:36'),
+(160, '8ef0f6fa33d0444dff8221a145af2be8', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/proyecto.php?slug=pulmon-mecanico', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/proyecto.php\",\"title\":\"404 - Page Not Found - Clase de Ciencia\"}', '2026-04-07 07:12:09'),
+(161, '10a09449e5943add441d02c724e99993', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'desktop', '66.249.66.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/146.0.7680.164 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-07 08:25:52'),
+(162, '1d2ba71fa837fe066ef6fd657b62d2dc', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/generador-manual-dinamo', NULL, 'desktop', '40.77.178.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/generador-manual-dinamo\",\"title\":\"Generador manual (dinamo) - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-07 10:56:35'),
+(163, '60570503412be3243871810da4c6f635', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kit-radio-de-cristal', NULL, 'desktop', '40.77.179.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/kit-radio-de-cristal\",\"title\":\"Kit de Ciencia - Ciencias Ambientales: Radio de cristal - Clase de Ciencia\"}', '2026-04-07 11:09:38'),
+(164, 'ebd5513af08f770965fdf49e1e03a9ca', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componentes?page=2', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-07 21:30:23'),
+(165, '530ca7d2d467dc00122029a8bbf28ac5', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kit-tratamiento-de-agua', NULL, 'desktop', '38.255.109.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36 Edg/146.0.0.0', NULL, NULL, '{\"path\":\"/kit-tratamiento-de-agua\",\"title\":\"Kit educativo: Kit: Tratamiento de agua - Clase de Ciencia\"}', '2026-04-08 02:01:13'),
+(166, 'e276904c41a078814336ce4b47563abf', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/privacy.php', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/privacy.php\",\"title\":\"Política de Privacidad - Clase de Ciencia\"}', '2026-04-08 03:21:10'),
+(167, '6682438f48a4b69ddde8b8d7a8b7695b', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/ingenieria', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/ingenieria\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-08 18:22:23'),
+(168, '9868692243efb845f188334be6a22556', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=laboratorio', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-08 20:05:45'),
+(169, '9d20f909a838f0d3b67f8cf7c9771f12', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-tiras-de-ph', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-tiras-de-ph\",\"title\":\"Tiras de pH - Clase de Ciencia\"}', '2026-04-08 22:21:39'),
+(170, 'a03ef92cb2ac7da225d063b36d4b8964', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=tratamiento', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 01:57:50'),
+(171, '6291cc544d5e840a0646716c2dcffa9b', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-sal-de-mesa', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-sal-de-mesa\",\"title\":\"Sal de mesa - Clase de Ciencia\"}', '2026-04-09 02:21:59'),
+(172, '2f87cd572dac9588ede33d76d10a4ef2', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=renovable', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 05:39:34'),
+(173, '016366fcdfbd9f91dae692a6d3c1f5ed', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '52.167.144.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.1938.76 Safari/537.36', NULL, NULL, '{\"path\":\"/carro-trampa-de-raton\",\"title\":\"Carro trampa de ratón - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-09 05:54:49'),
+(174, '4e7df9bef391b9bbeb9b5845e981371a', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-embudo-plastico', NULL, 'desktop', '17.246.19.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-embudo-plastico\",\"title\":\"Embudo plástico - Clase de Ciencia\"}', '2026-04-09 05:57:34'),
+(175, 'b41776e5826fe9a2026d0d5255194a5e', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/carro-trampa-de-raton', NULL, 'desktop', '40.77.179.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/carro-trampa-de-raton\",\"title\":\"Carro trampa de ratón - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-09 06:10:39'),
+(176, '4e8b08fda3c52181f2a886137d56b4e7', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-vaso-precipitado-plastico', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-vaso-precipitado-plastico\",\"title\":\"Vaso precipitado plástico - Clase de Ciencia\"}', '2026-04-09 07:35:22'),
+(177, 'f06fb312705289279cdb6da2cc48ac49', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-trampa-de-raton', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-trampa-de-raton\",\"title\":\"Trampa de ratón - Clase de Ciencia\"}', '2026-04-09 08:33:19'),
+(178, 'a0cb7ea7c9aa08a71f23a3ee6e7df35d', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=analisis', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 09:08:37'),
+(179, '8658ab8896da28f3d10d6366a4a38b08', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=movimiento', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 09:27:54'),
+(180, '59cba5b332105bcdf001a9809c3c05da', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '40.77.177.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-09 13:22:39'),
+(181, '69c24286c8583fe9cd1a71b2cb8d2414', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-clavo-de-hierro', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-clavo-de-hierro\",\"title\":\"Clavo de hierro - Clase de Ciencia\"}', '2026-04-09 18:17:45'),
+(182, '77b58c4b0e99fe494093f797a84e84d2', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=antena', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 21:22:49'),
+(183, '4dd5a39d6a168dbb7d2339a57a2a0544', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=lentes', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 21:27:10'),
+(184, '6287188e6f632ba3e85a74782457199c', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '181.197.55.0', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.4 Mobile/15E148 Safari/604.1', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-09 23:03:00'),
+(185, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '2607:fb90:9363::0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-09 23:25:32'),
+(186, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/cimentacion', NULL, 'mobile', '2607:fb90:9363::0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/cimentacion\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 23:25:36'),
+(187, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/circuito-electrico-basico', NULL, 'mobile', '2607:fb90:9363::0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/circuito-electrico-basico\",\"title\":\"Circuito eléctrico básico - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-09 23:25:40'),
+(188, '369301fc65eb1f74d7e563ad2d41739a', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/turbina-eolica-de-mesa', NULL, 'desktop', '40.77.179.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/turbina-eolica-de-mesa\",\"title\":\"Turbina eólica de mesa - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-09 23:30:05'),
+(189, 'f473cf17883a4fd86d7a7b06b02fba73', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=modelo', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-09 23:48:12'),
+(190, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/cimentacion', NULL, 'mobile', '2600:1001:a110::0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/cimentacion\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-10 00:20:38'),
+(191, '4ae2fe2c6ee03ab3b3640183fc7fd875', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=celula', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-10 01:23:42'),
+(192, '94d4c79e356248fe709efbce889fe9dc', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '40.77.177.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/100.0.4896.127 Safari/537.36', NULL, NULL, '{\"path\":\"/kit-tratamiento-de-agua\",\"title\":\"Kit educativo: Kit: Tratamiento de agua - Clase de Ciencia\"}', '2026-04-10 02:21:43'),
+(193, '521e401271cd3386c0007c42ec35da0d', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-porta-baterias-aa', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-porta-baterias-aa\",\"title\":\"Porta baterías AA - Clase de Ciencia\"}', '2026-04-10 16:58:03'),
+(194, 'fc002c2e89fbc583be578d1f55c59d01', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'desktop', '65.55.210.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/100.0.4896.127 Safari/537.36', NULL, NULL, '{\"path\":\"/pulmon-mecanico\",\"title\":\"Pulmón mecánico - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-10 23:48:38'),
+(195, 'c8eac8c55f738470e82d46a6491f967f', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/kit-microscopio-sencillo', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/kit-microscopio-sencillo\",\"title\":\"Kit educativo: Microscopio sencillo - Clase de Ciencia\"}', '2026-04-11 00:36:43'),
+(196, '254abb52c6c5ede60f5a14bd56676728', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=metodos-fisicos', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 02:42:11'),
+(197, '0ab0dbf168a1e97336e3573c95dac84a', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=sustancias', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 03:29:11'),
+(198, '14cf8c546d6e1603e369cbdbe2c62767', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-trampa-de-raton', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-trampa-de-raton\",\"title\":\"Trampa de ratón - Clase de Ciencia\"}', '2026-04-11 06:46:48'),
+(199, '815dc439fa8c38d58687c1667ce540e0', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=magnetismo', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 07:44:56'),
+(200, '60406283b10bb20f99fb36111d192f9c', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=electroiman', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 09:07:11'),
+(201, 'f68e8184185862f87d31f4c71ecc7da1', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=filtracion', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 10:02:19'),
+(202, '0b69bd2b6539b6c80ccd419412de3e72', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 10:05:29'),
+(203, '24139d6e3ad25541a96e37dca975540f', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=mezclas', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 12:54:50'),
+(204, '445922795ccca6495258e196676e9146', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=movimiento', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 13:39:46'),
+(205, 'c7ee5061646ec77ef40549391010a2ab', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=fuerzas', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 14:34:44'),
+(206, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '75.203.121.0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 15:34:55'),
+(207, '2bcef2b801e0d699f7db24336d0b60f1', 2, 'frontend', 'ia_question', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Hola que eres', NULL, 'https://clasedeciencia.com/', NULL, 'mobile', NULL, 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-04-11 15:35:05'),
+(208, '2bcef2b801e0d699f7db24336d0b60f1', 2, 'frontend', 'ia_answer', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 441, 437.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-04-11 15:35:06'),
+(209, '2bcef2b801e0d699f7db24336d0b60f1', 2, 'frontend', 'ia_question', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Universidad', NULL, 'https://clasedeciencia.com/', NULL, 'mobile', NULL, 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-04-11 15:35:17'),
+(210, '2bcef2b801e0d699f7db24336d0b60f1', 2, 'frontend', 'ia_answer', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 577, 503.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-04-11 15:35:17'),
+(211, '2bcef2b801e0d699f7db24336d0b60f1', 2, 'frontend', 'ia_question', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Física', NULL, 'https://clasedeciencia.com/', NULL, 'mobile', NULL, 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"source\":\"api/ia-consulta.php\"}', '2026-04-11 15:35:27'),
+(212, '2bcef2b801e0d699f7db24336d0b60f1', 2, 'frontend', 'ia_answer', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 306, 542.000000, '{\"guardrail_activado\":false,\"cached\":false,\"modelo_usado\":\"llama-3.3-70b-versatile\"}', '2026-04-11 15:35:27'),
+(213, '2bcef2b801e0d699f7db24336d0b60f1', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '75.203.121.0', 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 15:38:37'),
+(214, 'fb5eb8228c159327324764689ce77972', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/carro-solar', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/carro-solar\",\"title\":\"Carro solar - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-11 18:46:33'),
+(215, '2948c47b80a38f9541df05d82e889fbc', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 20:03:31'),
+(216, '0b7326a2e34e3fbde6a98c4244d45219', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '66.249.66.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/146.0.7680.164 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 20:04:15'),
+(217, '80206ca62739cb6ca4a98205849007fe', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.164 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 20:04:21'),
+(218, '579178a64e8c45068f5ffec6abb318b7', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '66.249.66.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/146.0.7680.164 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-11 20:04:22'),
+(219, 'a5034f4a42f0ebf3c6c78ebd336a1f7e', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=laboratorio', NULL, 'desktop', '17.246.19.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 21:07:25'),
+(220, '1523043176d7f0f8d34095fe9fcb32f1', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=volumen', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-11 22:48:04'),
+(221, 'd430f4d0089d1582507220df347bfa13', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=observacion', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-12 01:41:10'),
+(222, '0ddc8c40242036a42a854ebbc6233696', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=decantacion', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-12 03:45:57'),
+(223, 'ddd6c5b2002a7679004a75b6ab8a9b58', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-banda-elastica', NULL, 'desktop', '17.246.19.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-banda-elastica\",\"title\":\"Banda elástica - Clase de Ciencia\"}', '2026-04-12 20:48:17');
+INSERT INTO `analytics_eventos` (`id`, `session_hash`, `sesion_ia_id`, `instancia`, `evento`, `tipo_pagina`, `modulo`, `entidad_tipo`, `entidad_id`, `clase_id`, `kit_id`, `componente_id`, `manual_id`, `termino_busqueda`, `resultado_posicion`, `referrer`, `departamento`, `dispositivo`, `ip_anon`, `user_agent`, `duracion_ms`, `valor_numerico`, `metadata`, `created_at`) VALUES
+(224, 'bebd561eddd9323f584050de5b5d9508', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componentes?category=magneticos', NULL, 'desktop', '17.241.75.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-12 21:33:51'),
+(225, 'bf2cb874a025addde54ad6b9ffcb82a0', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componentes?page=3', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-13 00:11:32'),
+(226, 'aa290913dd14790b53dd9f3569a48869', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componentes?category=tecnologia', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-13 02:31:56'),
+(227, 'df498a994fae21b2e052c1aca7649301', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-bomba-de-aire-manual', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-bomba-de-aire-manual\",\"title\":\"Bomba de aire manual - Clase de Ciencia\"}', '2026-04-13 04:37:24'),
+(228, '3acb4d22739bc41c2e83727a34c403be', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kit-radio-de-cristal', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/kit-radio-de-cristal\",\"title\":\"Kit de Ciencia - Ciencias Ambientales: Radio de cristal - Clase de Ciencia\"}', '2026-04-13 09:02:57'),
+(229, 'c166cc71921ab93239cd4c4cbe13847c', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componentes?page=1', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-13 09:02:59'),
+(230, '8b567e0579b30a79f373db2e7b078195', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-13 12:12:07'),
+(231, '6a32a1927bcb041c4b0a0be8ed871c21', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/turbina-eolica-de-mesa', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/turbina-eolica-de-mesa\",\"title\":\"Turbina eólica de mesa - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-13 17:34:16'),
+(232, '4119345db9025e8752f5ee4b99597e26', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=acidos', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-13 17:57:55'),
+(233, '4f312d35702e0d77ee46ea06df09a11f', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componentes?category=tecnologia', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componentes\",\"title\":\"Componentes - Clase de Ciencia\"}', '2026-04-13 19:36:40'),
+(234, 'fc729b722bb6646c6e024e8640f33539', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=reacciones', NULL, 'desktop', '17.241.75.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-14 23:29:55'),
+(235, '7b50edb318a9d44ea260aad507474106', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=filtracion', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 01:34:54'),
+(236, '97b3faca31468625ca681480e896b8b9', NULL, 'frontend', 'page_view', 'otro', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/proyecto.php?slug=test-de-ph', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/proyecto.php\",\"title\":\"404 - Page Not Found - Clase de Ciencia\"}', '2026-04-15 02:13:26'),
+(237, '16aaa1eda7bfd7b81cf54cb48a0f5492', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=membrana', NULL, 'desktop', '17.241.75.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 04:25:53'),
+(238, 'b06910b0caeaf6ee48e7dfbfc45122ba', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=sustancias', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 05:07:44'),
+(239, '40f819f16e2d13815705781868962944', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/ingenieria', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/ingenieria\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 05:12:35'),
+(240, '52543d1726f06940e639cf9a455e12f8', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=mecanica', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 08:07:01'),
+(241, 'f91b001dae7dc9b58fe794ad08940af3', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=friccion', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 09:37:02'),
+(242, 'dc076fca708ef4b21ccf64eda0b0229d', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=circuito', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 12:03:26'),
+(243, '3eb5a6ad2de7c02c439a9a754281148a', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases?busqueda=generador', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-15 13:03:26'),
+(244, 'e496ae9b820faceca3651b3efc802b2a', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-panel-solar-5v', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-panel-solar-5v\",\"title\":\"Panel solar 5V - Clase de Ciencia\"}', '2026-04-15 19:15:42'),
+(245, 'a7d37bade36377f63951c5feae42a077', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-manivela-plastica', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-manivela-plastica\",\"title\":\"Manivela plástica - Clase de Ciencia\"}', '2026-04-15 21:20:47'),
+(246, '5ccdf913bbf126b6b7bab072025257cc', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-carton-rigido', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-carton-rigido\",\"title\":\"Cartón rígido - Clase de Ciencia\"}', '2026-04-15 22:57:37'),
+(247, '866293a5fd1ecbf463770b2c8b523bbd', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-rueda-plastica-50mm', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-rueda-plastica-50mm\",\"title\":\"Rueda plástica 50mm - Clase de Ciencia\"}', '2026-04-15 23:19:28'),
+(248, '6b703e0e15e22fc4d90c8c1c613f4c5d', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-eje-metalico', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-eje-metalico\",\"title\":\"Eje metálico - Clase de Ciencia\"}', '2026-04-15 23:45:58'),
+(249, '5405eeb5333bf8360860811b511c67b1', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-helice-plastica', NULL, 'desktop', '17.241.227.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-helice-plastica\",\"title\":\"Hélice plástica - Clase de Ciencia\"}', '2026-04-16 00:40:26'),
+(250, 'b0782199f441edf27f4e0ebb8af6a202', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/kit-tratamiento-de-agua', NULL, 'desktop', '45.6.140.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36 Edg/145.0.0.0', NULL, NULL, '{\"path\":\"/kit-tratamiento-de-agua\",\"title\":\"Kit educativo: Kit: Tratamiento de agua - Clase de Ciencia\"}', '2026-04-16 00:54:37'),
+(251, '14a2804a47f7740dd35498de0888b3f3', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=sistema-respiratorio', NULL, 'desktop', '17.246.15.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-16 04:32:37'),
+(252, 'a259996f8c7d219809cd9d8739d07c8d', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-botella-plastica-500ml', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-botella-plastica-500ml\",\"title\":\"Botella plástica 500ml - Clase de Ciencia\"}', '2026-04-16 09:44:02'),
+(253, '19e74313a9d00e87ab2bd1867660c535', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/generador-manual-dinamo', NULL, 'desktop', '40.77.167.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.193', NULL, NULL, '{\"path\":\"/generador-manual-dinamo\",\"title\":\"Generador manual (dinamo) - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-16 12:31:39'),
+(254, '90d3aee25caa4ec501361c2fc6eeeba9', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/quimica', NULL, 'desktop', '17.22.237.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/quimica\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-16 17:56:45'),
+(255, '7ac5115966e7cb21294bf8a88a14096e', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/carro-trampa-de-raton', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/carro-trampa-de-raton\",\"title\":\"Carro trampa de ratón - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-16 22:02:48'),
+(256, 'd2f19a8570813400d091898e594e0618', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/clases?busqueda=vegetales', NULL, 'desktop', '17.246.23.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-17 05:48:19'),
+(257, '2cf4f7465025771f76c0695ac02b888a', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/carro-trampa-de-raton', NULL, 'desktop', '40.77.178.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/carro-trampa-de-raton\",\"title\":\"Carro trampa de ratón - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-17 07:20:13'),
+(258, '7c2d081fc45192e9dc59781550416a17', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-17 23:03:04'),
+(259, 'd8dfd8cfd1617c817696e4b138c97a10', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '205.169.39.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.5938.132 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-18 01:47:52'),
+(260, 'aa3ae44cb28ddae81644d7e5fdd65097', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-18 07:02:30'),
+(261, '46cd759c0b260d24562d5790ab2a8719', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'desktop', '66.249.66.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/146.0.7680.177 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-18 07:02:40'),
+(262, 'b6d755dedd0cb97070c2a616adacb174', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-18 07:02:41'),
+(263, 'b7dbfd94935df22d0a9bace8e20cf90a', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/electroiman', NULL, 'desktop', '17.22.245.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/electroiman\",\"title\":\"Electroimán - Clase de Ciencia - Clase de Ciencia\"}', '2026-04-18 16:54:53'),
+(264, 'bcdf23cf8872554e6664600424f58e27', NULL, 'frontend', 'page_view', 'clases', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/clases', NULL, 'desktop', '40.77.167.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/136.0.0.0 Safari/537.36 AppleWebKit/537.36 (KHTML, like Gecko; compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm) Chrome/116.0.193', NULL, NULL, '{\"path\":\"/clases\",\"title\":\"Clases - Clase de Ciencia\"}', '2026-04-18 19:09:13'),
+(265, '22a4b6637534f9c68db9e93e52673f1b', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/componente-botella-plastica-500ml', NULL, 'desktop', '17.241.219.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-botella-plastica-500ml\",\"title\":\"Botella plástica 500ml - Clase de Ciencia\"}', '2026-04-18 23:38:57'),
+(266, 'fd77558c2405d61d6008ab5cc91c9134', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'desktop', '66.249.66.0', 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/146.0.7680.177 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-19 02:16:50'),
+(267, '7389a07ebb2fd2597386f010b2500ccc', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/', NULL, 'mobile', '66.249.66.0', 'Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.7680.177 Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-19 02:16:51'),
+(268, 'c52805f7bcafec3f96826a672484f542', NULL, 'frontend', 'page_view', 'clase', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://www.clasedeciencia.com/componente-carbon-activado', NULL, 'desktop', '17.22.253.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15 (Applebot/0.1; +http://www.apple.com/go/applebot)', NULL, NULL, '{\"path\":\"/componente-carbon-activado\",\"title\":\"Carbón activado - Clase de Ciencia\"}', '2026-04-19 04:12:44'),
+(269, 'd5c21494d10484856db76c133c6e1e0e', NULL, 'frontend', 'page_view', 'inicio', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/\",\"title\":\"Inicio - Clase de Ciencia\"}', '2026-04-19 19:53:39'),
+(270, NULL, NULL, 'backend', 'page_view', 'admin', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/dashboard.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/dashboard.php\"}', '2026-04-19 19:53:58'),
+(271, NULL, NULL, 'backend', 'page_view', 'admin', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/footer/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/footer/index.php\"}', '2026-04-19 19:54:01'),
+(272, NULL, NULL, 'backend', 'page_view', 'admin', 'paginas', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/paginas/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/paginas/index.php\"}', '2026-04-19 19:54:01'),
+(273, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-04-19 19:54:02'),
+(274, NULL, NULL, 'backend', 'page_view', 'admin', 'lotes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/lotes/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/lotes/index.php\"}', '2026-04-19 19:54:03'),
+(275, NULL, NULL, 'backend', 'page_view', 'admin', 'entregas', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/entregas/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/entregas/index.php\"}', '2026-04-19 19:54:05'),
+(276, NULL, NULL, 'backend', 'page_view', 'admin', 'contratos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/contratos/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/contratos/index.php\"}', '2026-04-19 19:54:06'),
+(277, NULL, NULL, 'backend', 'page_view', 'admin', 'componentes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/componentes/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/componentes/index.php\"}', '2026-04-19 19:54:07'),
+(278, NULL, NULL, 'backend', 'page_view', 'admin', 'admin', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/dashboard.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/dashboard.php\"}', '2026-04-19 19:54:09'),
+(279, NULL, NULL, 'backend', 'page_view', 'admin', 'contratos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/contratos/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/contratos/index.php\"}', '2026-04-19 19:54:20'),
+(280, NULL, NULL, 'backend', 'page_view', 'admin', 'componentes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/componentes/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/componentes/index.php\"}', '2026-04-19 19:54:27'),
+(281, NULL, NULL, 'backend', 'page_view', 'admin', 'contratos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/contratos/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/contratos/index.php\"}', '2026-04-19 19:54:28'),
+(282, NULL, NULL, 'backend', 'page_view', 'admin', 'entregas', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/entregas/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/entregas/index.php\"}', '2026-04-19 19:54:29'),
+(283, NULL, NULL, 'backend', 'page_view', 'admin', 'lotes', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/lotes/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/lotes/index.php\"}', '2026-04-19 19:54:30'),
+(284, NULL, NULL, 'backend', 'page_view', 'admin', 'ia', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/ia/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/ia/index.php\"}', '2026-04-19 19:54:31'),
+(285, NULL, NULL, 'backend', 'page_view', 'admin', 'paginas', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'https://clasedeciencia.com/admin/paginas/index.php', NULL, 'desktop', '2600:1001:a110::0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', NULL, NULL, '{\"path\":\"/admin/paginas/index.php\"}', '2026-04-19 19:54:36');
 
 -- --------------------------------------------------------
 
@@ -337,6 +663,25 @@ INSERT INTO `atributos_mapeo` (`id`, `atributo_id`, `tipo_entidad`, `requerido`,
 (69, 28, 'clase', 0, 1, 70, NULL, 'tags', 0, 0, '2025-12-21 20:47:53', '2025-12-21 20:47:53'),
 (70, 29, 'kit', 0, 1, 331, NULL, NULL, 0, 0, '2025-12-23 02:55:59', '2025-12-23 02:55:59'),
 (71, 30, 'kit', 0, 1, 332, NULL, NULL, 0, 0, '2025-12-23 04:20:34', '2025-12-23 04:20:34');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `auditoria_admin`
+--
+
+CREATE TABLE `auditoria_admin` (
+  `id` bigint(20) NOT NULL,
+  `modulo` varchar(64) NOT NULL,
+  `entidad` varchar(64) NOT NULL,
+  `entidad_id` int(11) NOT NULL,
+  `accion` enum('crear','editar','eliminar','cambio_estado') NOT NULL,
+  `usuario` varchar(120) NOT NULL,
+  `detalle_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `ip` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -754,6 +1099,7 @@ INSERT INTO `competencias` (`id`, `codigo`, `subcategoria`, `nombre`, `explicaci
 CREATE TABLE `configuracion_ia` (
   `id` int(11) NOT NULL,
   `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend',
+  `pagina` varchar(40) DEFAULT NULL,
   `clave` varchar(100) NOT NULL,
   `valor` text DEFAULT NULL,
   `tipo` enum('texto','numero','booleano','json','secreto') DEFAULT 'texto',
@@ -765,35 +1111,50 @@ CREATE TABLE `configuracion_ia` (
 -- Dumping data for table `configuracion_ia`
 --
 
-INSERT INTO `configuracion_ia` (`id`, `instancia`, `clave`, `valor`, `tipo`, `descripcion`, `updated_at`) VALUES
-(1, 'frontend', 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2026-03-21 02:23:32'),
-(2, 'frontend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del estudiante (1=activa, 0=inactiva)', '2026-03-21 02:23:32'),
-(3, 'frontend', 'groq_api_key', 'REEMPLAZAR_CON_API_KEY_GROQ_FRONTEND', 'secreto', 'API Key de Groq para la instancia frontend. Completar desde el panel admin.', '2026-03-21 01:19:55'),
-(4, 'frontend', 'groq_model_1', 'llama-3.3-70b-versatile', 'texto', 'Modelo principal frontend — pedagógico y preciso', '2026-03-21 02:23:32'),
-(5, 'frontend', 'groq_model_2', 'llama-3.1-8b-instant', 'texto', 'Fallback 1 frontend — rápido y económico (560 t/s)', '2026-03-21 02:23:32'),
-(6, 'frontend', 'groq_model_3', 'openai/gpt-oss-20b', 'texto', 'Fallback 2 frontend — último recurso (1000 t/s)', '2026-03-21 02:23:32'),
-(7, 'frontend', 'groq_temperature', '0.5', 'numero', 'Temperatura de muestreo (0-2). 0.5 = respuestas consistentes y seguras', '2026-03-21 02:23:32'),
-(8, 'frontend', 'groq_max_tokens', '400', 'numero', 'Máximo de tokens en la respuesta al estudiante', '2026-03-21 02:23:32'),
-(9, 'frontend', 'groq_top_p', '0.9', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 02:23:32'),
-(10, 'frontend', 'prompt_sistema', 'Eres un asistente científico educativo para estudiantes colombianos de ciencia (grados 1° a 11°). Tu misión es GUIAR, no resolver: usa preguntas socráticas para que el estudiante descubra las respuestas por sí mismo. NUNCA resuelvas preguntas de examen o evaluaciones directamente. no SIEMPRE menciona las normas de seguridad antes de cualquier instrucción experimental, solo cuando sea necesario. Habla con lenguaje claro, amigable y motivador, apropiado para el ciclo educativo del estudiante. Si la pregunta se sale del ámbito científico educativo, redirige amablemente al tema. Responde siempre en español colombiano.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del estudiante', '2026-03-21 02:23:32'),
-(11, 'frontend', 'guardrails_activos', '1', 'booleano', 'Activa el sistema de filtrado de contenido peligroso (1=activo, 0=desactivo)', '2026-03-21 02:23:32'),
-(12, 'frontend', 'palabras_tematicas', '[\"política\",\"religión\",\"violencia\",\"drogas\",\"alcohol\",\"armas\",\"sexo\",\"apuestas\",\"odio\",\"insultos\"]', 'json', 'Palabras fuera del ámbito educativo que activan el guardrail temático', '2026-03-21 02:23:32'),
-(13, 'frontend', 'nivel_safety', 'estricto', 'texto', 'Nivel de safety: estricto|moderado|libre', '2026-03-21 02:23:32'),
-(14, 'frontend', 'mensaje_guardrail', '⚠️ Esa pregunta está fuera del ámbito de esta clase. Consulta con tu profesor. Si tienes dudas sobre seguridad en el experimento, sigue siempre las instrucciones del kit.', 'texto', 'Mensaje mostrado al estudiante cuando se activa un guardrail', '2026-03-21 02:23:32'),
-(42, 'backend', 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del administrador (1=activa, 0=inactiva)', '2026-03-21 01:29:41'),
-(43, 'backend', 'groq_api_key', 'REEMPLAZAR_CON_API_KEY_GROQ_BACKEND', 'secreto', 'API Key de Groq para la instancia backend. Puede ser la misma del frontend o diferente.', '2026-03-21 01:20:13'),
-(44, 'backend', 'groq_model_1', 'openai/gpt-oss-20b', 'texto', 'Modelo principal backend — rápido y técnico (1000 t/s)', '2026-03-21 01:29:41'),
-(45, 'backend', 'groq_model_2', 'llama-3.3-70b-versatile', 'texto', 'Fallback 1 backend — preciso y capaz (280 t/s)', '2026-03-21 01:29:41'),
-(46, 'backend', 'groq_model_3', 'llama-3.1-8b-instant', 'texto', 'Fallback 2 backend — último recurso (560 t/s)', '2026-03-21 01:29:41'),
-(47, 'backend', 'groq_temperature', '0.3', 'numero', 'Temperatura (0-2). 0.3 = respuestas factuales y precisas', '2026-03-21 01:29:41'),
-(48, 'backend', 'groq_max_tokens', '1200', 'numero', 'Máximo de tokens en la respuesta al administrador', '2026-03-21 01:29:41'),
-(49, 'backend', 'groq_top_p', '0.95', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 01:29:41'),
-(50, 'backend', 'prompt_sistema', 'Eres un asistente técnico y operativo para el equipo administrativo de Clase de Ciencia SAS. Tienes acceso al estado actual del sistema: contratos CTeI, entregas de kits educativos, lotes de materiales, clases y métricas de la IA. Responde con precisión usando los datos del contexto proporcionado. Puedes sugerir acciones administrativas, detectar inconsistencias en los datos y ayudar a redactar documentos operativos. Sé directo y conciso. Responde en español.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del administrador', '2026-03-21 01:29:41'),
-(51, 'backend', 'guardrails_activos', '1', 'booleano', 'Guardrails desactivados por defecto para el admin (1=activar si se requiere)', '2026-03-21 01:29:41'),
-(52, 'backend', 'palabras_peligro', '[]', 'json', 'Sin palabras peligro para el admin (lista vacía)', '2026-03-21 01:29:41'),
-(53, 'backend', 'palabras_tematicas', '[]', 'json', 'Sin filtro temático para el admin (lista vacía)', '2026-03-21 01:29:41'),
-(54, 'backend', 'nivel_safety', 'moderado', 'texto', 'Nivel de safety del admin: estricto|moderado|libre', '2026-03-21 01:29:41'),
-(55, 'backend', 'mensaje_guardrail', '⚠️ Esta consulta fue bloqueada por el sistema de seguridad.', 'texto', 'Mensaje de guardrail para el admin (raramente se activa)', '2026-03-21 01:29:41');
+INSERT INTO `configuracion_ia` (`id`, `instancia`, `pagina`, `clave`, `valor`, `tipo`, `descripcion`, `updated_at`) VALUES
+(1, 'frontend', NULL, 'palabras_peligro', '[\"fuego\", \"explosión\", \"ácido fuerte\", \"cortocircuito\", \"veneno\"]', 'json', 'Palabras que activan guardrails de seguridad', '2026-03-21 02:23:32'),
+(2, 'frontend', NULL, 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del estudiante (1=activa, 0=inactiva)', '2026-03-21 02:23:32'),
+(3, 'frontend', NULL, 'groq_api_key', '', 'secreto', 'API Key de Groq para la instancia frontend. Completar desde el panel admin.', '2026-03-21 01:19:55'),
+(4, 'frontend', NULL, 'groq_model_1', 'llama-3.3-70b-versatile', 'texto', 'Modelo principal frontend — pedagógico y preciso', '2026-03-21 02:23:32'),
+(5, 'frontend', NULL, 'groq_model_2', 'llama-3.1-8b-instant', 'texto', 'Fallback 1 frontend — rápido y económico (560 t/s)', '2026-03-21 02:23:32'),
+(6, 'frontend', NULL, 'groq_model_3', 'openai/gpt-oss-20b', 'texto', 'Fallback 2 frontend — último recurso (1000 t/s)', '2026-03-21 02:23:32'),
+(7, 'frontend', NULL, 'groq_temperature', '0.5', 'numero', 'Temperatura de muestreo (0-2). 0.5 = respuestas consistentes y seguras', '2026-03-21 02:23:32'),
+(8, 'frontend', NULL, 'groq_max_tokens', '400', 'numero', 'Máximo de tokens en la respuesta al estudiante', '2026-03-21 02:23:32'),
+(9, 'frontend', NULL, 'groq_top_p', '0.9', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 02:23:32'),
+(10, 'frontend', NULL, 'prompt_sistema', 'Eres un asistente científico educativo para estudiantes colombianos de ciencia (grados 1° a 11°). Tu misión es GUIAR, no resolver: usa preguntas socráticas para que el estudiante descubra las respuestas por sí mismo. NUNCA resuelvas preguntas de examen o evaluaciones directamente. no SIEMPRE menciona las normas de seguridad antes de cualquier instrucción experimental, solo cuando sea necesario. Habla con lenguaje claro, amigable y motivador, apropiado para el ciclo educativo del estudiante. Si la pregunta se sale del ámbito científico educativo, redirige amablemente al tema. Responde siempre en español colombiano.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del estudiante', '2026-03-21 02:23:32'),
+(11, 'frontend', NULL, 'guardrails_activos', '1', 'booleano', 'Activa el sistema de filtrado de contenido peligroso (1=activo, 0=desactivo)', '2026-03-21 02:23:32'),
+(12, 'frontend', NULL, 'palabras_tematicas', '[\"política\",\"religión\",\"violencia\",\"drogas\",\"alcohol\",\"armas\",\"sexo\",\"apuestas\",\"odio\",\"insultos\"]', 'json', 'Palabras fuera del ámbito educativo que activan el guardrail temático', '2026-03-21 02:23:32'),
+(13, 'frontend', NULL, 'nivel_safety', 'estricto', 'texto', 'Nivel de safety: estricto|moderado|libre', '2026-03-21 02:23:32'),
+(14, 'frontend', NULL, 'mensaje_guardrail', '⚠️ Esa pregunta está fuera del ámbito de esta clase. Consulta con tu profesor. Si tienes dudas sobre seguridad en el experimento, sigue siempre las instrucciones del kit.', 'texto', 'Mensaje mostrado al estudiante cuando se activa un guardrail', '2026-03-21 02:23:32'),
+(42, 'backend', NULL, 'ia_activa', '1', 'booleano', 'Activa o desactiva la IA del administrador (1=activa, 0=inactiva)', '2026-03-21 01:29:41'),
+(43, 'backend', NULL, 'groq_api_key', '', 'secreto', 'API Key de Groq para la instancia backend. Puede ser la misma del frontend o diferente.', '2026-03-21 01:20:13'),
+(44, 'backend', NULL, 'groq_model_1', 'openai/gpt-oss-20b', 'texto', 'Modelo principal backend — rápido y técnico (1000 t/s)', '2026-03-21 01:29:41'),
+(45, 'backend', NULL, 'groq_model_2', 'llama-3.3-70b-versatile', 'texto', 'Fallback 1 backend — preciso y capaz (280 t/s)', '2026-03-21 01:29:41'),
+(46, 'backend', NULL, 'groq_model_3', 'llama-3.1-8b-instant', 'texto', 'Fallback 2 backend — último recurso (560 t/s)', '2026-03-21 01:29:41'),
+(47, 'backend', NULL, 'groq_temperature', '0.3', 'numero', 'Temperatura (0-2). 0.3 = respuestas factuales y precisas', '2026-03-21 01:29:41'),
+(48, 'backend', NULL, 'groq_max_tokens', '1200', 'numero', 'Máximo de tokens en la respuesta al administrador', '2026-03-21 01:29:41'),
+(49, 'backend', NULL, 'groq_top_p', '0.95', 'numero', 'Top-p para sampleo de tokens (0-1)', '2026-03-21 01:29:41'),
+(50, 'backend', NULL, 'prompt_sistema', 'Eres un asistente técnico y operativo para el equipo administrativo de Clase de Ciencia SAS. Tienes acceso al estado actual del sistema: contratos CTeI, entregas de kits educativos, lotes de materiales, clases y métricas de la IA. Responde con precisión usando los datos del contexto proporcionado. Puedes sugerir acciones administrativas, detectar inconsistencias en los datos y ayudar a redactar documentos operativos. Sé directo y conciso. Responde en español.', 'texto', 'Prompt del sistema que define el comportamiento base de la IA del administrador', '2026-03-21 01:29:41'),
+(51, 'backend', NULL, 'guardrails_activos', '1', 'booleano', 'Guardrails desactivados por defecto para el admin (1=activar si se requiere)', '2026-03-21 01:29:41'),
+(52, 'backend', NULL, 'palabras_peligro', '[]', 'json', 'Sin palabras peligro para el admin (lista vacía)', '2026-03-21 01:29:41'),
+(53, 'backend', NULL, 'palabras_tematicas', '[]', 'json', 'Sin filtro temático para el admin (lista vacía)', '2026-03-21 01:29:41'),
+(54, 'backend', NULL, 'nivel_safety', 'moderado', 'texto', 'Nivel de safety del admin: estricto|moderado|libre', '2026-03-21 01:29:41'),
+(55, 'backend', NULL, 'mensaje_guardrail', '⚠️ Esta consulta fue bloqueada por el sistema de seguridad.', 'texto', 'Mensaje de guardrail para el admin (raramente se activa)', '2026-03-21 01:29:41'),
+(56, 'frontend', 'clase', 'prompt_sistema', 'Eres Clase de CiencIA, guía científico del estudiante durante un experimento. Usa el método socrático: haz preguntas que lleven al estudiante a descubrir por sí mismo. NUNCA des la respuesta directa a una evaluación. Usa el contexto de la clase (materiales, pasos, guía pedagógica) para hacer referencias concretas. Menciona seguridad solo cuando sea relevante al paso actual. Haz máximo UNA pregunta de seguimiento por respuesta. Responde en español colombiano.', 'texto', 'Prompt socrático — experimento activo', '2026-03-23 23:39:19'),
+(57, 'frontend', 'clase', 'groq_max_tokens', '700', 'numero', 'Tokens extendidos para explicaciones de experimento', '2026-03-23 23:39:19'),
+(58, 'frontend', 'clase', 'groq_temperature', '0.4', 'numero', 'Precisión científica para guía de experimento', '2026-03-23 23:39:19'),
+(59, 'frontend', 'kit', 'prompt_sistema', 'Eres Clase de CiencIA, asistente técnico de kits educativos. El estudiante está viendo un kit de ciencia. Explica qué hace cada componente, cómo se ensamblan y para qué sirve el kit. Usa los datos del kit disponibles en el contexto. Menciona precauciones de seguridad cuando corresponda. Sé directo y concreto: no hagas múltiples preguntas al mismo tiempo. Responde en español colombiano.', 'texto', 'Prompt técnico — vista de kit', '2026-03-23 23:48:46'),
+(60, 'frontend', 'kit', 'groq_max_tokens', '500', 'numero', 'Tokens medios para descripción de kit', '2026-03-23 23:48:46'),
+(61, 'frontend', 'componente', 'prompt_sistema', 'Eres Clase de CiencIA. El estudiante consulta un componente de kit. Explica qué es, cómo funciona, en qué experimentos se usa y qué precauciones debe tener al manipularlo. Usa los datos del componente disponibles en el contexto. Sé breve y preciso. Responde en español colombiano.', 'texto', 'Prompt específico — vista de componente', '2026-03-23 23:39:19'),
+(62, 'frontend', 'componente', 'groq_max_tokens', '400', 'numero', 'Tokens cortos para consultas de componente', '2026-03-23 23:39:19'),
+(63, 'frontend', 'manual', 'prompt_sistema', 'Eres Clase de CiencIA, guía de armado y uso. El estudiante está siguiendo un manual. Aclara dudas sobre los pasos: explica por qué se realiza cada uno, qué puede salir mal y cómo corregirlo. Usa los pasos del manual disponibles en el contexto. Si el estudiante pregunta por un paso específico, ubícalo en la secuencia y explica su propósito. Responde en español colombiano.', 'texto', 'Prompt guía-de-pasos — modo manual', '2026-03-23 23:39:19'),
+(64, 'frontend', 'manual', 'groq_max_tokens', '600', 'numero', 'Tokens extendidos para aclaraciones de pasos', '2026-03-23 23:39:19'),
+(65, 'frontend', 'manual', 'groq_temperature', '0.3', 'numero', 'Temperatura baja para instrucciones precisas', '2026-03-23 23:39:19'),
+(66, 'frontend', 'inicio', 'prompt_sistema', 'Eres Clase de CiencIA, el asistente de bienvenida de clasedeciencia.com. Orienta al estudiante: pregunta su grado o interés, recomienda una clase o kit concreto según lo que exprese, y anímalo a explorar. Sé amigable y conciso. Haz solo UNA pregunta de seguimiento por turno. No expliques toda la plataforma de golpe. Responde en español colombiano.', 'texto', 'Prompt orientador — página de inicio', '2026-03-23 23:39:19'),
+(67, 'frontend', 'inicio', 'groq_max_tokens', '350', 'numero', 'Respuestas cortas para bienvenida', '2026-03-23 23:39:19'),
+(68, 'frontend', 'inicio', 'groq_temperature', '0.6', 'numero', 'Tono más dinámico para descubrimiento', '2026-03-23 23:39:19'),
+(69, 'frontend', 'catalogo', 'prompt_sistema', 'Eres Clase de CiencIA. El estudiante navega el catálogo de clases científicas. Recomienda la clase más adecuada según el interés, grado o área que mencione. Usa nombres concretos de clases cuando tengas datos del catálogo en el contexto. Sé motivador y directo: una recomendación clara, no una lista de preguntas. Responde en español colombiano.', 'texto', 'Prompt recomendador — catálogo de clases', '2026-03-23 23:39:19'),
+(70, 'frontend', 'catalogo', 'groq_max_tokens', '450', 'numero', 'Tokens medios para recomendaciones de catálogo', '2026-03-23 23:39:19');
 
 -- --------------------------------------------------------
 
@@ -806,8 +1167,19 @@ CREATE TABLE `contratos` (
   `numero` varchar(64) NOT NULL,
   `entidad_contratante` varchar(255) NOT NULL,
   `departamento` varchar(120) NOT NULL,
+  `municipio` varchar(120) DEFAULT NULL,
   `valor` decimal(16,2) NOT NULL,
-  `fecha` date DEFAULT NULL
+  `valor_ejecutado` decimal(16,2) NOT NULL DEFAULT 0.00,
+  `estado_contrato` enum('borrador','vigente','suspendido','finalizado','cerrado') NOT NULL DEFAULT 'borrador',
+  `supervisor` varchar(180) DEFAULT NULL,
+  `objeto_contrato` text DEFAULT NULL,
+  `contrato_pdf` varchar(255) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `fecha` date DEFAULT NULL,
+  `fecha_inicio` date DEFAULT NULL,
+  `fecha_fin` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -818,10 +1190,38 @@ CREATE TABLE `contratos` (
 
 CREATE TABLE `entregas` (
   `id` int(11) NOT NULL,
+  `codigo_entrega` varchar(64) DEFAULT NULL,
   `contrato_id` int(11) NOT NULL,
   `institucion_educativa` varchar(255) NOT NULL,
+  `departamento` varchar(120) DEFAULT NULL,
+  `municipio` varchar(120) DEFAULT NULL,
   `fecha` date NOT NULL,
+  `fecha_programada` date DEFAULT NULL,
+  `estado_entrega` enum('programada','en_transito','entregada','rechazada','reprogramada') NOT NULL DEFAULT 'programada',
+  `responsable_entrega` varchar(180) DEFAULT NULL,
+  `responsable_recepcion` varchar(180) DEFAULT NULL,
+  `cantidad_kits` int(11) NOT NULL DEFAULT 0,
+  `recibido_ok` tinyint(1) NOT NULL DEFAULT 0,
+  `novedad` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `acta_pdf` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `entrega_lotes`
+--
+
+CREATE TABLE `entrega_lotes` (
+  `entrega_id` int(11) NOT NULL,
+  `lote_id` int(11) NOT NULL,
+  `cantidad_asignada` int(11) NOT NULL DEFAULT 0,
+  `cantidad_entregada` int(11) NOT NULL DEFAULT 0,
+  `observaciones` varchar(255) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -1005,7 +1405,64 @@ INSERT INTO `ia_logs` (`id`, `sesion_id`, `clase_id`, `tipo_evento`, `descripcio
 (42, 2, NULL, 'consulta', 'Consulta Groq', 1097, 1426, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 17:08:55', NULL, 'frontend'),
 (43, 2, NULL, 'consulta', 'Consulta Groq', 1168, 798, 'llama-3.3-70b-versatile', 0.000000, '2026-03-21 17:09:15', NULL, 'frontend'),
 (44, 1, NULL, 'consulta', 'Consulta Groq', 474, 1751, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:29:27', NULL, 'frontend'),
-(45, 1, NULL, 'consulta', 'Consulta Groq', 784, 1302, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:29:44', NULL, 'frontend');
+(45, 1, NULL, 'consulta', 'Consulta Groq', 784, 1302, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:29:44', NULL, 'frontend'),
+(46, 1, NULL, 'consulta', 'Consulta Groq', 258, 680, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:49:11', NULL, 'frontend'),
+(47, 1, NULL, 'consulta', 'Consulta Groq', 383, 697, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:49:26', NULL, 'frontend'),
+(48, 1, NULL, 'consulta', 'Consulta Groq', 227, 403, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:52:48', NULL, 'frontend'),
+(49, 1, NULL, 'consulta', 'Consulta Groq', 322, 602, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:59:44', NULL, 'frontend'),
+(50, 1, NULL, 'consulta', 'Consulta Groq', 478, 627, 'llama-3.3-70b-versatile', 0.000000, '2026-03-23 23:59:58', NULL, 'frontend'),
+(51, 1, NULL, 'consulta', 'Consulta Groq', 577, 574, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:00:04', NULL, 'frontend'),
+(52, 1, NULL, 'consulta', 'Consulta Groq', 341, 650, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:02:48', NULL, 'frontend'),
+(53, 1, NULL, 'consulta', 'Consulta Groq', 447, 536, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:04:06', NULL, 'frontend'),
+(54, 1, NULL, 'consulta', 'Consulta Groq', 532, 583, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:04:16', NULL, 'frontend'),
+(55, 1, NULL, 'consulta', 'Consulta Groq', 605, 533, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:04:19', NULL, 'frontend'),
+(56, 1, NULL, 'consulta', 'Consulta Groq', 343, 553, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:12:02', NULL, 'frontend'),
+(57, 1, 7, 'consulta', 'Consulta Groq', 869, 621, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:12:15', NULL, 'frontend'),
+(58, 1, NULL, 'consulta', 'Consulta Groq', 360, 476, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:15:47', NULL, 'frontend'),
+(59, 1, NULL, 'consulta', 'Consulta Groq', 437, 533, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:16:01', NULL, 'frontend'),
+(60, 1, NULL, 'consulta', 'Consulta Groq', 300, 462, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:23', NULL, 'frontend'),
+(61, 1, NULL, 'consulta', 'Consulta Groq', 369, 379, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:28', NULL, 'frontend'),
+(62, 1, NULL, 'consulta', 'Consulta Groq', 422, 474, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:33', NULL, 'frontend'),
+(63, 1, NULL, 'consulta', 'Consulta Groq', 469, 306, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:36', NULL, 'frontend'),
+(64, 1, NULL, 'consulta', 'Consulta Groq', 526, 461, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:43', NULL, 'frontend'),
+(65, 1, NULL, 'consulta', 'Consulta Groq', 581, 246, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:46', NULL, 'frontend'),
+(66, 1, NULL, 'consulta', 'Consulta Groq', 650, 309, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:52', NULL, 'frontend'),
+(67, 1, NULL, 'consulta', 'Consulta Groq', 639, 478, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:26:56', NULL, 'frontend'),
+(68, 1, NULL, 'consulta', 'Consulta Groq', 646, 433, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:27:01', NULL, 'frontend'),
+(69, 1, NULL, 'consulta', 'Consulta Groq', 913, 1255, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:27:08', NULL, 'frontend'),
+(70, 1, NULL, 'consulta', 'Consulta Groq', 872, 567, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:27:36', NULL, 'frontend'),
+(71, 1, NULL, 'consulta', 'Consulta Groq', 429, 450, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:32:58', NULL, 'frontend'),
+(72, 1, NULL, 'consulta', 'Consulta Groq', 496, 651, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:33:04', NULL, 'frontend'),
+(73, 1, NULL, 'consulta', 'Consulta Groq', 558, 489, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:33:12', NULL, 'frontend'),
+(74, 1, NULL, 'consulta', 'Consulta Groq', 619, 482, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:33:23', NULL, 'frontend'),
+(75, 1, NULL, 'consulta', 'Consulta Groq', 425, 340, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:44:21', NULL, 'frontend'),
+(76, 1, NULL, 'consulta', 'Consulta Groq', 503, 496, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:44:28', NULL, 'frontend'),
+(77, 1, NULL, 'consulta', 'Consulta Groq', 557, 338, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:44:33', NULL, 'frontend'),
+(78, 1, NULL, 'consulta', 'Consulta Groq', 632, 519, 'llama-3.3-70b-versatile', 0.000000, '2026-03-24 00:44:51', NULL, 'frontend'),
+(79, NULL, NULL, 'consulta', 'Consulta Groq', 276, 1161, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:23:43', NULL, 'backend'),
+(80, NULL, NULL, 'consulta', 'Consulta Groq', 677, 374, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:33:24', NULL, 'backend'),
+(81, 3, NULL, 'consulta', 'Consulta Groq', 958, 582, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:44:39', NULL, 'backend'),
+(82, 3, NULL, 'consulta', 'Consulta Groq', 752, 225, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:45:06', NULL, 'backend'),
+(83, 3, NULL, 'consulta', 'Consulta Groq', 842, 245, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:46:30', NULL, 'backend'),
+(84, 3, NULL, 'consulta', 'Consulta Groq', 1095, 287, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:48:55', NULL, 'backend'),
+(85, 3, NULL, 'consulta', 'Consulta Groq', 1191, 613, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:49:16', NULL, 'backend'),
+(86, 3, NULL, 'consulta', 'Consulta Groq', 3004, 1158, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 00:57:33', NULL, 'backend'),
+(87, 3, NULL, 'consulta', 'Consulta Groq', 3482, 1093, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:03:47', NULL, 'backend'),
+(88, 3, NULL, 'consulta', 'Consulta Groq', 2254, 434, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:04:11', NULL, 'backend'),
+(89, 3, NULL, 'consulta', 'Consulta Groq', 2581, 368, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:04:33', NULL, 'backend'),
+(90, 3, NULL, 'consulta', 'Consulta Groq', 2880, 844, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:12:56', NULL, 'backend'),
+(91, 3, NULL, 'consulta', 'Consulta Groq', 2882, 492, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:13:11', NULL, 'backend'),
+(92, 3, NULL, 'consulta', 'Consulta Groq', 0, 0, 'deterministic-backend:manuales_estado', 0.000000, '2026-03-25 01:14:55', NULL, 'backend'),
+(93, 3, NULL, 'consulta', 'Consulta Groq', 2661, 575, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:15:01', NULL, 'backend'),
+(94, 3, NULL, 'consulta', 'Consulta Groq', 2619, 381, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:15:09', NULL, 'backend'),
+(95, 3, NULL, 'consulta', 'Consulta Groq', 3009, 412, 'openai/gpt-oss-20b', 0.000000, '2026-03-25 01:15:27', NULL, 'backend'),
+(96, 4, NULL, 'consulta', 'Consulta Groq', 700, 1052, 'llama-3.3-70b-versatile', 0.000000, '2026-03-25 19:15:39', NULL, 'frontend'),
+(97, 4, NULL, 'consulta', 'Consulta Groq', 449, 397, 'llama-3.3-70b-versatile', 0.000000, '2026-03-25 19:20:44', NULL, 'frontend'),
+(98, 4, NULL, 'consulta', 'Consulta Groq', 522, 450, 'llama-3.3-70b-versatile', 0.000000, '2026-03-25 19:20:53', NULL, 'frontend'),
+(99, 4, NULL, 'consulta', 'Consulta Groq', 724, 767, 'llama-3.3-70b-versatile', 0.000000, '2026-03-25 19:20:58', NULL, 'frontend'),
+(100, 2, NULL, 'consulta', 'Consulta Groq', 437, 441, 'llama-3.3-70b-versatile', 0.000000, '2026-04-11 15:35:06', NULL, 'frontend'),
+(101, 2, NULL, 'consulta', 'Consulta Groq', 503, 577, 'llama-3.3-70b-versatile', 0.000000, '2026-04-11 15:35:17', NULL, 'frontend'),
+(102, 2, NULL, 'consulta', 'Consulta Groq', 542, 306, 'llama-3.3-70b-versatile', 0.000000, '2026-04-11 15:35:27', NULL, 'frontend');
 
 -- --------------------------------------------------------
 
@@ -1040,7 +1497,51 @@ INSERT INTO `ia_mensajes` (`id`, `sesion_id`, `rol`, `contenido`, `tokens`, `fec
 (9, 1, 'user', '¿Cuántas clases activas hay?', 0, '2026-03-21 01:31:04', '{\"timestamp\": \"2026-03-21 01:31:04\"}', 'frontend'),
 (10, 1, 'assistant', 'Lo siento, pero no tengo información específica sobre el número de clases activas en este momento. La información proporcionada no incluye detalles sobre clases activas. Si necesitas ayuda con algo más o tienes más detalles para proporcionar, estaré encantado de ayudarte.', 117, '2026-03-21 01:31:04', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
 (11, 1, 'user', '¿Cuántas clases activas hay?', 0, '2026-03-21 01:32:57', '{\"timestamp\": \"2026-03-21 01:32:57\"}', 'frontend'),
-(12, 1, 'assistant', 'Lo siento, pero no tengo información sobre el número de clases activas. ¿Hay algo más en lo que pueda ayudarte?', 86, '2026-03-21 01:32:57', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend');
+(12, 1, 'assistant', 'Lo siento, pero no tengo información sobre el número de clases activas. ¿Hay algo más en lo que pueda ayudarte?', 86, '2026-03-21 01:32:57', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(13, 3, 'user', 'que clase es la mas completa', 0, '2026-03-25 00:44:39', '{\"timestamp\": \"2026-03-25 00:44:39\"}', 'backend'),
+(14, 3, 'assistant', 'No dispongo de métricas de profundidad o número de sub‑temas por clase.  \nEntre las clases publicadas y activas, la que suele considerarse más completa es **“Análisis químico del entorno”** (Ciclo 3), porque abarca la evaluación de varios parámetros ambientales (pH, turbidez, contaminantes, etc.) y suele incluir procedimientos de muestreo, análisis y reporte.  \n\nSi necesitas comparar objetivamente las clases, sería útil contar con datos de duración, número de actividades o evaluaciones.', 958, '2026-03-25 00:44:39', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(15, 3, 'user', 'me refiero con kit, manuales, componentes bien descritos', 0, '2026-03-25 00:45:06', '{\"timestamp\": \"2026-03-25 00:45:06\"}', 'backend'),
+(16, 3, 'assistant', 'No dispongo de información sobre los kits, manuales o componentes asociados a cada clase.  \nPara determinar cuál es la más completa en ese sentido, revisa el inventario de kits y la documentación técnica de cada curso; la clase que cuente con el mayor número de piezas, instrucciones detalladas y materiales listados será la más completa.', 752, '2026-03-25 00:45:06', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(17, 3, 'user', 'revisa', 0, '2026-03-25 00:46:30', '{\"timestamp\": \"2026-03-25 00:46:30\"}', 'backend'),
+(18, 3, 'assistant', 'No dispongo de datos sobre kits, manuales o componentes asociados a cada clase.  \nPara poder revisar cuál es la más completa en ese aspecto, necesitaría la información de inventario de kits, la lista de componentes y los manuales de cada curso. Si me proporcionas esos datos, podré hacer el análisis solicitado.', 842, '2026-03-25 00:46:30', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(19, 3, 'user', 'cual kit tiene el mayor numero de clases', 0, '2026-03-25 00:48:55', '{\"timestamp\": \"2026-03-25 00:48:55\"}', 'backend'),
+(20, 3, 'assistant', 'En la lista que me has proporcionado, cada kit está asociado a **una sola clase**.  \nPor lo tanto, **todos los kits tienen el mismo número de clases (1)**.', 1095, '2026-03-25 00:48:55', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(21, 3, 'user', 'cual clase es l;a mas completa en relacion a manuales, kits componentes', 0, '2026-03-25 00:49:16', '{\"timestamp\": \"2026-03-25 00:49:16\"}', 'backend'),
+(22, 3, 'assistant', 'Según la información de kits que me has proporcionado, la **clase “Carro solar”** es la que cuenta con más kits asociados (2 kits: *Carro solar* y *Radio de cristal*).  \n\nEn ausencia de datos sobre manuales y componentes, esta es la única métrica que podemos usar para determinar la “completitud” de una clase. Si dispones de los registros de manuales y de los componentes de cada kit, podríamos hacer un análisis más exhaustivo.', 1191, '2026-03-25 00:49:16', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(23, 3, 'user', 'hola cual es la clase mas completa lo que implica numero de kits, componentes, manuales', 0, '2026-03-25 00:57:33', '{\"timestamp\": \"2026-03-25 00:57:33\"}', 'backend'),
+(24, 3, 'assistant', 'La clase que presenta la mayor “completitud” en cuanto a **kits, componentes y manuales** es:\n\n| Clase | Kits | Manuales | Componentes | Total (K+M+C) |\n|-------|------|----------|-------------|---------------|\n| **Carro solar** | 2 | 0 | 6 | **8** |\n\n**Por qué es la más completa**\n\n1. **Mayor número de kits** – 2 kits (Carro solar + Radio de cristal).  \n2. **Mayor número de componentes** – 6 piezas (el mayor conteo entre todas las clases).  \n3. **Manual** – No hay manuales publicados para ninguna clase, por lo que el conteo de manuales es 0 en todas.  \n4. **Puntuación de completitud** – 2.1, la más alta de la lista.\n\nEn resumen, **Carro solar** es la clase con la mayor cobertura de recursos (kits + componentes), lo que la convierte en la más completa según los datos disponibles.', 3004, '2026-03-25 00:57:33', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(25, 3, 'user', 'que clase tiene mas elementos es decir kit, manual, componentes, la que almenos tenga uno', 0, '2026-03-25 01:03:47', '{\"timestamp\": \"2026-03-25 01:03:47\"}', 'backend'),
+(26, 3, 'assistant', 'Respuesta corta: Carro solar.\n\nEvidencia:\n- Kits: 2\n- Manuales: 0\n- Componentes: 6\n- Total elementos: 8 (máximo entre todas las clases)\n\nSiguiente accion: Si necesitas que se añadan manuales o se actualicen los componentes, indícalo para proceder.', 3482, '2026-03-25 01:03:47', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(27, 3, 'user', 'que hay de el emisor de ondas', 0, '2026-03-25 01:04:11', '{\"timestamp\": \"2026-03-25 01:04:11\"}', 'backend'),
+(28, 3, 'assistant', 'Respuesta corta: Emisión de ondas AM (Clase 6).\n\nEvidencia:\n- Ciclo: 4\n- Kits: 1\n- Manuales: 0\n- Componentes: 4\n- Score de completitud: 1.25\n\nSiguiente accion: Si necesitas listar los componentes específicos o planificar su entrega, indícalo.', 2254, '2026-03-25 01:04:11', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(29, 3, 'user', 'hay un manual de un coponente a que pertenece?', 0, '2026-03-25 01:04:33', '{\"timestamp\": \"2026-03-25 01:04:33\"}', 'backend'),
+(30, 3, 'assistant', 'Respuesta corta: No existen manuales publicados en el sistema.\n\nEvidencia:\n- Manuales publicados: 0\n\nSiguiente accion: Si necesitas crear o asignar un manual a un componente, indícalo con el nombre del componente y el contenido deseado.', 2581, '2026-03-25 01:04:33', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(31, 3, 'user', 'que manuales tenemos?', 0, '2026-03-25 01:12:56', '{\"timestamp\": \"2026-03-25 01:12:56\"}', 'backend'),
+(32, 3, 'assistant', 'Respuesta corta: Existe 1 manual publicado, pero no se indica a qué componente pertenece.\n\nEvidencia:\n- Manuales publicados (DB): 1\n- Manuales publicados por componente: 1\n- Manuales publicados por kit: 0\n- Manuales totales en resumen: 0 (inconsistencia)\n\nSiguiente accion: Proporcione el nombre del componente al que está asociado este manual para poder identificarlo correctamente.', 2880, '2026-03-25 01:12:56', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(33, 3, 'user', 'que manual es dime el nombre', 0, '2026-03-25 01:13:11', '{\"timestamp\": \"2026-03-25 01:13:11\"}', 'backend'),
+(34, 3, 'assistant', 'Respuesta corta: No se dispone del nombre del manual.\n\nEvidencia:\n- Manuales publicados (DB): 1\n- No se registra nombre en los datos actuales.\n\nSiguiente accion: Por favor indique el nombre del manual o el componente asociado para poder identificarlo.', 2882, '2026-03-25 01:13:11', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(35, 3, 'user', 'que manuales tenemos?', 0, '2026-03-25 01:14:55', '{\"timestamp\": \"2026-03-25 01:14:55\"}', 'backend'),
+(36, 3, 'assistant', 'Respuesta corta: Si hay manuales en el sistema.\nEvidencia:\n- Total: 1\n- Publicados: 1\n- Borrador: 0\n- Archivados/Inactivos: 0\n- Publicados de kit: 0\n- Publicados de componente: 1\nSiguiente accion: Si quieres, te filtro por componente o por kit especifico.', 0, '2026-03-25 01:14:55', '{\"modelo\": \"deterministic-backend:manuales_estado\"}', 'backend'),
+(37, 3, 'user', 'Profundiza en tu última respuesta y dame más detalles.', 0, '2026-03-25 01:15:01', '{\"timestamp\": \"2026-03-25 01:15:01\"}', 'backend'),
+(38, 3, 'assistant', 'Respuesta corta: Solo existe un manual publicado, asociado a un componente, pero no se dispone de su título ni descripción.\n\nEvidencia:\n- Total manuales: 1\n- Publicados: 1\n- Borrador: 0\n- Archivados/Inactivos: 0\n- Publicados de kit: 0\n- Publicados de componente: 1\n\nSiguiente accion: Indícame el ID o nombre del componente para que pueda mostrarte el manual correspondiente.', 2661, '2026-03-25 01:15:01', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(39, 3, 'user', 'cual es el manual?', 0, '2026-03-25 01:15:09', '{\"timestamp\": \"2026-03-25 01:15:09\"}', 'backend'),
+(40, 3, 'assistant', 'Respuesta corta: No dispongo del título ni contenido del manual publicado.\n\nEvidencia:\n- Solo existe 1 manual publicado en el sistema.\n- No se registra título, descripción ni enlace asociado.\n\nSiguiente accion: Proporcióname el ID o nombre del componente al que pertenece el manual para poder localizarlo.', 2619, '2026-03-25 01:15:09', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(41, 3, 'user', 'dime que manual tenemos?', 0, '2026-03-25 01:15:27', '{\"timestamp\": \"2026-03-25 01:15:27\"}', 'backend'),
+(42, 3, 'assistant', 'Respuesta corta: No se dispone de información detallada del manual publicado; solo sabemos que existe 1 manual en estado publicado.\n\nEvidencia:\n- Total manuales: 1\n- Publicados: 1\n- Borrador: 0\n- Archivados/Inactivos: 0\n- Publicados de kit: 0\n- Publicados de componente: 1\n\nSiguiente accion: Indícame el ID o nombre del componente al que pertenece el manual para poder localizarlo.', 3009, '2026-03-25 01:15:27', '{\"modelo\": \"openai/gpt-oss-20b\"}', 'backend'),
+(43, 4, 'user', 'what is this for', 0, '2026-03-25 19:15:39', '{\"timestamp\": \"2026-03-25 19:15:39\"}', 'frontend'),
+(44, 4, 'assistant', 'Este manual parece ser para armar y utilizar un componente electrónico que involucra un diodo de germanio. El propósito del armado y uso de este componente no está explícitamente mencionado, pero considerando los pasos y la mención de una antena y tierra, es probable que se trate de un proyecto relacionado con la recepción o transmisión de señales de radio.\n\nLos pasos mencionados en el manual sugieren que se está construyendo un circuito que involucra una bobina, un condensador (LC) y un diodo, lo que podría ser parte de un receptor de radio o un circuito de detección de señales. El uso de un diodo de germanio específicamente podría indicar que se está trabajando con señales de baja frecuencia o con aplicaciones que requieren una alta sensibilidad.\n\nSi necesitas más información o aclaraciones sobre algún paso específico, puedo intentar ayudarte.\n\nOpciones: preguntar_paso|explicar_componentes|otros', 700, '2026-03-25 19:15:39', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(45, 4, 'user', 'i need a kit for waves emision electromagnetism', 0, '2026-03-25 19:20:44', '{\"timestamp\": \"2026-03-25 19:20:44\"}', 'frontend'),
+(46, 4, 'assistant', 'Parece que estás interesado en explorar el fascinante mundo de las ondas electromagnéticas. Aun no tenemos un kit específico sobre emisión de ondas electromagnéticas, pero puedo contarte más sobre ello si te interesa seguir explorando.\n\nOpciones: Fisica|Electromagnetismo|Ondas|Teoria', 449, '2026-03-25 19:20:44', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(47, 4, 'user', 'Electromagnetismo', 0, '2026-03-25 19:20:53', '{\"timestamp\": \"2026-03-25 19:20:53\"}', 'frontend'),
+(48, 4, 'assistant', 'El electromagnetismo es un tema fundamental en la física. Aun no tenemos una clase o kit sobre este tema específico, pero puedo contarte más sobre los conceptos básicos de electromagnetismo, como campos eléctricos y magnéticos, si te interesa.\nOpciones: Física|Ingeniería|Electrónica|Otro', 522, '2026-03-25 19:20:53', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(49, 4, 'user', 'Profundiza en tu última respuesta y dame más detalles.', 0, '2026-03-25 19:20:58', '{\"timestamp\": \"2026-03-25 19:20:58\"}', 'frontend'),
+(50, 4, 'assistant', 'Claro, con gusto. El electromagnetismo es una rama de la física que estudia la interacción entre cargas eléctricas y campos magnéticos. Incluye conceptos como la electricidad estática, la corriente eléctrica, los campos magnéticos y las ondas electromagnéticas. Estos conceptos son fundamentales para entender cómo funcionan muchos dispositivos y tecnologías que utilizamos a diario, como motores, generadores, radios y teléfonos móviles.\n\nSi estás interesado en aprender más sobre el electromagnetismo, podríamos explorar temas como la ley de Coulomb, la inducción electromagnética de Faraday, o la teoría de Maxwell, que unificó las leyes del electromagnetismo en un conjunto coherente de ecuaciones.\n\nOpciones: Física|Matemáticas|Ingeniería|Otras', 724, '2026-03-25 19:20:58', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(51, 2, 'user', 'Hola que eres', 0, '2026-04-11 15:35:06', '{\"timestamp\": \"2026-04-11 15:35:06\"}', 'frontend'),
+(52, 2, 'assistant', 'Hola, soy Clase de CiencIA, tu asistente de bienvenida en clasedeciencia.com. Estoy aquí para ayudarte a encontrar clases y kits interesantes sobre ciencia y tecnología.\n\n¿Cuál es tu grado de estudio o interés? \nOpciones: Primaria|Secundaria|Universidad|Otro', 437, '2026-04-11 15:35:06', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(53, 2, 'user', 'Universidad', 0, '2026-04-11 15:35:17', '{\"timestamp\": \"2026-04-11 15:35:17\"}', 'frontend'),
+(54, 2, 'assistant', 'En la universidad, hay muchas áreas interesantes para explorar. Estamos desarrollando contenido sobre ciencias exactas, tecnología y más.\n\n¿Te interesa algo en particular como ingeniería, biología, física o quizás programación? \nOpciones: Ingeniería|Biología|Física|Programación', 503, '2026-04-11 15:35:17', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend'),
+(55, 2, 'user', 'Física', 0, '2026-04-11 15:35:27', '{\"timestamp\": \"2026-04-11 15:35:27\"}', 'frontend'),
+(56, 2, 'assistant', 'La física es una rama fascinante que nos ayuda a entender el mundo que nos rodea. \n\nOpciones: Mecánica|Electromagnetismo|Termodinámica|Otros', 542, '2026-04-11 15:35:27', '{\"modelo\": \"llama-3.3-70b-versatile\"}', 'frontend');
 
 -- --------------------------------------------------------
 
@@ -1072,7 +1573,8 @@ INSERT INTO `ia_respuestas_cache` (`id`, `clase_id`, `pregunta_normalizada`, `pr
 (5, 6, 'ok ya estamos aqui entonces que es este kit', 'ok ya estamos aqui entonces que es este kit', '¡Excelente! Ahora que estamos listos para empezar, veamos qué componentes tiene el kit de radio de cristal que tienes.\n\n¿Puedes describirme los componentes que ves en el kit? ¿Hay un cristal de galena o cuarzo, un diodo, un condensador, un resistor, un auricular, una antena y un circuito impreso?\n\n¿Sabes qué función cumple cada uno de estos componentes en el radio de cristal? Por ejemplo, ¿para qué se utiliza el cristal de galena o cuarzo? ¿Y qué papel juega el diodo en el circuito?\n\nVamos a explorar juntos cada uno de estos componentes y cómo se relacionan entre sí para crear un radio de cristal funcional.\n\n¿Qué te parece si empezamos por el cristal de galena o cuarzo? ¿Sabes qué es lo que hace que este cristal sea especial y cómo se utiliza en el radio de cristal?', 0, NULL, 1, '2026-03-21 02:43:52'),
 (6, 6, '¿hay un cristal de galena o cuarzo, un diodo, un condensador, un resistor, un auricular, una antena y un circuito impreso?', '¿Hay un cristal de galena o cuarzo, un diodo, un condensador, un resistor, un auricular, una antena y un circuito impreso?', '¡Exacto! Parece que tienes un kit de radio de cristal completo.\n\nAhora, vamos a analizar cada uno de estos componentes y su función en el radio de cristal.\n\n* El cristal de galena o cuarzo es el corazón del radio de cristal. ¿Sabes qué propiedad tiene este cristal que lo hace útil para detectar señales de radio?\n* El diodo es un componente que ayuda a \"rectificar\" la señal de radio. ¿Qué significa \"rectificar\" en este contexto?\n* El condensador es un componente que almacena energía eléctrica. ¿Cómo se utiliza el condensador en el radio de cristal para mejorar la recepción de señales?\n* El resistor es un componente que controla el flujo de corriente eléctrica. ¿Qué papel juega el resistor en el radio de cristal?\n* El auricular es el componente que convierte la señal de radio en sonido. ¿Cómo funciona el auricular para que podamos escuchar la radio?\n* La antena es el componente que recibe las señales de radio del aire. ¿Qué tipo de antena se utiliza comúnmente en los radios de cristal?\n* El circuito impreso es el \"esqueleto\" del radio de cristal, que conecta todos los componentes entre sí. ¿Qué papel juega el circuito impreso en la funcionalidad del radio de cristal?\n\nVamos a explorar cada uno de estos componentes y su función en el radio de cristal. ¿Qué te parece si empezamos por el cristal de galena o cuarzo y su propiedad especial?', 0, NULL, 1, '2026-03-21 02:44:07'),
 (7, 6, '¿qué significa \"rectificar\" en este contexto?', '¿Qué significa \"rectificar\" en este contexto?', 'Excelente pregunta! En el contexto de un radio de cristal, \"rectificar\" se refiere al proceso de convertir una señal de radio alternada (AC) en una señal de corriente continua (DC).\n\nLa señal de radio que se recibe a través de la antena es una señal alternada, lo que significa que la corriente eléctrica cambia de dirección constantemente. Sin embargo, el auricular y otros componentes del radio de cristal necesitan una señal de corriente continua para funcionar correctamente.\n\nEl diodo es el componente que se encarga de \"rectificar\" la señal de radio, es decir, de convertir la señal alternada en una señal de corriente continua. Esto se logra porque el diodo solo permite que la corriente fluya en una dirección, bloqueando la corriente en la otra dirección.\n\n¿Puedes imaginar cómo funciona esto en la práctica? ¿Qué pasaría si la señal de radio no se rectificara antes de llegar al auricular?', 0, NULL, 1, '2026-03-21 02:44:31'),
-(8, 6, 'profundiza en tu última respuesta y dame más detalles.', 'Profundiza en tu última respuesta y dame más detalles.', 'Claro, con gusto.\n\nEn un radio de cristal, la señal de radio que se recibe a través de la antena es una señal de corriente alterna (AC). Esto significa que la corriente eléctrica cambia de dirección constantemente, como una onda sinusoidal. La forma de la señal de radio es similar a una onda sinusoidal, con una parte positiva y una parte negativa.\n\nEl problema es que el auricular y otros componentes del radio de cristal necesitan una señal de corriente continua (DC) para funcionar correctamente. La corriente continua es una corriente que fluye en una sola dirección, sin cambiar de dirección.\n\nAquí es donde entra en juego el diodo. El diodo es un componente semiconductor que solo permite que la corriente fluya en una dirección, bloqueando la corriente en la otra dirección. Esto se conoce como \"rectificación\" de la señal de radio.\n\nCuando la señal de radio alternada (AC) llega al diodo, el diodo solo permite que la parte positiva de la señal de radio pase a través de él, bloqueando la parte negativa. De esta manera, la señal de radio se convierte en una señal de corriente continua (DC), que es lo que necesita el auricular y otros componentes del radio de cristal.\n\nEl proceso de rectificación es importante porque permite que el radio de cristal funcione correctamente. Sin la rectificación, la señal de radio no podría ser procesada por el auricular y otros componentes, y no podríamos escuchar la radio.\n\n¿Puedes imaginar cómo funciona esto en la práctica? ¿Cómo crees que la rectificación afecta la calidad de la señal de radio que se escucha en el auricular?\n\nAdemás, ¿sabes', 0, NULL, 1, '2026-03-21 02:44:44');
+(8, 6, 'profundiza en tu última respuesta y dame más detalles.', 'Profundiza en tu última respuesta y dame más detalles.', 'Claro, con gusto.\n\nEn un radio de cristal, la señal de radio que se recibe a través de la antena es una señal de corriente alterna (AC). Esto significa que la corriente eléctrica cambia de dirección constantemente, como una onda sinusoidal. La forma de la señal de radio es similar a una onda sinusoidal, con una parte positiva y una parte negativa.\n\nEl problema es que el auricular y otros componentes del radio de cristal necesitan una señal de corriente continua (DC) para funcionar correctamente. La corriente continua es una corriente que fluye en una sola dirección, sin cambiar de dirección.\n\nAquí es donde entra en juego el diodo. El diodo es un componente semiconductor que solo permite que la corriente fluya en una dirección, bloqueando la corriente en la otra dirección. Esto se conoce como \"rectificación\" de la señal de radio.\n\nCuando la señal de radio alternada (AC) llega al diodo, el diodo solo permite que la parte positiva de la señal de radio pase a través de él, bloqueando la parte negativa. De esta manera, la señal de radio se convierte en una señal de corriente continua (DC), que es lo que necesita el auricular y otros componentes del radio de cristal.\n\nEl proceso de rectificación es importante porque permite que el radio de cristal funcione correctamente. Sin la rectificación, la señal de radio no podría ser procesada por el auricular y otros componentes, y no podríamos escuchar la radio.\n\n¿Puedes imaginar cómo funciona esto en la práctica? ¿Cómo crees que la rectificación afecta la calidad de la señal de radio que se escucha en el auricular?\n\nAdemás, ¿sabes', 0, NULL, 1, '2026-03-21 02:44:44'),
+(9, 7, 'que tengo que hacer aqui?', 'que tengo que hacer aqui?', 'Estás en la clase de \"Motor eléctrico simple\", donde vas a armar un motor básico que convierte energía eléctrica en movimiento. Para empezar, debes seguir la guía paso a paso que se te proporciona.\n\n¿Has revisado los materiales que se encuentran en el kit, como el alambre esmaltado, los imanes neodimio y el clavo de hierro? \n\nOpciones: si|no|no_se', 0, NULL, 1, '2026-03-24 00:12:14');
 
 --
 -- Triggers `ia_respuestas_cache`
@@ -1090,6 +1592,64 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `ia_resumen_sesion`
+--
+
+CREATE TABLE `ia_resumen_sesion` (
+  `id` bigint(20) NOT NULL,
+  `sesion_id` int(11) NOT NULL,
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend',
+  `resumen_corto` text NOT NULL,
+  `resumen_largo` mediumtext DEFAULT NULL,
+  `ultimo_mensaje_id` bigint(20) DEFAULT NULL,
+  `tokens_estimados` int(11) DEFAULT 0,
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ia_search_index`
+--
+
+CREATE TABLE `ia_search_index` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `entity_type` enum('clase','kit','componente','manual') NOT NULL,
+  `entity_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `slug` varchar(255) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `status_publicacion` varchar(40) DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `search_text` longtext NOT NULL,
+  `search_text_normalized` longtext NOT NULL,
+  `keywords_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`keywords_json`)),
+  `relations_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`relations_json`)),
+  `score_base` decimal(10,4) NOT NULL DEFAULT 1.0000,
+  `source_updated_at` datetime DEFAULT NULL,
+  `indexed_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ia_search_index_meta`
+--
+
+CREATE TABLE `ia_search_index_meta` (
+  `id` int(11) NOT NULL,
+  `index_version` varchar(50) NOT NULL,
+  `generated_at` datetime NOT NULL,
+  `source_summary` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`source_summary`)),
+  `notes` varchar(500) DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `ia_sesiones`
 --
 
@@ -1102,16 +1662,47 @@ CREATE TABLE `ia_sesiones` (
   `total_mensajes` int(11) DEFAULT 0,
   `tokens_usados` int(11) DEFAULT 0,
   `estado` enum('activa','finalizada','timeout') DEFAULT 'activa',
-  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend'
+  `instancia` enum('frontend','backend') NOT NULL DEFAULT 'frontend',
+  `admin_user` varchar(120) DEFAULT NULL,
+  `contexto_scope` varchar(80) DEFAULT NULL,
+  `contexto_pagina` varchar(80) DEFAULT NULL,
+  `entidad_tipo` varchar(40) DEFAULT NULL,
+  `entidad_id` int(11) DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Dumping data for table `ia_sesiones`
 --
 
-INSERT INTO `ia_sesiones` (`id`, `sesion_hash`, `clase_id`, `fecha_inicio`, `fecha_ultima_interaccion`, `total_mensajes`, `tokens_usados`, `estado`, `instancia`) VALUES
-(1, 'd5c21494d10484856db76c133c6e1e0e', 6, '2026-03-21 01:22:41', '2026-03-23 23:29:43', 12, 1582, 'activa', 'frontend'),
-(2, '2bcef2b801e0d699f7db24336d0b60f1', NULL, '2026-03-21 01:54:59', '2026-03-21 17:09:15', 0, 0, 'activa', 'frontend');
+INSERT INTO `ia_sesiones` (`id`, `sesion_hash`, `clase_id`, `fecha_inicio`, `fecha_ultima_interaccion`, `total_mensajes`, `tokens_usados`, `estado`, `instancia`, `admin_user`, `contexto_scope`, `contexto_pagina`, `entidad_tipo`, `entidad_id`, `metadata`) VALUES
+(1, 'd5c21494d10484856db76c133c6e1e0e', 7, '2026-03-21 01:22:41', '2026-03-24 00:44:51', 12, 1582, 'activa', 'frontend', NULL, NULL, NULL, NULL, NULL, NULL),
+(2, '2bcef2b801e0d699f7db24336d0b60f1', NULL, '2026-03-21 01:54:59', '2026-04-11 15:35:27', 6, 1482, 'activa', 'frontend', NULL, NULL, NULL, NULL, NULL, NULL),
+(3, '237e9991264658c794e93abe676002550a43ddba26523a61024682aca16c342f', NULL, '2026-03-25 00:44:38', '2026-03-25 01:15:27', 30, 30210, 'activa', 'backend', 'admin', 'admin_global', 'kits', NULL, NULL, NULL),
+(4, '9bf772e005fd63f4f40ce2f67bd921e8', NULL, '2026-03-25 19:15:38', '2026-03-25 19:20:58', 8, 2395, 'activa', 'frontend', NULL, NULL, NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ia_sesiones_contexto`
+--
+
+CREATE TABLE `ia_sesiones_contexto` (
+  `id` bigint(20) NOT NULL,
+  `instancia` enum('frontend','backend') NOT NULL,
+  `sesion_clave` varchar(160) NOT NULL COMMENT 'Ej: backend:admin:contratos:12',
+  `sesion_id` int(11) NOT NULL,
+  `activa` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `ia_sesiones_contexto`
+--
+
+INSERT INTO `ia_sesiones_contexto` (`id`, `instancia`, `sesion_clave`, `sesion_id`, `activa`, `created_at`, `updated_at`) VALUES
+(1, 'backend', 'backend:admin:admin_global', 3, 1, '2026-03-25 00:44:38', '2026-03-25 00:44:38');
 
 -- --------------------------------------------------------
 
@@ -1384,6 +1975,30 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `lotes`
+--
+
+CREATE TABLE `lotes` (
+  `id` int(11) NOT NULL,
+  `codigo_lote` varchar(64) NOT NULL,
+  `kit_id` int(11) NOT NULL,
+  `contrato_id` int(11) DEFAULT NULL,
+  `cantidad_total` int(11) NOT NULL DEFAULT 0,
+  `cantidad_disponible` int(11) NOT NULL DEFAULT 0,
+  `cantidad_asignada` int(11) NOT NULL DEFAULT 0,
+  `cantidad_entregada` int(11) NOT NULL DEFAULT 0,
+  `fecha_fabricacion` date DEFAULT NULL,
+  `fecha_caducidad` date DEFAULT NULL,
+  `estado_lote` enum('activo','bloqueado','agotado','cerrado') NOT NULL DEFAULT 'activo',
+  `ubicacion` varchar(180) DEFAULT NULL,
+  `observaciones` text DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `paginas_estaticas`
 --
 
@@ -1530,6 +2145,207 @@ INSERT INTO `sitio_config` (`clave`, `valor`, `descripcion`, `updated_at`) VALUE
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `v_admin_contratos_resumen`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_admin_contratos_resumen` (
+`id` int(11)
+,`numero` varchar(64)
+,`entidad_contratante` varchar(255)
+,`departamento` varchar(120)
+,`municipio` varchar(120)
+,`fecha` date
+,`fecha_inicio` date
+,`fecha_fin` date
+,`valor` decimal(16,2)
+,`valor_ejecutado` decimal(16,2)
+,`saldo_pendiente` decimal(17,2)
+,`avance_financiero_pct` decimal(22,2)
+,`estado_contrato` enum('borrador','vigente','suspendido','finalizado','cerrado')
+,`supervisor` varchar(180)
+,`updated_at` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_admin_entregas_resumen`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_admin_entregas_resumen` (
+`id` int(11)
+,`codigo_entrega` varchar(64)
+,`contrato_id` int(11)
+,`contrato_numero` varchar(64)
+,`entidad_contratante` varchar(255)
+,`institucion_educativa` varchar(255)
+,`departamento` varchar(120)
+,`municipio` varchar(120)
+,`fecha_programada` date
+,`fecha_entrega` date
+,`estado_entrega` enum('programada','en_transito','entregada','rechazada','reprogramada')
+,`cantidad_kits` int(11)
+,`recibido_ok` tinyint(1)
+,`acta_pdf` varchar(255)
+,`entrega_atrasada` int(1)
+,`updated_at` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_admin_lotes_resumen`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_admin_lotes_resumen` (
+`id` int(11)
+,`codigo_lote` varchar(64)
+,`kit_id` int(11)
+,`kit_nombre` varchar(120)
+,`contrato_id` int(11)
+,`contrato_numero` varchar(64)
+,`cantidad_total` int(11)
+,`cantidad_disponible` int(11)
+,`cantidad_asignada` int(11)
+,`cantidad_entregada` int(11)
+,`estado_lote` enum('activo','bloqueado','agotado','cerrado')
+,`ubicacion` varchar(180)
+,`fecha_fabricacion` date
+,`fecha_caducidad` date
+,`stock_disponible_pct` decimal(16,2)
+,`updated_at` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `v_admin_riesgo_operativo`
+--
+-- Error reading structure for table u626603208_clasedeciencia.v_admin_riesgo_operativo: #1271 - Illegal mix of collations for operation 'UNION'
+-- Error reading data for table u626603208_clasedeciencia.v_admin_riesgo_operativo: #1064 - You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'FROM `u626603208_clasedeciencia`.`v_admin_riesgo_operativo`' at line 1
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_ctr_busqueda_30d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_ctr_busqueda_30d` (
+`fecha` date
+,`total_busquedas` decimal(22,0)
+,`total_clics_resultado` decimal(22,0)
+,`ctr_busqueda_pct` decimal(28,2)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_funnel_home_clase_kit_30d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_funnel_home_clase_kit_30d` (
+`sesiones_home` bigint(21)
+,`sesiones_clase` bigint(21)
+,`sesiones_kit` bigint(21)
+,`conv_home_a_clase_pct` decimal(26,2)
+,`conv_clase_a_kit_pct` decimal(26,2)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_ia_preguntas_sin_resolver_30d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_ia_preguntas_sin_resolver_30d` (
+`fecha` date
+,`instancia` enum('frontend','backend')
+,`total_preguntas_sin_resolver` bigint(21)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_ia_salud_30d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_ia_salud_30d` (
+`instancia` enum('frontend','backend')
+,`fecha` date
+,`total_eventos_ia` bigint(21)
+,`total_consultas` decimal(22,0)
+,`total_errores` decimal(22,0)
+,`total_guardrails` decimal(22,0)
+,`tokens_totales` decimal(32,0)
+,`latencia_promedio_ms` decimal(13,2)
+,`tasa_error_pct` decimal(28,2)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_resumen_ejecutivo`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_resumen_ejecutivo` (
+`page_views_7d` bigint(21)
+,`sesiones_unicas_7d` bigint(21)
+,`consultas_ia_7d` bigint(21)
+,`errores_ia_7d` bigint(21)
+,`guardrails_ia_7d` bigint(21)
+,`fecha_corte` timestamp /* mariadb-5.3 */
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_top_clases_7d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_top_clases_7d` (
+`clase_id` int(11)
+,`nombre` varchar(180)
+,`slug` varchar(180)
+,`visitas_totales` bigint(21)
+,`sesiones_unicas` bigint(21)
+,`clics_desde_busqueda` decimal(22,0)
+,`ultima_interaccion` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_top_clases_30d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_top_clases_30d` (
+`clase_id` int(11)
+,`nombre` varchar(180)
+,`slug` varchar(180)
+,`visitas_totales` bigint(21)
+,`sesiones_unicas` bigint(21)
+,`clics_desde_busqueda` decimal(22,0)
+,`ultima_interaccion` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `v_auditoria_visitas_legacy_30d`
+-- (See below for the actual view)
+--
+CREATE TABLE `v_auditoria_visitas_legacy_30d` (
+`clase_id` int(11)
+,`nombre` varchar(180)
+,`slug` varchar(180)
+,`visitas_totales` bigint(21)
+,`dias_con_trafico` bigint(21)
+,`ultima_visita` datetime
+);
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `v_clases_populares_ia`
 -- (See below for the actual view)
 --
@@ -1612,6 +2428,22 @@ CREATE TABLE `v_ia_preguntas_frecuentes_clase` (
 --
 
 --
+-- Indexes for table `analytics_eventos`
+--
+ALTER TABLE `analytics_eventos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ae_evento_fecha` (`evento`,`created_at`),
+  ADD KEY `idx_ae_session_fecha` (`session_hash`,`created_at`),
+  ADD KEY `idx_ae_instancia_modulo` (`instancia`,`modulo`),
+  ADD KEY `idx_ae_tipo_pagina` (`tipo_pagina`),
+  ADD KEY `idx_ae_entidad` (`entidad_tipo`,`entidad_id`),
+  ADD KEY `idx_ae_clase` (`clase_id`),
+  ADD KEY `idx_ae_kit` (`kit_id`),
+  ADD KEY `idx_ae_busqueda` (`termino_busqueda`),
+  ADD KEY `idx_ae_created` (`created_at`),
+  ADD KEY `fk_ae_sesion_ia` (`sesion_ia_id`);
+
+--
 -- Indexes for table `analytics_visitas`
 --
 ALTER TABLE `analytics_visitas`
@@ -1652,6 +2484,15 @@ ALTER TABLE `atributos_mapeo`
   ADD KEY `idx_mapeo_entidad` (`tipo_entidad`,`orden`);
 
 --
+-- Indexes for table `auditoria_admin`
+--
+ALTER TABLE `auditoria_admin`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_entidad` (`entidad`,`entidad_id`),
+  ADD KEY `idx_audit_modulo` (`modulo`),
+  ADD KEY `idx_audit_fecha` (`created_at`);
+
+--
 -- Indexes for table `categorias_items`
 --
 ALTER TABLE `categorias_items`
@@ -1677,6 +2518,7 @@ ALTER TABLE `clases`
   ADD KEY `idx_clases_activo_ciclo` (`activo`,`ciclo`),
   ADD KEY `idx_clases_status_published` (`status`,`published_at`),
   ADD KEY `idx_clases_popularidad` (`orden_popularidad`);
+ALTER TABLE `clases` ADD FULLTEXT KEY `ft_clases_ia` (`nombre`,`resumen`,`objetivo_aprendizaje`);
 
 --
 -- Indexes for table `clase_areas`
@@ -1722,21 +2564,36 @@ ALTER TABLE `competencias`
 --
 ALTER TABLE `configuracion_ia`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uk_instancia_clave` (`instancia`,`clave`);
+  ADD UNIQUE KEY `uk_instancia_pagina_clave` (`instancia`,`pagina`,`clave`);
 
 --
 -- Indexes for table `contratos`
 --
 ALTER TABLE `contratos`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uq_contratos_numero` (`numero`);
+  ADD UNIQUE KEY `uq_contratos_numero` (`numero`),
+  ADD KEY `idx_contratos_estado` (`estado_contrato`),
+  ADD KEY `idx_contratos_depto` (`departamento`),
+  ADD KEY `idx_contratos_fechas` (`fecha_inicio`,`fecha_fin`);
 
 --
 -- Indexes for table `entregas`
 --
 ALTER TABLE `entregas`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_entregas_contrato` (`contrato_id`);
+  ADD UNIQUE KEY `uq_entregas_codigo` (`codigo_entrega`),
+  ADD KEY `idx_entregas_contrato` (`contrato_id`),
+  ADD KEY `idx_entregas_estado` (`estado_entrega`),
+  ADD KEY `idx_entregas_fecha_prog` (`fecha_programada`),
+  ADD KEY `idx_entregas_fecha_real` (`fecha`),
+  ADD KEY `idx_entregas_geo` (`departamento`,`municipio`);
+
+--
+-- Indexes for table `entrega_lotes`
+--
+ALTER TABLE `entrega_lotes`
+  ADD PRIMARY KEY (`entrega_id`,`lote_id`),
+  ADD KEY `idx_el_lote` (`lote_id`);
 
 --
 -- Indexes for table `footer_enlaces`
@@ -1794,13 +2651,51 @@ ALTER TABLE `ia_respuestas_cache`
   ADD KEY `idx_ia_cache_clase_pregunta` (`clase_id`,`pregunta_normalizada`(255));
 
 --
+-- Indexes for table `ia_resumen_sesion`
+--
+ALTER TABLE `ia_resumen_sesion`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_ia_resumen_sesion` (`sesion_id`,`instancia`),
+  ADD KEY `idx_ia_resumen_updated` (`updated_at`);
+
+--
+-- Indexes for table `ia_search_index`
+--
+ALTER TABLE `ia_search_index`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_ia_search_entity` (`entity_type`,`entity_id`),
+  ADD KEY `idx_ia_search_type_active` (`entity_type`,`is_active`),
+  ADD KEY `idx_ia_search_status` (`status_publicacion`),
+  ADD KEY `idx_ia_search_indexed_at` (`indexed_at`);
+ALTER TABLE `ia_search_index` ADD FULLTEXT KEY `ft_ia_search_text` (`title`,`search_text`,`search_text_normalized`);
+
+--
+-- Indexes for table `ia_search_index_meta`
+--
+ALTER TABLE `ia_search_index_meta`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_ia_search_meta_generated` (`generated_at`);
+
+--
 -- Indexes for table `ia_sesiones`
 --
 ALTER TABLE `ia_sesiones`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_sesion_hash` (`sesion_hash`),
   ADD KEY `idx_ia_sesiones_clase` (`clase_id`),
-  ADD KEY `idx_sesiones_activas` (`estado`,`fecha_ultima_interaccion`);
+  ADD KEY `idx_sesiones_activas` (`estado`,`fecha_ultima_interaccion`),
+  ADD KEY `idx_ia_sesiones_instancia_estado` (`instancia`,`estado`),
+  ADD KEY `idx_ia_sesiones_scope` (`contexto_scope`,`contexto_pagina`),
+  ADD KEY `idx_ia_sesiones_entidad` (`entidad_tipo`,`entidad_id`),
+  ADD KEY `idx_ia_sesiones_admin_user` (`admin_user`);
+
+--
+-- Indexes for table `ia_sesiones_contexto`
+--
+ALTER TABLE `ia_sesiones_contexto`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_ia_sesion_contexto` (`instancia`,`sesion_clave`),
+  ADD KEY `idx_ia_sesion_contexto_sesion_id` (`sesion_id`);
 
 --
 -- Indexes for table `ia_stats_clase`
@@ -1816,6 +2711,7 @@ ALTER TABLE `kits`
   ADD UNIQUE KEY `uq_kits_codigo` (`codigo`),
   ADD UNIQUE KEY `uk_kits_slug` (`slug`),
   ADD KEY `idx_kits_clase` (`clase_id`);
+ALTER TABLE `kits` ADD FULLTEXT KEY `ft_kits_ia` (`nombre`,`resumen`);
 
 --
 -- Indexes for table `kits_areas`
@@ -1840,6 +2736,7 @@ ALTER TABLE `kit_items`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_kit_items_nombre` (`nombre_comun`),
   ADD KEY `idx_kit_items_categoria` (`categoria_id`);
+ALTER TABLE `kit_items` ADD FULLTEXT KEY `ft_items_ia` (`nombre_comun`);
 
 --
 -- Indexes for table `kit_manuals`
@@ -1854,6 +2751,17 @@ ALTER TABLE `kit_manuals`
   ADD KEY `idx_km_scope_type` (`ambito`,`tipo_manual`,`status`),
   ADD KEY `idx_km_item_status` (`item_id`,`status`),
   ADD KEY `idx_km_status_pubat` (`status`,`published_at`);
+
+--
+-- Indexes for table `lotes`
+--
+ALTER TABLE `lotes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uq_lotes_codigo` (`codigo_lote`),
+  ADD KEY `idx_lotes_kit` (`kit_id`),
+  ADD KEY `idx_lotes_contrato` (`contrato_id`),
+  ADD KEY `idx_lotes_estado` (`estado_lote`),
+  ADD KEY `idx_lotes_disponible` (`cantidad_disponible`);
 
 --
 -- Indexes for table `paginas_estaticas`
@@ -1896,6 +2804,12 @@ ALTER TABLE `sitio_config`
 --
 
 --
+-- AUTO_INCREMENT for table `analytics_eventos`
+--
+ALTER TABLE `analytics_eventos`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=286;
+
+--
 -- AUTO_INCREMENT for table `analytics_visitas`
 --
 ALTER TABLE `analytics_visitas`
@@ -1926,6 +2840,12 @@ ALTER TABLE `atributos_mapeo`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=72;
 
 --
+-- AUTO_INCREMENT for table `auditoria_admin`
+--
+ALTER TABLE `auditoria_admin`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `categorias_items`
 --
 ALTER TABLE `categorias_items`
@@ -1953,7 +2873,7 @@ ALTER TABLE `competencias`
 -- AUTO_INCREMENT for table `configuracion_ia`
 --
 ALTER TABLE `configuracion_ia`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `contratos`
@@ -1995,25 +2915,49 @@ ALTER TABLE `ia_guardrails_log`
 -- AUTO_INCREMENT for table `ia_logs`
 --
 ALTER TABLE `ia_logs`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
 
 --
 -- AUTO_INCREMENT for table `ia_mensajes`
 --
 ALTER TABLE `ia_mensajes`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
 -- AUTO_INCREMENT for table `ia_respuestas_cache`
 --
 ALTER TABLE `ia_respuestas_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `ia_resumen_sesion`
+--
+ALTER TABLE `ia_resumen_sesion`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ia_search_index`
+--
+ALTER TABLE `ia_search_index`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ia_search_index_meta`
+--
+ALTER TABLE `ia_search_index_meta`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `ia_sesiones`
 --
 ALTER TABLE `ia_sesiones`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `ia_sesiones_contexto`
+--
+ALTER TABLE `ia_sesiones_contexto`
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `kits`
@@ -2034,6 +2978,12 @@ ALTER TABLE `kit_manuals`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `lotes`
+--
+ALTER TABLE `lotes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `paginas_estaticas`
 --
 ALTER TABLE `paginas_estaticas`
@@ -2050,6 +3000,105 @@ ALTER TABLE `prompts_clase`
 --
 ALTER TABLE `recursos_multimedia`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_admin_contratos_resumen`
+--
+DROP TABLE IF EXISTS `v_admin_contratos_resumen`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_admin_contratos_resumen`  AS SELECT `c`.`id` AS `id`, `c`.`numero` AS `numero`, `c`.`entidad_contratante` AS `entidad_contratante`, `c`.`departamento` AS `departamento`, `c`.`municipio` AS `municipio`, `c`.`fecha` AS `fecha`, `c`.`fecha_inicio` AS `fecha_inicio`, `c`.`fecha_fin` AS `fecha_fin`, `c`.`valor` AS `valor`, `c`.`valor_ejecutado` AS `valor_ejecutado`, `c`.`valor`- `c`.`valor_ejecutado` AS `saldo_pendiente`, CASE WHEN `c`.`valor` > 0 THEN round(`c`.`valor_ejecutado` / `c`.`valor` * 100,2) ELSE 0 END AS `avance_financiero_pct`, `c`.`estado_contrato` AS `estado_contrato`, `c`.`supervisor` AS `supervisor`, `c`.`updated_at` AS `updated_at` FROM `contratos` AS `c` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_admin_entregas_resumen`
+--
+DROP TABLE IF EXISTS `v_admin_entregas_resumen`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_admin_entregas_resumen`  AS SELECT `e`.`id` AS `id`, `e`.`codigo_entrega` AS `codigo_entrega`, `e`.`contrato_id` AS `contrato_id`, `c`.`numero` AS `contrato_numero`, `c`.`entidad_contratante` AS `entidad_contratante`, `e`.`institucion_educativa` AS `institucion_educativa`, coalesce(`e`.`departamento`,`c`.`departamento`) AS `departamento`, `e`.`municipio` AS `municipio`, `e`.`fecha_programada` AS `fecha_programada`, `e`.`fecha` AS `fecha_entrega`, `e`.`estado_entrega` AS `estado_entrega`, `e`.`cantidad_kits` AS `cantidad_kits`, `e`.`recibido_ok` AS `recibido_ok`, `e`.`acta_pdf` AS `acta_pdf`, CASE WHEN `e`.`estado_entrega` in ('programada','reprogramada') AND `e`.`fecha_programada` is not null AND `e`.`fecha_programada` < curdate() THEN 1 ELSE 0 END AS `entrega_atrasada`, `e`.`updated_at` AS `updated_at` FROM (`entregas` `e` join `contratos` `c` on(`c`.`id` = `e`.`contrato_id`)) ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_admin_lotes_resumen`
+--
+DROP TABLE IF EXISTS `v_admin_lotes_resumen`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_admin_lotes_resumen`  AS SELECT `l`.`id` AS `id`, `l`.`codigo_lote` AS `codigo_lote`, `l`.`kit_id` AS `kit_id`, `k`.`nombre` AS `kit_nombre`, `l`.`contrato_id` AS `contrato_id`, `c`.`numero` AS `contrato_numero`, `l`.`cantidad_total` AS `cantidad_total`, `l`.`cantidad_disponible` AS `cantidad_disponible`, `l`.`cantidad_asignada` AS `cantidad_asignada`, `l`.`cantidad_entregada` AS `cantidad_entregada`, `l`.`estado_lote` AS `estado_lote`, `l`.`ubicacion` AS `ubicacion`, `l`.`fecha_fabricacion` AS `fecha_fabricacion`, `l`.`fecha_caducidad` AS `fecha_caducidad`, CASE WHEN `l`.`cantidad_total` > 0 THEN round(`l`.`cantidad_disponible` / `l`.`cantidad_total` * 100,2) ELSE 0 END AS `stock_disponible_pct`, `l`.`updated_at` AS `updated_at` FROM ((`lotes` `l` join `kits` `k` on(`k`.`id` = `l`.`kit_id`)) left join `contratos` `c` on(`c`.`id` = `l`.`contrato_id`)) ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_ctr_busqueda_30d`
+--
+DROP TABLE IF EXISTS `v_auditoria_ctr_busqueda_30d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_ctr_busqueda_30d`  AS SELECT cast(`ae`.`created_at` as date) AS `fecha`, sum(case when `ae`.`evento` = 'search_query' then 1 else 0 end) AS `total_busquedas`, sum(case when `ae`.`evento` = 'search_result_click' then 1 else 0 end) AS `total_clics_resultado`, round(100 * sum(case when `ae`.`evento` = 'search_result_click' then 1 else 0 end) / nullif(sum(case when `ae`.`evento` = 'search_query' then 1 else 0 end),0),2) AS `ctr_busqueda_pct` FROM `analytics_eventos` AS `ae` WHERE `ae`.`created_at` >= current_timestamp() - interval 30 day AND `ae`.`instancia` = 'frontend' GROUP BY cast(`ae`.`created_at` as date) ORDER BY cast(`ae`.`created_at` as date) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_funnel_home_clase_kit_30d`
+--
+DROP TABLE IF EXISTS `v_auditoria_funnel_home_clase_kit_30d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_funnel_home_clase_kit_30d`  AS SELECT count(distinct case when `ae`.`tipo_pagina` = 'inicio' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end) AS `sesiones_home`, count(distinct case when `ae`.`tipo_pagina` = 'clase' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end) AS `sesiones_clase`, count(distinct case when `ae`.`tipo_pagina` = 'kit' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end) AS `sesiones_kit`, round(100 * count(distinct case when `ae`.`tipo_pagina` = 'clase' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end) / nullif(count(distinct case when `ae`.`tipo_pagina` = 'inicio' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end),0),2) AS `conv_home_a_clase_pct`, round(100 * count(distinct case when `ae`.`tipo_pagina` = 'kit' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end) / nullif(count(distinct case when `ae`.`tipo_pagina` = 'clase' and `ae`.`evento` = 'page_view' then `ae`.`session_hash` end),0),2) AS `conv_clase_a_kit_pct` FROM `analytics_eventos` AS `ae` WHERE `ae`.`created_at` >= current_timestamp() - interval 30 day AND `ae`.`instancia` = 'frontend' ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_ia_preguntas_sin_resolver_30d`
+--
+DROP TABLE IF EXISTS `v_auditoria_ia_preguntas_sin_resolver_30d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_ia_preguntas_sin_resolver_30d`  AS SELECT cast(`l`.`fecha_hora` as date) AS `fecha`, `l`.`instancia` AS `instancia`, count(0) AS `total_preguntas_sin_resolver` FROM `ia_logs` AS `l` WHERE `l`.`fecha_hora` >= current_timestamp() - interval 30 day AND `l`.`tipo_evento` in ('error','timeout') GROUP BY cast(`l`.`fecha_hora` as date), `l`.`instancia` ORDER BY cast(`l`.`fecha_hora` as date) DESC, `l`.`instancia` ASC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_ia_salud_30d`
+--
+DROP TABLE IF EXISTS `v_auditoria_ia_salud_30d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_ia_salud_30d`  AS SELECT `l`.`instancia` AS `instancia`, cast(`l`.`fecha_hora` as date) AS `fecha`, count(0) AS `total_eventos_ia`, sum(case when `l`.`tipo_evento` = 'consulta' then 1 else 0 end) AS `total_consultas`, sum(case when `l`.`tipo_evento` = 'error' then 1 else 0 end) AS `total_errores`, sum(case when `l`.`tipo_evento` = 'guardrail_activado' then 1 else 0 end) AS `total_guardrails`, sum(coalesce(`l`.`tokens_usados`,0)) AS `tokens_totales`, round(avg(coalesce(`l`.`tiempo_respuesta_ms`,0)),2) AS `latencia_promedio_ms`, round(100 * sum(case when `l`.`tipo_evento` = 'error' then 1 else 0 end) / nullif(count(0),0),2) AS `tasa_error_pct` FROM `ia_logs` AS `l` WHERE `l`.`fecha_hora` >= current_timestamp() - interval 30 day GROUP BY `l`.`instancia`, cast(`l`.`fecha_hora` as date) ORDER BY cast(`l`.`fecha_hora` as date) DESC, `l`.`instancia` ASC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_resumen_ejecutivo`
+--
+DROP TABLE IF EXISTS `v_auditoria_resumen_ejecutivo`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_resumen_ejecutivo`  AS SELECT (select count(0) from `analytics_eventos` where `analytics_eventos`.`created_at` >= current_timestamp() - interval 7 day and `analytics_eventos`.`evento` = 'page_view' and `analytics_eventos`.`instancia` = 'frontend') AS `page_views_7d`, (select count(distinct `analytics_eventos`.`session_hash`) from `analytics_eventos` where `analytics_eventos`.`created_at` >= current_timestamp() - interval 7 day and `analytics_eventos`.`instancia` = 'frontend') AS `sesiones_unicas_7d`, (select count(0) from `ia_logs` where `ia_logs`.`fecha_hora` >= current_timestamp() - interval 7 day and `ia_logs`.`tipo_evento` = 'consulta') AS `consultas_ia_7d`, (select count(0) from `ia_logs` where `ia_logs`.`fecha_hora` >= current_timestamp() - interval 7 day and `ia_logs`.`tipo_evento` = 'error') AS `errores_ia_7d`, (select count(0) from `ia_logs` where `ia_logs`.`fecha_hora` >= current_timestamp() - interval 7 day and `ia_logs`.`tipo_evento` = 'guardrail_activado') AS `guardrails_ia_7d`, current_timestamp() AS `fecha_corte` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_top_clases_7d`
+--
+DROP TABLE IF EXISTS `v_auditoria_top_clases_7d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_top_clases_7d`  AS SELECT `c`.`id` AS `clase_id`, `c`.`nombre` AS `nombre`, `c`.`slug` AS `slug`, count(0) AS `visitas_totales`, count(distinct coalesce(`ae`.`session_hash`,concat('anon-',`ae`.`id`))) AS `sesiones_unicas`, sum(case when `ae`.`evento` = 'search_result_click' then 1 else 0 end) AS `clics_desde_busqueda`, max(`ae`.`created_at`) AS `ultima_interaccion` FROM (`analytics_eventos` `ae` join `clases` `c` on(`c`.`id` = `ae`.`clase_id`)) WHERE `ae`.`created_at` >= current_timestamp() - interval 7 day AND `ae`.`instancia` = 'frontend' AND `ae`.`evento` in ('page_view','search_result_click') GROUP BY `c`.`id`, `c`.`nombre`, `c`.`slug` ORDER BY count(0) DESC, count(distinct coalesce(`ae`.`session_hash`,concat('anon-',`ae`.`id`))) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_top_clases_30d`
+--
+DROP TABLE IF EXISTS `v_auditoria_top_clases_30d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_top_clases_30d`  AS SELECT `c`.`id` AS `clase_id`, `c`.`nombre` AS `nombre`, `c`.`slug` AS `slug`, count(0) AS `visitas_totales`, count(distinct coalesce(`ae`.`session_hash`,concat('anon-',`ae`.`id`))) AS `sesiones_unicas`, sum(case when `ae`.`evento` = 'search_result_click' then 1 else 0 end) AS `clics_desde_busqueda`, max(`ae`.`created_at`) AS `ultima_interaccion` FROM (`analytics_eventos` `ae` join `clases` `c` on(`c`.`id` = `ae`.`clase_id`)) WHERE `ae`.`created_at` >= current_timestamp() - interval 30 day AND `ae`.`instancia` = 'frontend' AND `ae`.`evento` in ('page_view','search_result_click') GROUP BY `c`.`id`, `c`.`nombre`, `c`.`slug` ORDER BY count(0) DESC, count(distinct coalesce(`ae`.`session_hash`,concat('anon-',`ae`.`id`))) DESC ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `v_auditoria_visitas_legacy_30d`
+--
+DROP TABLE IF EXISTS `v_auditoria_visitas_legacy_30d`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL SECURITY DEFINER VIEW `v_auditoria_visitas_legacy_30d`  AS SELECT `av`.`clase_id` AS `clase_id`, `c`.`nombre` AS `nombre`, `c`.`slug` AS `slug`, count(0) AS `visitas_totales`, count(distinct cast(`av`.`visited_at` as date)) AS `dias_con_trafico`, max(`av`.`visited_at`) AS `ultima_visita` FROM (`analytics_visitas` `av` left join `clases` `c` on(`c`.`id` = `av`.`clase_id`)) WHERE `av`.`visited_at` >= current_timestamp() - interval 30 day GROUP BY `av`.`clase_id`, `c`.`nombre`, `c`.`slug` ORDER BY count(0) DESC ;
 
 -- --------------------------------------------------------
 
@@ -2101,6 +3150,12 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`u626603208_clasedeciencia`@`127.0.0.1` SQL S
 --
 
 --
+-- Constraints for table `analytics_eventos`
+--
+ALTER TABLE `analytics_eventos`
+  ADD CONSTRAINT `fk_ae_sesion_ia` FOREIGN KEY (`sesion_ia_id`) REFERENCES `ia_sesiones` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
 -- Constraints for table `atributos_contenidos`
 --
 ALTER TABLE `atributos_contenidos`
@@ -2146,6 +3201,13 @@ ALTER TABLE `entregas`
   ADD CONSTRAINT `fk_entregas_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `entrega_lotes`
+--
+ALTER TABLE `entrega_lotes`
+  ADD CONSTRAINT `fk_el_entrega` FOREIGN KEY (`entrega_id`) REFERENCES `entregas` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_el_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes` (`id`) ON UPDATE CASCADE;
+
+--
 -- Constraints for table `footer_enlaces`
 --
 ALTER TABLE `footer_enlaces`
@@ -2162,6 +3224,18 @@ ALTER TABLE `guias`
 --
 ALTER TABLE `ia_mensajes`
   ADD CONSTRAINT `fk_ia_mensajes_sesion` FOREIGN KEY (`sesion_id`) REFERENCES `ia_sesiones` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `ia_resumen_sesion`
+--
+ALTER TABLE `ia_resumen_sesion`
+  ADD CONSTRAINT `fk_ia_resumen_sesion` FOREIGN KEY (`sesion_id`) REFERENCES `ia_sesiones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `ia_sesiones_contexto`
+--
+ALTER TABLE `ia_sesiones_contexto`
+  ADD CONSTRAINT `fk_ia_sesion_contexto_sesion` FOREIGN KEY (`sesion_id`) REFERENCES `ia_sesiones` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `kits`
@@ -2195,6 +3269,13 @@ ALTER TABLE `kit_items`
 ALTER TABLE `kit_manuals`
   ADD CONSTRAINT `fk_kit_manuals_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_km_item` FOREIGN KEY (`item_id`) REFERENCES `kit_items` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Constraints for table `lotes`
+--
+ALTER TABLE `lotes`
+  ADD CONSTRAINT `fk_lotes_contrato` FOREIGN KEY (`contrato_id`) REFERENCES `contratos` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_lotes_kit` FOREIGN KEY (`kit_id`) REFERENCES `kits` (`id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `recursos_multimedia`
