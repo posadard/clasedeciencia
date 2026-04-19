@@ -1400,6 +1400,10 @@ if ($is_edit) {
       const options = categorySelect ? Array.from(categorySelect.options).map((o) => ({ id: parseInt(o.value || '0', 10) || 0, nombre: String(o.textContent || '').trim() })).filter((x) => x.id > 0) : [];
       const categoriaActualId = categorySelect ? parseInt(categorySelect.value || '0', 10) || 0 : 0;
       const categoriaActualNombre = (categorySelect && categorySelect.selectedOptions && categorySelect.selectedOptions[0]) ? String(categorySelect.selectedOptions[0].textContent || '').trim() : '';
+      const descripcionActual = getDescripcionEditorHtml();
+      const descripcionRecortada = descripcionActual.length > 2400
+        ? (descripcionActual.slice(0, 2400) + '\n...[DESCRIPCION ACTUAL RECORTADA PARA CONTEXTO]...')
+        : descripcionActual;
 
       return {
         nombre_comun: (document.getElementById('nombre_comun')?.value || '').trim(),
@@ -1409,7 +1413,7 @@ if ($is_edit) {
         unidad: (document.getElementById('unidad')?.value || '').trim(),
         advertencias_seguridad: (document.getElementById('advertencias_seguridad')?.value || '').trim(),
         foto_url: (document.getElementById('foto_url')?.value || '').trim(),
-        descripcion_html: getDescripcionEditorHtml(),
+        descripcion_html: descripcionRecortada,
         categorias_disponibles: options
       };
     }
@@ -1485,8 +1489,7 @@ if ($is_edit) {
 
     async function askIa(userText) {
       if (isBusy) return;
-      const text = String(userText || '').trim();
-      if (!text) return;
+      const text = String(userText || '').trim() || 'Genera un borrador completo usando el contexto actual del componente cargado.';
 
       isBusy = true;
       btnSend.disabled = true;
