@@ -3294,30 +3294,60 @@ include '../header.php';
       console.log('🔍 [IA Kit Content Modal] Enviando solicitud IA con foco:', currentFocus || '(general)');
 
       try {
-        const payload = {
-          instancia: 'backend',
-          contexto_scope: 'admin_kits_content_builder',
-          contexto_pagina: 'kits',
-          entidad_tipo: 'kit',
-          entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
-          pregunta: buildPrompt(message)
-        };
+        async function callIaWithPrompt(promptText) {
+          const payload = {
+            instancia: 'backend',
+            contexto_scope: 'admin_kits_content_builder',
+            contexto_pagina: 'kits',
+            entidad_tipo: 'kit',
+            entidad_id: <?= $is_edit ? (int)$id : 'null' ?>,
+            pregunta: promptText
+          };
+          const res = await fetch('/api/ia-consulta.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          return res.json();
+        }
 
-        const res = await fetch('/api/ia-consulta.php', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const json = await res.json();
+        const primaryPrompt = buildPrompt(message);
+        let json = await callIaWithPrompt(primaryPrompt);
         if (!json || !json.ok) {
           const msg = (json && json.error) ? json.error : 'No se pudo generar contenido.';
           addMsg('assistant', '❌ ' + msg);
           return;
         }
 
-        const respuesta = String(json.respuesta || '').trim();
+        let respuesta = String(json.respuesta || '').trim();
+        let parsed = safeJsonParse(respuesta);
+
+        if (!respuesta || !(parsed && typeof parsed === 'object' && parsed.contenido_html)) {
+          console.log('⚠️ [IA Kit Content Modal] Primera respuesta vacía/no válida, activando reintento de rescate');
+          addMsg('system', '⚠️ La primera respuesta no fue utilizable. Reintentando con formato de rescate...');
+
+          const rescuePrompt = [
+            'RESPUESTA DE RESCATE OBLIGATORIA.',
+            'Devuelve SOLO JSON válido en UNA sola línea.',
+            'Sin markdown. Sin texto extra. Sin explicación.',
+            'Schema exacto:',
+            '{"contenido_html":"","resumen":"","seguridad":{"notas":""},"notas_autor":"","plantilla_validada":true,"secciones_detectadas":["Introduccion del kit","Para que sirve en clase","Fundamento cientifico","Componentes del kit y funcion","Armado y puesta en marcha","Actividades sugeridas","Seguridad y buenas practicas","Evaluacion y cierre","Glosario basico"]}',
+            'La clave contenido_html es obligatoria y debe traer HTML real con al menos 9 bloques h2.',
+            'Solicitud original del usuario: ' + message
+          ].join('\n');
+
+          json = await callIaWithPrompt(rescuePrompt);
+          if (!json || !json.ok) {
+            const msg = (json && json.error) ? json.error : 'No se pudo generar contenido (reintento).';
+            addMsg('assistant', '❌ ' + msg);
+            return;
+          }
+
+          respuesta = String(json.respuesta || '').trim();
+          parsed = safeJsonParse(respuesta);
+        }
+
         addMsg('assistant', respuesta || 'Respuesta vacía.');
-        const parsed = safeJsonParse(respuesta);
         if (parsed && typeof parsed === 'object' && parsed.contenido_html) {
           lastSuggestion = parsed;
           preview.textContent = JSON.stringify(parsed, null, 2);
