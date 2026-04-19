@@ -308,12 +308,163 @@ function ia_generate_context_files(PDO $pdo): array {
     return ['ok' => true, 'msg' => 'Contexto IA regenerado (' . count($files) . ' archivos).'];
 }
 
-function ia_refresh_search_index(PDO $pdo): array {
+function ia_refresh_search_index_fallback(PDO $pdo): array {
     try {
-        $pdo->exec('CALL sp_refresh_ia_search_index()');
+        $pdo->beginTransaction();
+
+        $pdo->exec('DELETE FROM ia_search_index');
+
+        $sql_clases = "INSERT INTO ia_search_index (
+                entity_type, entity_id, title, slug, url, status_publicacion, is_active,
+                search_text, search_text_normalized, keywords_json, relations_json,
+                score_base, source_updated_at, indexed_at
+            )
+            SELECT
+                'clase' AS entity_type,
+                c.id AS entity_id,
+                c.nombre AS title,
+                c.slug,
+                CONCAT('/clase.php?slug=', c.slug) AS url,
+                CASE WHEN c.status = 'published' THEN 'published' ELSE c.status END AS status_publicacion,
+                c.activo AS is_active,
+                CONCAT_WS(' ', c.nombre, COALESCE(c.resumen, ''), COALESCE(c.objetivo_aprendizaje, ''), COALESCE(c.dificultad, ''), CONCAT('ciclo ', c.ciclo)) AS search_text,
+                LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    CONCAT_WS(' ', c.nombre, COALESCE(c.resumen, ''), COALESCE(c.objetivo_aprendizaje, ''), COALESCE(c.dificultad, '')),
+                    'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n'),'ü','u')) AS search_text_normalized,
+                JSON_OBJECT('ciclo', c.ciclo, 'dificultad', c.dificultad, 'destacado', c.destacado) AS keywords_json,
+                JSON_OBJECT('origen', 'fallback_admin') AS relations_json,
+                1.00 + CASE WHEN c.destacado = 1 THEN 0.25 ELSE 0 END AS score_base,
+                COALESCE(c.updated_at, NOW()) AS source_updated_at,
+                NOW() AS indexed_at
+            FROM clases c";
+        $pdo->exec($sql_clases);
+
+        $sql_kits = "INSERT INTO ia_search_index (
+                entity_type, entity_id, title, slug, url, status_publicacion, is_active,
+                search_text, search_text_normalized, keywords_json, relations_json,
+                score_base, source_updated_at, indexed_at
+            )
+            SELECT
+                'kit' AS entity_type,
+                k.id AS entity_id,
+                k.nombre AS title,
+                k.slug,
+                CONCAT('/kit.php?slug=', IFNULL(k.slug, CONCAT('kit-', k.id))) AS url,
+                CASE WHEN k.activo = 1 THEN 'published' ELSE 'inactive' END AS status_publicacion,
+                k.activo AS is_active,
+                CONCAT_WS(' ', k.nombre, COALESCE(k.codigo, ''), COALESCE(k.resumen, '')) AS search_text,
+                LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    CONCAT_WS(' ', k.nombre, COALESCE(k.codigo, ''), COALESCE(k.resumen, '')),
+                    'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n'),'ü','u')) AS search_text_normalized,
+                JSON_OBJECT('codigo', k.codigo, 'clase_id', k.clase_id) AS keywords_json,
+                JSON_OBJECT('origen', 'fallback_admin') AS relations_json,
+                1.00 AS score_base,
+                COALESCE(k.updated_at, NOW()) AS source_updated_at,
+                NOW() AS indexed_at
+            FROM kits k";
+        $pdo->exec($sql_kits);
+
+        $sql_componentes = "INSERT INTO ia_search_index (
+                entity_type, entity_id, title, slug, url, status_publicacion, is_active,
+                search_text, search_text_normalized, keywords_json, relations_json,
+                score_base, source_updated_at, indexed_at
+            )
+            SELECT
+                'componente' AS entity_type,
+                i.id AS entity_id,
+                i.nombre_comun AS title,
+                i.slug,
+                CONCAT('/componente.php?slug=', IFNULL(i.slug, CONCAT('componente-', i.id))) AS url,
+                'published' AS status_publicacion,
+                1 AS is_active,
+                CONCAT_WS(' ', i.nombre_comun, COALESCE(i.sku, ''), COALESCE(i.unidad, ''), COALESCE(i.descripcion_html, '')) AS search_text,
+                LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    CONCAT_WS(' ', i.nombre_comun, COALESCE(i.sku, ''), COALESCE(i.unidad, ''), COALESCE(i.descripcion_html, '')),
+                    'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n'),'ü','u')) AS search_text_normalized,
+                JSON_OBJECT('sku', i.sku, 'unidad', i.unidad) AS keywords_json,
+                JSON_OBJECT('origen', 'fallback_admin') AS relations_json,
+                0.90 AS score_base,
+                NOW() AS source_updated_at,
+                NOW() AS indexed_at
+            FROM kit_items i";
+        $pdo->exec($sql_componentes);
+
+        $sql_manuales = "INSERT INTO ia_search_index (
+                entity_type, entity_id, title, slug, url, status_publicacion, is_active,
+                search_text, search_text_normalized, keywords_json, relations_json,
+                score_base, source_updated_at, indexed_at
+            )
+            SELECT
+                'manual' AS entity_type,
+                km.id AS entity_id,
+                km.slug AS title,
+                km.slug,
+                CONCAT('/manual.php?slug=', km.slug) AS url,
+                km.status AS status_publicacion,
+                CASE WHEN km.status = 'published' THEN 1 ELSE 0 END AS is_active,
+                CONCAT_WS(' ', km.slug, COALESCE(km.resumen, ''), COALESCE(k.nombre, ''), COALESCE(i.nombre_comun, '')) AS search_text,
+                LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    CONCAT_WS(' ', km.slug, COALESCE(km.resumen, ''), COALESCE(k.nombre, ''), COALESCE(i.nombre_comun, '')),
+                    'á','a'),'é','e'),'í','i'),'ó','o'),'ú','u'),'ñ','n'),'ü','u')) AS search_text_normalized,
+                JSON_OBJECT('ambito', km.ambito, 'tipo_manual', km.tipo_manual) AS keywords_json,
+                JSON_OBJECT('kit_id', km.kit_id, 'item_id', km.item_id, 'origen', 'fallback_admin') AS relations_json,
+                0.95 AS score_base,
+                COALESCE(km.updated_at, NOW()) AS source_updated_at,
+                NOW() AS indexed_at
+            FROM kit_manuals km
+            LEFT JOIN kits k ON k.id = km.kit_id
+            LEFT JOIN kit_items i ON i.id = km.item_id";
+        $pdo->exec($sql_manuales);
+
+        $stmtCount = $pdo->query("SELECT entity_type, COUNT(*) AS total FROM ia_search_index GROUP BY entity_type");
+        $summary = $stmtCount ? $stmtCount->fetchAll(PDO::FETCH_ASSOC) : [];
+
+        $index_version = 'fallback-' . date('YmdHis');
+        $stmtMeta = $pdo->prepare(
+            "INSERT INTO ia_search_index_meta (index_version, generated_at, source_summary, notes)
+             VALUES (?, NOW(), ?, ?)"
+        );
+        $stmtMeta->execute([
+            $index_version,
+            json_encode($summary, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'Regenerado por fallback admin (sin stored procedure)'
+        ]);
+
+        $pdo->commit();
+        return ['ok' => true, 'msg' => 'Índice IA regenerado con fallback interno (sin stored procedure).'];
     } catch (Exception $e) {
-        error_log('[IA Admin] refresh index error: ' . $e->getMessage());
-        return ['ok' => false, 'msg' => 'No se pudo regenerar el índice IA. Verifica que exista sp_refresh_ia_search_index.'];
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('[IA Admin] fallback refresh index error: ' . $e->getMessage());
+        return ['ok' => false, 'msg' => 'Falló la regeneración del índice IA: ' . $e->getMessage()];
+    }
+}
+
+function ia_refresh_search_index(PDO $pdo): array {
+    $proc_exists = false;
+    try {
+        $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = 'PROCEDURE' AND ROUTINE_NAME = 'sp_refresh_ia_search_index'");
+        $proc_exists = ((int)($stmt ? $stmt->fetchColumn() : 0) > 0);
+    } catch (Exception $e) {
+        error_log('[IA Admin] routine check warning: ' . $e->getMessage());
+    }
+
+    if ($proc_exists) {
+        try {
+            $pdo->exec('CALL sp_refresh_ia_search_index()');
+        } catch (Exception $e) {
+            error_log('[IA Admin] refresh index error: ' . $e->getMessage());
+            $fallback = ia_refresh_search_index_fallback($pdo);
+            if (empty($fallback['ok'])) {
+                return ['ok' => false, 'msg' => 'No se pudo regenerar el índice IA ni por procedimiento ni por fallback.'];
+            }
+        }
+    } else {
+        $fallback = ia_refresh_search_index_fallback($pdo);
+        if (empty($fallback['ok'])) {
+            return $fallback;
+        }
     }
 
     try {
