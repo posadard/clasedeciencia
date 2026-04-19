@@ -865,7 +865,7 @@ include '../header.php';
   <h2><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></h2>
   <span class="help-text">Completa los campos del kit y gestiona sus componentes.</span>
   <div class="page-header-actions" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-    <button type="button" class="btn" id="btn_open_ia_kit_modal">Asistente IA de kit</button>
+    <button type="button" class="btn ia-assistant-btn" id="btn_open_ia_kit_modal">Asistente <span class="ia-word">IA</span> de kit</button>
   </div>
   <script>
     console.log('✅ [Admin] Kits edit cargado');
@@ -1035,6 +1035,29 @@ include '../header.php';
     gap: 14px;
     flex-wrap: wrap;
   }
+  .ia-assistant-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #0e7490;
+    color: #ecfeff;
+    background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+    box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.2), 0 0 12px rgba(34, 211, 238, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  }
+  .ia-assistant-btn:hover,
+  .ia-assistant-btn:focus {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow: 0 0 0 1px rgba(103, 232, 249, 0.45), 0 0 18px rgba(56, 189, 248, 0.5);
+  }
+  .ia-assistant-btn .ia-word {
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.55), 0 0 14px rgba(103, 232, 249, 0.45);
+  }
   @media (max-width: 900px) {
     .ia-class-body { grid-template-columns: 1fr; }
     .ia-class-chat { border-right: none; border-bottom: 1px solid #e5e7eb; }
@@ -1161,7 +1184,7 @@ include '../header.php';
   <div class="form-group">
     <label for="contenido_html" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
       <span>Contenido HTML</span>
-      <button type="button" class="btn btn-secondary" id="btn_open_ia_kit_content_modal">Asistente IA de contenido</button>
+      <button type="button" class="btn btn-secondary ia-assistant-btn" id="btn_open_ia_kit_content_modal">Asistente <span class="ia-word">IA</span> de contenido</button>
     </label>
     <textarea id="contenido_html" name="contenido_html" rows="8" placeholder="HTML básico para la ficha del kit."><?= htmlspecialchars($kit['contenido_html'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
     <small class="hint">Soporta HTML básico. Evita scripts incrustados.</small>
