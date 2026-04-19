@@ -580,6 +580,57 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  function isSafeInternalLink(url) {
+    if (typeof url !== 'string') return false;
+    if (url.indexOf('/') !== 0) return false;
+    if (url.indexOf('javascript:') === 0) return false;
+    if (url.indexOf('//') === 0) return false;
+    return true;
+  }
+
+  function addEntityLinks(log, links) {
+    if (!Array.isArray(links) || links.length === 0) return;
+    var safe = links.filter(function(l) {
+      return l && typeof l.label === 'string' && l.label.trim() !== '' && isSafeInternalLink(String(l.url || ''));
+    }).slice(0, 8);
+    if (safe.length === 0) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'ia-sugerencias';
+    var label = document.createElement('div');
+    label.className = 'ia-sugerencias-label';
+    label.textContent = '🔗 Enlaces clave';
+    wrap.appendChild(label);
+
+    safe.forEach(function(item) {
+      var a = document.createElement('a');
+      a.className = 'ia-sug-card';
+      a.href = String(item.url);
+      var icon = document.createElement('span');
+      icon.className = 'ia-sug-icon';
+      icon.textContent = '↗';
+
+      var body = document.createElement('span');
+      body.className = 'ia-sug-body';
+      var ttl = document.createElement('div');
+      ttl.className = 'ia-sug-titulo';
+      ttl.textContent = String(item.label);
+      body.appendChild(ttl);
+
+      var arrow = document.createElement('span');
+      arrow.className = 'ia-sug-arrow';
+      arrow.textContent = '›';
+
+      a.appendChild(icon);
+      a.appendChild(body);
+      a.appendChild(arrow);
+      wrap.appendChild(a);
+    });
+
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
+  }
+
   // Parsea el bloque "Opciones: A|B|C" que la IA puede añadir al final de su respuesta
   function parsearOpciones(texto) {
     var match = texto.match(/\nOpciones:\s*(.+)$/i);
@@ -940,6 +991,7 @@
           historial.push({ role: 'assistant', content: parsed.texto   });
           guardarHistorial(ssKey, historial);
           addBubble(ui.log, 'ia', parsed.texto);
+          addEntityLinks(ui.log, json.links || []);
           addIAActions(ui.log, parsed.texto, parsed.opciones, enviar);
           // Para sugerencias usar el tema original si el mensaje actual es muy corto
           if (usarSugerencias) {

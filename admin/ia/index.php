@@ -308,6 +308,39 @@ function ia_generate_context_files(PDO $pdo): array {
     return ['ok' => true, 'msg' => 'Contexto IA regenerado (' . count($files) . ' archivos).'];
 }
 
+function ia_refresh_search_index(PDO $pdo): array {
+    try {
+        $pdo->exec('CALL sp_refresh_ia_search_index()');
+    } catch (Exception $e) {
+        error_log('[IA Admin] refresh index error: ' . $e->getMessage());
+        return ['ok' => false, 'msg' => 'No se pudo regenerar el índice IA. Verifica que exista sp_refresh_ia_search_index.'];
+    }
+
+    try {
+        $dir = __DIR__ . '/../../assets/cache';
+        if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
+            throw new RuntimeException('No se pudo crear directorio de cache.');
+        }
+        $version = (string)time();
+        $ok_write = file_put_contents($dir . '/search-version.txt', $version, LOCK_EX);
+        if ($ok_write === false) {
+            throw new RuntimeException('No se pudo actualizar search-version.');
+        }
+    } catch (Exception $e) {
+        error_log('[IA Admin] refresh index cache version error: ' . $e->getMessage());
+        return ['ok' => true, 'msg' => 'Índice IA regenerado, pero no se pudo actualizar search-version.'];
+    }
+
+    try {
+        $pdo->prepare("INSERT INTO ia_admin_refresh_log (proceso, estado, detalle_json) VALUES (?, 'ok', JSON_OBJECT('origen', 'admin/ia/index.php'))")
+            ->execute(['search_index']);
+    } catch (Exception $e) {
+        error_log('[IA Admin] refresh log warning: ' . $e->getMessage());
+    }
+
+    return ['ok' => true, 'msg' => 'Índice IA regenerado y versión de búsqueda actualizada.'];
+}
+
 // ---------------------------------------------------------------
 // POST: Guardar configuración
 // ---------------------------------------------------------------
@@ -324,6 +357,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $save_msg = (string)$r['msg'];
         } else {
             $save_error = (string)($r['msg'] ?? 'No se pudo regenerar el contexto IA.');
+        }
+    } elseif ($action === 'refresh_search_index') {
+        $r = ia_refresh_search_index($pdo);
+        if (!empty($r['ok'])) {
+            $save_ok = true;
+            $save_msg = (string)$r['msg'];
+        } else {
+            $save_error = (string)($r['msg'] ?? 'No se pudo regenerar el índice IA.');
         }
     } elseif ($action === 'save_config') {
     $instancia_save = in_array($_POST['instancia'] ?? '', ['frontend', 'backend']) ? $_POST['instancia'] : null;
@@ -448,6 +489,24 @@ try {
     )->fetchColumn();
 } catch (Exception $e) { error_log('[IA Admin] stats: ' . $e->getMessage()); }
 
+$search_index_meta = null;
+$search_index_stats = [];
+try {
+    $search_index_meta = $pdo->query(
+        "SELECT index_version, generated_at, notes FROM ia_search_index_meta ORDER BY id DESC LIMIT 1"
+    )->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (Exception $e) {
+    error_log('[IA Admin] search index meta: ' . $e->getMessage());
+}
+
+try {
+    $search_index_stats = $pdo->query(
+        "SELECT entity_type, total, activos, publicados, ultima_indexacion FROM v_ia_search_index_stats ORDER BY entity_type ASC"
+    )->fetchAll(PDO::FETCH_ASSOC);
+} catch (Exception $e) {
+    error_log('[IA Admin] search index stats: ' . $e->getMessage());
+}
+
 // Active tab (URL ?tab=frontend|backend|estado|logs)
 $active_tab = in_array($_GET['tab'] ?? '', ['frontend', 'backend', 'estado', 'logs']) ? $_GET['tab'] : 'estado';
 
@@ -548,6 +607,51 @@ include '../header.php';
     </form>
 </div>
 
+<div class="card" style="margin-bottom:1rem;">
+    <h3>Índice IA de Búsqueda (Base de Datos)</h3>
+    <p class="hint" style="margin-bottom:0.8rem;">Regenera el índice transversal usado por la IA y fuerza actualización de caché de búsqueda.</p>
+    <form method="post" action="/admin/ia/index.php?tab=estado" style="margin-bottom:1rem;">
+        <input type="hidden" name="action" value="refresh_search_index">
+        <button type="submit" class="btn">🔄 Regenerar índice IA de búsqueda</button>
+    </form>
+
+    <?php if ($search_index_meta): ?>
+        <p class="hint" style="margin-bottom:0.5rem;">
+            Última versión: <strong><?= htmlspecialchars((string)$search_index_meta['index_version'], ENT_QUOTES, 'UTF-8') ?></strong>
+            · Generado: <strong><?= htmlspecialchars((string)$search_index_meta['generated_at'], ENT_QUOTES, 'UTF-8') ?></strong>
+        </p>
+    <?php endif; ?>
+
+    <?php if (!empty($search_index_stats)): ?>
+        <div style="overflow-x:auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Total</th>
+                        <th>Activos</th>
+                        <th>Publicados</th>
+                        <th>Última indexación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($search_index_stats as $s): ?>
+                    <tr>
+                        <td><?= htmlspecialchars((string)$s['entity_type'], ENT_QUOTES, 'UTF-8') ?></td>
+                        <td><?= number_format((int)$s['total']) ?></td>
+                        <td><?= number_format((int)$s['activos']) ?></td>
+                        <td><?= number_format((int)$s['publicados']) ?></td>
+                        <td><?= htmlspecialchars((string)$s['ultima_indexacion'], ENT_QUOTES, 'UTF-8') ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php else: ?>
+        <p class="hint">No hay estadísticas del índice disponibles todavía.</p>
+    <?php endif; ?>
+</div>
+
 <!-- Tab navigation -->
 <div class="ia-tabs" role="tablist">
     <button class="ia-tab-btn <?= $active_tab === 'estado' ? 'active' : '' ?>" data-tab="estado"  role="tab">📊 Estado</button>
@@ -604,6 +708,7 @@ include '../header.php';
             <div id="test-fe-result" style="margin-top:0.75rem;display:none;">
                 <div class="ia-test-response" id="test-fe-text"></div>
                 <div class="ia-test-meta" id="test-fe-meta"></div>
+                <div class="ia-test-meta" id="test-fe-links"></div>
             </div>
         </div>
     </div>
@@ -635,6 +740,7 @@ include '../header.php';
             <div id="test-be-result" style="margin-top:0.75rem;display:none;">
                 <div class="ia-test-response" id="test-be-text"></div>
                 <div class="ia-test-meta" id="test-be-meta"></div>
+                <div class="ia-test-meta" id="test-be-links"></div>
             </div>
         </div>
     </div>
@@ -877,6 +983,7 @@ async function testIA(instancia) {
     const resId  = 'test-'     + (instancia === 'frontend' ? 'fe' : 'be') + '-result';
     const textId = 'test-'     + (instancia === 'frontend' ? 'fe' : 'be') + '-text';
     const metaId = 'test-'     + (instancia === 'frontend' ? 'fe' : 'be') + '-meta';
+    const linksId = 'test-'    + (instancia === 'frontend' ? 'fe' : 'be') + '-links';
 
     const btn = document.getElementById(btnId);
     btn.disabled = true;
@@ -896,9 +1003,43 @@ async function testIA(instancia) {
     const resDiv  = document.getElementById(resId);
     const textDiv = document.getElementById(textId);
     const metaDiv = document.getElementById(metaId);
+    const linksDiv = document.getElementById(linksId);
     resDiv.style.display = 'block';
     textDiv.textContent  = '…';
     metaDiv.textContent  = '';
+    linksDiv.innerHTML = '';
+
+    function isSafeInternalLink(url) {
+        return typeof url === 'string'
+            && url.indexOf('/') === 0
+            && url.indexOf('//') !== 0
+            && url.indexOf('javascript:') !== 0;
+    }
+
+    function renderLinks(links) {
+        linksDiv.innerHTML = '';
+        if (!Array.isArray(links) || links.length === 0) return;
+        const safe = links.filter(function(l) {
+            return l && typeof l.label === 'string' && l.label.trim() !== '' && isSafeInternalLink(String(l.url || ''));
+        }).slice(0, 8);
+        if (safe.length === 0) return;
+
+        const title = document.createElement('div');
+        title.textContent = 'Enlaces clave:';
+        title.style.fontWeight = '600';
+        title.style.marginTop = '0.45rem';
+        linksDiv.appendChild(title);
+
+        safe.forEach(function(l) {
+            const row = document.createElement('div');
+            const a = document.createElement('a');
+            a.href = String(l.url);
+            a.textContent = String(l.label);
+            a.style.textDecoration = 'underline';
+            row.appendChild(a);
+            linksDiv.appendChild(row);
+        });
+    }
 
     try {
         const resp = await fetch('/api/ia-consulta.php', {
@@ -921,6 +1062,7 @@ async function testIA(instancia) {
                 data.cached             ? '📦 Desde caché'      : '',
                 data.guardrail_activado ? '🛡️ Guardrail activo' : '',
             ].filter(Boolean).join(' · ');
+            renderLinks(data.links || []);
         } else {
             textDiv.textContent = '❌ Error: ' + (data.error || 'desconocido');
         }

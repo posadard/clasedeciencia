@@ -99,6 +99,15 @@ function detect_backend_intent(string $pregunta): ?string {
     $has_completa = preg_match('/\b(mas completa|completitud|completa)\b/u', $q) === 1;
     $has_clase = preg_match('/\bclase(?:s)?\b/u', $q) === 1;
     $has_nombre = preg_match('/\b(nombre|nombres|cual|cuales|dime|listar|lista)\b/u', $q) === 1;
+    $has_contrato = preg_match('/\bcontrato(?:s)?\b/u', $q) === 1;
+    $has_entrega = preg_match('/\bentrega(?:s)?\b/u', $q) === 1;
+    $has_lote = preg_match('/\blote(?:s)?\b/u', $q) === 1;
+    $has_riesgo = preg_match('/\b(riesgo|riesgos|alerta|alertas|critico|criticos)\b/u', $q) === 1;
+    $has_vencer = preg_match('/\b(vencer|vence|vencen|vencido|vencidos|vencimiento|proximo)\b/u', $q) === 1;
+    $has_acta = preg_match('/\bacta(?:s)?\b/u', $q) === 1;
+    $has_sin = preg_match('/\b(sin|faltan|falta|faltante|incompleto|incompleta)\b/u', $q) === 1;
+    $has_pendiente = preg_match('/\b(pendiente|pendientes|atrasad|reprogramad|abiert)\w*\b/u', $q) === 1;
+    $has_quiebre = preg_match('/\b(quiebre|agot|stock|disponible)\w*\b/u', $q) === 1;
 
     if ($has_clase && $has_completa) {
         return 'clase_mas_completa';
@@ -112,11 +121,59 @@ function detect_backend_intent(string $pregunta): ?string {
     if ($has_manual && preg_match('/\b(hay|existe|cuantos|cuantas|tenemos|tienen)\b/u', $q) === 1) {
         return 'manuales_estado';
     }
+    if ($has_contrato && $has_vencer) {
+        return 'contratos_vencimiento';
+    }
+    if ($has_entrega && $has_acta && $has_sin) {
+        return 'entregas_sin_acta';
+    }
+    if ($has_entrega && $has_pendiente) {
+        return 'entregas_pendientes';
+    }
+    if ($has_lote && $has_quiebre) {
+        return 'lotes_riesgo_quiebre';
+    }
+    if ($has_riesgo && ($has_contrato || $has_entrega || $has_lote || preg_match('/\boperativo\b/u', $q) === 1)) {
+        return 'riesgo_operativo';
+    }
 
     return null;
 }
 
-function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pregunta): ?string {
+function ia_admin_entity_url(string $tipo, int $id): ?string {
+    if ($id <= 0) return null;
+    switch ($tipo) {
+        case 'clase':
+            return '/admin/clases/edit.php?id=' . $id;
+        case 'kit':
+            return '/admin/kits/edit.php?id=' . $id;
+        case 'componente':
+            return '/admin/componentes/edit.php?id=' . $id;
+        case 'manual':
+            return '/admin/kits/manuals/edit.php?id=' . $id;
+        case 'contrato':
+            return '/admin/contratos/edit.php?id=' . $id;
+        case 'entrega':
+            return '/admin/entregas/edit.php?id=' . $id;
+        case 'lote':
+            return '/admin/lotes/edit.php?id=' . $id;
+        default:
+            return null;
+    }
+}
+
+function ia_build_link(string $label, string $tipo, int $id): ?array {
+    $url = ia_admin_entity_url($tipo, $id);
+    if ($url === null) return null;
+    return [
+        'label' => $label,
+        'url' => $url,
+        'entity_type' => $tipo,
+        'entity_id' => $id,
+    ];
+}
+
+function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pregunta): array|string|null {
     try {
         if ($intent === 'manuales_nombres') {
             $rows = $pdo->query(
@@ -124,6 +181,8 @@ function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pr
                     km.id,
                     km.titulo,
                     km.status,
+                    km.kit_id,
+                    km.item_id,
                     k.nombre AS kit_nombre,
                     i.nombre_comun AS componente_nombre
                  FROM kit_manuals km
@@ -142,15 +201,29 @@ function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pr
             }
 
             $lineas = [];
+            $links = [];
             foreach ($rows as $r) {
                 $dest = $r['kit_nombre'] ?: ($r['componente_nombre'] ?: 'sin destino');
                 $lineas[] = '- ' . (string)$r['titulo'] . ' (destino: ' . $dest . ')';
+                $manual_link = ia_build_link((string)$r['titulo'], 'manual', (int)$r['id']);
+                if ($manual_link) $links[] = $manual_link;
+                if (!empty($r['kit_nombre']) && !empty($r['kit_id'])) {
+                    $kit_link = ia_build_link('Kit: ' . (string)$r['kit_nombre'], 'kit', (int)$r['kit_id']);
+                    if ($kit_link) $links[] = $kit_link;
+                }
+                if (!empty($r['componente_nombre']) && !empty($r['item_id'])) {
+                    $item_link = ia_build_link('Componente: ' . (string)$r['componente_nombre'], 'componente', (int)$r['item_id']);
+                    if ($item_link) $links[] = $item_link;
+                }
             }
 
-            return "Respuesta corta: Estos son los manuales publicados que tengo registrados.\n"
-                . "Evidencia:\n"
-                . implode("\n", $lineas) . "\n"
-                . "Siguiente accion: Si quieres, te digo a que clases impacta cada manual.";
+            return [
+                'text' => "Respuesta corta: Estos son los manuales publicados que tengo registrados.\n"
+                    . "Evidencia:\n"
+                    . implode("\n", $lineas) . "\n"
+                    . "Siguiente accion: Si quieres, te digo a que clases impacta cada manual.",
+                'links' => array_slice($links, 0, 8)
+            ];
         }
 
         if ($intent === 'manuales_estado') {
@@ -196,13 +269,40 @@ function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pr
             )->fetch(PDO::FETCH_ASSOC);
             if (!$row) return null;
 
-            return "Respuesta corta: La clase mas completa es " . $row['nombre'] . ".\n"
-                . "Evidencia:\n"
-                . "- Kits: " . (int)$row['total_kits'] . "\n"
-                . "- Manuales publicados: " . (int)$row['total_manuales_publicados'] . "\n"
-                . "- Componentes: " . (int)$row['total_componentes'] . "\n"
-                . "- Score: " . (float)$row['score_completitud'] . "\n"
-                . "Siguiente accion: Si quieres, te doy tambien el top 3 con el mismo criterio.";
+            $kit_rows = [];
+            try {
+                $stmt = $pdo->prepare(
+                    "SELECT k.id, k.nombre
+                     FROM clase_kits ck
+                     JOIN kits k ON k.id = ck.kit_id
+                     WHERE ck.clase_id = ?
+                     ORDER BY k.nombre ASC
+                     LIMIT 5"
+                );
+                $stmt->execute([(int)$row['id']]);
+                $kit_rows = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            } catch (Exception $e) {
+                error_log('IA deterministic class kits links error: ' . $e->getMessage());
+            }
+
+            $links = [];
+            $class_link = ia_build_link('Clase: ' . (string)$row['nombre'] . ' (ID ' . (int)$row['id'] . ')', 'clase', (int)$row['id']);
+            if ($class_link) $links[] = $class_link;
+            foreach ($kit_rows as $k) {
+                $kit_link = ia_build_link('Kit: ' . (string)$k['nombre'] . ' (ID ' . (int)$k['id'] . ')', 'kit', (int)$k['id']);
+                if ($kit_link) $links[] = $kit_link;
+            }
+
+            return [
+                'text' => "Respuesta corta: La clase mas completa es " . $row['nombre'] . " (ID " . (int)$row['id'] . ").\n"
+                    . "Evidencia:\n"
+                    . "- Kits: " . (int)$row['total_kits'] . "\n"
+                    . "- Manuales publicados: " . (int)$row['total_manuales_publicados'] . "\n"
+                    . "- Componentes: " . (int)$row['total_componentes'] . "\n"
+                    . "- Score: " . (float)$row['score_completitud'] . "\n"
+                    . "Siguiente accion: Si quieres, te doy tambien el top 3 con el mismo criterio.",
+                'links' => array_slice($links, 0, 8)
+            ];
         }
 
         if ($intent === 'manual_pertenencia') {
@@ -272,13 +372,209 @@ function build_backend_deterministic_answer(PDO $pdo, string $intent, string $pr
             }
             $clases = $row['clases_kit'] ?: ($row['clases_comp'] ?: 'sin clases relacionadas');
 
-            return "Respuesta corta: El manual encontrado pertenece a " . $destino . ".\n"
-                . "Evidencia:\n"
-                . "- Manual: " . $row['titulo'] . "\n"
-                . "- Estado: " . $row['status'] . "\n"
-                . "- Ambito: " . $row['ambito'] . "\n"
-                . "- Clases relacionadas: " . $clases . "\n"
-                . "Siguiente accion: Si me das otro nombre exacto, te confirmo su pertenencia puntual.";
+            $links = [];
+            $manual_link = ia_build_link('Manual: ' . (string)$row['titulo'] . ' (ID ' . (int)$row['id'] . ')', 'manual', (int)$row['id']);
+            if ($manual_link) $links[] = $manual_link;
+            if (!empty($row['kit_id'])) {
+                $kit_link = ia_build_link('Kit: ' . (string)$row['kit_nombre'] . ' (ID ' . (int)$row['kit_id'] . ')', 'kit', (int)$row['kit_id']);
+                if ($kit_link) $links[] = $kit_link;
+            }
+            if (!empty($row['item_id'])) {
+                $item_link = ia_build_link('Componente: ' . (string)$row['componente_nombre'] . ' (ID ' . (int)$row['item_id'] . ')', 'componente', (int)$row['item_id']);
+                if ($item_link) $links[] = $item_link;
+            }
+
+            return [
+                'text' => "Respuesta corta: El manual encontrado pertenece a " . $destino . ".\n"
+                    . "Evidencia:\n"
+                    . "- Manual: " . $row['titulo'] . "\n"
+                    . "- Estado: " . $row['status'] . "\n"
+                    . "- Ambito: " . $row['ambito'] . "\n"
+                    . "- Clases relacionadas: " . $clases . "\n"
+                    . "Siguiente accion: Si me das otro nombre exacto, te confirmo su pertenencia puntual.",
+                'links' => array_slice($links, 0, 5)
+            ];
+        }
+
+        if ($intent === 'contratos_vencimiento') {
+            $row = $pdo->query(
+                "SELECT contratos_vigentes, contratos_suspendidos, contratos_vencidos_activos, contratos_por_vencer_30d
+                 FROM v_admin_kpis_contratos LIMIT 1"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            return [
+                'text' => "Respuesta corta: Estos son los contratos con foco en vencimientos.
+Evidencia:
+- Vigentes: " . (int)$row['contratos_vigentes'] . "
+- Suspendidos: " . (int)$row['contratos_suspendidos'] . "
+- Vencidos con estado activo: " . (int)$row['contratos_vencidos_activos'] . "
+- Próximos a vencer (30 días): " . (int)$row['contratos_por_vencer_30d'] . "
+Siguiente accion: Si quieres, te muestro el detalle por contrato desde el módulo Contratos.",
+                'links' => [
+                    [
+                        'label' => 'Abrir módulo de contratos',
+                        'url' => '/admin/contratos/index.php',
+                        'entity_type' => 'contrato',
+                        'entity_id' => 0,
+                    ]
+                ]
+            ];
+        }
+
+        if ($intent === 'entregas_sin_acta') {
+            $row = $pdo->query(
+                "SELECT entregas_entregadas, entregas_entregadas_sin_acta
+                 FROM v_admin_kpis_entregas LIMIT 1"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            return [
+                'text' => "Respuesta corta: Este es el estado de actas para entregas completadas.
+Evidencia:
+- Entregas marcadas como entregadas: " . (int)$row['entregas_entregadas'] . "
+- Entregas entregadas sin acta: " . (int)$row['entregas_entregadas_sin_acta'] . "
+Siguiente accion: Si quieres, te indico las entregas priorizadas para cargar acta.",
+                'links' => [
+                    [
+                        'label' => 'Abrir módulo de entregas',
+                        'url' => '/admin/entregas/index.php',
+                        'entity_type' => 'entrega',
+                        'entity_id' => 0,
+                    ]
+                ]
+            ];
+        }
+
+        if ($intent === 'entregas_pendientes') {
+            $row = $pdo->query(
+                "SELECT entregas_programadas, entregas_en_transito, entregas_reprogramadas, entregas_abiertas, entregas_atrasadas
+                 FROM v_admin_kpis_entregas LIMIT 1"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            return [
+                'text' => "Respuesta corta: Este es el panorama de entregas pendientes.
+Evidencia:
+- Programadas: " . (int)$row['entregas_programadas'] . "
+- En tránsito: " . (int)$row['entregas_en_transito'] . "
+- Reprogramadas: " . (int)$row['entregas_reprogramadas'] . "
+- Abiertas (totales): " . (int)$row['entregas_abiertas'] . "
+- Atrasadas: " . (int)$row['entregas_atrasadas'] . "
+Siguiente accion: Si quieres, priorizo primero las atrasadas por fecha programada.",
+                'links' => [
+                    [
+                        'label' => 'Abrir módulo de entregas',
+                        'url' => '/admin/entregas/index.php',
+                        'entity_type' => 'entrega',
+                        'entity_id' => 0,
+                    ]
+                ]
+            ];
+        }
+
+        if ($intent === 'lotes_riesgo_quiebre') {
+            $row = $pdo->query(
+                "SELECT lotes_activos, lotes_bloqueados, lotes_riesgo_quiebre, stock_disponible, stock_total
+                 FROM v_admin_kpis_lotes LIMIT 1"
+            )->fetch(PDO::FETCH_ASSOC);
+            if (!$row) return null;
+
+            return [
+                'text' => "Respuesta corta: Este es el estado de riesgo de lotes.
+Evidencia:
+- Lotes activos: " . (int)$row['lotes_activos'] . "
+- Lotes bloqueados: " . (int)$row['lotes_bloqueados'] . "
+- Lotes con riesgo de quiebre: " . (int)$row['lotes_riesgo_quiebre'] . "
+- Stock disponible: " . (int)$row['stock_disponible'] . "
+- Stock total: " . (int)$row['stock_total'] . "
+Siguiente accion: Si quieres, te doy los lotes con menor disponibilidad para priorizar reposición.",
+                'links' => [
+                    [
+                        'label' => 'Abrir módulo de lotes',
+                        'url' => '/admin/lotes/index.php',
+                        'entity_type' => 'lote',
+                        'entity_id' => 0,
+                    ]
+                ]
+            ];
+        }
+
+        if ($intent === 'riesgo_operativo') {
+            $rows = $pdo->query(
+                "SELECT modulo, nivel_riesgo, COUNT(*) AS total
+                 FROM v_admin_riesgo_operativo
+                 WHERE nivel_riesgo IN ('alto', 'medio')
+                 GROUP BY modulo, nivel_riesgo
+                 ORDER BY FIELD(nivel_riesgo, 'alto', 'medio'), modulo"
+            )->fetchAll(PDO::FETCH_ASSOC);
+
+            if (!$rows) {
+                return [
+                    'text' => "Respuesta corta: No detecté riesgos operativos altos o medios.
+Evidencia:
+- Registros críticos en v_admin_riesgo_operativo: 0
+Siguiente accion: Si quieres, te doy igual un chequeo general de contratos, entregas y lotes.",
+                    'links' => [
+                        [
+                            'label' => 'Ver contratos',
+                            'url' => '/admin/contratos/index.php',
+                            'entity_type' => 'contrato',
+                            'entity_id' => 0,
+                        ],
+                        [
+                            'label' => 'Ver entregas',
+                            'url' => '/admin/entregas/index.php',
+                            'entity_type' => 'entrega',
+                            'entity_id' => 0,
+                        ],
+                        [
+                            'label' => 'Ver lotes',
+                            'url' => '/admin/lotes/index.php',
+                            'entity_type' => 'lote',
+                            'entity_id' => 0,
+                        ]
+                    ]
+                ];
+            }
+
+            $lineas = [];
+            foreach ($rows as $r) {
+                $lineas[] = '- ' . (string)$r['modulo'] . ' | ' . (string)$r['nivel_riesgo'] . ': ' . (int)$r['total'];
+            }
+
+            return [
+                'text' => "Respuesta corta: Sí hay riesgos operativos que requieren seguimiento.
+Evidencia:
+" . implode("\n", $lineas) . "
+Siguiente accion: Si quieres, te doy el detalle por referencia (contrato, entrega o lote).",
+                'links' => [
+                    [
+                        'label' => 'Abrir riesgo operativo (IA)',
+                        'url' => '/admin/ia/index.php?tab=estado',
+                        'entity_type' => 'riesgo',
+                        'entity_id' => 0,
+                    ],
+                    [
+                        'label' => 'Ver contratos',
+                        'url' => '/admin/contratos/index.php',
+                        'entity_type' => 'contrato',
+                        'entity_id' => 0,
+                    ],
+                    [
+                        'label' => 'Ver entregas',
+                        'url' => '/admin/entregas/index.php',
+                        'entity_type' => 'entrega',
+                        'entity_id' => 0,
+                    ],
+                    [
+                        'label' => 'Ver lotes',
+                        'url' => '/admin/lotes/index.php',
+                        'entity_type' => 'lote',
+                        'entity_id' => 0,
+                    ]
+                ]
+            ];
         }
     } catch (Exception $e) {
         error_log('IA deterministic backend error: ' . $e->getMessage());
@@ -1346,6 +1642,7 @@ try {
     $tokens       = 0;
     $tiempo_ms    = 0;
     $modelo_usado = '';
+    $respuesta_links = [];
     $tipo_pagina_analytics = $instancia === 'backend' ? 'admin' : ($pagina !== '' ? $pagina : 'frontend');
     $modulo_analytics = $instancia === 'backend' ? ($contexto_pagina !== '' ? $contexto_pagina : 'admin') : null;
     $session_hash_analytics = null;
@@ -1393,7 +1690,12 @@ try {
                 if ($intent_backend !== null) {
                     $det_resp = build_backend_deterministic_answer($pdo, $intent_backend, $pregunta);
                     if (!empty($det_resp)) {
-                        $respuesta = normalize_backend_chat_response((string)$det_resp, 10);
+                        if (is_array($det_resp)) {
+                            $respuesta = normalize_backend_chat_response((string)($det_resp['text'] ?? ''), 10);
+                            $respuesta_links = is_array($det_resp['links'] ?? null) ? array_values($det_resp['links']) : [];
+                        } else {
+                            $respuesta = normalize_backend_chat_response((string)$det_resp, 10);
+                        }
                         $modelo_usado = 'deterministic-backend:' . $intent_backend;
                     }
                 }
@@ -1534,6 +1836,7 @@ try {
     echo json_encode([
         'ok'                 => true,
         'respuesta'          => $respuesta,
+        'links'              => $respuesta_links,
         'guardrail_activado' => $guardrail_activado,
         'cached'             => $cached,
         'modelo_usado'       => $modelo_usado,
